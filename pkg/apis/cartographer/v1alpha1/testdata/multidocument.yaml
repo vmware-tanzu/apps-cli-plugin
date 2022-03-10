@@ -1,0 +1,73 @@
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  name: spring-petclinic0
+  labels:
+    app.kubernetes.io/part-of: spring-petclinic0
+    apps.tanzu.vmware.com/workload-type: web
+spec:
+  env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: mysql
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 100m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+  source:
+    git:
+      url: https://github.com/spring-projects/spring-petclinic.git
+      ref:
+        branch: main
+
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  name: spring-petclinic1
+  labels:
+    app.kubernetes.io/part-of: spring-petclinic1
+    apps.tanzu.vmware.com/workload-type: web
+spec:
+  env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: mysql
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 100m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+  source:
+    git:
+      url: https://github.com/spring-projects/spring-petclinic.git
+      ref:
+        branch: main
+
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  name: spring-petclinic2
+  labels:
+    app.kubernetes.io/part-of: spring-petclinic2
+    apps.tanzu.vmware.com/workload-type: web
+spec:
+  env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: mysql
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 100m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+  source:
+    git:
+      url: https://github.com/spring-projects/spring-petclinic.git
+      ref:
+        branch: main

@@ -1,0 +1,11 @@
+ignore:
+- "hack"
+- "vendor"
+- "**/zz_generated*.go"
+- "docs"
+- "pkg/apis/knative/serving/v1/*.go"
+- "pkg/apis/cartographer/v1alpha1/cluster_supply_chain.go"
+- "pkg/apis/cartographer/v1alpha1/workload.go"
+comment:
+  # Update existing comment or create new if deleted.
+  behavior: default

@@ -1,0 +1,255 @@
+name: CI
+
+on:
+  push: 
+    branches:
+    - '**'
+    - '!dependabot/**'
+    tags:
+    - '**'
+  pull_request: {}
+
+jobs:
+
+  unit:
+    env:
+      TANZU_CLI_NO_INIT: true
+      TANZU_HOME: $HOME/tanzu
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v2
+      with:
+        go-version: 1.17.x
+    - name: Grype scan
+      run: |
+        echo "##[group]Install grype"
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+        echo "##[endgroup]"
+        echo "##[group]Scan source ."
+          grype dir:. --exclude ./hack,./vendor
+        echo "##[endgroup]"
+    - name: Install tanzu cli
+      run: |
+        TANZU_VERSION=$(cat TANZU_VERSION)
+        env
+        mkdir -p ${TANZU_HOME}
+        curl -Lo tanzu-framework.tar.gz https://github.com/vmware-tanzu/tanzu-framework/releases/download/${TANZU_VERSION}/tanzu-framework-linux-amd64.tar.gz
+        tar -xzf tanzu-framework.tar.gz -C ${TANZU_HOME}
+        sudo mv ${TANZU_HOME}/cli/core/${TANZU_VERSION}/tanzu-core-linux_amd64 /usr/local/bin/tanzu
+        chmod +x /usr/local/bin/tanzu
+        tanzu init
+        tanzu plugin repo add -b tanzu-cli-admin-plugins -n admin -p artifacts-admin
+        curl -Lo admin-plugins.tar.gz https://github.com/vmware-tanzu/tanzu-framework/releases/download/${TANZU_VERSION}/tanzu-framework-plugins-admin-linux-amd64.tar.gz
+        tar -xzf admin-plugins.tar.gz -C ${TANZU_HOME}
+        tanzu plugin install builder --local ${TANZU_HOME}/admin-plugins
+        tanzu plugin install test --local ${TANZU_HOME}/admin-plugins
+        tanzu plugin list
+    - name: Test
+      run: make test
+    - uses: codecov/codecov-action@v2
+      with:
+        token: c6e0ea67-1493-464a-b879-d8f06da7d313
+    - name: Build Version
+      run: echo "BUILD_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+      if: startsWith(github.ref, 'refs/tags/')
+    - name: Build
+      run: make publish
+    - uses: actions/upload-artifact@v2
+      with:
+        name: tanzu-apps-plugin.tar.gz
+        path: tanzu-apps-plugin*.tar.gz
+        retention-days: 1
+    - name: Install
+      run: make install
+    - name: Verify docs
+      run: |
+        rm -rf docs/command-reference
+        tanzu apps docs --directory docs/command-reference
+        git diff --exit-code docs
+      continue-on-error: true
+
+  acceptance:
+    needs: unit
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        k8s:
+        - 1.20.2
+        - 1.21.2
+        - 1.22.5
+    env:
+      REGISTRY_NAME: registry.local
+      REGISTRY_PORT: 5000
+      TANZU_CLI_NO_INIT: true
+      TANZU_HOME: $HOME/tanzu
+      OS_ARCH: linux-amd64
+    steps:
+    - uses: actions/checkout@v3
+    - uses: vmware-tanzu/carvel-setup-action@v1
+    - name: Download plugin bundle
+      uses: actions/download-artifact@v2
+      with:
+        name: tanzu-apps-plugin.tar.gz
+    - name: Install tanzu cli
+      run: |
+        TANZU_VERSION=$(cat TANZU_VERSION)
+        mkdir -p ${TANZU_HOME}
+        curl -Lo tanzu-framework.tar.gz https://github.com/vmware-tanzu/tanzu-framework/releases/download/${TANZU_VERSION}/tanzu-framework-linux-amd64.tar.gz
+          tar -xzf tanzu-framework.tar.gz -C ${TANZU_HOME}
+          sudo mv ${TANZU_HOME}/cli/core/${TANZU_VERSION}/tanzu-core-linux_amd64 /usr/local/bin/tanzu
+          chmod +x /usr/local/bin/tanzu
+        env
+        tanzu init
+    - name: Build Version
+      run: echo "BUILD_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+      if: startsWith(github.ref, 'refs/tags/')
+    - name: Install CLI
+      run: |
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+
+        tar -xvf tanzu-apps-plugin.tar.gz
+        tanzu plugin install apps --local ./${OS_ARCH} --version ${BUILD_VERSION:-v0.0.0-dev}
+    - name: Install kind
+      run: |
+        cd $(mktemp -d -t kind.XXXX)
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-$(go env GOHOSTOS)-$(go env GOHOSTARCH)
+        chmod +x ./kind
+        sudo mv ./kind /usr/local/bin
+        cd -
+    - name: Create Cluster
+      run: |
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+
+        # KinD configuration.
+        cat > kind.yaml <<EOF
+        apiVersion: kind.x-k8s.io/v1alpha4
+        kind: Cluster
+        nodes:
+        - role: control-plane
+          image: kindest/node:v${{ matrix.k8s }}
+        EOF
+        kind create cluster --wait 5m --config kind.yaml
+    - name: Deploy Cartographer
+      run: |
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+
+        echo "##[group]Apply cartographer"
+          kubectl create namespace cartographer-system
+          kapp deploy -y -a cartographer -n kube-system -f ./acceptance/vendor/cartographer/
+        echo "##[endgroup]"
+        echo "##[group]Apply static pod"
+          kubectl apply -f ./.github/samples/pod.yaml
+        echo "##[endgroup]"
+    - name: Test CLI commands
+      run: |
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+
+        echo "##[group]Create workload"
+          tanzu apps workload create petclinic --git-repo example.com --git-branch main --annotation serving.knative.dev/maxScale=10 --yes
+        echo "##[endgroup]"
+        echo "##[group]List workload"
+          tanzu apps workload list
+        echo "##[endgroup]"
+        echo "##[group]Get workload"
+          tanzu apps workload get petclinic
+        echo "##[endgroup]"
+        echo "##[group]Update workload"
+          tanzu apps workload update petclinic --label cli.ci/new-label=true --yes
+        echo "##[endgroup]"
+    - name: Collect diagnostics
+      run: |
+        echo "##[group]Static Pod"
+          kubectl describe pod static-web
+        echo "##[endgroup]"
+        echo "##[group]Workload"
+          kubectl describe workload petclinic 
+        echo "##[endgroup]"
+      continue-on-error: true
+    - name: Delete Gracefully
+      run: |
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+
+        echo "##[group]Delete workload"
+          printf 'y' | tanzu apps workload delete petclinic
+        echo "##[endgroup]"
+        echo "##[group]Delete pod"
+          kubectl delete -f ./.github/samples/pod.yaml
+        echo "##[endgroup]"
+        echo "##[group]Delete cartographer"
+          kapp delete -y -a cartographer -n kube-system
+          kubectl delete namespace cartographer-system
+        echo "##[endgroup]"
+      if: always()
+    - name: Cleanup cluster
+      run: kind delete cluster
+      if: always()
+
+  create-release:
+    needs:
+    - unit
+    - acceptance
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+    - name: Draft release
+      id: create_release
+      uses: actions/create-release@v1.1.4
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # This token is provided by Actions, you do not need to create your own token
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ steps.get_version.outputs.VERSION }}
+        draft: true 
+    - name: Create release info files
+      run: |
+        echo "${{ steps.get_version.outputs.VERSION }}" > RELEASE_INFO_VERSION
+        echo "${{ steps.create_release.outputs.upload_url }}" > RELEASE_INFO_UPLOAD_URL
+    - name: Upload release files
+      uses: actions/upload-artifact@v2
+      with:
+        name: tanzu-apps-plugin.tar.gz
+        path: RELEASE_INFO_*
+        retention-days: 1
+
+
+  release:
+    needs:
+    - create-release
+    if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      matrix:
+        os-arch: ["", -darwin-amd64, -linux-amd64, -windows-amd64]
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+    - name: Download staged CLI binaries${{ matrix.os-arch }}
+      uses: actions/download-artifact@v2.0.10
+      with:
+        name: tanzu-apps-plugin.tar.gz
+    - name: Get release info
+      run: |
+        echo "RELEASE_VERSION=$(cat RELEASE_INFO_VERSION)" >> $GITHUB_ENV
+        echo "UPLOAD_URL=$(cat RELEASE_INFO_UPLOAD_URL)" >> $GITHUB_ENV
+    - name: Upload CLI release${{ matrix.os-arch }}
+      uses: actions/upload-release-asset@v1.0.2
+      with:
+        upload_url: ${{ env.UPLOAD_URL }}
+        asset_path: tanzu-apps-plugin${{ matrix.os-arch }}.tar.gz
+        asset_name: tanzu-apps-plugin${{ matrix.os-arch }}-${{ env.RELEASE_VERSION }}.tar.gz
+        asset_content_type: application/gzip
+

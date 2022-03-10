@@ -1,4 +1,8 @@
-# Ignore everything in this directory
-*
-# Except this file
-!.gitignore
+/artifacts
+/bin
+/cover.out
+/coverage.txt
+/tanzu-apps-plugin*.tar.gz
+.vscode/
+.idea
+.DS_Store

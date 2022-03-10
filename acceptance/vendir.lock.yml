@@ -1,0 +1,11 @@
+apiVersion: vendir.k14s.io/v1alpha1
+directories:
+- contents:
+  - git:
+      commitTitle: Fix indentation in dependabot.yml (#500)
+      sha: 85fcf5085eb6d19c4ec740ae7255c13917408ae1
+      tags:
+      - v0.1.0-rc.1
+    path: cartographer
+  path: vendor
+kind: LockConfig
