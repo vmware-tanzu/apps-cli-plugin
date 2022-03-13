@@ -93,10 +93,14 @@ type ClientOptions struct {
 	// CLI options specific to the CLI.
 	CLI      *CLIOptions           `json:"cli,omitempty" yaml:"cli"`
 	Features map[string]FeatureMap `json:"features,omitempty" yaml:"features"`
+	Env      map[string]string     `json:"env,omitempty" yaml:"env"`
 }
 
 // FeatureMap is simply a hash table, but needs an explicit type to be an object in another hash map (cf ClientOptions.Features)
 type FeatureMap map[string]string
+
+// EnvMap is simply a hash table, but needs an explicit type to be an object in another hash map (cf ClientOptions.Env)
+type EnvMap map[string]string
 
 // CLIOptions are options for the CLI.
 type CLIOptions struct {
@@ -106,6 +110,14 @@ type CLIOptions struct {
 	DiscoverySources []PluginDiscovery `json:"discoverySources,omitempty" yaml:"discoverySources"`
 	// UnstableVersionSelector determined which version tags are allowed
 	UnstableVersionSelector VersionSelectorLevel `json:"unstableVersionSelector,omitempty" yaml:"unstableVersionSelector"`
+	// Edition
+	Edition EditionSelector `json:"edition,omitempty" yaml:"edition"`
+	// BOMRepo is the root repository URL used to resolve the compatibiilty file
+	// and bill of materials. An example URL is projects.registry.vmware.com/tkg.
+	BOMRepo string `json:"bomRepo,omitempty" yaml:"bomRepo"`
+	// CompatibilityFilePath is the path, from the BOM repo, to download and access the compatibility file.
+	// the compatibility file is used for resolving the bill of materials for creating clusters.
+	CompatibilityFilePath string `json:"compatibilityFilePath,omitempty" yaml:"compatibilityFilePath"`
 }
 
 // PluginDiscovery contains a specific distribution mechanism. Only one of the

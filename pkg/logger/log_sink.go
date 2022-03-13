@@ -30,9 +30,21 @@ type writerLogSink struct {
 	level  *int32
 }
 
-var _ logr.Logger = &writerLogSink{}
+var _ logr.LogSink = &writerLogSink{}
 
-func (l *writerLogSink) Info(msg string, kvs ...interface{}) {
+func (*writerLogSink) Init(info logr.RuntimeInfo) {
+
+}
+
+func (*writerLogSink) Enabled(level int) bool {
+	return true
+}
+
+func (l *writerLogSink) Info(level int, msg string, kvs ...interface{}) {
+	if *l.level < int32(level) {
+		return
+	}
+
 	fmt.Fprintf(l.writer, "%s ", msg)
 	if l.name != "" {
 		fmt.Fprintf(l.writer, "%s:%+v  ", "name", l.name)
@@ -40,37 +52,33 @@ func (l *writerLogSink) Info(msg string, kvs ...interface{}) {
 	for i := 0; i < len(kvs); i += 2 {
 		fmt.Fprintf(l.writer, "%s:%+v  ", kvs[i], kvs[i+1])
 	}
-	fmt.Fprintf(l.writer, "\n")
-}
 
-func (_ *writerLogSink) Enabled() bool {
-	return true
+	fmt.Fprintf(l.writer, "\n")
 }
 
 func (l *writerLogSink) Error(err error, msg string, kvs ...interface{}) {
 	kvs = append(kvs, "error", err)
-	l.Info(msg, kvs...)
+	l.Info(0, msg, kvs...)
 }
 
-func (l *writerLogSink) V(level int) logr.Logger {
-	if *l.level < int32(level) {
-		return logr.Discard()
+func (l *writerLogSink) WithName(name string) logr.LogSink {
+	return &writerLogSink{
+		name:   l.name + "." + name,
+		writer: l.writer,
+		level:  l.level,
 	}
-	return l
 }
 
-func (l *writerLogSink) WithName(name string) logr.Logger {
-	return l
-}
-
-func (l *writerLogSink) WithValues(kvs ...interface{}) logr.Logger {
+func (l *writerLogSink) WithValues(kvs ...interface{}) logr.LogSink {
 	return l
 }
 
 func NewSinkLogger(name string, level *int32, writer io.Writer) logr.Logger {
-	return &writerLogSink{
+	sink := &writerLogSink{
 		name:   name,
 		writer: writer,
 		level:  level,
 	}
+
+	return logr.New(sink)
 }

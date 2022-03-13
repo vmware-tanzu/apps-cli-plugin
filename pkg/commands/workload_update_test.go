@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
@@ -202,8 +203,8 @@ status:
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -218,7 +219,7 @@ status:
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 		},
@@ -242,8 +243,8 @@ status:
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -258,7 +259,7 @@ status:
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 			ExpectOutput: `
@@ -310,8 +311,8 @@ Error: conflict updating workload, the object was modified by another user; plea
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -329,7 +330,7 @@ Error: conflict updating workload, the object was modified by another user; plea
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 			ExpectOutput: `
@@ -389,8 +390,8 @@ To view status run: tanzu apps workload get my-workload --namespace default
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -408,7 +409,7 @@ To view status run: tanzu apps workload get my-workload --namespace default
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 			ExpectOutput: `
@@ -465,8 +466,8 @@ Error: Failed to become ready: a hopefully informative message about what went w
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -484,7 +485,7 @@ Error: Failed to become ready: a hopefully informative message about what went w
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Update workload:
@@ -551,8 +552,8 @@ Workload "my-workload" is ready
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -570,7 +571,7 @@ Workload "my-workload" is ready
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Update workload:
@@ -638,8 +639,8 @@ Workload "my-workload" is ready
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -657,7 +658,7 @@ Workload "my-workload" is ready
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Update workload:
@@ -702,8 +703,8 @@ Workload "my-workload" is ready
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      "spring-petclinic",
@@ -743,7 +744,7 @@ Workload "my-workload" is ready
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Update workload:
@@ -828,8 +829,8 @@ spec:
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      "spring-petclinic",
@@ -869,7 +870,7 @@ spec:
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Update workload:
@@ -989,8 +990,8 @@ spec:
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "test-namespace",
 						Name:      workloadName,
@@ -1030,7 +1031,7 @@ spec:
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Update workload:

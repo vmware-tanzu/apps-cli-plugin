@@ -6,10 +6,11 @@ package common
 
 // Plugin status and scope constants
 const (
-	PluginStatusInstalled    = "installed"
-	PluginStatusNotInstalled = "not installed"
-	PluginScopeStandalone    = "Standalone"
-	PluginScopeContext       = "Context"
+	PluginStatusInstalled       = "installed"
+	PluginStatusNotInstalled    = "not installed"
+	PluginStatusUpdateAvailable = "update available"
+	PluginScopeStandalone       = "Standalone"
+	PluginScopeContext          = "Context"
 )
 
 // DiscoveryType constants
@@ -25,5 +26,4 @@ const (
 const (
 	DistributionTypeOCI   = "oci"
 	DistributionTypeLocal = "local"
-	DistributionTypeGCP   = "gcp"
 )

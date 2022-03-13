@@ -69,7 +69,11 @@ func (aMap Artifacts) Fetch(version, os, arch string) ([]byte, error) {
 		return artifact.NewOCIArtifact(a.Image).Fetch()
 	}
 	if a.URI != "" {
-		return artifact.NewURIArtifact(a.URI).Fetch()
+		u, err := artifact.NewURIArtifact(a.URI)
+		if err != nil {
+			return nil, err
+		}
+		return u.Fetch()
 	}
 
 	return nil, errors.Errorf("invalid artifact for version:%s, os:%s, "+
@@ -84,6 +88,11 @@ func (aMap Artifacts) GetDigest(version, os, arch string) (string, error) {
 	}
 
 	return a.Digest, nil
+}
+
+// DescribeArtifact returns the artifact resource based plugin metadata
+func (aMap Artifacts) DescribeArtifact(version, os, arch string) (Artifact, error) {
+	return aMap.GetArtifact(version, os, arch)
 }
 
 // ArtifactFromK8sV1alpha1 returns Artifact from k8sV1alpha1

@@ -26,6 +26,7 @@ import (
 	rtesting "github.com/vmware-labs/reconciler-runtime/testing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
@@ -137,14 +138,14 @@ func TestWorkloadCreateCommand(t *testing.T) {
 		{
 			Name: "create resource",
 			Args: []string{"my-resource"},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&rtesting.TestResource{
+			ExpectCreates: []client.Object{
+				&rtesting.TestResource{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "default",
 						Name:      "my-resource",
 					},
 					Spec: rtesting.TestResourceSpec{},
-				}),
+				},
 			},
 			ExpectOutput: `
 Created resource "my-resource"
@@ -162,14 +163,14 @@ Created resource "my-resource"
 					Spec: rtesting.TestResourceSpec{},
 				}),
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&rtesting.TestResource{
+			ExpectCreates: []client.Object{
+				&rtesting.TestResource{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "default",
 						Name:      "my-resource",
 					},
 					Spec: rtesting.TestResourceSpec{},
-				}),
+				},
 			},
 			ShouldError: true,
 		},
