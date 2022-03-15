@@ -51,4 +51,4 @@ Thanks for taking the time to join our community and start contributing! We welc
 
 ## <a id='feedback'></a>Feedback
 
-For questions or feeadback you can reach us at tanzu-application-platform-beta@vmware.com
+For questions or feedback you can reach us at tanzu-application-platform-beta@vmware.com
