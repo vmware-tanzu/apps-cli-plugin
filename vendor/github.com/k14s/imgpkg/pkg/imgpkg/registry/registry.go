@@ -8,7 +8,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"time"
@@ -30,6 +29,8 @@ type Opts struct {
 	Password string
 	Token    string
 	Anon     bool
+
+	ResponseHeaderTimeout time.Duration
 }
 
 type Registry struct {
@@ -108,6 +109,17 @@ func (r Registry) Image(ref regname.Reference) (regv1.Image, error) {
 }
 
 func (r Registry) MultiWrite(imageOrIndexesToUpload map[regname.Reference]regremote.Taggable, concurrency int, updatesCh chan regv1.Update) error {
+	overriddenImageOrIndexesToUploadRef := map[regname.Reference]regremote.Taggable{}
+
+	for ref, taggable := range imageOrIndexesToUpload {
+		overriddenRef, err := regname.ParseReference(ref.String(), r.refOpts...)
+		if err != nil {
+			return err
+		}
+
+		overriddenImageOrIndexesToUploadRef[overriddenRef] = taggable
+	}
+
 	return util.Retry(func() error {
 		lOpts := append(append([]regremote.Option{}, r.opts...), regremote.WithJobs(concurrency))
 
@@ -123,7 +135,7 @@ func (r Registry) MultiWrite(imageOrIndexesToUpload map[regname.Reference]regrem
 			}()
 		}
 
-		return regremote.MultiWrite(imageOrIndexesToUpload, lOpts...)
+		return regremote.MultiWrite(overriddenImageOrIndexesToUploadRef, lOpts...)
 	})
 }
 
@@ -222,25 +234,13 @@ func newHTTPTransport(opts Opts) (*http.Transport, error) {
 		}
 	}
 
-	// Copied from https://github.com/golang/go/blob/release-branch.go1.12/src/net/http/transport.go#L42-L53
-	// We want to use the DefaultTransport but change its TLSClientConfig. There
-	// isn't a clean way to do this yet: https://github.com/golang/go/issues/26013
-	return &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ResponseHeaderTimeout: 10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-		// Use the cert pool with k8s cert bundle appended.
-		TLSClientConfig: &tls.Config{
-			RootCAs:            pool,
-			InsecureSkipVerify: (opts.VerifyCerts == false),
-		},
-	}, nil
+	clonedDefaultTransport := http.DefaultTransport.(*http.Transport).Clone()
+	clonedDefaultTransport.ForceAttemptHTTP2 = false
+	clonedDefaultTransport.ResponseHeaderTimeout = opts.ResponseHeaderTimeout
+	clonedDefaultTransport.TLSClientConfig = &tls.Config{
+		RootCAs:            pool,
+		InsecureSkipVerify: opts.VerifyCerts == false,
+	}
+
+	return clonedDefaultTransport, nil
 }

@@ -28,7 +28,7 @@ var RootCmd = &cobra.Command{
 var (
 	noInit      bool
 	color       = true
-	forceNoInit = "false" // a string variable so as to be overridable via linker flag
+	forceNoInit = "true" // a string variable so as to be overridable via linker flag
 )
 
 // NewRootCmd creates a root command.
@@ -43,6 +43,9 @@ func NewRootCmd() (*cobra.Command, error) {
 	if os.Getenv("TANZU_CLI_NO_COLOR") != "" {
 		color = false
 	}
+
+	// configure defined environment variables under tanzu config file
+	config.ConfigureEnvVariables()
 
 	au := aurora.NewAurora(color)
 	RootCmd.Short = au.Bold(`Tanzu CLI`).String()
@@ -69,9 +72,9 @@ func NewRootCmd() (*cobra.Command, error) {
 		return nil, fmt.Errorf("failed to copy legacy configuration directory to new location: %w", err)
 	}
 
-	// If context-aware-discovery is not enabled
+	// If context-aware-cli-for-plugins feature is not enabled
 	// check that all plugins in the core distro are installed or do so.
-	if !config.IsFeatureActivated(config.FeatureContextAwareDiscovery) {
+	if !config.IsFeatureActivated(config.FeatureContextAwareCLIForPlugins) {
 		plugins, err = checkAndInstallMissingPlugins(plugins)
 		if err != nil {
 			return nil, err
@@ -94,7 +97,7 @@ func getAvailablePlugins() ([]*v1alpha1.PluginDescriptor, error) {
 	plugins := make([]*v1alpha1.PluginDescriptor, 0)
 	var err error
 
-	if config.IsFeatureActivated(config.FeatureContextAwareDiscovery) {
+	if config.IsFeatureActivated(config.FeatureContextAwareCLIForPlugins) {
 		currentServerName := ""
 
 		server, err := config.GetCurrentServer()
@@ -106,6 +109,8 @@ func getAvailablePlugins() ([]*v1alpha1.PluginDescriptor, error) {
 		if err != nil {
 			return nil, fmt.Errorf("find installed plugins: %w", err)
 		}
+
+		//nolint:gocritic
 		p := append(serverPlugin, standalonePlugins...)
 		for i := range p {
 			plugins = append(plugins, &p[i])

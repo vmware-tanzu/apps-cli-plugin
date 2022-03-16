@@ -32,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -145,8 +146,8 @@ status:
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -162,7 +163,7 @@ status:
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 			ExpectOutput: `
@@ -210,8 +211,8 @@ To view status run: tanzu apps workload get my-workload --namespace default
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -227,7 +228,7 @@ To view status run: tanzu apps workload get my-workload --namespace default
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Create workload:
@@ -284,8 +285,8 @@ Workload "my-workload" is ready
 				tailer.AssertExpectations(t)
 				return nil
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -301,7 +302,7 @@ Workload "my-workload" is ready
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Create workload:
@@ -330,8 +331,8 @@ Workload "my-workload" is ready
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("create", "Workload"),
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -347,7 +348,7 @@ Workload "my-workload" is ready
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 		},
@@ -359,8 +360,8 @@ Workload "my-workload" is ready
 				ctx = watchhelper.WithWatcher(ctx, fakewatch)
 				return ctx, nil
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -376,7 +377,7 @@ Workload "my-workload" is ready
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 		},
@@ -406,8 +407,8 @@ Workload "my-workload" is ready
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -423,7 +424,7 @@ Workload "my-workload" is ready
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 			ExpectOutput: `
@@ -449,8 +450,8 @@ Error: Failed to become ready: a hopefully informative message about what went w
 		{
 			Name: "filepath",
 			Args: []string{flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      "spring-petclinic",
@@ -485,7 +486,7 @@ Error: Failed to become ready: a hopefully informative message about what went w
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Create workload:
@@ -546,8 +547,8 @@ spec:
       ref:
         branch: main
 `),
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      "spring-petclinic",
@@ -582,7 +583,7 @@ spec:
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Create workload:
@@ -663,8 +664,8 @@ spec:
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      "spring-petclinic",
@@ -704,7 +705,7 @@ spec:
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Update workload:
@@ -793,8 +794,8 @@ status:
 		{
 			Name: "filepath - service account build-env",
 			Args: []string{flags.FilePathFlagName, "testdata/workload-build-env.yaml", flags.YesFlagName},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      "spring-petclinic",
@@ -832,7 +833,7 @@ status:
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Create workload:
@@ -975,8 +976,8 @@ status:
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -991,7 +992,7 @@ status:
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 		},
@@ -1015,8 +1016,8 @@ status:
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -1031,7 +1032,7 @@ status:
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 			ExpectOutput: `
@@ -1083,8 +1084,8 @@ Error: conflict updating workload, the object was modified by another user; plea
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -1102,7 +1103,7 @@ Error: conflict updating workload, the object was modified by another user; plea
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 			ExpectOutput: `
@@ -1162,8 +1163,8 @@ To view status run: tanzu apps workload get my-workload --namespace default
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -1181,7 +1182,7 @@ To view status run: tanzu apps workload get my-workload --namespace default
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 			ExpectOutput: `
@@ -1238,8 +1239,8 @@ Error: Failed to become ready: a hopefully informative message about what went w
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -1257,7 +1258,7 @@ Error: Failed to become ready: a hopefully informative message about what went w
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Update workload:
@@ -1324,8 +1325,8 @@ Workload "my-workload" is ready
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -1343,7 +1344,7 @@ Workload "my-workload" is ready
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Update workload:
@@ -1388,8 +1389,8 @@ Workload "my-workload" is ready
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      "spring-petclinic",
@@ -1429,7 +1430,7 @@ Workload "my-workload" is ready
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Update workload:
@@ -1489,8 +1490,8 @@ Updated workload "spring-petclinic"
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "test-namespace",
 						Name:      workloadName,
@@ -1530,7 +1531,7 @@ Updated workload "spring-petclinic"
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Update workload:
@@ -1598,8 +1599,8 @@ Updated workload "my-workload"
 					},
 				}),
 			},
-			ExpectUpdates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -1620,7 +1621,7 @@ Updated workload "my-workload"
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 WARNING: Cross namespace service claims are deprecated. Please use ` + "`tanzu service claim create`" + ` instead.
@@ -1648,8 +1649,8 @@ Updated workload "my-workload"
 		{
 			Name: "create - serviceclaim with deprecation warning",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-ns:my-prod-db", flags.YesFlagName},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -1672,7 +1673,7 @@ Updated workload "my-workload"
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 WARNING: Cross namespace service claims are deprecated. Please use ` + "`tanzu service claim create`" + ` instead.

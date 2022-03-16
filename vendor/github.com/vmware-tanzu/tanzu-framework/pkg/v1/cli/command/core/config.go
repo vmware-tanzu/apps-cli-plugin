@@ -20,12 +20,19 @@ import (
 	"github.com/vmware-tanzu/tanzu-framework/pkg/v1/config"
 )
 
+// ConfigLiterals used with set/unset commands
+const (
+	ConfigLiteralFeatures = "features"
+	ConfigLiteralEnv      = "env"
+)
+
 func init() {
 	configCmd.SetUsageFunc(cli.SubCmdUsageFunc)
 	configCmd.AddCommand(
 		getConfigCmd,
 		initConfigCmd,
 		setConfigCmd,
+		unsetConfigCmd,
 		serversCmd,
 	)
 	serversCmd.AddCommand(listServersCmd)
@@ -67,7 +74,8 @@ var getConfigCmd = &cobra.Command{
 
 var setConfigCmd = &cobra.Command{
 	Use:   "set <path> <value>",
-	Short: "Set config values at the given path. path values: [unstable-versions, features.global.<feature>, features.<plugin>.<feature>]",
+	Short: "Set config values at the given path",
+	Long:  "Set config values at the given path. path values: [unstable-versions, cli.edition, features.global.<feature>, features.<plugin>.<feature>, env.<variable>]",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 2 {
 			return errors.Errorf("both path and value are required")
@@ -80,7 +88,7 @@ var setConfigCmd = &cobra.Command{
 			return err
 		}
 
-		err = setFeature(cfg, args[0], args[1])
+		err = setConfiguration(cfg, args[0], args[1])
 		if err != nil {
 			return err
 		}
@@ -89,27 +97,42 @@ var setConfigCmd = &cobra.Command{
 	},
 }
 
-// setFeature sets the key-value pair for the given path
-func setFeature(cfg *configv1alpha1.ClientConfig, pathParam, value string) error {
+// setConfiguration sets the key-value pair for the given path
+func setConfiguration(cfg *configv1alpha1.ClientConfig, pathParam, value string) error {
 	// special cases:
 	// backward compatibility
-	if pathParam == "unstable-versions" {
+	if pathParam == "unstable-versions" || pathParam == "cli.unstable-versions" {
 		return setUnstableVersions(cfg, value)
+	}
+
+	if pathParam == "cli.edition" {
+		return setEdition(cfg, value)
 	}
 
 	// parse the param
 	paramArray := strings.Split(pathParam, ".")
+	if len(paramArray) < 2 {
+		return errors.New("unable to parse config path parameter into parts [" + pathParam + "]  (was expecting 'features.<plugin>.<feature>' or 'env.<env_variable>')")
+	}
+
+	configLiteral := paramArray[0]
+
+	switch configLiteral {
+	case ConfigLiteralFeatures:
+		return setFeatures(cfg, paramArray, value)
+	case ConfigLiteralEnv:
+		return setEnvs(cfg, paramArray, value)
+	default:
+		return errors.New("unsupported config path parameter [" + configLiteral + "] (was expecting 'features.<plugin>.<feature>' or 'env.<env_variable>')")
+	}
+}
+
+func setFeatures(cfg *configv1alpha1.ClientConfig, paramArray []string, value string) error {
 	if len(paramArray) != 3 {
-		return errors.New("unable to parse config path parameter into three parts [" + pathParam + "]  (was expecting features.<plugin>.<feature>)")
+		return errors.New("unable to parse config path parameter into three parts [" + strings.Join(paramArray, ".") + "]  (was expecting 'features.<plugin>.<feature>'")
 	}
-
-	featuresLiteral := paramArray[0]
 	plugin := paramArray[1]
-	key := paramArray[2]
-
-	if featuresLiteral != "features" {
-		return errors.New("unsupported config path parameter [" + featuresLiteral + "] (was expecting 'features.<plugin>.<feature>')")
-	}
+	featureName := paramArray[2]
 
 	if cfg.ClientOptions == nil {
 		cfg.ClientOptions = &configv1alpha1.ClientOptions{}
@@ -120,8 +143,24 @@ func setFeature(cfg *configv1alpha1.ClientConfig, pathParam, value string) error
 	if cfg.ClientOptions.Features[plugin] == nil {
 		cfg.ClientOptions.Features[plugin] = configv1alpha1.FeatureMap{}
 	}
-	cfg.ClientOptions.Features[plugin][key] = value
+	cfg.ClientOptions.Features[plugin][featureName] = value
+	return nil
+}
 
+func setEnvs(cfg *configv1alpha1.ClientConfig, paramArray []string, value string) error {
+	if len(paramArray) != 2 {
+		return errors.New("unable to parse config path parameter into two parts [" + strings.Join(paramArray, ".") + "]  (was expecting 'env.<variable>'")
+	}
+	envVariable := paramArray[1]
+
+	if cfg.ClientOptions == nil {
+		cfg.ClientOptions = &configv1alpha1.ClientOptions{}
+	}
+	if cfg.ClientOptions.Env == nil {
+		cfg.ClientOptions.Env = make(map[string]string)
+	}
+
+	cfg.ClientOptions.Env[envVariable] = value
 	return nil
 }
 
@@ -136,6 +175,24 @@ func setUnstableVersions(cfg *configv1alpha1.ClientConfig, value string) error {
 		cfg.SetUnstableVersionSelector(optionKey)
 	default:
 		return fmt.Errorf("unknown unstable-versions setting: %s; should be one of [all, none, alpha, experimental]", optionKey)
+	}
+	return nil
+}
+
+func setEdition(cfg *configv1alpha1.ClientConfig, edition string) error {
+	editionOption := configv1alpha1.EditionSelector(edition)
+
+	switch editionOption {
+	case configv1alpha1.EditionCommunity, configv1alpha1.EditionStandard:
+		cfg.SetEditionSelector(editionOption)
+		// when community edition is set, configure the compatibility file to use
+		// community edition's.
+		err := cfg.SetCompatibilityFile(editionOption)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unknown edition: %s; should be one of [%s, %s]", editionOption, configv1alpha1.EditionStandard, configv1alpha1.EditionCommunity)
 	}
 	return nil
 }
@@ -223,7 +280,7 @@ var listServersCmd = &cobra.Command{
 
 var deleteServersCmd = &cobra.Command{
 	Use:   "delete SERVER_NAME",
-	Short: "delete a server from the config",
+	Short: "Delete a server from the config",
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
@@ -249,10 +306,84 @@ var deleteServersCmd = &cobra.Command{
 					return err
 				}
 			} else {
-				return errors.New(fmt.Sprintf("Server %s not found in list of known servers", args[0]))
+				return fmt.Errorf("server %s not found in list of known servers", args[0])
 			}
 		}
 
 		return nil
 	},
+}
+
+var unsetConfigCmd = &cobra.Command{
+	Use:   "unset <path>",
+	Short: "Unset config values at the given path",
+	Long:  "Unset config values at the given path. path values: [features.global.<feature>, features.<plugin>.<feature>, env.global.<variable>, env.<plugin>.<variable>]",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return errors.Errorf("path is required")
+		}
+		if len(args) > 1 {
+			return errors.Errorf("only path is allowed")
+		}
+		cfg, err := config.GetClientConfig()
+		if err != nil {
+			return err
+		}
+
+		err = unsetConfiguration(cfg, args[0])
+		if err != nil {
+			return err
+		}
+
+		return config.StoreClientConfig(cfg)
+	},
+}
+
+// unsetConfiguration unsets the key-value pair for the given path and removes it
+func unsetConfiguration(cfg *configv1alpha1.ClientConfig, pathParam string) error {
+	// parse the param
+	paramArray := strings.Split(pathParam, ".")
+	if len(paramArray) < 2 {
+		return errors.New("unable to parse config path parameter into parts [" + pathParam + "]  (was expecting 'features.<plugin>.<feature>' or 'env.<env_variable>')")
+	}
+
+	configLiteral := paramArray[0]
+
+	switch configLiteral {
+	case ConfigLiteralFeatures:
+		return unsetFeatures(cfg, paramArray)
+	case ConfigLiteralEnv:
+		return unsetEnvs(cfg, paramArray)
+	default:
+		return errors.New("unsupported config path parameter [" + configLiteral + "] (was expecting 'features.<plugin>.<feature>' or 'env.<env_variable>')")
+	}
+}
+
+func unsetFeatures(cfg *configv1alpha1.ClientConfig, paramArray []string) error {
+	if len(paramArray) != 3 {
+		return errors.New("unable to parse config path parameter into three parts [" + strings.Join(paramArray, ".") + "]  (was expecting 'features.<plugin>.<feature>'")
+	}
+	plugin := paramArray[1]
+	featureName := paramArray[2]
+
+	if cfg.ClientOptions == nil || cfg.ClientOptions.Features == nil ||
+		cfg.ClientOptions.Features[plugin] == nil {
+		return nil
+	}
+	delete(cfg.ClientOptions.Features[plugin], featureName)
+	return nil
+}
+
+func unsetEnvs(cfg *configv1alpha1.ClientConfig, paramArray []string) error {
+	if len(paramArray) != 2 {
+		return errors.New("unable to parse config path parameter into two parts [" + strings.Join(paramArray, ".") + "]  (was expecting 'env.<env_variable>'")
+	}
+
+	envVariable := paramArray[1]
+	if cfg.ClientOptions == nil || cfg.ClientOptions.Env == nil {
+		return nil
+	}
+	delete(cfg.ClientOptions.Env, envVariable)
+
+	return nil
 }

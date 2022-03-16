@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -160,8 +161,8 @@ status:
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -177,7 +178,7 @@ status:
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 			ExpectOutput: `
@@ -224,8 +225,8 @@ Error: Failed to become ready: a hopefully informative message about what went w
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -241,7 +242,7 @@ Error: Failed to become ready: a hopefully informative message about what went w
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 			ExpectOutput: `
@@ -289,8 +290,8 @@ To view status run: tanzu apps workload get my-workload --namespace default
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -306,7 +307,7 @@ To view status run: tanzu apps workload get my-workload --namespace default
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Create workload:
@@ -363,8 +364,8 @@ Workload "my-workload" is ready
 				tailer.AssertExpectations(t)
 				return nil
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -380,7 +381,7 @@ Workload "my-workload" is ready
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Create workload:
@@ -438,8 +439,8 @@ Workload "my-workload" is ready
 				tailer.AssertExpectations(t)
 				return nil
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -455,7 +456,7 @@ Workload "my-workload" is ready
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Create workload:
@@ -500,8 +501,8 @@ Error: workload "default/my-workload" already exists
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("create", "Workload"),
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -517,7 +518,7 @@ Error: workload "default/my-workload" already exists
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 		},
@@ -529,8 +530,8 @@ Error: workload "default/my-workload" already exists
 				ctx = watchhelper.WithWatcher(ctx, fakewatch)
 				return ctx, nil
 			},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
@@ -546,7 +547,7 @@ Error: workload "default/my-workload" already exists
 							},
 						},
 					},
-				}),
+				},
 			},
 			ShouldError: true,
 		},
@@ -578,8 +579,8 @@ spec:
       ref:
         branch: main
 `),
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      "spring-petclinic",
@@ -614,7 +615,7 @@ spec:
 							},
 						},
 					},
-				}),
+				},
 			},
 			ExpectOutput: `
 Create workload:
@@ -723,8 +724,8 @@ spec:
 		{
 			Name: "add annotation",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.AnnotationFlagName, "NEW=value", flags.AnnotationFlagName, "FOO=bar", flags.AnnotationFlagName, "removeme-"},
-			ExpectCreates: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      "my-workload",
@@ -745,7 +746,7 @@ spec:
 							},
 						},
 					},
-				}),
+				},
 			}},
 	}
 

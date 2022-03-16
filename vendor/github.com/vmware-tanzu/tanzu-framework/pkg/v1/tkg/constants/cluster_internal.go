@@ -44,15 +44,17 @@ const (
 	KappControllerNamespace     = "tkg-system"
 	KappControllerConfigMapName = "kapp-controller-config"
 
-	AddonsManagerDeploymentName  = "tanzu-addons-controller-manager"
-	KappControllerDeploymentName = "kapp-controller"
-	TkrControllerDeploymentName  = "tkr-controller-manager"
-	KappControllerPackageName    = "kapp-controller"
+	AddonsManagerDeploymentName      = "tanzu-addons-controller-manager"
+	KappControllerDeploymentName     = "kapp-controller"
+	TkrControllerDeploymentName      = "tkr-controller-manager"
+	KappControllerPackageName        = "kapp-controller"
+	CoreManagementPluginsPackageName = "tanzu-core-management-plugins"
 
-	AkoStatefulSetName  = "ako"
-	AkoAddonName        = "load-balancer-and-ingress-service"
-	AkoNamespace        = "avi-system"
-	AkoCleanupCondition = "ako.vmware.com/ObjectDeletionInProgress"
+	AkoStatefulSetName       = "ako"
+	AkoAddonName             = "load-balancer-and-ingress-service"
+	AkoNamespace             = "avi-system"
+	AkoCleanUpAnnotationKey  = "AviObjectDeletionStatus"
+	AkoCleanUpFinishedStatus = "Done"
 
 	ServiceDNSSuffix             = ".svc"
 	ServiceDNSClusterLocalSuffix = ".svc.cluster.local"
@@ -115,4 +117,11 @@ const (
 	AddonNameLabel = "tkg.tanzu.vmware.com/addon-name"
 	// ClusterNameLabel is the label on the Secret to indicate the cluster on which addon is to be installed
 	ClusterNameLabel = "tkg.tanzu.vmware.com/cluster-name"
+)
+
+// TKG management package related constants
+const (
+	TKGManagementPackageName           = "tkg.tanzu.vmware.com"
+	TKGManagementPackageInstallName    = "tkg-pkg"
+	TKGManagementPackageRepositoryName = "management"
 )

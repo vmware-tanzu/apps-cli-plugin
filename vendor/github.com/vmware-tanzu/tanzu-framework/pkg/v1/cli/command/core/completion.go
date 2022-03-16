@@ -38,13 +38,12 @@ var (
 		  source <(tanzu completion bash)
 
 		  ## Load for all new sessions:
-		  tanzu completion bash >  $HOME/.tanzu/completion.bash.inc
-		  printf "\n# Tanzu shell completion\nsource '$HOME/.tanzu/completion.bash.inc'\n" >> $HOME/.bash_profile
+		  tanzu completion bash >  $HOME/.config/tanzu/completion.bash.inc
+		  printf "\n# Tanzu shell completion\nsource '$HOME/.config/tanzu/completion.bash.inc'\n" >> $HOME/.bash_profile
+
+		  ## NOTE: the bash-completion package must be installed.
 
 		# Zsh instructions:
-
-		  ## Load only for current session:
-		  source <(tanzu completion zsh)
 
 		  ## Load for all new sessions:
 		  echo "autoload -U compinit; compinit" >> ~/.zshrc

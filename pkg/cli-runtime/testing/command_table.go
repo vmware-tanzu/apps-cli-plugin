@@ -122,10 +122,10 @@ type CommandTestCase struct {
 
 	// ExpectCreates asserts each resource with the resources passed to the Create method of the
 	// fake client in order.
-	ExpectCreates []Factory
+	ExpectCreates []client.Object
 	// ExpectUpdates asserts each resource with the resources passed to the Update method of the
 	// fake client in order.
-	ExpectUpdates []Factory
+	ExpectUpdates []client.Object
 	// ExpectDeletes assert references to the Delete method of the fake client in order.
 	// Unlike Create and Update, Delete does not receive a full resource, so a reference is used
 	// instead. The Group will be blank for 'core' resources. The Resource is not a Kind, but
@@ -336,12 +336,6 @@ func objKey(o runtime.Object) string {
 	return path.Join(reflect.TypeOf(o).String(), on.GetObjectMeta().GetNamespace(), on.GetObjectMeta().GetName())
 }
 
-func applyDefaults(o runtime.Object) {
-	if d, ok := o.(defaultable); ok {
-		d.Default()
-	}
-}
-
 type DeleteRef struct {
 	Group     string
 	Resource  string
@@ -383,8 +377,4 @@ func fakeExecCommand(helper string) func(context.Context, string, ...string) *ex
 		cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
 		return cmd
 	}
-}
-
-type defaultable interface {
-	Default()
 }
