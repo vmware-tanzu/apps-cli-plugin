@@ -11,7 +11,7 @@ require (
 	github.com/google/go-cmp v0.5.7
 	github.com/google/go-containerregistry v0.8.0
 	github.com/k14s/imgpkg v0.17.0
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.4.0
 	github.com/stern/stern v1.20.1
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
 	github.com/vmware-labs/reconciler-runtime v0.4.0
