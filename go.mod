@@ -12,7 +12,7 @@ require (
 	github.com/google/go-containerregistry v0.8.0
 	github.com/k14s/imgpkg v0.17.0
 	github.com/spf13/cobra v1.4.0
-	github.com/stern/stern v1.20.1
+	github.com/stern/stern v1.21.0
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
 	github.com/vmware-labs/reconciler-runtime v0.4.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
