@@ -632,7 +632,7 @@ github.com/spf13/viper/internal/encoding/hcl
 github.com/spf13/viper/internal/encoding/json
 github.com/spf13/viper/internal/encoding/toml
 github.com/spf13/viper/internal/encoding/yaml
-# github.com/stern/stern v1.20.1
+# github.com/stern/stern v1.21.0
 ## explicit; go 1.17
 github.com/stern/stern/kubernetes
 github.com/stern/stern/stern
