@@ -39,7 +39,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	capav1beta1 "sigs.k8s.io/cluster-api-provider-aws/api/v1beta1"
 	capzv1beta1 "sigs.k8s.io/cluster-api-provider-azure/api/v1beta1"
-	capvv1beta1 "sigs.k8s.io/cluster-api-provider-vsphere/api/v1beta1"
+	capvv1beta1 "sigs.k8s.io/cluster-api-provider-vsphere/apis/v1beta1"
 	capiv1alpha3 "sigs.k8s.io/cluster-api/api/v1alpha3"
 	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
@@ -277,7 +277,10 @@ type Client interface {
 	// GetPacificTanzuKubernetesReleases returns the list of TanzuKubernetesRelease versions if TKr object is available in TKGS
 	GetPacificTanzuKubernetesReleases() ([]string, error)
 	// GetVCCredentialsFromSecret gets the vSphere username and password used to deploy the cluster
+	// Deprecated: use GetVCCredentialsFromCluster() method instead which would use both clustername and namespace to get the VC credentials
 	GetVCCredentialsFromSecret(string) (string, string, error)
+	// GetVCCredentialsFromCluster gets the vSphere username and password used to deploy the cluster
+	GetVCCredentialsFromCluster(string, string) (string, string, error)
 	// GetVCServer gets the vSphere server that used to deploy the cluster
 	GetVCServer() (string, error)
 	// GetAWSEncodedCredentialsFromSecret gets the AWS base64 credentials used to deploy the cluster
