@@ -11,7 +11,7 @@ cloud.google.com/go/internal/version
 ## explicit; go 1.11
 cloud.google.com/go/storage
 cloud.google.com/go/storage/internal/apiv2
-# github.com/AlecAivazis/survey/v2 v2.3.2
+# github.com/AlecAivazis/survey/v2 v2.3.3
 ## explicit; go 1.13
 github.com/AlecAivazis/survey/v2
 github.com/AlecAivazis/survey/v2/core
