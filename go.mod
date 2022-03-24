@@ -3,7 +3,7 @@ module github.com/vmware-tanzu/apps-cli-plugin
 go 1.17
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.3
+	github.com/AlecAivazis/survey/v2 v2.3.4
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/cppforlife/go-cli-ui v0.0.0-20200716203538-1e47f820817f
 	github.com/fatih/color v1.13.0
