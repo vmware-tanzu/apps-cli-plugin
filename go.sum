@@ -69,8 +69,8 @@ contrib.go.opencensus.io/resource v0.1.1/go.mod h1:F361eGI91LCmW1I/Saf+rX0+OFcig
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/AlecAivazis/survey/v2 v2.1.1/go.mod h1:9FJRdMdDm8rnT+zHVbvQT2RTSTLq0Ttd6q3Vl2fahjk=
 github.com/AlecAivazis/survey/v2 v2.2.16/go.mod h1:TH2kPCDU3Kqq7pLbnCWwZXDBjnhZtmsCle5EiYDJ2fg=
-github.com/AlecAivazis/survey/v2 v2.3.3 h1:Ph4ISZiROO27yClM7LTVd+5UH1vxOYfWq/WifbSFerQ=
-github.com/AlecAivazis/survey/v2 v2.3.3/go.mod h1:hrV6Y/kQCLhIZXGcriDCUBtB3wnN7156gMXJ3+b23xM=
+github.com/AlecAivazis/survey/v2 v2.3.4 h1:pchTU9rsLUSvWEl2Aq9Pv3k0IE2fkqtGxazskAMd9Ng=
+github.com/AlecAivazis/survey/v2 v2.3.4/go.mod h1:hrV6Y/kQCLhIZXGcriDCUBtB3wnN7156gMXJ3+b23xM=
 github.com/Azure/aad-pod-identity v1.8.5/go.mod h1:mu0fepT2bK9Te2VNlKPy9qEFSgdFZXM3pblQ/9cMWhg=
 github.com/Azure/azure-amqp-common-go/v2 v2.1.0/go.mod h1:R8rea+gJRuJR6QxTir/XuEd+YuKoUiazDC/N96FiDEU=
 github.com/Azure/azure-pipeline-go v0.2.1/go.mod h1:UGSo8XybXnIGZ3epmeBw7Jdz+HiUVpqIlpz/HKHylF4=
