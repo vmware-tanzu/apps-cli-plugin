@@ -47,9 +47,6 @@ jobs:
         tanzu plugin list
     - name: Test
       run: make test
-    - uses: codecov/codecov-action@v2
-      with:
-        token: c6e0ea67-1493-464a-b879-d8f06da7d313
     - name: Build Version
       run: echo "BUILD_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       if: startsWith(github.ref, 'refs/tags/')
