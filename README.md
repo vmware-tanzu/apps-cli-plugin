@@ -1,7 +1,6 @@
 # Apps Plugin for the Tanzu CLI
 
-![CI](https://github.com/vmware-tanzu/apps-cli-plugin/workflows/CI/badge.svg?branch=main)
-[![codecov](https://codecov.io/gh/vmware-tanzu/apps-cli-plugin/branch/main/graph/badge.svg?token=LYP76S1UI4)](https://codecov.io/gh/vmware-tanzu/apps-cli-plugin)
+[![CI](https://github.com/vmware-tanzu/apps-cli-plugin/actions/workflows/ci.yaml/badge.svg)](https://github.com/vmware-tanzu/apps-cli-plugin/actions/workflows/ci.yaml)
 
 ## Overview
 
