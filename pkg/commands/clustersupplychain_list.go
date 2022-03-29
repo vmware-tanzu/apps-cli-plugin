@@ -116,7 +116,6 @@ func (opts *ClusterSupplyChainListOptions) print(supplyChain *cartov1alpha1.Clus
 		supplyChain.Name,
 		printer.ConditionStatus(printer.FindCondition(supplyChain.Status.Conditions, "Ready")),
 		printer.TimestampSince(supplyChain.CreationTimestamp, now),
-		printer.Labels(supplyChain.Spec.Selector),
 	)
 	return []metav1beta1.TableRow{row}, nil
 }
@@ -126,6 +125,5 @@ func (opts *ClusterSupplyChainListOptions) printColumns() []metav1beta1.TableCol
 		{Name: "Name", Type: "string"},
 		{Name: "Ready", Type: "string"},
 		{Name: "Age", Type: "string"},
-		{Name: "Label Selector", Type: "string"},
 	}
 }

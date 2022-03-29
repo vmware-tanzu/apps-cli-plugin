@@ -62,12 +62,6 @@ No cluster supply chains found.
 					ObjectMeta: metav1.ObjectMeta{
 						Name: supplyChainName,
 					},
-					Spec: cartov1alpha1.SupplyChainSpec{
-						Selector: map[string]string{
-							"app.tanzu.vmware.com/workload-type": "web",
-							"app.kubernetes.io/component":        "runtime",
-						},
-					},
 					Status: cartov1alpha1.SupplyChainStatus{
 						Conditions: []metav1.Condition{
 							{
@@ -79,8 +73,8 @@ No cluster supply chains found.
 				}),
 			},
 			ExpectOutput: `
-NAME                READY   AGE         LABEL SELECTOR
-test-supply-chain   Ready   <unknown>   app.kubernetes.io/component=runtime,app.tanzu.vmware.com/workload-type=web
+NAME                READY   AGE
+test-supply-chain   Ready   <unknown>
 `,
 		},
 		{
@@ -94,8 +88,8 @@ test-supply-chain   Ready   <unknown>   app.kubernetes.io/component=runtime,app.
 				}),
 			},
 			ExpectOutput: `
-NAME                READY       AGE         LABEL SELECTOR
-test-supply-chain   <unknown>   <unknown>   <empty>
+NAME                READY       AGE
+test-supply-chain   <unknown>   <unknown>
 `,
 		},
 		{
