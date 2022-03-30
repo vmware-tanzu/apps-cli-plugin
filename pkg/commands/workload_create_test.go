@@ -19,9 +19,13 @@ package commands_test
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"testing"
 	"time"
 
+	"github.com/Netflix/go-expect"
+	ggcrregistry "github.com/google/go-containerregistry/pkg/registry"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
 	corev1 "k8s.io/api/core/v1"
@@ -30,6 +34,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -43,6 +48,7 @@ import (
 	watchfakes "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch/fake"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
 )
 
 func TestWorkloadCreateOptionsValidate(t *testing.T) {
@@ -91,6 +97,14 @@ func TestWorkloadCreateCommand(t *testing.T) {
 	workloadName := "my-workload"
 	gitRepo := "https://example.com/repo.git"
 	gitBranch := "main"
+	localPath := "testdata/local-source"
+	registry, err := ggcrregistry.TLS("localhost")
+	utilruntime.Must(err)
+	defer registry.Close()
+	u, err := url.Parse(registry.URL)
+	utilruntime.Must(err)
+	registryHost := u.Host
+	imagePath := fmt.Sprintf("%s/hello:source", registryHost)
 
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
@@ -747,7 +761,141 @@ spec:
 						},
 					},
 				},
-			}},
+			},
+		},
+		// Test prompts
+		{
+			Name: "Create workload and confirm prompt",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString("Do you want to create this workload?")
+				c.SendLine("y")
+				c.Expectf("Created workload %q", workloadName)
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  source:
+      9 + |    git:
+     10 + |      ref:
+     11 + |        branch: main
+     12 + |      url: https://example.com/repo.git
+
+? Do you want to create this workload? Yes
+Created workload "my-workload"`,
+		},
+		{
+			Name: "Create workload and reject prompt",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString("Do you want to create this workload?")
+				c.SendLine("n")
+				c.Expectf("Skipping workload %q", workloadName)
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  source:
+      9 + |    git:
+     10 + |      ref:
+     11 + |        branch: main
+     12 + |      url: https://example.com/repo.git
+
+? Do you want to create this workload? No
+Skipping workload "my-workload"`,
+		},
+		{
+			Name: "Create workload with local code and confirm prompt",
+			Args: []string{workloadName, flags.LocalPathFlagName, localPath, flags.SourceImageFlagName, imagePath},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				ctx = source.StashGgcrRemoteOptions(ctx, remote.WithTransport(registry.Client().Transport))
+				return ctx, nil
+			},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Image: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+						},
+					},
+				},
+			},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.Expectf("Publish source in %q to %q? It may be visible to others who can pull images from that repository", localPath, imagePath)
+				c.SendLine("y")
+				c.Expectf("Publishing source in %q to %q...", localPath, imagePath)
+				c.Expectf("Published source")
+				c.Expectf("Do you want to create this workload?")
+				c.SendLine("y")
+				c.Expectf("Created workload %q", workloadName)
+			},
+			ExpectOutput: `
+? Publish source in "testdata/local-source" to "` + registryHost + `/hello:source"? It may be visible to others who can pull images from that repository Yes
+Publishing source in "testdata/local-source" to "` + registryHost + `/hello:source"...
+Published source
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  source:
+      9 + |    image: ` + registryHost + `/hello:source@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652
+
+? Do you want to create this workload? Yes
+Created workload "my-workload"`,
+		},
+		{
+			Name: "Create workload with local code and reject prompt",
+			Args: []string{workloadName, flags.LocalPathFlagName, localPath, flags.SourceImageFlagName, imagePath},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				ctx = source.StashGgcrRemoteOptions(ctx, remote.WithTransport(registry.Client().Transport))
+				return ctx, nil
+			},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.Expectf("Publish source in %q to %q? It may be visible to others who can pull images from that repository", localPath, imagePath)
+				c.SendLine("n")
+				c.Expectf("Skipping workload %q", workloadName)
+			},
+		},
 	}
 
 	table.Run(t, scheme, func(ctx context.Context, c *cli.Config) *cobra.Command {

@@ -26,6 +26,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	"github.com/Netflix/go-expect"
+
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
@@ -173,34 +175,6 @@ Deleted workloads in namespace "default"
 `,
 		},
 		{
-			// TODO figure out how to send input to the confirmation
-			Skip:  true,
-			Name:  "delete all workloads, prompt confirmed",
-			Args:  []string{flags.AllFlagName},
-			Stdin: []byte("yes"),
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
-			},
-			ExpectDeleteCollections: []clitesting.DeleteCollectionRef{{
-				Group:     "carto.run",
-				Resource:  "Workload",
-				Namespace: defaultNamespace,
-			}},
-			Verify: func(t *testing.T, output string, err error) {
-				if !strings.Contains(output, `Really delete all workloads in the namespace "default"?`) {
-					t.Errorf("expected output to contain delete prompt")
-				}
-				if !strings.Contains(output, `Deleted workloads in namespace "default"`) {
-					t.Errorf("expected output to contain skip confirmation")
-				}
-			},
-		},
-		{
 			Name:  "delete all workloads, prompt denied",
 			Args:  []string{flags.AllFlagName},
 			Stdin: []byte("no"),
@@ -262,35 +236,6 @@ Deleted workloads in namespace "default"
 			ExpectOutput: `
 Deleted workload "test-workload"
 `,
-		},
-		{
-			// TODO figure out how to send input to the confirmation
-			Skip:  true,
-			Name:  "delete workload, prompt confirmed",
-			Args:  []string{workloadName},
-			Stdin: []byte("yes"),
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
-			},
-			ExpectDeletes: []clitesting.DeleteRef{{
-				Group:     "carto.run",
-				Resource:  "Workload",
-				Namespace: defaultNamespace,
-				Name:      workloadName,
-			}},
-			Verify: func(t *testing.T, output string, err error) {
-				if !strings.Contains(output, `Really delete the workload "test-workload"?`) {
-					t.Errorf("expected output to contain delete prompt")
-				}
-				if !strings.Contains(output, `Deleted workload "test-workload"`) {
-					t.Errorf("expected output to contain delete confirmation")
-				}
-			},
 		},
 		{
 			Name:  "delete workload, prompt denied",
@@ -685,6 +630,90 @@ Deleted workload "spring-petclinic"
 Deleted workload "test-workload"
 Deleted workload "spring-petclinic"
 `,
+		},
+		// Test prompts
+		{
+			Name: "delete all workloads, prompt confirmed",
+			Args: []string{flags.AllFlagName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      workloadName,
+						Namespace: defaultNamespace,
+					},
+				}),
+			},
+			ExpectDeleteCollections: []clitesting.DeleteCollectionRef{{
+				Group:     "carto.run",
+				Resource:  "Workload",
+				Namespace: defaultNamespace,
+			}},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.Expectf("Really delete all workloads in the namespace %q?", defaultNamespace)
+				c.SendLine("y")
+				c.Expectf("Deleted workloads in namespace %q", defaultNamespace)
+			},
+			ExpectOutput: `
+? Really delete all workloads in the namespace "default"? Yes
+Deleted workloads in namespace "default"`,
+		},
+		{
+			Name: "delete all workloads, prompt denied",
+			Args: []string{flags.AllFlagName},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.Expectf("Really delete all workloads in the namespace %q?", defaultNamespace)
+				c.SendLine("n")
+				c.Expectf("Skipping workloads in namespace %q", defaultNamespace)
+			},
+			ExpectOutput: `
+? Really delete all workloads in the namespace "default"? No
+Skipping workloads in namespace "default"`,
+		},
+		{
+			Name: "delete workload, prompt confirmed",
+			Args: []string{workloadName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      workloadName,
+						Namespace: defaultNamespace,
+					},
+				}),
+			},
+			ExpectDeletes: []clitesting.DeleteRef{{
+				Group:     "carto.run",
+				Resource:  "Workload",
+				Namespace: defaultNamespace,
+				Name:      workloadName,
+			}},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.Expectf("Really delete the workload %q?", workloadName)
+				c.SendLine("y")
+				c.Expectf("Deleted workload %q", workloadName)
+			},
+			ExpectOutput: `
+? Really delete the workload "test-workload"? Yes
+Deleted workload "test-workload"`,
+		},
+		{
+			Name: "delete workload, prompt denied",
+			Args: []string{workloadName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      workloadName,
+						Namespace: defaultNamespace,
+					},
+				}),
+			},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.Expectf("Really delete the workload %q?", workloadName)
+				c.SendLine("N")
+				c.Expectf("Skipping workload %q", workloadName)
+			},
+			ExpectOutput: `
+? Really delete the workload "test-workload"? No
+Skipping workload "test-workload"`,
 		},
 	}
 

@@ -19,15 +19,20 @@ package testing
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/Netflix/go-expect"
+	pseudotty "github.com/creack/pty"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hinshun/vt10x"
 	"github.com/spf13/cobra"
 	rtesting "github.com/vmware-labs/reconciler-runtime/testing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -161,6 +166,8 @@ type CommandTestCase struct {
 	// It is indended to clean up any state created in the Prepare step or during the test
 	// execution, or to make assertions for mocks.
 	CleanUp func(t *testing.T, ctx context.Context, config *cli.Config, tc *CommandTestCase) error
+	// WithConsoleInteractions receives function with an expect.Console that can be used to send characters and verify the output send to a fake console.
+	WithConsoleInteractions func(t *testing.T, console *expect.Console)
 }
 
 // Run each record for the table. Tables with a focused record will run only the focused records
@@ -260,7 +267,51 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 				}
 			}()
 		}
+
+		var console *expect.Console
+		var donec chan struct{}
+		var term vt10x.Terminal
+		if tc.WithConsoleInteractions != nil {
+			var err error
+			// Setup stdio for prompt testing, multiplex output to a buffer as well for the raw bytes.
+			pty, tty, err := pseudotty.Open()
+			if err != nil {
+				t.Fatalf("failed to open pseudotty: %v", err)
+			}
+			term = vt10x.New(vt10x.WithWriter(tty), vt10x.WithSize(160, 24))
+			if err != nil {
+				t.Errorf("Unexpected error %s", err)
+			}
+
+			console, err := expect.NewConsole(expect.WithStdin(pty), expect.WithStdout(term), expect.WithCloser(pty, tty), expectNoError(t), expect.WithDefaultTimeout(3*time.Second))
+			if err != nil {
+				t.Fatalf("failed to create console: %v", err)
+			}
+
+			defer console.Close()
+
+			donec = make(chan struct{})
+			go func() {
+				defer close(donec)
+				tc.WithConsoleInteractions(t, console)
+			}()
+
+			c.Stdout = console.Tty()
+			c.Stderr = console.Tty()
+			c.Stdin = console.Tty()
+		}
+
 		cmdErr := cmd.Execute()
+
+		// Close the slave end of the pty
+		if console != nil {
+			console.Tty().Close()
+		}
+
+		// Read the remaining bytes from the master end if needed
+		if donec != nil {
+			<-donec
+		}
 
 		if expected, actual := tc.ShouldError, cmdErr != nil; expected != actual {
 			if expected {
@@ -312,6 +363,10 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 		}
 
 		outputString := output.String()
+		// terminalOutput doesn't contain ANSI escape sequences, we compare that when using an interactive terminal
+		if term != nil {
+			outputString = trimTrailingSpaces(expect.StripTrailingEmptyLines(term.String()))
+		}
 		if tc.ExpectOutput != "" {
 			if diff := cmp.Diff(strings.TrimPrefix(tc.ExpectOutput, "\n"), outputString); diff != "" {
 				t.Errorf("Unexpected output (-expected, +actual): %s", diff)
@@ -329,11 +384,38 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 	})
 }
 
+func trimTrailingSpaces(in string) string {
+	lines := strings.Split(in, "\n")
+	for i := len(lines) - 1; i >= 0; i-- {
+		lines[i] = strings.TrimRight(lines[i], " ")
+	}
+	return strings.Join(lines, "\n")
+}
+
 func objKey(o runtime.Object) string {
 	on := o.(metav1.ObjectMetaAccessor)
 	// namespace + name is not unique, and the tests don't populate k8s kind
 	// information, so use GoLang's type name as part of the key.
 	return path.Join(reflect.TypeOf(o).String(), on.GetObjectMeta().GetNamespace(), on.GetObjectMeta().GetName())
+}
+
+func expectNoError(t *testing.T) expect.ConsoleOpt {
+	return expect.WithExpectObserver(
+		func(matchers []expect.Matcher, buf string, err error) {
+			if err == nil {
+				return
+			}
+			if len(matchers) == 0 {
+				t.Fatalf("Error occurred while matching %q: %s\n", buf, err)
+			} else {
+				var criteria []string
+				for _, matcher := range matchers {
+					criteria = append(criteria, fmt.Sprintf("%q", matcher.Criteria()))
+				}
+				t.Fatalf("Unexpected output; expected: %s ; got %q: \nError: %s\n", strings.Join(criteria, ", "), buf, err)
+			}
+		},
+	)
 }
 
 type DeleteRef struct {

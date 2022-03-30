@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Netflix/go-expect"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
 	corev1 "k8s.io/api/core/v1"
@@ -1579,6 +1580,168 @@ Updated workload "my-workload"
 
 				return nil
 			},
+		},
+		// Test prompts
+		{
+			Name: "Apply with existing workload and confirm prompt",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+					},
+				}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.Expectf("Really update the workload %q?", workloadName)
+				c.SendLine("y")
+				c.Expectf("Updated workload %q", workloadName)
+			},
+			ExpectOutput: `
+Update workload:
+...
+  4,  4   |metadata:
+  5,  5   |  name: my-workload
+  6,  6   |  namespace: default
+  7,  7   |spec:
+  8     - |  image: ubuntu:bionic
+      8 + |  source:
+      9 + |    git:
+     10 + |      ref:
+     11 + |        branch: main
+     12 + |      url: https://example.com/repo.git
+
+? Really update the workload "my-workload"? Yes
+Updated workload "my-workload"`,
+		},
+		{
+			Name: "Apply with existing workload and reject prompt",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+					},
+				}),
+			},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.Expectf("Really update the workload %q?", workloadName)
+				c.SendLine("n")
+				c.Expectf("Skipping workload %q", workloadName)
+			},
+			ExpectOutput: `
+Update workload:
+...
+  4,  4   |metadata:
+  5,  5   |  name: my-workload
+  6,  6   |  namespace: default
+  7,  7   |spec:
+  8     - |  image: ubuntu:bionic
+      8 + |  source:
+      9 + |    git:
+     10 + |      ref:
+     11 + |        branch: main
+     12 + |      url: https://example.com/repo.git
+
+? Really update the workload "my-workload"? No
+Skipping workload "my-workload"`,
+		},
+		{
+			Name: "Apply with new workload and confirm prompt",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString("Do you want to create this workload?")
+				c.SendLine("y")
+				c.Expectf("Created workload %q", workloadName)
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  source:
+      9 + |    git:
+     10 + |      ref:
+     11 + |        branch: main
+     12 + |      url: https://example.com/repo.git
+
+? Do you want to create this workload? Yes
+Created workload "my-workload"`,
+		},
+		{
+			Name: "Apply with new workload and reject prompt",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString("Do you want to create this workload?")
+				c.SendLine("n")
+				c.Expectf("Skipping workload %q", workloadName)
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  source:
+      9 + |    git:
+     10 + |      ref:
+     11 + |        branch: main
+     12 + |      url: https://example.com/repo.git
+
+? Do you want to create this workload? No
+Skipping workload "my-workload"`,
 		},
 		{
 			Name:        "filepath invalid name",
