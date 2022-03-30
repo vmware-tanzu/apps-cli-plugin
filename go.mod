@@ -16,7 +16,7 @@ require (
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
 	github.com/vmware-labs/reconciler-runtime v0.4.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
-	github.com/vmware-tanzu/tanzu-framework v0.19.0
+	github.com/vmware-tanzu/tanzu-framework v0.20.0
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	k8s.io/api v0.23.5
 	k8s.io/apiextensions-apiserver v0.23.4
@@ -189,6 +189,7 @@ require (
 	k8s.io/component-base v0.23.4 // indirect
 	k8s.io/klog/v2 v2.40.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220124234850-424119656bbf // indirect
+	k8s.io/kubectl v0.23.4 // indirect
 	sigs.k8s.io/cluster-api v1.1.3 // indirect
 	sigs.k8s.io/cluster-api-provider-aws v1.1.0 // indirect
 	sigs.k8s.io/cluster-api-provider-azure v1.0.1 // indirect
