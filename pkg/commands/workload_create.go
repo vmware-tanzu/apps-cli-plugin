@@ -18,6 +18,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -68,9 +69,21 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		workload.Namespace = opts.Namespace
 	}
 
-	if err := c.Get(ctx, client.ObjectKey{Namespace: workload.Namespace, Name: workload.Name}, &cartov1alpha1.Workload{}); !apierrs.IsNotFound(err) {
-		c.Printf("%s workload %q already exists\n", printer.Serrorf("Error:"), fmt.Sprintf("%s/%s", workload.Namespace, workload.Name))
-		return cli.SilenceError(err)
+	existingWorkload := &cartov1alpha1.Workload{}
+
+	if err := c.Get(ctx, client.ObjectKey{Namespace: workload.Namespace, Name: workload.Name}, existingWorkload); err != nil {
+		// return err, except when not found
+		if !apierrs.IsNotFound(err) {
+			return err
+		}
+	}
+
+	// check if the workload exists
+	if existingWorkload != nil {
+		if existingWorkload.Name == workload.Name && existingWorkload.Namespace == workload.Namespace {
+			c.Printf("%s workload %q already exists\n", printer.Serrorf("Error:"), fmt.Sprintf("%s/%s", workload.Namespace, workload.Name))
+			return cli.SilenceError(errors.New(""))
+		}
 	}
 
 	opts.ApplyOptionsToWorkload(ctx, workload)
