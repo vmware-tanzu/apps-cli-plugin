@@ -36,7 +36,10 @@ func (*writerLogSink) Init(info logr.RuntimeInfo) {
 
 }
 
-func (*writerLogSink) Enabled(level int) bool {
+func (l *writerLogSink) Enabled(level int) bool {
+	if *l.level < int32(level) {
+		return false
+	}
 	return true
 }
 

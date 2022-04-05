@@ -120,7 +120,7 @@ func (c *client) DeleteAllOf(ctx context.Context, obj crclient.Object, opts ...c
 }
 
 func (c *client) logError(err error) {
-	if err != nil {
+	if err != nil && c.log.V(2).Enabled() {
 		c.log.V(2).Error(err, "API Error")
 	}
 }
