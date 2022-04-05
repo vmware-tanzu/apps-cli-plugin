@@ -40,6 +40,7 @@ type WorkloadListOptions struct {
 	Namespace     string
 	AllNamespaces bool
 	App           string
+	Output        string
 }
 
 var (
@@ -61,6 +62,10 @@ func (opts *WorkloadListOptions) Validate(ctx context.Context) validation.FieldE
 		errs = errs.Also(validation.K8sName(opts.App, flags.AppFlagName))
 	}
 
+	if opts.Output != "" {
+		errs = errs.Also(validation.Enum(opts.Output, flags.OutputFlagName, []string{printer.OutputFormatJson, printer.OutputFormatYaml}))
+	}
+
 	return errs
 }
 
@@ -73,6 +78,21 @@ func (opts *WorkloadListOptions) Exec(ctx context.Context, c *cli.Config) error 
 	err := c.List(ctx, workloads, client.InNamespace(opts.Namespace), client.MatchingLabels(labels))
 	if err != nil {
 		return err
+	}
+
+	if opts.Output != "" {
+		var list []printer.Object
+		for _, w := range workloads.Items {
+			list = append(list, &w)
+		}
+		export, err := printer.OutputResources(list, printer.OutputFormat(opts.Output), c.Scheme)
+		if err != nil {
+			c.Eprintf("%s %s\n", printer.Serrorf("Failed to output workload:"), err)
+			return cli.SilenceError(err)
+		}
+
+		c.Printf("%s\n", export)
+		return nil
 	}
 
 	if len(workloads.Items) == 0 {
@@ -113,6 +133,7 @@ List workloads in a namespace or across all namespaces.
 
 	cli.AllNamespacesFlag(ctx, cmd, c, &opts.Namespace, &opts.AllNamespaces)
 	cmd.Flags().StringVar(&opts.App, cli.StripDash(flags.AppFlagName), "", "application `name` the workload is a part of")
+	cmd.Flags().StringVarP(&opts.Output, cli.StripDash(flags.OutputFlagName), "o", "", "output the Workloads formatted. Supported formats: \"json\", \"yaml\"")
 
 	return cmd
 }
