@@ -19,6 +19,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -29,6 +30,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/flowcontrol"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 )
 
 var (
@@ -179,7 +182,13 @@ func (c *client) lazyLoadRestConfigOrDie() *rest.Config {
 		kubeConfig := c.lazyLoadKubeConfig()
 		restConfig, err := kubeConfig.ClientConfig()
 		if err != nil {
-			panic(err)
+			if clientcmd.IsEmptyConfig(err) {
+				fmt.Printf("%s Unable to connect: no configuration has been found. If a kubeconfig is not set, it can be provided with the --kubeconfig flag or KUBECONFIG environment variable.\n", printer.Serrorf("Error:"))
+			} else {
+				fmt.Printf("%s %v \n", printer.Serrorf("Error:"), err)
+			}
+			c.logError(err)
+			os.Exit(2)
 		}
 		restConfig.RateLimiter = flowcontrol.NewTokenBucketRateLimiter(qps, burst)
 		c.restConfig = restConfig
@@ -200,7 +209,9 @@ func (c *client) lazyLoadClientOrDie() crclient.Client {
 		restConfig := c.lazyLoadRestConfigOrDie()
 		client, err := crclient.New(restConfig, crclient.Options{Scheme: c.scheme})
 		if err != nil {
-			panic(err)
+			fmt.Printf("%s Unable to connect: connection refused. Confirm kubeconfig details and try again.\n", printer.Serrorf("Error:"))
+			c.logError(err)
+			os.Exit(2)
 		}
 		c.client = client
 	}
@@ -212,7 +223,14 @@ func (c *client) lazyLoadDefaultNamespaceOrDie() string {
 		kubeConfig := c.lazyLoadKubeConfig()
 		namespace, _, err := kubeConfig.Namespace()
 		if err != nil {
-			panic(err)
+			if clientcmd.IsEmptyConfig(err) {
+				fmt.Printf("%s Unable to connect: no configuration has been found. If a kubeconfig is not set, it can be provided with the --kubeconfig flag or KUBECONFIG environment variable.\n", printer.Serrorf("Error:"))
+			} else {
+				fmt.Printf("%s %v \n", printer.Serrorf("Error:"), err)
+			}
+
+			c.logError(err)
+			os.Exit(2)
 		}
 		c.defaultNamespace = namespace
 	}
