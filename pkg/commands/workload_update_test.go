@@ -224,6 +224,92 @@ status:
 			ShouldError: true,
 		},
 		{
+			Name: "update subPath for git source",
+			Args: []string{workloadName, flags.SubPathFlagName, "./app", flags.YesFlagName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						},
+					},
+				}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+							Subpath: "./app",
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "unset subPath for git source",
+			Args: []string{workloadName, flags.SubPathFlagName, "./app", flags.YesFlagName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						},
+					},
+				}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+							Subpath: "./app",
+						},
+					},
+				},
+			},
+		},
+		{
 			Name: "conflict during update",
 			Args: []string{workloadName, flags.DebugFlagName, flags.YesFlagName},
 			WithReactors: []clitesting.ReactionFunc{

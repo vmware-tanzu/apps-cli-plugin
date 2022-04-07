@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -156,9 +155,6 @@ func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldError
 	}
 	if opts.SourceImage != "" {
 		source = append(source, flags.SourceImageFlagName)
-	}
-	if opts.SubPath != "" && len(source) != 1 {
-		errs = errs.Also(validation.ErrDisallowedFields(flags.SubPathFlagName, "subPath flag cannot be used without local-path/git-* sources"))
 	}
 	if opts.Image != "" {
 		source = append(source, flags.ImageFlagName)
@@ -332,13 +328,9 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	if !okToPush {
 		return okToPush, nil
 	}
-	localPathDir := opts.LocalPath
-	if opts.SubPath != "" {
-		localPathDir = filepath.Join(localPathDir, opts.SubPath)
-	}
 
-	c.Infof("Publishing source in %q to %q...\n", localPathDir, taggedImage)
-	digestedImage, err := source.ImgpkgPush(ctx, localPathDir, taggedImage)
+	c.Infof("Publishing source in %q to %q...\n", opts.LocalPath, taggedImage)
+	digestedImage, err := source.ImgpkgPush(ctx, opts.LocalPath, taggedImage)
 	if err != nil {
 		return okToPush, err
 	}
@@ -489,7 +481,7 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.Flags().StringVar(&opts.GitCommit, cli.StripDash(flags.GitCommitFlagName), "", "commit `SHA` within the git repo to checkout")
 	cmd.Flags().StringVar(&opts.GitTag, cli.StripDash(flags.GitTagFlagName), "", "`tag` within the git repo to checkout")
 	cmd.Flags().StringVar(&opts.SourceImage, cli.StripDash(flags.SourceImageFlagName), "", "destination `image` repository where source code is staged before being built")
-	cmd.Flags().StringVar(&opts.SubPath, cli.StripDash(flags.SubPathFlagName), "", "subpath for git-* or `image` repository")
+	cmd.Flags().StringVar(&opts.SubPath, cli.StripDash(flags.SubPathFlagName), "", "`path` within the referenced source, typically a directory")
 	cmd.Flags().StringVar(&opts.LocalPath, cli.StripDash(flags.LocalPathFlagName), "", "`path` on the local file system to a directory of source code to build for the workload")
 	cmd.MarkFlagDirname(cli.StripDash(flags.LocalPathFlagName))
 	cmd.Flags().StringVar(&opts.Image, cli.StripDash(flags.ImageFlagName), "", "pre-built `image`, skips the source resolution and build phases of the supply chain")

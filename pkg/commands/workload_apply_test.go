@@ -123,6 +123,53 @@ status:
 `,
 		},
 		{
+			Name: "git source with subPath",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.SubPathFlagName, "./app", flags.YesFlagName},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+							Subpath: "./app",
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  source:
+      9 + |    git:
+     10 + |      ref:
+     11 + |        branch: main
+     12 + |      url: https://example.com/repo.git
+     13 + |    subPath: ./app
+
+Created workload "my-workload"
+`,
+		},
+		{
+			Name:        "subPath with no source",
+			Args:        []string{workloadName, flags.SubPathFlagName, "./app", flags.YesFlagName},
+			ShouldError: true,
+		},
+		{
 			Name: "wait with timeout error",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName, flags.WaitTimeoutFlagName, "1ns"},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {

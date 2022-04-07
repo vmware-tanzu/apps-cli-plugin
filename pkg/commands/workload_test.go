@@ -452,42 +452,6 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			},
 			ShouldValidate: true,
 		},
-		{
-			Name: "subpath with image source",
-			Validatable: &commands.WorkloadOptions{
-				Namespace: "default",
-				Name:      "my-resource",
-				SubPath:   "./app",
-				Image:     "repo.example/image:tag",
-			},
-			ShouldValidate: false,
-			ExpectFieldErrors: validation.FieldErrors{}.Also(
-				validation.ErrDisallowedFields(flags.SubPathFlagName, "subPath flag cannot be used without local-path/git-* sources"),
-			),
-		},
-		{
-			Name: "subpath with local path source",
-			Validatable: &commands.WorkloadOptions{
-				Namespace:   "default",
-				Name:        "my-resource",
-				SubPath:     "./app",
-				SourceImage: "repo.example/image:tag",
-				LocalPath:   "./source",
-			},
-			ShouldValidate: true,
-		},
-		{
-			Name: "subpath with no source",
-			Validatable: &commands.WorkloadOptions{
-				Namespace: "default",
-				Name:      "my-resource",
-				SubPath:   "./app",
-			},
-			ShouldValidate: false,
-			ExpectFieldErrors: validation.FieldErrors{}.Also(
-				validation.ErrDisallowedFields(flags.SubPathFlagName, "subPath flag cannot be used without local-path/git-* sources"),
-			),
-		},
 	}
 
 	table.Run(t)
@@ -1446,7 +1410,6 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 		name           string
 		args           []string
 		input          string
-		subPath        string
 		expected       string
 		shouldError    bool
 		expectedOutput string
@@ -1458,16 +1421,6 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 			expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 			expectedOutput: `
 Publishing source in "testdata/local-source" to "` + registryHost + `/hello:source"...
-Published source
-`,
-		},
-		{
-			name:     "local source with subpath",
-			args:     []string{flags.LocalPathFlagName, "testdata/local-source-subpath", flags.SubPathFlagName, "./app", flags.YesFlagName},
-			input:    fmt.Sprintf("%s/hello:source", registryHost),
-			expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "6a94b72dbdc10dc9d2bd99efcc827952174ededa65c91a0cd6981fd55a102660"),
-			expectedOutput: `
-Publishing source in "testdata/local-source-subpath/app" to "` + registryHost + `/hello:source"...
 Published source
 `,
 		},
