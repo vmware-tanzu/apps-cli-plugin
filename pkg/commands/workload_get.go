@@ -107,6 +107,28 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 	c.Printf(printer.ResourceStatus(workload.Name, printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadConditionReady)))
 
+	if workload.Spec.Image != "" {
+		c.Printf("\n")
+		if err := cartov1alpha1.WorkloadSourceImagePrinter(c.Stdout, workload); err != nil {
+			return err
+		}
+	}
+
+	if workload.Spec.Source != nil {
+		if workload.Spec.Source.Image != "" {
+			c.Printf("\n")
+			if err := cartov1alpha1.WorkloadSourceLocalImagePrinter(c.Stdout, workload); err != nil {
+				return err
+			}
+		}
+		if workload.Spec.Source.Git != nil {
+			c.Printf("\n")
+			if err := cartov1alpha1.WorkloadSourceGitPrinter(c.Stdout, workload); err != nil {
+				return err
+			}
+		}
+	}
+
 	if len(workload.Spec.ServiceClaims) > 0 {
 		c.Printf("\n")
 		c.Printf("Services\n")

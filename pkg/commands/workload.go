@@ -91,6 +91,7 @@ type WorkloadOptions struct {
 	SourceImage string
 	LocalPath   string
 	Image       string
+	SubPath     string
 
 	BuildEnv    []string
 	Env         []string
@@ -227,6 +228,10 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 
 	if opts.SourceImage != "" {
 		workload.Spec.MergeSourceImage(opts.SourceImage)
+	}
+
+	if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.SubPathFlagName)) {
+		workload.Spec.MergeSubPath(opts.SubPath)
 	}
 
 	if opts.Image != "" {
@@ -476,6 +481,7 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.Flags().StringVar(&opts.GitCommit, cli.StripDash(flags.GitCommitFlagName), "", "commit `SHA` within the git repo to checkout")
 	cmd.Flags().StringVar(&opts.GitTag, cli.StripDash(flags.GitTagFlagName), "", "`tag` within the git repo to checkout")
 	cmd.Flags().StringVar(&opts.SourceImage, cli.StripDash(flags.SourceImageFlagName), "", "destination `image` repository where source code is staged before being built")
+	cmd.Flags().StringVar(&opts.SubPath, cli.StripDash(flags.SubPathFlagName), "", "relative `path` within source directory containing workload source code. To unset, pass empty string")
 	cmd.Flags().StringVar(&opts.LocalPath, cli.StripDash(flags.LocalPathFlagName), "", "`path` on the local file system to a directory of source code to build for the workload")
 	cmd.MarkFlagDirname(cli.StripDash(flags.LocalPathFlagName))
 	cmd.Flags().StringVar(&opts.Image, cli.StripDash(flags.ImageFlagName), "", "pre-built `image`, skips the source resolution and build phases of the supply chain")

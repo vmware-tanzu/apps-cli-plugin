@@ -18,6 +18,7 @@ package commands_test
 
 import (
 	"testing"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -61,6 +62,22 @@ func TestWorkloadListOptionsValidate(t *testing.T) {
 			},
 			ExpectFieldErrors: validation.ErrInvalidValue("hello-", flags.AppFlagName),
 		},
+		{
+			Name: "valid output format",
+			Validatable: &commands.WorkloadListOptions{
+				Namespace: "default",
+				Output:    "json",
+			},
+			ShouldValidate: true,
+		},
+		{
+			Name: "invalid output format",
+			Validatable: &commands.WorkloadListOptions{
+				Namespace: "default",
+				Output:    "myFormat",
+			},
+			ExpectFieldErrors: validation.EnumInvalidValue("myFormat", flags.OutputFlagName, []string{"json", "yaml"}),
+		},
 	}
 
 	table.Run(t)
@@ -97,6 +114,37 @@ No workloads found.
 			ExpectOutput: `
 NAME            APP       READY       AGE
 test-workload   <empty>   <unknown>   <unknown>
+`,
+		},
+		{
+			Name: "lists all items in json format",
+			Args: []string{flags.OutputFlagName, "json"},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:              workloadName,
+						Namespace:         defaultNamespace,
+						CreationTimestamp: metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
+					},
+				}),
+			},
+			ExpectOutput: `
+[
+	{
+		"kind": "Workload",
+		"apiVersion": "carto.run/v1alpha1",
+		"metadata": {
+			"name": "test-workload",
+			"namespace": "default",
+			"resourceVersion": "999",
+			"creationTimestamp": "2021-09-10T15:00:00Z"
+		},
+		"spec": {},
+		"status": {
+			"supplyChainRef": {}
+		}
+	}
+]
 `,
 		},
 		{

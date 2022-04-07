@@ -255,6 +255,12 @@ func (w *WorkloadSpec) MergeSourceImage(image string) {
 	}
 }
 
+func (w *WorkloadSpec) MergeSubPath(subPath string) {
+	if w.Source != nil {
+		w.Source.Subpath = subPath
+	}
+}
+
 func (w *WorkloadSpec) MergeImage(image string) {
 	w.ResetSource()
 

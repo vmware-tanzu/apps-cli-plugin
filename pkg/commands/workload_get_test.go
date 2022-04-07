@@ -203,6 +203,72 @@ No pods found for workload.
 `,
 		},
 		{
+			Name: "show source info - git",
+			Args: []string{workloadName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      workloadName,
+						Namespace: defaultNamespace,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: url,
+								Ref: cartov1alpha1.GitRef{
+									Branch: "master",
+									Tag:    "v1.0.0",
+									Commit: "abcdef",
+								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:    cartov1alpha1.WorkloadConditionReady,
+								Status:  metav1.ConditionFalse,
+								Reason:  "OopsieDoodle",
+								Message: "a hopefully informative message about what went wrong",
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+								},
+							},
+						},
+						Resources: []cartov1alpha1.RealizedResource{
+							{
+								Name: "image-builder",
+								Outputs: []cartov1alpha1.Output{
+									{
+										Name:    "image",
+										Preview: "example.com/example/example@sha256:c844da7c2890ffe02b6c2dfe6489f3f5ae31a116277d1b511ae0a0a953306f0b",
+									},
+								},
+							},
+						},
+					},
+				}),
+			},
+			ExpectOutput: `
+# my-workload: OopsieDoodle
+---
+lastTransitionTime: "2019-06-29T01:44:05Z"
+message: a hopefully informative message about what went wrong
+reason: OopsieDoodle
+status: "False"
+type: Ready
+
+Source:        https://example.com
+Branch:        master
+Tag:           v1.0.0
+Commit:        abcdef
+Built image:   example.com/example/example@sha256:c844da7c2890ffe02b6c2dfe6489f3f5ae31a116277d1b511ae0a0a953306f0b
+Updated:       <unknown>
+
+No pods found for workload.
+`,
+		},
+		{
 			Name: "show pods",
 			Args: []string{workloadName},
 			GivenObjects: []clitesting.Factory{
