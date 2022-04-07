@@ -136,14 +136,16 @@ func TestWorkloadGetCommand(t *testing.T) {
 						}},
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionFalse,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						OwnerStatus: cartov1alpha1.OwnerStatus{
+							Conditions: []metav1.Condition{
+								{
+									Type:    cartov1alpha1.WorkloadConditionReady,
+									Status:  metav1.ConditionFalse,
+									Reason:  "OopsieDoodle",
+									Message: "a hopefully informative message about what went wrong",
+									LastTransitionTime: metav1.Time{
+										Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+									},
 								},
 							},
 						},
@@ -176,14 +178,16 @@ No pods found for workload.
 						Namespace: defaultNamespace,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionFalse,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						OwnerStatus: cartov1alpha1.OwnerStatus{
+							Conditions: []metav1.Condition{
+								{
+									Type:    cartov1alpha1.WorkloadConditionReady,
+									Status:  metav1.ConditionFalse,
+									Reason:  "OopsieDoodle",
+									Message: "a hopefully informative message about what went wrong",
+									LastTransitionTime: metav1.Time{
+										Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+									},
 								},
 							},
 						},
@@ -212,14 +216,16 @@ No pods found for workload.
 						Namespace: defaultNamespace,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionUnknown,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						OwnerStatus: cartov1alpha1.OwnerStatus{
+							Conditions: []metav1.Condition{
+								{
+									Type:    cartov1alpha1.WorkloadConditionReady,
+									Status:  metav1.ConditionUnknown,
+									Reason:  "OopsieDoodle",
+									Message: "a hopefully informative message about what went wrong",
+									LastTransitionTime: metav1.Time{
+										Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+									},
 								},
 							},
 						},
@@ -284,14 +290,16 @@ pod2   Failed    0          <unknown>
 						Namespace: defaultNamespace,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionUnknown,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						OwnerStatus: cartov1alpha1.OwnerStatus{
+							Conditions: []metav1.Condition{
+								{
+									Type:    cartov1alpha1.WorkloadConditionReady,
+									Status:  metav1.ConditionUnknown,
+									Reason:  "OopsieDoodle",
+									Message: "a hopefully informative message about what went wrong",
+									LastTransitionTime: metav1.Time{
+										Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+									},
 								},
 							},
 						},
@@ -371,14 +379,16 @@ ksvc2   not-Ready   <empty>
 						Namespace: defaultNamespace,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionTrue,
-								Reason:  "Worked",
-								Message: "Ready",
-								LastTransitionTime: metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						OwnerStatus: cartov1alpha1.OwnerStatus{
+							Conditions: []metav1.Condition{
+								{
+									Type:    cartov1alpha1.WorkloadConditionReady,
+									Status:  metav1.ConditionTrue,
+									Reason:  "Worked",
+									Message: "Ready",
+									LastTransitionTime: metav1.Time{
+										Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+									},
 								},
 							},
 						},
@@ -478,14 +488,16 @@ Workload "default/my-workload" not found
 						Namespace: defaultNamespace,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionTrue,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						OwnerStatus: cartov1alpha1.OwnerStatus{
+							Conditions: []metav1.Condition{
+								{
+									Type:    cartov1alpha1.WorkloadConditionReady,
+									Status:  metav1.ConditionTrue,
+									Reason:  "OopsieDoodle",
+									Message: "a hopefully informative message about what went wrong",
+									LastTransitionTime: metav1.Time{
+										Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+									},
 								},
 							},
 						},
@@ -552,12 +564,14 @@ No pods found for workload.
 						CreationTimestamp: metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionUnknown,
-								Reason:  "Workload Reason",
-								Message: "a hopefully informative message about what went wrong",
+						OwnerStatus: cartov1alpha1.OwnerStatus{
+							Conditions: []metav1.Condition{
+								{
+									Type:    cartov1alpha1.WorkloadConditionReady,
+									Status:  metav1.ConditionUnknown,
+									Reason:  "Workload Reason",
+									Message: "a hopefully informative message about what went wrong",
+								},
 							},
 						},
 					},
@@ -589,12 +603,14 @@ spec: {}
 						CreationTimestamp: metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionUnknown,
-								Reason:  "Workload Reason",
-								Message: "a hopefully informative message about what went wrong",
+						OwnerStatus: cartov1alpha1.OwnerStatus{
+							Conditions: []metav1.Condition{
+								{
+									Type:    cartov1alpha1.WorkloadConditionReady,
+									Status:  metav1.ConditionUnknown,
+									Reason:  "Workload Reason",
+									Message: "a hopefully informative message about what went wrong",
+								},
 							},
 						},
 					},
@@ -628,12 +644,14 @@ spec: {}
 						},
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionUnknown,
-								Reason:  "Workload Reason",
-								Message: "a hopefully informative message about what went wrong",
+						OwnerStatus: cartov1alpha1.OwnerStatus{
+							Conditions: []metav1.Condition{
+								{
+									Type:    cartov1alpha1.WorkloadConditionReady,
+									Status:  metav1.ConditionUnknown,
+									Reason:  "Workload Reason",
+									Message: "a hopefully informative message about what went wrong",
+								},
 							},
 						},
 					},
@@ -674,12 +692,14 @@ status:
 						},
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionUnknown,
-								Reason:  "Workload Reason",
-								Message: "a hopefully informative message about what went wrong",
+						OwnerStatus: cartov1alpha1.OwnerStatus{
+							Conditions: []metav1.Condition{
+								{
+									Type:    cartov1alpha1.WorkloadConditionReady,
+									Status:  metav1.ConditionUnknown,
+									Reason:  "Workload Reason",
+									Message: "a hopefully informative message about what went wrong",
+								},
 							},
 						},
 					},

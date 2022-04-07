@@ -15,8 +15,21 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+type OwnerStatus struct {
+	// ObservedGeneration refers to the metadata.Generation of the spec that resulted in
+	// the current `status`.
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// Conditions describing this resource's reconcile state. The top level condition is
+	// of type `Ready`, and follows these Kubernetes conventions:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
 
 type TemplateParams []TemplateParam
 
@@ -69,4 +82,40 @@ type ObjectReference struct {
 type ServiceAccountRef struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace,omitempty"`
+}
+
+type RealizedResource struct {
+	// Name is the name of the resource in the blueprint
+	Name string `json:"name"`
+
+	// StampedRef is a reference to the object that was created by the resource
+	StampedRef *corev1.ObjectReference `json:"stampedRef,omitempty"`
+
+	// TemplateRef is a reference to the template used to create the object in StampedRef
+	TemplateRef *corev1.ObjectReference `json:"templateRef,omitempty"`
+
+	// Inputs are references to resources that were used to template the object in StampedRef
+	Inputs []Input `json:"inputs,omitempty"`
+
+	// Outputs are values from the object in StampedRef that can be consumed by other resources
+	Outputs []Output `json:"outputs,omitempty"`
+}
+
+type Input struct {
+	// Name is the name of the resource in the blueprint whose output the resource consumes as an input
+	Name string `json:"name"`
+}
+
+type Output struct {
+	// Name is the output type generated from the resource [url, revision, image or config]
+	Name string `json:"name"`
+
+	// Preview is a preview of the value of the output
+	Preview string `json:"preview"`
+
+	// Digest is a sha256 of the full value of the output
+	Digest string `json:"digest"`
+
+	// LastTransitionTime is a timestamp of the last time the value changed
+	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 }

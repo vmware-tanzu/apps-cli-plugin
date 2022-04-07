@@ -113,10 +113,12 @@ test-workload   <empty>   <unknown>   <unknown>
 					},
 					Spec: cartov1alpha1.WorkloadSpec{},
 					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:   cartov1alpha1.WorkloadConditionReady,
-								Status: metav1.ConditionTrue,
+						OwnerStatus: cartov1alpha1.OwnerStatus{
+							Conditions: []metav1.Condition{
+								{
+									Type:   cartov1alpha1.WorkloadConditionReady,
+									Status: metav1.ConditionTrue,
+								},
 							},
 						},
 					},

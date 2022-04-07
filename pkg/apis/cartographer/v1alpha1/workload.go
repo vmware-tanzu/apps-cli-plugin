@@ -82,9 +82,14 @@ type WorkloadBuild struct {
 }
 
 type WorkloadStatus struct {
-	ObservedGeneration int64              `json:"observedGeneration,omitempty"`
-	Conditions         []metav1.Condition `json:"conditions,omitempty"`
-	SupplyChainRef     ObjectReference    `json:"supplyChainRef,omitempty"`
+	OwnerStatus `json:",inline"`
+
+	// SupplyChainRef is the Supply Chain resource that was used when this status was set.
+	SupplyChainRef ObjectReference `json:"supplyChainRef,omitempty"`
+
+	// Resources contain references to the objects created by the Supply Chain and the templates used to create them.
+	// It also contains Inputs and Outputs that were passed between the templates as the Supply Chain was processed.
+	Resources []RealizedResource `json:"resources,omitempty"`
 }
 
 // +kubebuilder:object:root=true
