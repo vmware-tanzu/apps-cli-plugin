@@ -230,7 +230,9 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 		workload.Spec.MergeSourceImage(opts.SourceImage)
 	}
 
-	workload.Spec.MergeSubPath(opts.SubPath)
+	if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.SubPathFlagName)) {
+		workload.Spec.MergeSubPath(opts.SubPath)
+	}
 
 	if opts.Image != "" {
 		workload.Spec.MergeImage(opts.Image)

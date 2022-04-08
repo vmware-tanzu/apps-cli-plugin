@@ -267,6 +267,40 @@ status:
 			},
 		},
 		{
+			Name: "override subPath for source image source",
+			Args: []string{workloadName, flags.SubPathFlagName, "./app", flags.YesFlagName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Image:   "ubuntu:source",
+							Subpath: "./cmd",
+						},
+					},
+				}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Image:   "ubuntu:source",
+							Subpath: "./app",
+						},
+					},
+				},
+			},
+		},
+		{
 			Name: "unset subPath for git source",
 			Args: []string{workloadName, flags.SubPathFlagName, "./app", flags.YesFlagName},
 			GivenObjects: []clitesting.Factory{

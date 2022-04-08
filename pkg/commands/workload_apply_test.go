@@ -1415,7 +1415,7 @@ Workload "my-workload" is ready
 		},
 		{
 			Name: "update - filepath",
-			Args: []string{flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/workload.yaml", flags.SubPathFlagName, "./cmd", flags.YesFlagName},
 			GivenObjects: []clitesting.Factory{
 				clitesting.Wrapper(&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1455,6 +1455,7 @@ Workload "my-workload" is ready
 									Branch: "main",
 								},
 							},
+							Subpath: "./cmd",
 						},
 						Env: []corev1.EnvVar{
 							{
@@ -1510,6 +1511,7 @@ Update workload:
      26 + |      ref:
      27 + |        branch: main
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
+     29 + |    subPath: ./cmd
 
 Updated workload "spring-petclinic"
 `,

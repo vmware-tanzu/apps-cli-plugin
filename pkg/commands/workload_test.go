@@ -830,6 +830,34 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 			},
 		},
 		{
+			name: "subPath update with image source",
+			args: []string{flags.SubPathFlagName, subPath},
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image:   "ubuntu:source",
+						Subpath: "./app",
+					},
+				},
+			},
+			expected: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image:   "ubuntu:source",
+						Subpath: "./cmd",
+					},
+				},
+			},
+		},
+		{
 			name: "workload with git tag",
 			args: []string{flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.GitTagFlagName, gitTag},
 			input: &cartov1alpha1.Workload{
