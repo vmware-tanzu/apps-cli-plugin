@@ -55,6 +55,7 @@ const (
 	ServiceRefFlagName    = "--service-ref"
 	SinceFlagName         = "--since"
 	SourceImageFlagName   = "--source-image"
+	SubPathFlagName       = "--sub-path"
 	TailFlagName          = "--tail"
 	TimestampFlagName     = "--timestamp"
 	TailTimestampFlagName = "--tail-timestamp"
