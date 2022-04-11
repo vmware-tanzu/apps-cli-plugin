@@ -82,8 +82,6 @@ type WorkloadBuild struct {
 }
 
 type WorkloadStatus struct {
-	// OwnerStatus `json:",inline"`
-
 	// ObservedGeneration refers to the metadata.Generation of the spec that resulted in
 	// the current `status`.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
