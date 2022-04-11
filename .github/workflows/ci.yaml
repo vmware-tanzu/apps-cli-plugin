@@ -52,7 +52,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
     - name: Build
       run: make publish
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: tanzu-apps-plugin.tar.gz
         path: tanzu-apps-plugin*.tar.gz
@@ -219,7 +219,7 @@ jobs:
         echo "${{ steps.get_version.outputs.VERSION }}" > RELEASE_INFO_VERSION
         echo "${{ steps.create_release.outputs.upload_url }}" > RELEASE_INFO_UPLOAD_URL
     - name: Upload release files
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: tanzu-apps-plugin.tar.gz
         path: RELEASE_INFO_*
