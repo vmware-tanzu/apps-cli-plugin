@@ -85,7 +85,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: vmware-tanzu/carvel-setup-action@v1
     - name: Download plugin bundle
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: tanzu-apps-plugin.tar.gz
     - name: Install tanzu cli
@@ -238,7 +238,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - name: Download staged CLI binaries${{ matrix.os-arch }}
-      uses: actions/download-artifact@v2.0.10
+      uses: actions/download-artifact@v3
       with:
         name: tanzu-apps-plugin.tar.gz
     - name: Get release info
