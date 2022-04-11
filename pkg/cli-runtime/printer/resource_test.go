@@ -221,16 +221,14 @@ spec:
 		format: printer.OutputFormatYaml,
 		obj: &cartov1alpha1.Workload{
 			Status: cartov1alpha1.WorkloadStatus{
-				OwnerStatus: cartov1alpha1.OwnerStatus{
-					Conditions: []metav1.Condition{
-						{
-							Type:    cartov1alpha1.WorkloadConditionReady,
-							Status:  metav1.ConditionTrue,
-							Reason:  "No printing status",
-							Message: "a hopefully informative message about what went wrong",
-							LastTransitionTime: metav1.Time{
-								Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-							},
+				Conditions: []metav1.Condition{
+					{
+						Type:    cartov1alpha1.WorkloadConditionReady,
+						Status:  metav1.ConditionTrue,
+						Reason:  "No printing status",
+						Message: "a hopefully informative message about what went wrong",
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
 						},
 					},
 				},
@@ -302,16 +300,14 @@ func TestOutputResource(t *testing.T) {
 				},
 			},
 			Status: cartov1alpha1.WorkloadStatus{
-				OwnerStatus: cartov1alpha1.OwnerStatus{
-					Conditions: []metav1.Condition{
-						{
-							Type:    cartov1alpha1.WorkloadConditionReady,
-							Status:  metav1.ConditionTrue,
-							Reason:  "No printing status",
-							Message: "a hopefully informative message about what went wrong",
-							LastTransitionTime: metav1.Time{
-								Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-							},
+				Conditions: []metav1.Condition{
+					{
+						Type:    cartov1alpha1.WorkloadConditionReady,
+						Status:  metav1.ConditionTrue,
+						Reason:  "No printing status",
+						Message: "a hopefully informative message about what went wrong",
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
 						},
 					},
 				},
@@ -389,16 +385,14 @@ status:
 				},
 			},
 			Status: cartov1alpha1.WorkloadStatus{
-				OwnerStatus: cartov1alpha1.OwnerStatus{
-					Conditions: []metav1.Condition{
-						{
-							Type:    cartov1alpha1.WorkloadConditionReady,
-							Status:  metav1.ConditionTrue,
-							Reason:  "No printing status",
-							Message: "a hopefully informative message about what went wrong",
-							LastTransitionTime: metav1.Time{
-								Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-							},
+				Conditions: []metav1.Condition{
+					{
+						Type:    cartov1alpha1.WorkloadConditionReady,
+						Status:  metav1.ConditionTrue,
+						Reason:  "No printing status",
+						Message: "a hopefully informative message about what went wrong",
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
 						},
 					},
 				},

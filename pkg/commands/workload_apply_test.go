@@ -179,12 +179,10 @@ Created workload "my-workload"
 						Name:      workloadName,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						OwnerStatus: cartov1alpha1.OwnerStatus{
-							Conditions: []metav1.Condition{
-								{
-									Type:   cartov1alpha1.WorkloadConditionReady,
-									Status: metav1.ConditionTrue,
-								},
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},
@@ -246,12 +244,10 @@ To view status run: tanzu apps workload get my-workload --namespace default
 						Name:      workloadName,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						OwnerStatus: cartov1alpha1.OwnerStatus{
-							Conditions: []metav1.Condition{
-								{
-									Type:   cartov1alpha1.WorkloadConditionReady,
-									Status: metav1.ConditionTrue,
-								},
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},
@@ -311,12 +307,10 @@ Workload "my-workload" is ready
 						Name:      workloadName,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						OwnerStatus: cartov1alpha1.OwnerStatus{
-							Conditions: []metav1.Condition{
-								{
-									Type:   cartov1alpha1.WorkloadConditionReady,
-									Status: metav1.ConditionTrue,
-								},
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},
@@ -444,14 +438,12 @@ Workload "my-workload" is ready
 						Name:      workloadName,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						OwnerStatus: cartov1alpha1.OwnerStatus{
-							Conditions: []metav1.Condition{
-								{
-									Type:    cartov1alpha1.WorkloadConditionReady,
-									Status:  metav1.ConditionFalse,
-									Reason:  "OopsieDoodle",
-									Message: "a hopefully informative message about what went wrong",
-								},
+						Conditions: []metav1.Condition{
+							{
+								Type:    cartov1alpha1.WorkloadConditionReady,
+								Status:  metav1.ConditionFalse,
+								Reason:  "OopsieDoodle",
+								Message: "a hopefully informative message about what went wrong",
 							},
 						},
 					},
@@ -1125,12 +1117,10 @@ Error: conflict updating workload, the object was modified by another user; plea
 						Name:      workloadName,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						OwnerStatus: cartov1alpha1.OwnerStatus{
-							Conditions: []metav1.Condition{
-								{
-									Type:   cartov1alpha1.WorkloadConditionReady,
-									Status: metav1.ConditionTrue,
-								},
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},
@@ -1204,14 +1194,12 @@ To view status run: tanzu apps workload get my-workload --namespace default
 						Name:      workloadName,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						OwnerStatus: cartov1alpha1.OwnerStatus{
-							Conditions: []metav1.Condition{
-								{
-									Type:    cartov1alpha1.WorkloadConditionReady,
-									Status:  metav1.ConditionFalse,
-									Reason:  "OopsieDoodle",
-									Message: "a hopefully informative message about what went wrong",
-								},
+						Conditions: []metav1.Condition{
+							{
+								Type:    cartov1alpha1.WorkloadConditionReady,
+								Status:  metav1.ConditionFalse,
+								Reason:  "OopsieDoodle",
+								Message: "a hopefully informative message about what went wrong",
 							},
 						},
 					},
@@ -1284,12 +1272,10 @@ Error: Failed to become ready: a hopefully informative message about what went w
 						Name:      workloadName,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						OwnerStatus: cartov1alpha1.OwnerStatus{
-							Conditions: []metav1.Condition{
-								{
-									Type:   cartov1alpha1.WorkloadConditionReady,
-									Status: metav1.ConditionTrue,
-								},
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},
@@ -1350,12 +1336,10 @@ Workload "my-workload" is ready
 						Name:      workloadName,
 					},
 					Status: cartov1alpha1.WorkloadStatus{
-						OwnerStatus: cartov1alpha1.OwnerStatus{
-							Conditions: []metav1.Condition{
-								{
-									Type:   cartov1alpha1.WorkloadConditionReady,
-									Status: metav1.ConditionTrue,
-								},
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},

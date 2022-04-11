@@ -1473,12 +1473,10 @@ func TestWorkloadReadyConditionFunc(t *testing.T) {
 				Name:      workloadName,
 			},
 			Status: WorkloadStatus{
-				OwnerStatus: OwnerStatus{
-					Conditions: []metav1.Condition{
-						{
-							Type:   WorkloadConditionReady,
-							Status: metav1.ConditionUnknown,
-						},
+				Conditions: []metav1.Condition{
+					{
+						Type:   WorkloadConditionReady,
+						Status: metav1.ConditionUnknown,
 					},
 				},
 			},
@@ -1491,13 +1489,11 @@ func TestWorkloadReadyConditionFunc(t *testing.T) {
 				Name:      workloadName,
 			},
 			Status: WorkloadStatus{
-				OwnerStatus: OwnerStatus{
-					Conditions: []metav1.Condition{
-						{
-							Type:    WorkloadConditionReady,
-							Status:  metav1.ConditionFalse,
-							Message: "something went wrong",
-						},
+				Conditions: []metav1.Condition{
+					{
+						Type:    WorkloadConditionReady,
+						Status:  metav1.ConditionFalse,
+						Message: "something went wrong",
 					},
 				},
 			},
@@ -1512,12 +1508,10 @@ func TestWorkloadReadyConditionFunc(t *testing.T) {
 				Name:      workloadName,
 			},
 			Status: WorkloadStatus{
-				OwnerStatus: OwnerStatus{
-					Conditions: []metav1.Condition{
-						{
-							Type:   WorkloadConditionReady,
-							Status: metav1.ConditionTrue,
-						},
+				Conditions: []metav1.Condition{
+					{
+						Type:   WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
 					},
 				},
 			},
@@ -1531,13 +1525,11 @@ func TestWorkloadReadyConditionFunc(t *testing.T) {
 				Name:      workloadName,
 			},
 			Status: WorkloadStatus{
-				OwnerStatus: OwnerStatus{
-					ObservedGeneration: 10,
-					Conditions: []metav1.Condition{
-						{
-							Type:   WorkloadConditionReady,
-							Status: metav1.ConditionTrue,
-						},
+				ObservedGeneration: 10,
+				Conditions: []metav1.Condition{
+					{
+						Type:   WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
 					},
 				},
 			},
@@ -1558,13 +1550,11 @@ func TestWorkloadReadyConditionFunc(t *testing.T) {
 				Name:      workloadName,
 			},
 			Status: WorkloadStatus{
-				OwnerStatus: OwnerStatus{
-					ObservedGeneration: 10,
-					Conditions: []metav1.Condition{
-						{
-							Type:   "Success",
-							Status: metav1.ConditionTrue,
-						},
+				ObservedGeneration: 10,
+				Conditions: []metav1.Condition{
+					{
+						Type:   "Success",
+						Status: metav1.ConditionTrue,
 					},
 				},
 			},
@@ -1577,12 +1567,10 @@ func TestWorkloadReadyConditionFunc(t *testing.T) {
 				Name:      workloadName,
 			},
 			Status: WorkloadStatus{
-				OwnerStatus: OwnerStatus{
-					ObservedGeneration: 10,
-					Conditions: []metav1.Condition{
-						{
-							Type: WorkloadConditionReady,
-						},
+				ObservedGeneration: 10,
+				Conditions: []metav1.Condition{
+					{
+						Type: WorkloadConditionReady,
 					},
 				},
 			},

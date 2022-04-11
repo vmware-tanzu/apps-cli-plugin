@@ -43,12 +43,10 @@ func TestUntilReady(t *testing.T) {
 			Name:      workloadName,
 		},
 		Status: cartov1alpha1.WorkloadStatus{
-			OwnerStatus: cartov1alpha1.OwnerStatus{
-				Conditions: []metav1.Condition{
-					{
-						Type:   cartov1alpha1.WorkloadConditionReady,
-						Status: metav1.ConditionUnknown,
-					},
+			Conditions: []metav1.Condition{
+				{
+					Type:   cartov1alpha1.WorkloadConditionReady,
+					Status: metav1.ConditionUnknown,
 				},
 			},
 		},
@@ -59,12 +57,10 @@ func TestUntilReady(t *testing.T) {
 			Name:      "anotherworkload",
 		},
 		Status: cartov1alpha1.WorkloadStatus{
-			OwnerStatus: cartov1alpha1.OwnerStatus{
-				Conditions: []metav1.Condition{
-					{
-						Type:   cartov1alpha1.WorkloadConditionReady,
-						Status: metav1.ConditionTrue,
-					},
+			Conditions: []metav1.Condition{
+				{
+					Type:   cartov1alpha1.WorkloadConditionReady,
+					Status: metav1.ConditionTrue,
 				},
 			},
 		},
@@ -75,12 +71,10 @@ func TestUntilReady(t *testing.T) {
 			Name:      workloadName,
 		},
 		Status: cartov1alpha1.WorkloadStatus{
-			OwnerStatus: cartov1alpha1.OwnerStatus{
-				Conditions: []metav1.Condition{
-					{
-						Type:   cartov1alpha1.WorkloadConditionReady,
-						Status: metav1.ConditionTrue,
-					},
+			Conditions: []metav1.Condition{
+				{
+					Type:   cartov1alpha1.WorkloadConditionReady,
+					Status: metav1.ConditionTrue,
 				},
 			},
 		},
@@ -171,12 +165,10 @@ func TestUntilDelete(t *testing.T) {
 			Name:      workloadName,
 		},
 		Status: cartov1alpha1.WorkloadStatus{
-			OwnerStatus: cartov1alpha1.OwnerStatus{
-				Conditions: []metav1.Condition{
-					{
-						Type:   cartov1alpha1.WorkloadConditionReady,
-						Status: metav1.ConditionUnknown,
-					},
+			Conditions: []metav1.Condition{
+				{
+					Type:   cartov1alpha1.WorkloadConditionReady,
+					Status: metav1.ConditionUnknown,
 				},
 			},
 		},

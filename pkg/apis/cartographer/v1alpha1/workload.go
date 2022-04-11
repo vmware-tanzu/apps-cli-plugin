@@ -82,7 +82,14 @@ type WorkloadBuild struct {
 }
 
 type WorkloadStatus struct {
-	OwnerStatus `json:",inline"`
+	// ObservedGeneration refers to the metadata.Generation of the spec that resulted in
+	// the current `status`.
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// Conditions describing this resource's reconcile state. The top level condition is
+	// of type `Ready`, and follows these Kubernetes conventions:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
 	// SupplyChainRef is the Supply Chain resource that was used when this status was set.
 	SupplyChainRef ObjectReference `json:"supplyChainRef,omitempty"`
