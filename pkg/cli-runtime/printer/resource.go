@@ -78,17 +78,36 @@ func ExportResource(obj Object, format OutputFormat, scheme *runtime.Scheme) (st
 	return printObject(u, format)
 }
 
-func OutputResource(obj Object, format OutputFormat, scheme *runtime.Scheme) (string, error) {
+func setGVK(obj Object, scheme *runtime.Scheme) (Object, error) {
 	copy := obj.DeepCopyObject().(Object)
 
 	// force apiVersion and kind to be set
 	gvks, _, err := scheme.ObjectKinds(obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	copy.SetGroupVersionKind(gvks[0])
+	return copy, nil
+}
 
+func OutputResource(obj Object, format OutputFormat, scheme *runtime.Scheme) (string, error) {
+	copy, err := setGVK(obj, scheme)
+	if err != nil {
+		return "", err
+	}
 	return printObject(copy, format)
+}
+
+func OutputResources(objList []Object, format OutputFormat, scheme *runtime.Scheme) (string, error) {
+	var updatedList []Object
+	for _, o := range objList {
+		copy, err := setGVK(o, scheme)
+		if err != nil {
+			return "", err
+		}
+		updatedList = append(updatedList, copy)
+	}
+	return printObject(updatedList, format)
 }
 
 func printObject(obj interface{}, format OutputFormat) (string, error) {

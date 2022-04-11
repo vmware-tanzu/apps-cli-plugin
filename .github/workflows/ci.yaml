@@ -156,6 +156,9 @@ jobs:
         echo "##[group]List workload"
           tanzu apps workload list
         echo "##[endgroup]"
+        echo "##[group]List workload with output json"
+          tanzu apps workload list --output json | jq '.[] | select(.metadata.name=="petclinic")'
+        echo "##[endgroup]"
         echo "##[group]Get workload"
           tanzu apps workload get petclinic
         echo "##[endgroup]"

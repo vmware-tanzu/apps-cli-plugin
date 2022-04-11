@@ -49,6 +49,7 @@ tanzu apps workload apply --file workload.yaml
       --request-memory bytes           the minimum amount of memory required, in bytes (500Mi = 500MiB = 500 * 1024 * 1024)
       --service-ref object reference   object reference for a service to bind to the workload "database=rabbitmq.com/v1beta1:RabbitmqCluster:my-broker", or "database-" to delete. This flag may be specified multiple times.
       --source-image image             destination image repository where source code is staged before being built
+      --sub-path path                  relative path within source directory containing workload source code. To unset, pass empty string
       --tail                           show logs while waiting for workload to become ready
       --tail-timestamp                 show logs and add timestamp to each log line while waiting for workload to become ready
       --type type                      distinguish workload type

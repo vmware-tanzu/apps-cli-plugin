@@ -464,6 +464,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 	typeName := "job"
 	gitRepo := "https://example.com/repo.git"
 	gitBranch := "main"
+	subPath := "./cmd"
 	gitTag := "v0.0.1"
 	gitCommit := "abcdefg"
 
@@ -803,7 +804,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 		},
 		{
 			name: "workload git repo",
-			args: []string{flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch},
+			args: []string{flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.SubPathFlagName, subPath},
 			input: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
@@ -823,6 +824,35 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 								Branch: gitBranch,
 							},
 						},
+						Subpath: "./cmd",
+					},
+				},
+			},
+		},
+		{
+			name: "subPath update with image source",
+			args: []string{flags.SubPathFlagName, subPath},
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image:   "ubuntu:source",
+						Subpath: "./app",
+					},
+				},
+			},
+			expected: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image:   "ubuntu:source",
+						Subpath: "./cmd",
 					},
 				},
 			},
@@ -883,7 +913,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 		},
 		{
 			name: "workload with source image",
-			args: []string{flags.SourceImageFlagName, "repo.example/image:tag"},
+			args: []string{flags.SourceImageFlagName, "repo.example/image:tag", flags.SubPathFlagName, "workspace"},
 			input: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
@@ -897,7 +927,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
-						Image: "repo.example/image:tag",
+						Image:   "repo.example/image:tag",
+						Subpath: "workspace",
 					},
 				},
 			},

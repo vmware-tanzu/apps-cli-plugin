@@ -950,6 +950,70 @@ func TestWorkloadSpec_MergeImage(t *testing.T) {
 	}
 }
 
+func TestWorkloadSpec_MergeSubpath(t *testing.T) {
+	tests := []struct {
+		name    string
+		seed    *WorkloadSpec
+		subPath string
+		want    *WorkloadSpec
+	}{{
+		name: "set",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
+						Tag:    "v1.0.0",
+					},
+				},
+			},
+		},
+		subPath: "./cmd",
+		want: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
+						Tag:    "v1.0.0",
+					},
+				},
+				Subpath: "./cmd",
+			},
+		},
+	}, {
+		name: "unset",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Image:   "app.registry.com:source",
+				Subpath: "./cmd",
+			},
+		},
+		subPath: "",
+		want: &WorkloadSpec{
+			Source: &Source{
+				Image: "app.registry.com:source",
+			},
+		},
+	}, {
+		name:    "empty source",
+		seed:    &WorkloadSpec{},
+		subPath: "",
+		want:    &WorkloadSpec{},
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.seed
+			got.MergeSubPath(test.subPath)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("MergeSubPath() (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 func TestWorkloadSpec_MergeEnv(t *testing.T) {
 	tests := []struct {
 		name string

@@ -477,6 +477,384 @@ status:
 	}
 }
 
+func TestOutputResources(t *testing.T) {
+	scheme := runtime.NewScheme()
+	cartov1alpha1.AddToScheme(scheme)
+
+	tests := []struct {
+		name         string
+		objs         []printer.Object
+		want         string
+		shouldError  bool
+		outputFormat printer.OutputFormat
+	}{{
+		name:         "print output with yaml",
+		outputFormat: printer.OutputFormatYaml,
+		objs: []printer.Object{
+			&cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-workload",
+					Namespace: "default",
+					Annotations: map[string]string{
+						"name": "value",
+					},
+					Labels: map[string]string{
+						"name": "value",
+					},
+					UID:                        types.UID("uid-xyz"),
+					ResourceVersion:            "999",
+					Generation:                 1,
+					CreationTimestamp:          metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
+					DeletionTimestamp:          &metav1.Time{Time: time.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC)},
+					Finalizers:                 []string{"my.finalizer"},
+					DeletionGracePeriodSeconds: &[]int64{5}[0],
+					ManagedFields: []metav1.ManagedFieldsEntry{
+						{Manager: "tanzu"},
+					},
+					ClusterName: "my-cluster",
+					SelfLink:    "/default/my-workload",
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							APIVersion: "v1",
+							Kind:       "Pod",
+							Name:       "workload-owner",
+						},
+					},
+				},
+				Status: cartov1alpha1.WorkloadStatus{
+					Conditions: []metav1.Condition{
+						{
+							Type:    cartov1alpha1.WorkloadConditionReady,
+							Status:  metav1.ConditionTrue,
+							Reason:  "No printing status",
+							Message: "a hopefully informative message about what went wrong",
+							LastTransitionTime: metav1.Time{
+								Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+							},
+						},
+					},
+				},
+			},
+			&cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "another-workload",
+					Namespace: "default",
+					Labels: map[string]string{
+						"name": "value",
+					},
+					UID:                        types.UID("uid-xyz"),
+					ResourceVersion:            "999",
+					Generation:                 1,
+					CreationTimestamp:          metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
+					DeletionTimestamp:          &metav1.Time{Time: time.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC)},
+					Finalizers:                 []string{"my.finalizer"},
+					DeletionGracePeriodSeconds: &[]int64{5}[0],
+					ManagedFields: []metav1.ManagedFieldsEntry{
+						{Manager: "tanzu"},
+					},
+					ClusterName: "my-cluster",
+					SelfLink:    "/default/my-workload",
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							APIVersion: "v1",
+							Kind:       "Pod",
+							Name:       "workload-owner",
+						},
+					},
+				},
+				Status: cartov1alpha1.WorkloadStatus{
+					Conditions: []metav1.Condition{
+						{
+							Type:    cartov1alpha1.WorkloadConditionReady,
+							Status:  metav1.ConditionTrue,
+							Reason:  "No printing status",
+							Message: "a hopefully informative message about what went wrong",
+							LastTransitionTime: metav1.Time{
+								Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+							},
+						},
+					},
+				},
+			},
+		},
+		want: `
+---
+- apiVersion: carto.run/v1alpha1
+  kind: Workload
+  metadata:
+    annotations:
+      name: value
+    clusterName: my-cluster
+    creationTimestamp: "2021-09-10T15:00:00Z"
+    deletionGracePeriodSeconds: 5
+    deletionTimestamp: "2021-09-10T15:00:00Z"
+    finalizers:
+    - my.finalizer
+    generation: 1
+    labels:
+      name: value
+    managedFields:
+    - manager: tanzu
+    name: my-workload
+    namespace: default
+    ownerReferences:
+    - apiVersion: v1
+      kind: Pod
+      name: workload-owner
+      uid: ""
+    resourceVersion: "999"
+    selfLink: /default/my-workload
+    uid: uid-xyz
+  spec: {}
+  status:
+    conditions:
+    - lastTransitionTime: "2019-06-29T01:44:05Z"
+      message: a hopefully informative message about what went wrong
+      reason: No printing status
+      status: "True"
+      type: Ready
+    supplyChainRef: {}
+- apiVersion: carto.run/v1alpha1
+  kind: Workload
+  metadata:
+    clusterName: my-cluster
+    creationTimestamp: "2021-09-10T15:00:00Z"
+    deletionGracePeriodSeconds: 5
+    deletionTimestamp: "2021-09-10T15:00:00Z"
+    finalizers:
+    - my.finalizer
+    generation: 1
+    labels:
+      name: value
+    managedFields:
+    - manager: tanzu
+    name: another-workload
+    namespace: default
+    ownerReferences:
+    - apiVersion: v1
+      kind: Pod
+      name: workload-owner
+      uid: ""
+    resourceVersion: "999"
+    selfLink: /default/my-workload
+    uid: uid-xyz
+  spec: {}
+  status:
+    conditions:
+    - lastTransitionTime: "2019-06-29T01:44:05Z"
+      message: a hopefully informative message about what went wrong
+      reason: No printing status
+      status: "True"
+      type: Ready
+    supplyChainRef: {}
+`}, {
+		name:         "print output with json",
+		outputFormat: printer.OutputFormatJson,
+		objs: []printer.Object{
+			&cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-workload",
+					Namespace: "default",
+					Labels: map[string]string{
+						"name": "value",
+					},
+					UID:                        types.UID("uid-xyz"),
+					ResourceVersion:            "999",
+					Generation:                 1,
+					CreationTimestamp:          metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
+					DeletionTimestamp:          &metav1.Time{Time: time.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC)},
+					Finalizers:                 []string{"my.finalizer"},
+					DeletionGracePeriodSeconds: &[]int64{5}[0],
+					ManagedFields: []metav1.ManagedFieldsEntry{
+						{Manager: "tanzu"},
+					},
+					ClusterName: "my-cluster",
+					SelfLink:    "/default/my-workload",
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							APIVersion: "v1",
+							Kind:       "Pod",
+							Name:       "workload-owner",
+						},
+					},
+				},
+				Status: cartov1alpha1.WorkloadStatus{
+					Conditions: []metav1.Condition{
+						{
+							Type:    cartov1alpha1.WorkloadConditionReady,
+							Status:  metav1.ConditionTrue,
+							Reason:  "No printing status",
+							Message: "a hopefully informative message about what went wrong",
+							LastTransitionTime: metav1.Time{
+								Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+							},
+						},
+					},
+				},
+			},
+			&cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "another-workload",
+					Namespace: "default",
+					Annotations: map[string]string{
+						"name": "value",
+					},
+					UID:                        types.UID("uid-abc"),
+					ResourceVersion:            "1000",
+					Generation:                 1,
+					CreationTimestamp:          metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
+					DeletionTimestamp:          &metav1.Time{Time: time.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC)},
+					Finalizers:                 []string{"my.finalizer"},
+					DeletionGracePeriodSeconds: &[]int64{5}[0],
+					ManagedFields: []metav1.ManagedFieldsEntry{
+						{Manager: "tanzu"},
+					},
+					ClusterName: "my-cluster",
+					SelfLink:    "/default/my-workload",
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							APIVersion: "v1",
+							Kind:       "Pod",
+							Name:       "workload-owner",
+						},
+					},
+				},
+				Status: cartov1alpha1.WorkloadStatus{
+					Conditions: []metav1.Condition{
+						{
+							Type:    cartov1alpha1.WorkloadConditionReady,
+							Status:  metav1.ConditionTrue,
+							Reason:  "No printing status",
+							Message: "a hopefully informative message about what went wrong",
+							LastTransitionTime: metav1.Time{
+								Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+							},
+						},
+					},
+				},
+			},
+		},
+		want: `
+[
+	{
+		"kind": "Workload",
+		"apiVersion": "carto.run/v1alpha1",
+		"metadata": {
+			"name": "my-workload",
+			"namespace": "default",
+			"selfLink": "/default/my-workload",
+			"uid": "uid-xyz",
+			"resourceVersion": "999",
+			"generation": 1,
+			"creationTimestamp": "2021-09-10T15:00:00Z",
+			"deletionTimestamp": "2021-09-10T15:00:00Z",
+			"deletionGracePeriodSeconds": 5,
+			"labels": {
+				"name": "value"
+			},
+			"ownerReferences": [
+				{
+					"apiVersion": "v1",
+					"kind": "Pod",
+					"name": "workload-owner",
+					"uid": ""
+				}
+			],
+			"finalizers": [
+				"my.finalizer"
+			],
+			"clusterName": "my-cluster",
+			"managedFields": [
+				{
+					"manager": "tanzu"
+				}
+			]
+		},
+		"spec": {},
+		"status": {
+			"conditions": [
+				{
+					"type": "Ready",
+					"status": "True",
+					"lastTransitionTime": "2019-06-29T01:44:05Z",
+					"reason": "No printing status",
+					"message": "a hopefully informative message about what went wrong"
+				}
+			],
+			"supplyChainRef": {}
+		}
+	},
+	{
+		"kind": "Workload",
+		"apiVersion": "carto.run/v1alpha1",
+		"metadata": {
+			"name": "another-workload",
+			"namespace": "default",
+			"selfLink": "/default/my-workload",
+			"uid": "uid-abc",
+			"resourceVersion": "1000",
+			"generation": 1,
+			"creationTimestamp": "2021-09-10T15:00:00Z",
+			"deletionTimestamp": "2021-09-10T15:00:00Z",
+			"deletionGracePeriodSeconds": 5,
+			"annotations": {
+				"name": "value"
+			},
+			"ownerReferences": [
+				{
+					"apiVersion": "v1",
+					"kind": "Pod",
+					"name": "workload-owner",
+					"uid": ""
+				}
+			],
+			"finalizers": [
+				"my.finalizer"
+			],
+			"clusterName": "my-cluster",
+			"managedFields": [
+				{
+					"manager": "tanzu"
+				}
+			]
+		},
+		"spec": {},
+		"status": {
+			"conditions": [
+				{
+					"type": "Ready",
+					"status": "True",
+					"lastTransitionTime": "2019-06-29T01:44:05Z",
+					"reason": "No printing status",
+					"message": "a hopefully informative message about what went wrong"
+				}
+			],
+			"supplyChainRef": {}
+		}
+	}
+]`,
+	}, {
+		name:         "not valid output",
+		outputFormat: "myFormat",
+		objs: []printer.Object{
+			&cartov1alpha1.Workload{},
+		},
+		shouldError: true,
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := printer.OutputResources(test.objs, test.outputFormat, scheme)
+			if (err != nil) != test.shouldError {
+				t.Errorf("OutputResources() error = %v, expected %v", err, test.shouldError)
+			}
+			if diff := cmp.Diff(strings.TrimSpace(test.want), got); diff != "" {
+				t.Errorf("OutputResources() (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 func TestResourceDiff(t *testing.T) {
 	scheme := runtime.NewScheme()
 	cartov1alpha1.AddToScheme(scheme)
