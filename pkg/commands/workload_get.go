@@ -87,7 +87,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 		export, err := printer.ExportResource(workload, format, c.Scheme)
 		if err != nil {
-			c.Eprintf("%s %s\n", printer.Serrorf("Failed export workload:"), err)
+			c.Eprintf("%s %s\n", printer.Serrorf("Failed to export workload:"), err)
 			return cli.SilenceError(err)
 		}
 		c.Printf("%s\n", export)
@@ -106,6 +106,30 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	}
 
 	c.Printf(printer.ResourceStatus(workload.Name, printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadConditionReady)))
+
+	if workload.Spec.Image != "" || workload.Spec.Source != nil {
+		c.Printf("\n")
+		c.Printf("Source\n")
+
+		if workload.Spec.Image != "" {
+			if err := printer.WorkloadSourceImagePrinter(c.Stdout, workload); err != nil {
+				return err
+			}
+		}
+
+		if workload.Spec.Source != nil {
+			if workload.Spec.Source.Image != "" {
+				if err := printer.WorkloadLocalSourceImagePrinter(c.Stdout, workload); err != nil {
+					return err
+				}
+			}
+			if workload.Spec.Source.Git != nil {
+				if err := printer.WorkloadSourceGitPrinter(c.Stdout, workload); err != nil {
+					return err
+				}
+			}
+		}
+	}
 
 	if len(workload.Spec.ServiceClaims) > 0 {
 		c.Printf("\n")

@@ -203,6 +203,149 @@ No pods found for workload.
 `,
 		},
 		{
+			Name: "show source info - git",
+			Args: []string{workloadName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      workloadName,
+						Namespace: defaultNamespace,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: url,
+								Ref: cartov1alpha1.GitRef{
+									Branch: "master",
+									Tag:    "v1.0.0",
+									Commit: "abcdef",
+								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:    cartov1alpha1.WorkloadConditionReady,
+								Status:  metav1.ConditionFalse,
+								Reason:  "OopsieDoodle",
+								Message: "a hopefully informative message about what went wrong",
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+								},
+							},
+						},
+					},
+				}),
+			},
+			ExpectOutput: `
+# my-workload: OopsieDoodle
+---
+lastTransitionTime: "2019-06-29T01:44:05Z"
+message: a hopefully informative message about what went wrong
+reason: OopsieDoodle
+status: "False"
+type: Ready
+
+Source
+type:     git
+url:      https://example.com
+branch:   master
+tag:      v1.0.0
+commit:   abcdef
+
+No pods found for workload.
+`,
+		},
+		{
+			Name: "show source info - local path",
+			Args: []string{workloadName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      workloadName,
+						Namespace: defaultNamespace,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Image: "my-registry/my-image:v1.0.0",
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:    cartov1alpha1.WorkloadConditionReady,
+								Status:  metav1.ConditionFalse,
+								Reason:  "OopsieDoodle",
+								Message: "a hopefully informative message about what went wrong",
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+								},
+							},
+						},
+					},
+				}),
+			},
+			ExpectOutput: `
+# my-workload: OopsieDoodle
+---
+lastTransitionTime: "2019-06-29T01:44:05Z"
+message: a hopefully informative message about what went wrong
+reason: OopsieDoodle
+status: "False"
+type: Ready
+
+Source
+type:    source image
+image:   my-registry/my-image:v1.0.0
+
+No pods found for workload.
+`,
+		},
+		{
+			Name: "show source info - image",
+			Args: []string{workloadName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      workloadName,
+						Namespace: defaultNamespace,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "docker.io/library/nginx:latest",
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:    cartov1alpha1.WorkloadConditionReady,
+								Status:  metav1.ConditionFalse,
+								Reason:  "OopsieDoodle",
+								Message: "a hopefully informative message about what went wrong",
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+								},
+							},
+						},
+					},
+				}),
+			},
+			ExpectOutput: `
+# my-workload: OopsieDoodle
+---
+lastTransitionTime: "2019-06-29T01:44:05Z"
+message: a hopefully informative message about what went wrong
+reason: OopsieDoodle
+status: "False"
+type: Ready
+
+Source
+type:    image
+image:   docker.io/library/nginx:latest
+
+No pods found for workload.
+`,
+		},
+		{
 			Name: "show pods",
 			Args: []string{workloadName},
 			GivenObjects: []clitesting.Factory{
