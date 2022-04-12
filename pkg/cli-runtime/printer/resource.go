@@ -99,7 +99,8 @@ func OutputResource(obj Object, format OutputFormat, scheme *runtime.Scheme) (st
 }
 
 func OutputResources(objList []Object, format OutputFormat, scheme *runtime.Scheme) (string, error) {
-	var updatedList []Object
+	updatedList := []Object{}
+
 	for _, o := range objList {
 		copy, err := setGVK(o, scheme)
 		if err != nil {
