@@ -828,6 +828,17 @@ func TestOutputResources(t *testing.T) {
 	}
 ]`,
 	}, {
+		name:         "empty list with json format",
+		outputFormat: printer.OutputFormatJson,
+		objs:         []printer.Object{},
+		want:         "[]",
+	}, {
+		name:         "empty list with yaml format",
+		outputFormat: printer.OutputFormatYaml,
+		objs:         []printer.Object{},
+		want: `---
+[]`,
+	}, {
 		name:         "not valid output",
 		outputFormat: "myFormat",
 		objs: []printer.Object{
