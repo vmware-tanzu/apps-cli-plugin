@@ -13,7 +13,7 @@ Run [`tanzu apps workload get`](command-reference/tanzu_apps_workload_get.md) pe
 
 ## <a id='yaml-files'></a>Working with YAML Files
 
-In many cases the lifecycle of workloads can be managed through CLI commands and their flags alone but there might be cases where it is desired to manage a workload using a `yaml` file and the Apps plugin supports this use case. 
+In many cases the lifecycle of workloads can be managed through CLI commands and their flags alone but there might be cases where it is desired to manage a workload using a `yaml` file and the Apps plugin supports this use case.
 
 The plugin has been designed to manage one workload at a time. As such when a workload is being managed via a `yaml` file, that file must contain a single workload definition. In addition plugin commands support only one file per command.
 
@@ -31,9 +31,9 @@ metadata:
 spec:
   source:
     git:
-      url: https://github.com/spring-projects/spring-petclinic
+      url: https://github.com/sample-accelerators/spring-petclinic
       ref:
-        branch: main
+        tag: tap-1.1
 ```
 ## <a id='autocompletion'></a>Autocompletion
 

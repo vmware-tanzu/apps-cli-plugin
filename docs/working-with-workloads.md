@@ -10,7 +10,7 @@ Start by naming the workload and specifying a source code location for the workl
 1. Run:
 
     ```sh
-    tanzu apps workload create pet-clinic --git-repo https://github.com/spring-projects/spring-petclinic --git-branch main --type web  
+    tanzu apps workload create pet-clinic --git-repo https://github.com/sample-accelerators/spring-petclinic --git-tag tap-1.1 --type web  
     ```
 
     Respond `Y` to prompts to complete process
@@ -22,7 +22,7 @@ Start by naming the workload and specifying a source code location for the workl
      + `--git-branch` (optional) specifies which branch in the repo to pull the code from
      + `--type` is used to distinguish the workload type
 
-    NOTE: The above command will create the workload in the default namespace of your cluster, it is also possible to specify a namespace to use when creating a workload with the `--namespace` flag. For example: `tanzu apps workload create pet-clinic --git-repo https://github.com/spring-projects/spring-petclinic --git-branch main --type web --namespace NAME`  
+    NOTE: The above command will create the workload in the default namespace of your cluster, it is also possible to specify a namespace to use when creating a workload with the `--namespace` flag. For example: `tanzu apps workload create pet-clinic --git-repo https://github.com/sample-accelerators/spring-petclinic --git-tag tap-1.1 --type web --namespace NAME`  
 
     The options available for specifying the workload are available in the command reference for [`workload create`](command-reference/tanzu_apps_workload_create.md) or by running `tanzu apps workload create --help`
 
