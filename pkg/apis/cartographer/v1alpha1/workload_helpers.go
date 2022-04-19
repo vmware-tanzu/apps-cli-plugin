@@ -146,6 +146,8 @@ func (w *GitSource) Validate() validation.FieldErrors {
 }
 
 func (w *WorkloadSpec) Merge(updates *WorkloadSpec) {
+	w.ServiceAccountName = updates.ServiceAccountName
+
 	for _, p := range updates.Params {
 		w.MergeParams(p.Name, p.Value)
 	}
