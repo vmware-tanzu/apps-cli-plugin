@@ -94,7 +94,7 @@ func TestWorkloadGetOptionsValidate(t *testing.T) {
 				Name:      "my-workload",
 				Output:    "myFormat",
 			},
-			ExpectFieldErrors: validation.EnumInvalidValue("myFormat", flags.OutputFlagName, []string{"json", "yaml"}),
+			ExpectFieldErrors: validation.EnumInvalidValue("myFormat", flags.OutputFlagName, []string{"json", "yaml", "yml"}),
 		},
 	}
 

@@ -37,6 +37,7 @@ type OutputFormat string
 const (
 	OutputFormatJson = "json"
 	OutputFormatYaml = "yaml"
+	OutputFormatYml  = "yml"
 )
 
 type Object interface {
@@ -117,7 +118,7 @@ func printObject(obj interface{}, format OutputFormat) (string, error) {
 	case OutputFormatJson:
 		b, err := json.MarshalIndent(obj, "", "\t")
 		return strings.TrimSpace(string(b)), err
-	case OutputFormatYaml:
+	case OutputFormatYaml, OutputFormatYml:
 		b, err := yaml.Marshal(obj)
 		return fmt.Sprintf("---\n%s", strings.TrimSpace(string(b))), err
 	default:
