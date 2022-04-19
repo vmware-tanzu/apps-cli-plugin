@@ -63,7 +63,7 @@ func (opts *WorkloadListOptions) Validate(ctx context.Context) validation.FieldE
 	}
 
 	if opts.Output != "" {
-		errs = errs.Also(validation.Enum(opts.Output, flags.OutputFlagName, []string{printer.OutputFormatJson, printer.OutputFormatYaml}))
+		errs = errs.Also(validation.Enum(opts.Output, flags.OutputFlagName, []string{printer.OutputFormatJson, printer.OutputFormatYaml, printer.OutputFormatYml}))
 	}
 
 	return errs
@@ -133,7 +133,7 @@ List workloads in a namespace or across all namespaces.
 
 	cli.AllNamespacesFlag(ctx, cmd, c, &opts.Namespace, &opts.AllNamespaces)
 	cmd.Flags().StringVar(&opts.App, cli.StripDash(flags.AppFlagName), "", "application `name` the workload is a part of")
-	cmd.Flags().StringVarP(&opts.Output, cli.StripDash(flags.OutputFlagName), "o", "", "output the Workloads formatted. Supported formats: \"json\", \"yaml\"")
+	cmd.Flags().StringVarP(&opts.Output, cli.StripDash(flags.OutputFlagName), "o", "", "output the Workloads formatted. Supported formats: \"json\", \"yaml\", \"yml\"")
 
 	return cmd
 }

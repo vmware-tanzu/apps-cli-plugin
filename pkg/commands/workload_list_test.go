@@ -76,7 +76,7 @@ func TestWorkloadListOptionsValidate(t *testing.T) {
 				Namespace: "default",
 				Output:    "myFormat",
 			},
-			ExpectFieldErrors: validation.EnumInvalidValue("myFormat", flags.OutputFlagName, []string{"json", "yaml"}),
+			ExpectFieldErrors: validation.EnumInvalidValue("myFormat", flags.OutputFlagName, []string{"json", "yaml", "yml"}),
 		},
 	}
 
@@ -145,6 +145,32 @@ test-workload   <empty>   <unknown>   <unknown>
 		}
 	}
 ]
+`,
+		},
+		{
+			Name: "lists all items in yml format",
+			Args: []string{flags.OutputFlagName, "yml"},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:              workloadName,
+						Namespace:         defaultNamespace,
+						CreationTimestamp: metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
+					},
+				}),
+			},
+			ExpectOutput: `
+---
+- apiVersion: carto.run/v1alpha1
+  kind: Workload
+  metadata:
+    creationTimestamp: "2021-09-10T15:00:00Z"
+    name: test-workload
+    namespace: default
+    resourceVersion: "999"
+  spec: {}
+  status:
+    supplyChainRef: {}
 `,
 		},
 		{

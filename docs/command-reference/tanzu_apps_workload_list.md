@@ -24,7 +24,7 @@ tanzu apps workload list --all-namespaces
       --app name         application name the workload is a part of
   -h, --help             help for list
   -n, --namespace name   kubernetes namespace (defaulted from kube config)
-  -o, --output string    output the Workloads formatted. Supported formats: "json", "yaml"
+  -o, --output string    output the Workloads formatted. Supported formats: "json", "yaml", "yml"
 ```
 
 ### Options inherited from parent commands

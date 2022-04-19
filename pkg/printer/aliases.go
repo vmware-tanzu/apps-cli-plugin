@@ -35,3 +35,4 @@ type OutputFormat = printer.OutputFormat
 
 var OutputFormatJson = printer.OutputFormatJson
 var OutputFormatYaml = printer.OutputFormatYaml
+var OutputFormatYml = printer.OutputFormatYml
