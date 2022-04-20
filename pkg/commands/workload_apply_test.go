@@ -1753,7 +1753,7 @@ Created workload "my-workload"
 		},
 		{
 			Name: "update serviceAccountName",
-			Args: []string{flags.FilePathFlagName, "testdata/service_account_name_example.yaml", flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/service_account_name.yaml", flags.YesFlagName},
 			GivenObjects: []clitesting.Factory{
 				clitesting.Wrapper(&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1814,8 +1814,135 @@ Updated workload "spring-petclinic"
 `,
 		},
 		{
+			Name: "delete serviceAccountName by setting to empty",
+			Args: []string{flags.FilePathFlagName, "testdata/no_service_account_name.yaml", flags.YesFlagName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"preserve-me": "should-exist",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: "my-service-account",
+					},
+				}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"preserve-me":                         "should-exist",
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: "",
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Update workload:
+...
+  2,  2   |apiVersion: carto.run/v1alpha1
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  labels:
+      6 + |    app.kubernetes.io/part-of: spring-petclinic
+      7 + |    apps.tanzu.vmware.com/workload-type: web
+  6,  8   |    preserve-me: should-exist
+  7,  9   |  name: spring-petclinic
+  8, 10   |  namespace: default
+  9, 11   |spec:
+ 10     - |  serviceAccountName: my-service-account
+     12 + |  source:
+     13 + |    git:
+     14 + |      ref:
+     15 + |        tag: tap-1.1
+     16 + |      url: https://github.com/sample-accelerators/spring-petclinic
+
+Updated workload "spring-petclinic"
+`,
+		},
+		{
+			Name: "delete serviceAccountName field",
+			Args: []string{flags.FilePathFlagName, "testdata/no_service_account_name.yaml", flags.YesFlagName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"preserve-me": "should-exist",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: "my-service-account",
+					},
+				}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"preserve-me":                         "should-exist",
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Update workload:
+...
+  2,  2   |apiVersion: carto.run/v1alpha1
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  labels:
+      6 + |    app.kubernetes.io/part-of: spring-petclinic
+      7 + |    apps.tanzu.vmware.com/workload-type: web
+  6,  8   |    preserve-me: should-exist
+  7,  9   |  name: spring-petclinic
+  8, 10   |  namespace: default
+  9, 11   |spec:
+ 10     - |  serviceAccountName: my-service-account
+     12 + |  source:
+     13 + |    git:
+     14 + |      ref:
+     15 + |        tag: tap-1.1
+     16 + |      url: https://github.com/sample-accelerators/spring-petclinic
+
+Updated workload "spring-petclinic"
+`,
+		},
+		{
 			Name: "create with serviceAccountName",
-			Args: []string{flags.FilePathFlagName, "testdata/service_account_name_example.yaml", flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/service_account_name.yaml", flags.YesFlagName},
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
