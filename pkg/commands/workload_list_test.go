@@ -20,6 +20,8 @@ import (
 	"testing"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -91,11 +93,19 @@ func TestWorkloadListCommand(t *testing.T) {
 
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
+	_ = corev1.AddToScheme(scheme)
 
 	table := clitesting.CommandTestSuite{
 		{
 			Name: "empty",
 			Args: []string{},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: defaultNamespace,
+					},
+				}),
+			},
 			ExpectOutput: `
 No workloads found.
 `,
@@ -227,7 +237,7 @@ test-workload   <unknown>   <unknown>
 `,
 		},
 		{
-			Name: "filters by namespace",
+			Name: "filters by namespace that exists",
 			Args: []string{flags.NamespaceFlagName, otherNamespace},
 			GivenObjects: []clitesting.Factory{
 				clitesting.Wrapper(&cartov1alpha1.Workload{
@@ -236,9 +246,36 @@ test-workload   <unknown>   <unknown>
 						Namespace: defaultNamespace,
 					},
 				}),
+				clitesting.Wrapper(&corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: otherNamespace,
+					},
+				}),
 			},
+
 			ExpectOutput: `
 No workloads found.
+`,
+		},
+		{
+			Name: "namespace not found",
+			Args: []string{flags.NamespaceFlagName, "foo"},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      workloadName,
+						Namespace: defaultNamespace,
+					},
+				}),
+			},
+			WithReactors: []clitesting.ReactionFunc{
+				clitesting.InduceFailure("get", "Namespace", clitesting.InduceFailureOpts{
+					Error: apierrors.NewNotFound(corev1.Resource("Namespace"), "foo"),
+				}),
+			},
+			ShouldError: true,
+			ExpectOutput: `
+Error: namespace "foo" not found, it may not exist or user does not have permissions to read it.
 `,
 		},
 		{

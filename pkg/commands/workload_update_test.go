@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	apierrs "k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -93,6 +93,7 @@ func TestWorkloadUpdateCommand(t *testing.T) {
 
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
+	_ = corev1.AddToScheme(scheme)
 
 	var cmd *cobra.Command
 
@@ -141,11 +142,36 @@ Workload is unchanged, skipping update
 			},
 		},
 		{
-			Name:        "not found",
-			Args:        []string{workloadName},
+			Name: "not found",
+			Args: []string{workloadName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: defaultNamespace,
+					},
+				}),
+			},
+			WithReactors: []clitesting.ReactionFunc{
+				clitesting.InduceFailure("get", "Workload", clitesting.InduceFailureOpts{
+					Error: apierrors.NewNotFound(cartov1alpha1.Resource("Workload"), workloadName),
+				}),
+			},
 			ShouldError: true,
 			ExpectOutput: `
 Workload "default/my-workload" not found
+`,
+		},
+		{
+			Name: "namespace not found",
+			Args: []string{workloadName, flags.NamespaceFlagName, "foo"},
+			WithReactors: []clitesting.ReactionFunc{
+				clitesting.InduceFailure("get", "Namespace", clitesting.InduceFailureOpts{
+					Error: apierrors.NewNotFound(corev1.Resource("Namespace"), "foo"),
+				}),
+			},
+			ShouldError: true,
+			ExpectOutput: `
+Error: namespace "foo" not found, it may not exist or user does not have permissions to read it.
 `,
 		},
 		{
@@ -348,7 +374,7 @@ status:
 			Args: []string{workloadName, flags.DebugFlagName, flags.YesFlagName},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("update", "Workload", clitesting.InduceFailureOpts{
-					Error: apierrs.NewConflict(schema.GroupResource{Group: "carto.run", Resource: "workloads"}, workloadName, fmt.Errorf("induced conflict")),
+					Error: apierrors.NewConflict(schema.GroupResource{Group: "carto.run", Resource: "workloads"}, workloadName, fmt.Errorf("induced conflict")),
 				}),
 			},
 			GivenObjects: []clitesting.Factory{

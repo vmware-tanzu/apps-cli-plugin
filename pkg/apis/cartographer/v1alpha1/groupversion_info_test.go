@@ -56,3 +56,15 @@ func TestGetGroupVersionKind(t *testing.T) {
 		})
 	}
 }
+
+func TestResource(t *testing.T) {
+	resourceName := "test"
+	expectResource := schema.GroupResource{
+		Group:    GroupName,
+		Resource: resourceName,
+	}
+	actualResource := Resource(resourceName)
+	if diff := cmp.Diff(expectResource, actualResource); diff != "" {
+		t.Errorf("Resource() (-want, +got) = %v", diff)
+	}
+}
