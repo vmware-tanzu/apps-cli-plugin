@@ -330,19 +330,32 @@ func (w *Workload) MergeLabels(key, value string) {
 	w.Labels[key] = value
 }
 
+func (w *Workload) MergeServiceClaimAnnotation(name string, value interface{}) {
+	annotationServiceClaims, err := servicesv1alpha1.NewServiceClaimWorkloadConfigFromAnnotation(w.GetAnnotations()[apis.ServiceClaimAnnotationName])
+	if err != nil {
+		return
+	}
+
+	annotationServiceClaims.AddServiceClaim(name, value)
+	if len(annotationServiceClaims.Spec.ServiceClaims) > 0 {
+		w.MergeAnnotations(apis.ServiceClaimAnnotationName, annotationServiceClaims.Annotation())
+	}
+}
+
 func (w *Workload) DeleteServiceClaimAnnotation(name string) {
-	currentServiceClaims, err := servicesv1alpha1.NewServiceClaimWorkloadConfigFromAnnotation(w.GetAnnotations()[apis.ServiceClaimAnnotationName])
+	annotationServiceClaims, err := servicesv1alpha1.NewServiceClaimWorkloadConfigFromAnnotation(w.GetAnnotations()[apis.ServiceClaimAnnotationName])
 	if err != nil {
 		return
 	}
 
 	sc := servicesv1alpha1.NewServiceClaimWorkloadConfig()
 
-	for claimName, claimValue := range currentServiceClaims.Spec.ServiceClaims {
+	for claimName, claimValue := range annotationServiceClaims.Spec.ServiceClaims {
 		if claimName != name {
 			sc.AddServiceClaim(claimName, claimValue)
 		}
 	}
+
 	if len(sc.Spec.ServiceClaims) > 0 {
 		w.MergeAnnotations(apis.ServiceClaimAnnotationName, sc.Annotation())
 	} else {
