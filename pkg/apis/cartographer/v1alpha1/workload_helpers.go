@@ -78,6 +78,10 @@ func (w *Workload) loadAndValidateDocuments(in io.Reader) error {
 	return nil
 }
 
+func (w *Workload) MergeServiceAccountName(serviceAccountName string) {
+	w.Spec.ServiceAccountName = serviceAccountName
+}
+
 func (w *Workload) Merge(updates *Workload) {
 	for k, v := range updates.Annotations {
 		w.MergeAnnotations(k, v)
@@ -146,8 +150,6 @@ func (w *GitSource) Validate() validation.FieldErrors {
 }
 
 func (w *WorkloadSpec) Merge(updates *WorkloadSpec) {
-	w.ServiceAccountName = updates.ServiceAccountName
-
 	for _, p := range updates.Params {
 		w.MergeParams(p.Name, p.Value)
 	}
