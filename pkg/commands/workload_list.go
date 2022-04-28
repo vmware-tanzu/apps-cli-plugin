@@ -23,8 +23,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
@@ -75,8 +78,7 @@ func (opts *WorkloadListOptions) Exec(ctx context.Context, c *cli.Config) error 
 	if opts.App != "" {
 		labels[apis.AppPartOfLabelName] = opts.App
 	}
-	err := c.List(ctx, workloads, client.InNamespace(opts.Namespace), client.MatchingLabels(labels))
-	if err != nil {
+	if err := c.List(ctx, workloads, client.InNamespace(opts.Namespace), client.MatchingLabels(labels)); err != nil {
 		return err
 	}
 
@@ -96,6 +98,11 @@ func (opts *WorkloadListOptions) Exec(ctx context.Context, c *cli.Config) error 
 	}
 
 	if len(workloads.Items) == 0 {
+		nsGet := &corev1.Namespace{}
+		if getErr := c.Get(ctx, types.NamespacedName{Name: opts.Namespace}, nsGet); getErr != nil && apierrors.IsNotFound(getErr) {
+			c.Eprintf("%s %s\n", printer.Serrorf("Error:"), fmt.Sprintf("namespace %q not found, it may not exist or user does not have permissions to read it.", opts.Namespace))
+			return cli.SilenceError(getErr)
+		}
 		c.Infof("No workloads found.\n")
 		return nil
 	}
