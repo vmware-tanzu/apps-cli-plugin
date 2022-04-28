@@ -21,6 +21,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -606,10 +607,35 @@ ksvc2   not-Ready   <empty>
 		{
 			Name: "not found",
 			Args: []string{workloadName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: defaultNamespace,
+					},
+				}),
+			},
+			WithReactors: []clitesting.ReactionFunc{
+				clitesting.InduceFailure("get", "Workload", clitesting.InduceFailureOpts{
+					Error: apierrors.NewNotFound(cartov1alpha1.Resource("Workload"), workloadName),
+				}),
+			},
 			ExpectOutput: `
 Workload "default/my-workload" not found
 `,
 			ShouldError: true,
+		},
+		{
+			Name: "namespace not found",
+			Args: []string{workloadName, flags.NamespaceFlagName, "foo"},
+			WithReactors: []clitesting.ReactionFunc{
+				clitesting.InduceFailure("get", "Namespace", clitesting.InduceFailureOpts{
+					Error: apierrors.NewNotFound(corev1.Resource("Namespace"), "foo"),
+				}),
+			},
+			ShouldError: true,
+			ExpectOutput: `
+Error: namespace "foo" not found, it may not exist or user does not have permissions to read it.
+`,
 		},
 		{
 			Name: "get error",

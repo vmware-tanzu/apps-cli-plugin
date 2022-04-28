@@ -747,7 +747,56 @@ spec:
 						},
 					},
 				},
-			}},
+			},
+		},
+		{
+			Name: "create with serviceAccountName specifying other flags from cli ",
+			Args: []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.GitTagFlagName, "tap-1.2", flags.TypeFlagName, "whatever", flags.YesFlagName},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							apis.AppPartOfLabelName:               "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "whatever",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: "my-service-account",
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.2",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    app.kubernetes.io/part-of: spring-petclinic
+      7 + |    apps.tanzu.vmware.com/workload-type: whatever
+      8 + |  name: spring-petclinic
+      9 + |  namespace: default
+     10 + |spec:
+     11 + |  serviceAccountName: my-service-account
+     12 + |  source:
+     13 + |    git:
+     14 + |      ref:
+     15 + |        tag: tap-1.2
+     16 + |      url: https://github.com/sample-accelerators/spring-petclinic
+
+Created workload "spring-petclinic"
+`,
+		},
 	}
 
 	table.Run(t, scheme, func(ctx context.Context, c *cli.Config) *cobra.Command {
