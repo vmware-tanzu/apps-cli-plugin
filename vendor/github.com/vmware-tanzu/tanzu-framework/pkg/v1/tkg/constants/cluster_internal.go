@@ -61,6 +61,8 @@ const (
 
 	// TKGDataValueFormatString is required annotations for YTT data value file
 	TKGDataValueFormatString = "#@data/values\n#@overlay/match-child-defaults missing_ok=True\n---\n"
+
+	CAPVClusterSelectorKey = "capv.vmware.com/cluster.name"
 )
 
 // deployment plan constants
@@ -92,6 +94,8 @@ const (
 	InfrastructureRefAWS = "AWSCluster"
 	// InfrastructureRefAzure is the Azure infrastructure
 	InfrastructureRefAzure = "AzureCluster"
+	// InfrastructureRefDocker is the docker infrastructure
+	InfrastructureRefDocker = "DockerCluster"
 )
 
 // networking constants
@@ -117,6 +121,10 @@ const (
 	AddonNameLabel = "tkg.tanzu.vmware.com/addon-name"
 	// ClusterNameLabel is the label on the Secret to indicate the cluster on which addon is to be installed
 	ClusterNameLabel = "tkg.tanzu.vmware.com/cluster-name"
+	// ClusterPauseLabel is the label on the Cluster Object to indicate the cluster is paused by TKG
+	ClusterPauseLabel = "tkg.tanzu.vmware.com/paused"
+	// PackageTypeLabel is the label on the PackageInstall which mentions type of the package
+	PackageTypeLabel = "tkg.tanzu.vmware.com/package-type"
 )
 
 // TKG management package related constants
@@ -124,4 +132,5 @@ const (
 	TKGManagementPackageName           = "tkg.tanzu.vmware.com"
 	TKGManagementPackageInstallName    = "tkg-pkg"
 	TKGManagementPackageRepositoryName = "tanzu-management"
+	PackageTypeManagement              = "management"
 )
