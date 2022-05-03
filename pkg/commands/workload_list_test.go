@@ -20,16 +20,20 @@ import (
 	"testing"
 	"time"
 
+	diecorev1 "dies.dev/apis/core/v1"
+	diemetav1 "dies.dev/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
+	diev1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
@@ -95,16 +99,23 @@ func TestWorkloadListCommand(t *testing.T) {
 	_ = cartov1alpha1.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
 
+	parent := diev1alpha1.WorkloadBlank.
+		MetadataDie(
+			func(d *diemetav1.ObjectMetaDie) {
+				d.Name(workloadName)
+				d.Namespace(defaultNamespace)
+			})
+
 	table := clitesting.CommandTestSuite{
 		{
 			Name: "empty",
 			Args: []string{},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&corev1.Namespace{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: defaultNamespace,
+			GivenObjects: []client.Object{
+				diecorev1.NamespaceBlank.MetadataDie(
+					func(d *diemetav1.ObjectMetaDie) {
+						d.Name(defaultNamespace)
 					},
-				}),
+				),
 			},
 			ExpectOutput: `
 No workloads found.
@@ -113,13 +124,8 @@ No workloads found.
 		{
 			Name: "lists an item",
 			Args: []string{},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ExpectOutput: `
 NAME            APP       READY       AGE
@@ -129,14 +135,12 @@ test-workload   <empty>   <unknown>   <unknown>
 		{
 			Name: "lists all items in json format",
 			Args: []string{flags.OutputFlagName, "json"},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:              workloadName,
-						Namespace:         defaultNamespace,
-						CreationTimestamp: metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
+			GivenObjects: []client.Object{
+				parent.MetadataDie(
+					func(d *diemetav1.ObjectMetaDie) {
+						d.CreationTimestamp(metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC))
 					},
-				}),
+				),
 			},
 			ExpectOutput: `
 [
@@ -160,14 +164,12 @@ test-workload   <empty>   <unknown>   <unknown>
 		{
 			Name: "lists all items in yml format",
 			Args: []string{flags.OutputFlagName, "yml"},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:              workloadName,
-						Namespace:         defaultNamespace,
-						CreationTimestamp: metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
+			GivenObjects: []client.Object{
+				parent.MetadataDie(
+					func(d *diemetav1.ObjectMetaDie) {
+						d.CreationTimestamp(metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC))
 					},
-				}),
+				),
 			},
 			ExpectOutput: `
 ---
@@ -186,25 +188,22 @@ test-workload   <empty>   <unknown>   <unknown>
 		{
 			Name: "lists an item, with detail",
 			Args: []string{},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							apis.AppPartOfLabelName: "hello",
-						},
-					},
-					Spec: cartov1alpha1.WorkloadSpec{},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:   cartov1alpha1.WorkloadConditionReady,
-								Status: metav1.ConditionTrue,
+			GivenObjects: []client.Object{
+				parent.MetadataDie(
+					func(d *diemetav1.ObjectMetaDie) {
+						d.Labels(
+							map[string]string{
+								apis.AppPartOfLabelName: "hello",
 							},
-						},
+						)
 					},
-				}),
+				).StatusDie(
+					func(d *diev1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diev1alpha1.WorkloadConditionReadyBlank.Status(metav1.ConditionTrue),
+						)
+					},
+				),
 			},
 			ExpectOutput: `
 NAME            APP     READY   AGE
@@ -214,22 +213,21 @@ test-workload   hello   Ready   <unknown>
 		{
 			Name: "filters by app",
 			Args: []string{flags.AppFlagName, "hello"},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadOtherName,
-						Namespace: defaultNamespace,
-					},
-				}),
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							apis.AppPartOfLabelName: "hello",
-						},
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.MetadataDie(
+					func(d *diemetav1.ObjectMetaDie) {
+						d.Labels(
+							map[string]string{
+								apis.AppPartOfLabelName: "hello",
+							},
+						)
+					}),
+				diev1alpha1.WorkloadBlank.
+					MetadataDie(
+						func(d *diemetav1.ObjectMetaDie) {
+							d.Name(workloadOtherName)
+							d.Namespace(defaultNamespace)
+						}),
 			},
 			ExpectOutput: `
 NAME            READY       AGE
@@ -239,20 +237,19 @@ test-workload   <unknown>   <unknown>
 		{
 			Name: "filters by namespace that exists",
 			Args: []string{flags.NamespaceFlagName, otherNamespace},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
+			GivenObjects: []client.Object{
+				diecorev1.NamespaceBlank.MetadataDie(
+					func(d *diemetav1.ObjectMetaDie) {
+						d.Name(otherNamespace)
 					},
-				}),
-				clitesting.Wrapper(&corev1.Namespace{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: otherNamespace,
-					},
-				}),
+				),
+				parent,
+				diev1alpha1.WorkloadBlank.
+					MetadataDie(
+						func(d *diemetav1.ObjectMetaDie) {
+							d.Name("something-else")
+						}),
 			},
-
 			ExpectOutput: `
 No workloads found.
 `,
@@ -260,13 +257,8 @@ No workloads found.
 		{
 			Name: "namespace not found",
 			Args: []string{flags.NamespaceFlagName, "foo"},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("get", "Namespace", clitesting.InduceFailureOpts{
@@ -281,19 +273,19 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 		{
 			Name: "all namespace",
 			Args: []string{flags.AllNamespacesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
+			GivenObjects: []client.Object{
+				diecorev1.NamespaceBlank.MetadataDie(
+					func(d *diemetav1.ObjectMetaDie) {
+						d.Name(otherNamespace)
 					},
-				}),
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadOtherName,
-						Namespace: otherNamespace,
-					},
-				}),
+				),
+				parent,
+				diev1alpha1.WorkloadBlank.
+					MetadataDie(
+						func(d *diemetav1.ObjectMetaDie) {
+							d.Name("test-other-workload")
+							d.Namespace(otherNamespace)
+						}),
 			},
 			ExpectOutput: `
 NAMESPACE         NAME                  APP       READY       AGE

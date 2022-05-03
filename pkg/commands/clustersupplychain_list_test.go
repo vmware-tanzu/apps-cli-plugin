@@ -19,13 +19,16 @@ package commands_test
 import (
 	"testing"
 
+	diemetav1 "dies.dev/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
+	diev1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 )
 
 func TestClusterSupplyChainListOptionsValidate(t *testing.T) {
@@ -57,20 +60,17 @@ No cluster supply chains found.
 		{
 			Name: "lists an item",
 			Args: []string{},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.ClusterSupplyChain{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: supplyChainName,
-					},
-					Status: cartov1alpha1.SupplyChainStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:   "Ready",
-								Status: metav1.ConditionTrue,
-							},
-						},
-					},
-				}),
+			GivenObjects: []client.Object{
+				diev1alpha1.ClusterSupplyChainBlank.
+					MetadataDie(
+						func(d *diemetav1.ObjectMetaDie) {
+							d.Name(supplyChainName)
+						}).StatusDie(
+					func(d *diev1alpha1.SupplyChainStatusDie) {
+						d.ConditionsDie(
+							diev1alpha1.ClusterSupplyChainConditionReadyBlank.Status(metav1.ConditionTrue),
+						)
+					}),
 			},
 			ExpectOutput: `
 NAME                READY   AGE
@@ -80,12 +80,12 @@ test-supply-chain   Ready   <unknown>
 		{
 			Name: "lists an item with empty values",
 			Args: []string{},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.ClusterSupplyChain{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: supplyChainName,
-					},
-				}),
+			GivenObjects: []client.Object{
+				diev1alpha1.ClusterSupplyChainBlank.
+					MetadataDie(
+						func(d *diemetav1.ObjectMetaDie) {
+							d.Name(supplyChainName)
+						}),
 			},
 			ExpectOutput: `
 NAME                READY       AGE

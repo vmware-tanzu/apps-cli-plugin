@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	diemetav1 "dies.dev/apis/meta/v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
 	corev1 "k8s.io/api/core/v1"
@@ -42,6 +43,7 @@ import (
 	watchhelper "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch"
 	watchfakes "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch/fake"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
+	diev1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
@@ -482,12 +484,10 @@ Workload "my-workload" is ready
 		{
 			Name: "error existing workload",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-					},
+			GivenObjects: []client.Object{
+				diev1alpha1.WorkloadBlank.MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+					d.Namespace(defaultNamespace)
+					d.Name(workloadName)
 				}),
 			},
 			ExpectOutput: `
