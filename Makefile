@@ -103,9 +103,6 @@ generate-internal:
 	@echo "diegen die:headerFile=\"hack/boilerplate.go.txt\" paths=\"./...\""
 	@$(DIEGEN) die:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-	@echo "find -L . -name 'zz_generated.*.go' -exec goimports --local github.com/vmware-tanzu/apps-cli-plugin -w {} \;"
-	@find -L . -name 'zz_generated.*.go' -exec $(GOIMPORTS) --local github.com/vmware-tanzu/apps-cli-plugin r -w {} \;
-
 vendor: go.mod go.sum $(GO_SOURCES)
 	go mod tidy
 	go mod vendor

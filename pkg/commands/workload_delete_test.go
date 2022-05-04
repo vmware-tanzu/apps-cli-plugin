@@ -33,7 +33,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/wait"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
-	diev1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
+	diecartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
@@ -148,12 +148,11 @@ func TestWorkloadDeleteCommand(t *testing.T) {
 		}
 	}
 
-	parent := diev1alpha1.WorkloadBlank.
-		MetadataDie(
-			func(d *diemetav1.ObjectMetaDie) {
-				d.Name(workloadName)
-				d.Namespace(defaultNamespace)
-			})
+	parent := diecartov1alpha1.WorkloadBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name(workloadName)
+			d.Namespace(defaultNamespace)
+		})
 
 	table := clitesting.CommandTestSuite{
 		{
@@ -292,12 +291,11 @@ Deleted workload "test-workload"
 			Args: []string{workloadName, workloadOtherName, flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent,
-				diev1alpha1.WorkloadBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name(workloadOtherName)
-							d.Namespace(defaultNamespace)
-						}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name(workloadOtherName)
+						d.Namespace(defaultNamespace)
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -430,12 +428,11 @@ spec:
         branch: main
 `),
 			GivenObjects: []client.Object{
-				diev1alpha1.WorkloadBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name("spring-petclinic")
-							d.Namespace(defaultNamespace)
-						}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace(defaultNamespace)
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -513,12 +510,11 @@ spec:
 			Name: "delete workload from file",
 			Args: []string{flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				diev1alpha1.WorkloadBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name("spring-petclinic")
-							d.Namespace(defaultNamespace)
-						}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace(defaultNamespace)
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -539,12 +535,11 @@ Deleted workload "spring-petclinic"
 			Name: "delete workload from file with custom namespace",
 			Args: []string{flags.NamespaceFlagName, "test-namespace", flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				diev1alpha1.WorkloadBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name("spring-petclinic")
-							d.Namespace("test-namespace")
-						}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace("test-namespace")
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -560,12 +555,11 @@ Deleted workload "spring-petclinic"
 			Name: "delete workload from file with custom namespace in file",
 			Args: []string{flags.FilePathFlagName, "testdata/workload-custom-namespace.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				diev1alpha1.WorkloadBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name("spring-petclinic")
-							d.Namespace("test-namespace")
-						}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace("test-namespace")
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -581,12 +575,11 @@ Deleted workload "spring-petclinic"
 			Name: "delete workload from file with namespace from cli args",
 			Args: []string{workloadName, flags.NamespaceFlagName, "test", flags.FilePathFlagName, "testdata/workload-custom-namespace.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				diev1alpha1.WorkloadBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name("spring-petclinic")
-							d.Namespace("test")
-						}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace("test")
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -605,12 +598,11 @@ Deleted workload "spring-petclinic"
 			GivenObjects: []client.Object{
 				parent,
 
-				diev1alpha1.WorkloadBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name("spring-petclinic")
-							d.Namespace(defaultNamespace)
-						}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace(defaultNamespace)
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{
 				{

@@ -36,7 +36,7 @@ import (
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
-	diev1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
+	diecartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
@@ -113,12 +113,11 @@ func TestWorkloadTailCommand(t *testing.T) {
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
 
-	parent := diev1alpha1.WorkloadBlank.
-		MetadataDie(
-			func(d *diemetav1.ObjectMetaDie) {
-				d.Name(workloadName)
-				d.Namespace(defaultNamespace)
-			})
+	parent := diecartov1alpha1.WorkloadBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name(workloadName)
+			d.Namespace(defaultNamespace)
+		})
 
 	table := clitesting.CommandTestSuite{
 		{

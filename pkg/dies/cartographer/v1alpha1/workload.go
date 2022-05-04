@@ -15,9 +15,6 @@ type _ = cartov1alpha1.Workload
 // +die
 type _ = cartov1alpha1.WorkloadSpec
 
-// +die
-type _ = cartov1alpha1.WorkloadStatus
-
 func (d *WorkloadSpecDie) EnvDie(name string, fn func(d *diecorev1.EnvVarDie)) *WorkloadSpecDie {
 	return d.DieStamp(func(r *cartov1alpha1.WorkloadSpec) {
 		for i := range r.Env {
@@ -34,6 +31,10 @@ func (d *WorkloadSpecDie) EnvDie(name string, fn func(d *diecorev1.EnvVarDie)) *
 		r.Env = append(r.Env, d.DieRelease())
 	})
 }
+
+// +die
+type _ = cartov1alpha1.WorkloadStatus
+
 func (d *WorkloadStatusDie) ConditionsDie(conditions ...*diemetav1.ConditionDie) *WorkloadStatusDie {
 	return d.DieStamp(func(r *cartov1alpha1.WorkloadStatus) {
 		r.Conditions = make([]metav1.Condition, len(conditions))

@@ -45,7 +45,7 @@ import (
 	watchhelper "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch"
 	watchfakes "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch/fake"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
-	diev1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
+	diecartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
@@ -100,13 +100,16 @@ func TestWorkloadUpdateCommand(t *testing.T) {
 
 	var cmd *cobra.Command
 
-	parent := diev1alpha1.WorkloadBlank.
-		MetadataDie(
-			func(d *diemetav1.ObjectMetaDie) {
-				d.Name(workloadName)
-				d.Namespace(defaultNamespace)
-			})
-
+	parent := diecartov1alpha1.WorkloadBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name(workloadName)
+			d.Namespace(defaultNamespace)
+		})
+	sprintPetclinicWorkload := diecartov1alpha1.WorkloadBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name("spring-petclinic")
+			d.Namespace(defaultNamespace)
+		})
 	table := clitesting.CommandTestSuite{
 		{
 			Name:        "invalid args",
@@ -117,10 +120,9 @@ func TestWorkloadUpdateCommand(t *testing.T) {
 			Name: "noop",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
-						d.Image("ubuntu:bionic")
-					},
+				parent.SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+					d.Image("ubuntu:bionic")
+				},
 				),
 			},
 			ExpectOutput: `
@@ -145,16 +147,14 @@ Workload is unchanged, skipping update
 			Name: "not found",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
-				diecorev1.NamespaceBlank.MetadataDie(
-					func(d *diemetav1.ObjectMetaDie) {
+				diecorev1.NamespaceBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 						d.Name(defaultNamespace)
-					},
-				),
-				diev1alpha1.WorkloadBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name("foo")
-						}),
+					}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("foo")
+					}),
 			},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("get", "Workload", clitesting.InduceFailureOpts{
@@ -191,11 +191,10 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 			Name: "dry run",
 			Args: []string{workloadName, flags.DryRunFlagName, flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					},
-				),
+					}),
 			},
 			ExpectOutput: `
 ---
@@ -219,11 +218,10 @@ status:
 				clitesting.InduceFailure("update", "Workload"),
 			},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					},
-				),
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -249,8 +247,8 @@ status:
 			Name: "update subPath for git source",
 			Args: []string{workloadName, flags.SubPathFlagName, "./app", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Source(
 							&cartov1alpha1.Source{
 								Git: &cartov1alpha1.GitSource{
@@ -261,8 +259,7 @@ status:
 								},
 							},
 						)
-					},
-				),
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -289,16 +286,15 @@ status:
 			Name: "override subPath for source image source",
 			Args: []string{workloadName, flags.SubPathFlagName, "./app", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Source(
 							&cartov1alpha1.Source{
 								Image:   "ubuntu:source",
 								Subpath: "./cmd",
 							},
 						)
-					},
-				),
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -320,8 +316,8 @@ status:
 			Name: "unset subPath for git source",
 			Args: []string{workloadName, flags.SubPathFlagName, "./app", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Source(
 							&cartov1alpha1.Source{
 								Git: &cartov1alpha1.GitSource{
@@ -332,8 +328,7 @@ status:
 								},
 							},
 						)
-					},
-				),
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -365,11 +360,10 @@ status:
 				}),
 			},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					},
-				),
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -408,11 +402,10 @@ Error: conflict updating workload, the object was modified by another user; plea
 			Name: "wait error with timeout",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					},
-				),
+					}),
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -481,11 +474,10 @@ To view status run: tanzu apps workload get my-workload --namespace default
 			Name: "wait error for false condition",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					},
-				),
+					}),
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -555,11 +547,10 @@ Error: Failed to become ready: a hopefully informative message about what went w
 			Name: "successful wait for ready condition",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					},
-				),
+					}),
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -658,11 +649,10 @@ Workload "my-workload" is ready
 				return nil
 			},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					},
-				),
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -741,11 +731,10 @@ Workload "my-workload" is ready
 				return nil
 			},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					},
-				),
+					}),
 			},
 
 			ExpectUpdates: []client.Object{
@@ -793,26 +782,17 @@ Workload "my-workload" is ready
 			Name: "filepath",
 			Args: []string{flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				diev1alpha1.WorkloadBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name("spring-petclinic")
-							d.Namespace(defaultNamespace)
-							d.Labels(
-								map[string]string{
-									"preserve-me": "should-exist",
-								},
-							)
-						}).SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				sprintPetclinicWorkload.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel("preserve-me", "should-exist")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 						d.Env(corev1.EnvVar{
 							Name:  "OVERRIDE_VAR",
 							Value: "doesnt matter",
-						},
-						)
-					},
-				),
+						})
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -921,26 +901,17 @@ spec:
         branch: main
 `),
 			GivenObjects: []client.Object{
-				diev1alpha1.WorkloadBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name("spring-petclinic")
-							d.Namespace(defaultNamespace)
-							d.Labels(
-								map[string]string{
-									"preserve-me": "should-exist",
-								},
-							)
-						}).SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				sprintPetclinicWorkload.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel("preserve-me", "should-exist")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 						d.Env(corev1.EnvVar{
 							Name:  "OVERRIDE_VAR",
 							Value: "doesnt matter",
-						},
-						)
-					},
-				),
+						})
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -1024,11 +995,10 @@ Updated workload "spring-petclinic"
 			Name: "accept yaml file through stdin - using --dry-run flag",
 			Args: []string{flags.FilePathFlagName, "-", flags.DryRunFlagName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					},
-				),
+					}),
 			},
 			Stdin: []byte(`
 ---
@@ -1080,27 +1050,20 @@ spec:
 			Name: "filepath - custom namespace and name",
 			Args: []string{workloadName, flags.NamespaceFlagName, "test-namespace", flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				diev1alpha1.WorkloadBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Namespace("test-namespace")
-							d.Name(workloadName)
-							d.Labels(
-								map[string]string{
-									"preserve-me": "should-exist",
-								},
-							)
-						},
-					).SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Namespace("test-namespace")
+						d.Name(workloadName)
+						d.AddLabel("preserve-me", "should-exist")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 						d.Env(corev1.EnvVar{
 							Name:  "OVERRIDE_VAR",
 							Value: "doesnt matter",
 						})
 					},
-				),
-			},
+					)},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{

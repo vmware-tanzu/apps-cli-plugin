@@ -202,8 +202,7 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 		// Record the given objects
 		givenObjects := make([]client.Object, 0, len(tc.GivenObjects))
 		originalGivenObjects := make([]client.Object, 0, len(tc.GivenObjects))
-		for _, f := range tc.GivenObjects {
-			object := f
+		for _, object := range tc.GivenObjects {
 			givenObjects = append(givenObjects, object.DeepCopyObject().(client.Object))
 			originalGivenObjects = append(originalGivenObjects, object.DeepCopyObject().(client.Object))
 		}

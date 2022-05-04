@@ -44,7 +44,7 @@ import (
 	watchhelper "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch"
 	watchfakes "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch/fake"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
-	diev1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
+	diecartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
@@ -89,12 +89,11 @@ func TestWorkloadApplyCommand(t *testing.T) {
 
 	var cmd *cobra.Command
 
-	parent := diev1alpha1.WorkloadBlank.
-		MetadataDie(
-			func(d *diemetav1.ObjectMetaDie) {
-				d.Name(workloadName)
-				d.Namespace(defaultNamespace)
-			})
+	parent := diecartov1alpha1.WorkloadBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name(workloadName)
+			d.Namespace(defaultNamespace)
+		})
 
 	table := clitesting.CommandTestSuite{
 		{
@@ -701,18 +700,13 @@ spec:
         branch: main
 `),
 			GivenObjects: []client.Object{
-				diev1alpha1.WorkloadBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name("spring-petclinic")
-							d.Namespace(defaultNamespace)
-							d.Labels(
-								map[string]string{
-									"preserve-me": "should-exist",
-								},
-							)
-						}).SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace(defaultNamespace)
+						d.AddLabel("preserve-me", "should-exist")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 						d.Env(
 							corev1.EnvVar{
@@ -804,8 +798,8 @@ Updated workload "spring-petclinic"
 			Name: "update - accept yaml file through stdin - using --dry-run flag",
 			Args: []string{flags.FilePathFlagName, "-", flags.DryRunFlagName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 					}),
 			},
@@ -937,8 +931,8 @@ Created workload "spring-petclinic"
 			Name: "noop",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 					}),
 			},
@@ -972,8 +966,8 @@ Workload is unchanged, skipping update
 			Name: "update - dry run",
 			Args: []string{workloadName, flags.DebugFlagName, flags.DryRunFlagName, flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 					}),
 			},
@@ -1002,8 +996,8 @@ status:
 				clitesting.InduceFailure("update", "Workload"),
 			},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 					}),
 			},
@@ -1036,8 +1030,8 @@ status:
 				}),
 			},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 					}),
 			},
@@ -1078,8 +1072,8 @@ Error: conflict updating workload, the object was modified by another user; plea
 			Name: "update - wait error with timeout",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 					}),
 			},
@@ -1150,8 +1144,8 @@ To view status run: tanzu apps workload get my-workload --namespace default
 			Name: "update - wait error for false condition",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 					}),
 			},
@@ -1224,8 +1218,8 @@ Error: Failed to become ready: a hopefully informative message about what went w
 			Name: "update - successful wait for ready condition",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 					}),
 			},
@@ -1326,8 +1320,8 @@ Workload "my-workload" is ready
 				return nil
 			},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 					}),
 			},
@@ -1377,25 +1371,19 @@ Workload "my-workload" is ready
 			Args: []string{flags.FilePathFlagName, "testdata/workload.yaml", flags.SubPathFlagName, "./cmd", flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name("spring-petclinic")
-							d.Labels(
-								map[string]string{
-									"preserve-me": "should-exist",
-								},
-							)
-						}).
-					SpecDie(
-						func(d *diev1alpha1.WorkloadSpecDie) {
-							d.Image("ubuntu:bionic")
-							d.Env(
-								corev1.EnvVar{
-									Name:  "OVERRIDE_VAR",
-									Value: "doesnt matter",
-								},
-							)
-						}),
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("preserve-me", "should-exist")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+						d.Env(
+							corev1.EnvVar{
+								Name:  "OVERRIDE_VAR",
+								Value: "doesnt matter",
+							},
+						)
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -1482,25 +1470,19 @@ Updated workload "spring-petclinic"
 			Args: []string{workloadName, flags.NamespaceFlagName, "test-namespace", flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Namespace("test-namespace")
-							d.Labels(
-								map[string]string{
-									"preserve-me": "should-exist",
-								},
-							)
-						}).
-					SpecDie(
-						func(d *diev1alpha1.WorkloadSpecDie) {
-							d.Image("ubuntu:bionic")
-							d.Env(
-								corev1.EnvVar{
-									Name:  "OVERRIDE_VAR",
-									Value: "doesnt matter",
-								},
-							)
-						}),
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Namespace("test-namespace")
+						d.AddLabel("preserve-me", "should-exist")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+						d.Env(
+							corev1.EnvVar{
+								Name:  "OVERRIDE_VAR",
+								Value: "doesnt matter",
+							},
+						)
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -1601,8 +1583,8 @@ Updated workload "my-workload"
 			Name: "update - serviceclaim with deprecation warning",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-ns:my-prod-db", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
 					}),
 			},
@@ -1713,14 +1695,10 @@ Created workload "my-workload"
 			Name: "update serviceAccountName",
 			Args: []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.MetadataDie(
-					func(d *diemetav1.ObjectMetaDie) {
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 						d.Name("spring-petclinic")
-						d.Labels(
-							map[string]string{
-								"preserve-me": "should-exist",
-							},
-						)
+						d.AddLabel("preserve-me", "should-exist")
 					}),
 			},
 			ExpectUpdates: []client.Object{
@@ -1775,18 +1753,13 @@ Updated workload "spring-petclinic"
 			Name: "delete serviceAccountName by setting to empty",
 			Args: []string{flags.FilePathFlagName, "testdata/no-service-account-name.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.MetadataDie(
-					func(d *diemetav1.ObjectMetaDie) {
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 						d.Name("spring-petclinic")
-						d.Labels(
-							map[string]string{
-								"preserve-me": "should-exist",
-							},
-						)
-					}).SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
-						d.ServiceAccountName("my-service-account")
-					}),
+						d.AddLabel("preserve-me", "should-exist")
+					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+					d.ServiceAccountName("my-service-account")
+				}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -1839,18 +1812,13 @@ Updated workload "spring-petclinic"
 			Name: "delete serviceAccountName field",
 			Args: []string{flags.FilePathFlagName, "testdata/no-service-account-name.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
-				parent.MetadataDie(
-					func(d *diemetav1.ObjectMetaDie) {
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 						d.Name("spring-petclinic")
-						d.Labels(
-							map[string]string{
-								"preserve-me": "should-exist",
-							},
-						)
-					}).SpecDie(
-					func(d *diev1alpha1.WorkloadSpecDie) {
-						d.ServiceAccountName("my-service-account")
-					}),
+						d.AddLabel("preserve-me", "should-exist")
+					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+					d.ServiceAccountName("my-service-account")
+				}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -1904,7 +1872,7 @@ Updated workload "spring-petclinic"
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(
-						func(d *diev1alpha1.WorkloadSpecDie) {
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
 							d.ServiceAccountName("my-service-account")
 							d.Source(&cartov1alpha1.Source{
 								Git: &cartov1alpha1.GitSource{

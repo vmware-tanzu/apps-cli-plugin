@@ -22,15 +22,17 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"dies.dev/apis/meta/v1"
 	json "encoding/json"
 	fmtx "fmt"
-	cartographerv1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
+
+	v1 "dies.dev/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	unstructured "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
+
+	cartographerv1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 )
 
 var ClusterSupplyChainBlank = (&ClusterSupplyChainDie{}).DieFeed(cartographerv1alpha1.ClusterSupplyChain{})
@@ -147,6 +149,24 @@ func (d *ClusterSupplyChainDie) MetadataDie(fn func(d *v1.ObjectMetaDie)) *Clust
 		d := v1.ObjectMetaBlank.DieImmutable(false).DieFeed(r.ObjectMeta)
 		fn(d)
 		r.ObjectMeta = d.DieRelease()
+	})
+}
+
+// SpecDie stamps the resource's spec field with a mutable die.
+func (d *ClusterSupplyChainDie) SpecDie(fn func(d *SupplyChainSpecDie)) *ClusterSupplyChainDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.ClusterSupplyChain) {
+		d := SupplyChainSpecBlank.DieImmutable(false).DieFeed(r.Spec)
+		fn(d)
+		r.Spec = d.DieRelease()
+	})
+}
+
+// StatusDie stamps the resource's status field with a mutable die.
+func (d *ClusterSupplyChainDie) StatusDie(fn func(d *SupplyChainStatusDie)) *ClusterSupplyChainDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.ClusterSupplyChain) {
+		d := SupplyChainStatusBlank.DieImmutable(false).DieFeed(r.Status)
+		fn(d)
+		r.Status = d.DieRelease()
 	})
 }
 

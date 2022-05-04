@@ -7,7 +7,7 @@ import (
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 )
 
-// +die:object=true
+// +die:object=true,spec=SupplyChainSpec,status=SupplyChainStatus
 type _ = cartov1alpha1.ClusterSupplyChain
 
 // +die
@@ -25,16 +25,6 @@ func (d *SupplyChainStatusDie) ConditionsDie(conditions ...*diemetav1.ConditionD
 	})
 }
 
-// StatusDie stamps the resource's Status field with a mutable die.
-func (d *ClusterSupplyChainDie) StatusDie(fn func(d *SupplyChainStatusDie)) *ClusterSupplyChainDie {
-	return d.DieStamp(func(r *cartov1alpha1.ClusterSupplyChain) {
-		d := SupplyChainStatusBlank.DieImmutable(false).DieFeed(r.Status)
-		fn(d)
-		r.Status = d.DieRelease()
-	})
-}
-
 var (
-	ClusterSupplyChainConditionTemplatesReadyBlank = diemetav1.ConditionBlank.Type(cartov1alpha1.SupplyChainTemplatesReady)
-	ClusterSupplyChainConditionReadyBlank          = diemetav1.ConditionBlank.Type(cartov1alpha1.SupplyChainReady)
+	ClusterSupplyChainConditionReadyBlank = diemetav1.ConditionBlank.Type(cartov1alpha1.SupplyChainReady)
 )

@@ -43,7 +43,7 @@ import (
 	watchhelper "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch"
 	watchfakes "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch/fake"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
-	diev1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
+	diecartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
@@ -485,7 +485,7 @@ Workload "my-workload" is ready
 			Name: "error existing workload",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName},
 			GivenObjects: []client.Object{
-				diev1alpha1.WorkloadBlank.MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+				diecartov1alpha1.WorkloadBlank.MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 					d.Namespace(defaultNamespace)
 					d.Name(workloadName)
 				}),

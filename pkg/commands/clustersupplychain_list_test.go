@@ -28,7 +28,7 @@ import (
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
-	diev1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
+	diecartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 )
 
 func TestClusterSupplyChainListOptionsValidate(t *testing.T) {
@@ -61,14 +61,13 @@ No cluster supply chains found.
 			Name: "lists an item",
 			Args: []string{},
 			GivenObjects: []client.Object{
-				diev1alpha1.ClusterSupplyChainBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name(supplyChainName)
-						}).StatusDie(
-					func(d *diev1alpha1.SupplyChainStatusDie) {
+				diecartov1alpha1.ClusterSupplyChainBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name(supplyChainName)
+					}).
+					StatusDie(func(d *diecartov1alpha1.SupplyChainStatusDie) {
 						d.ConditionsDie(
-							diev1alpha1.ClusterSupplyChainConditionReadyBlank.Status(metav1.ConditionTrue),
+							diecartov1alpha1.ClusterSupplyChainConditionReadyBlank.Status(metav1.ConditionTrue),
 						)
 					}),
 			},
@@ -81,11 +80,10 @@ test-supply-chain   Ready   <unknown>
 			Name: "lists an item with empty values",
 			Args: []string{},
 			GivenObjects: []client.Object{
-				diev1alpha1.ClusterSupplyChainBlank.
-					MetadataDie(
-						func(d *diemetav1.ObjectMetaDie) {
-							d.Name(supplyChainName)
-						}),
+				diecartov1alpha1.ClusterSupplyChainBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name(supplyChainName)
+					}),
 			},
 			ExpectOutput: `
 NAME                READY       AGE
