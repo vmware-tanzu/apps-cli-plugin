@@ -160,6 +160,8 @@ reason: OopsieDoodle
 status: "False"
 type: Ready
 
+Supply Chain resources not found
+
 Services
 CLAIM      NAME         KIND         API VERSION
 database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
@@ -199,6 +201,8 @@ message: a hopefully informative message about what went wrong
 reason: OopsieDoodle
 status: "False"
 type: Ready
+
+Supply Chain resources not found
 
 No pods found for workload.
 `,
@@ -255,6 +259,8 @@ branch:   master
 tag:      v1.0.0
 commit:   abcdef
 
+Supply Chain resources not found
+
 No pods found for workload.
 `,
 		},
@@ -300,6 +306,8 @@ Source
 type:    source image
 image:   my-registry/my-image:v1.0.0
 
+Supply Chain resources not found
+
 No pods found for workload.
 `,
 		},
@@ -342,6 +350,105 @@ type: Ready
 Source
 type:    image
 image:   docker.io/library/nginx:latest
+
+Supply Chain resources not found
+
+No pods found for workload.
+`,
+		},
+		{
+			Name: "show resources",
+			Args: []string{workloadName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      workloadName,
+						Namespace: defaultNamespace,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: url,
+								Ref: cartov1alpha1.GitRef{
+									Branch: "master",
+									Tag:    "v1.0.0",
+									Commit: "abcdef",
+								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:    cartov1alpha1.WorkloadConditionReady,
+								Status:  metav1.ConditionFalse,
+								Reason:  "OopsieDoodle",
+								Message: "a hopefully informative message about what went wrong",
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+								},
+							},
+						},
+						Resources: []cartov1alpha1.RealizedResource{{
+							Name: "source-provider",
+							Conditions: []metav1.Condition{
+								{
+									Type:   "Ready",
+									Status: "True",
+								},
+								{
+									Type:   "ResourceSubmitted",
+									Status: "True",
+								},
+							},
+						}, {
+							Name: "deliverable",
+							Conditions: []metav1.Condition{
+								{
+									Type:   "Ready",
+									Status: "Unknown",
+								},
+								{
+									Type:   "ResourceSubmitted",
+									Status: "Unknown",
+								},
+							},
+						}, {
+							Name: "image-builder",
+							Conditions: []metav1.Condition{
+								{
+									Type:   "Ready",
+									Status: "False",
+								},
+								{
+									Type:   "ResourceSubmitted",
+									Status: "False",
+								},
+							},
+						}},
+					},
+				}),
+			},
+			ExpectOutput: `
+# my-workload: OopsieDoodle
+---
+lastTransitionTime: "2019-06-29T01:44:05Z"
+message: a hopefully informative message about what went wrong
+reason: OopsieDoodle
+status: "False"
+type: Ready
+
+Source
+type:     git
+url:      https://example.com
+branch:   master
+tag:      v1.0.0
+commit:   abcdef
+
+RESOURCE          READY     TIME
+source-provider   True      <unknown>
+deliverable       Unknown   <unknown>
+image-builder     False     <unknown>
 
 No pods found for workload.
 `,
@@ -411,6 +518,8 @@ message: a hopefully informative message about what went wrong
 reason: OopsieDoodle
 status: Unknown
 type: Ready
+
+Supply Chain resources not found
 
 Pods
 NAME   STATUS    RESTARTS   AGE
@@ -496,6 +605,8 @@ message: a hopefully informative message about what went wrong
 reason: OopsieDoodle
 status: Unknown
 type: Ready
+
+Supply Chain resources not found
 
 No pods found for workload.
 
@@ -593,6 +704,8 @@ reason: Worked
 status: "True"
 type: Ready
 
+Supply Chain resources not found
+
 Pods
 NAME   STATUS    RESTARTS   AGE
 pod1   Running   0          <unknown>
@@ -683,6 +796,8 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 			ExpectOutput: `
 # my-workload: <unknown>
 
+Supply Chain resources not found
+
 Failed to list pods:
   inducing failure for list PodList
 `,
@@ -703,6 +818,8 @@ Failed to list pods:
 			},
 			ExpectOutput: `
 # my-workload: <unknown>
+
+Supply Chain resources not found
 
 No pods found for workload.
 `,

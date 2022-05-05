@@ -38,6 +38,11 @@ const (
 	ResourceRealizerBuilderErrorResourcesSubmittedReason = "ResourceRealizerBuilderError"
 )
 
+const (
+	ResourceReady     = "Ready"
+	ResourceSubmitted = "ResourceSubmitted"
+)
+
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:categories="all"
 // +kubebuilder:subresource:status
