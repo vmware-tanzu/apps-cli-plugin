@@ -9,7 +9,7 @@
 
 ## Local builds
 
-Building the CLI plugin locally requires both go 1.17 and the [Tanzu CLI](https://github.com/vmware-tanzu/tanzu-framework/tree/main/cmd/cli#installation) with the builder plugin installed.
+Building the CLI plugin locally requires both go 1.18 and the [Tanzu CLI](https://github.com/vmware-tanzu/tanzu-framework/tree/main/cmd/cli#installation) with the builder plugin installed.
 
 Install the Tanzu builder and test plugins:
 
