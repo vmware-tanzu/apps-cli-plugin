@@ -78,8 +78,8 @@ func (w *Workload) loadAndValidateDocuments(in io.Reader) error {
 	return nil
 }
 
-func (w *Workload) MergeServiceAccountName(serviceAccountName string) {
-	w.Spec.ServiceAccountName = serviceAccountName
+func (w *WorkloadSpec) MergeServiceAccountName(serviceAccountName string) {
+	w.ServiceAccountName = serviceAccountName
 }
 
 func (w *Workload) Merge(updates *Workload) {
@@ -162,6 +162,9 @@ func (w *WorkloadSpec) Merge(updates *WorkloadSpec) {
 		}
 		if s.Image != "" {
 			w.MergeSourceImage(s.Image)
+		}
+		if s.Subpath != "" {
+			w.MergeSubPath(s.Subpath)
 		}
 	}
 	for _, e := range updates.Env {
