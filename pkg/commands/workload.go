@@ -445,20 +445,20 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 	return okToCreate, nil
 }
 
-func (w *WorkloadOptions) LoadInputWorkload(input io.Reader, workload *cartov1alpha1.Workload) error {
+func (opts *WorkloadOptions) LoadInputWorkload(input io.Reader, workload *cartov1alpha1.Workload) error {
 	var in io.Reader
 
-	f, err := os.Open(w.FilePath)
+	f, err := os.Open(opts.FilePath)
 	in = f
-	if f == nil && w.FilePath == "-" {
+	if f == nil && opts.FilePath == "-" {
 		in = input
 	} else if err != nil {
-		return fmt.Errorf("unable to open file %q: %w", w.FilePath, err)
+		return fmt.Errorf("unable to open file %q: %w", opts.FilePath, err)
 	}
 	defer f.Close()
 
 	if err := workload.Load(in); err != nil {
-		return fmt.Errorf("unable to load file %q: %w", w.FilePath, err)
+		return fmt.Errorf("unable to load file %q: %w", opts.FilePath, err)
 	}
 	return nil
 }

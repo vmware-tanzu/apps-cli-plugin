@@ -1753,7 +1753,7 @@ Created workload "my-workload"
 		},
 		{
 			Name: "update serviceAccountName",
-			Args: []string{flags.FilePathFlagName, "testdata/service_account_name.yaml", flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.YesFlagName},
 			GivenObjects: []clitesting.Factory{
 				clitesting.Wrapper(&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1815,7 +1815,7 @@ Updated workload "spring-petclinic"
 		},
 		{
 			Name: "delete serviceAccountName by setting to empty",
-			Args: []string{flags.FilePathFlagName, "testdata/no_service_account_name.yaml", flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/no-service-account-name.yaml", flags.YesFlagName},
 			GivenObjects: []clitesting.Factory{
 				clitesting.Wrapper(&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1879,7 +1879,7 @@ Updated workload "spring-petclinic"
 		},
 		{
 			Name: "delete serviceAccountName field",
-			Args: []string{flags.FilePathFlagName, "testdata/no_service_account_name.yaml", flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/no-service-account-name.yaml", flags.YesFlagName},
 			GivenObjects: []clitesting.Factory{
 				clitesting.Wrapper(&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1941,8 +1941,65 @@ Updated workload "spring-petclinic"
 `,
 		},
 		{
+			Name: "do not delete serviceAccountName when updating another field",
+			Args: []string{workloadName, flags.GitTagFlagName, "tap-1.1", flags.YesFlagName},
+			GivenObjects: []clitesting.Factory{
+				clitesting.Wrapper(&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: "my-service-account",
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						},
+					},
+				}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: "my-service-account",
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+									Tag:    "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Update workload:
+...
+  9,  9   |  source:
+ 10, 10   |    git:
+ 11, 11   |      ref:
+ 12, 12   |        branch: main
+     13 + |        tag: tap-1.1
+ 13, 14   |      url: https://github.com/sample-accelerators/spring-petclinic
+
+Updated workload "my-workload"
+`,
+		},
+		{
 			Name: "create with serviceAccountName",
-			Args: []string{flags.FilePathFlagName, "testdata/service_account_name.yaml", flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.YesFlagName},
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
