@@ -85,6 +85,10 @@ func TestNewServiceClaimWorkloadConfigFromAnnotation(t *testing.T) {
 		wantServiceClaims: map[string]interface{}{},
 		annotation:        "invalid stuff",
 		shouldErr:         true,
+	}, {
+		name:              "empty",
+		wantServiceClaims: map[string]interface{}{},
+		annotation:        "",
 	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

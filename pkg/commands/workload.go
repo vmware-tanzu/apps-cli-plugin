@@ -32,7 +32,6 @@ import (
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
-	servicev1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/services/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/parsers"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
@@ -256,26 +255,22 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 		}
 	}
 
-	sc := servicev1alpha1.NewServiceClaimWorkloadConfig()
 	for _, ref := range opts.ServiceRefs {
 		parts := parsers.DeletableKeyValue(ref)
+		serviceRefKey := parts[0]
 		if len(parts) == 1 {
-			deleteKey := parts[0]
-			workload.Spec.DeleteServiceClaim(deleteKey)
-			workload.DeleteServiceClaimAnnotation(deleteKey)
+			workload.Spec.DeleteServiceClaim(serviceRefKey)
+			workload.DeleteServiceClaimAnnotation(serviceRefKey)
 		} else {
-			deleteKey := parts[0]
 			deleteValue := parts[1]
-			workload.Spec.MergeServiceClaim(cartov1alpha1.NewServiceClaim(deleteKey, parsers.ObjectReference(deleteValue)))
+			workload.Spec.MergeServiceClaim(cartov1alpha1.NewServiceClaim(serviceRefKey, parsers.ObjectReference(deleteValue)))
 			serviceClaimAnnotationValue := parsers.ObjectReferenceAnnotation(deleteValue)
 			if serviceClaimAnnotationValue != nil {
-				sc.AddServiceClaim(deleteKey, serviceClaimAnnotationValue)
+				workload.MergeServiceClaimAnnotation(serviceRefKey, serviceClaimAnnotationValue)
+			} else {
+				workload.DeleteServiceClaimAnnotation(serviceRefKey)
 			}
 		}
-	}
-
-	if sc.Annotation() != "" {
-		workload.MergeAnnotations(apis.ServiceClaimAnnotationName, sc.Annotation())
 	}
 
 	if opts.LimitCPU != "" {

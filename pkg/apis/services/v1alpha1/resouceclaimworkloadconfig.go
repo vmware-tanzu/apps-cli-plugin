@@ -57,9 +57,12 @@ func NewServiceClaimWorkloadConfig() *ServiceClaimWorkloadConfig {
 }
 
 func NewServiceClaimWorkloadConfigFromAnnotation(annotationValue string) (*ServiceClaimWorkloadConfig, error) {
-	serviceClaimConfig := &ServiceClaimWorkloadConfig{}
-	err := json.Unmarshal([]byte(annotationValue), &serviceClaimConfig)
-	return serviceClaimConfig, err
+	serviceClaimConfig := NewServiceClaimWorkloadConfig()
+	if annotationValue != "" {
+		err := json.Unmarshal([]byte(annotationValue), &serviceClaimConfig)
+		return serviceClaimConfig, err
+	}
+	return serviceClaimConfig, nil
 }
 
 func (sc *ServiceClaimWorkloadConfig) AddServiceClaim(name string, value interface{}) {
