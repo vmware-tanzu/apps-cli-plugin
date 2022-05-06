@@ -1,11 +1,11 @@
 /*
-Copyright 2019 VMware, Inc.
+Copyright 2022 the original author or authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,22 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package testing
+package v1
 
 import (
-	rtesting "github.com/vmware-labs/reconciler-runtime/testing"
+	corev1 "k8s.io/api/core/v1"
 )
 
-const TestField = "test-field"
+// +die:object=true
+type _ = corev1.Binding
 
-type ReactionFunc = rtesting.ReactionFunc
-
-type Action = rtesting.Action
-type GetAction = rtesting.GetAction
-
-var NewFakeClient = rtesting.NewFakeClient
-var Wrapper = rtesting.Wrapper
-
-var InduceFailure = rtesting.InduceFailure
-
-type InduceFailureOpts = rtesting.InduceFailureOpts
+func (d *BindingDie) TargetDie(fn func(d *ObjectReferenceDie)) *BindingDie {
+	return d.DieStamp(func(r *corev1.Binding) {
+		d := ObjectReferenceBlank.DieImmutable(false).DieFeed(r.Target)
+		fn(d)
+		r.Target = d.DieRelease()
+	})
+}

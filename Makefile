@@ -21,6 +21,7 @@ GOBIN=$(shell go env GOBIN)
 endif
 
 CONTROLLER_GEN ?= go run -mod=mod -modfile hack/go.mod sigs.k8s.io/controller-tools/cmd/controller-gen
+DIEGEN ?= go run -modfile hack/go.mod -mod=mod dies.dev/diegen
 GOIMPORTS ?= go run -mod=mod -modfile hack/go.mod golang.org/x/tools/cmd/goimports
 
 ARTIFACTS_DIR ?= ./artifacts
@@ -99,6 +100,8 @@ generate: generate-internal fmt ## Generate code
 .PHONY: generate-internal
 generate-internal:
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
+	@echo "diegen die:headerFile=\"hack/boilerplate.go.txt\" paths=\"./...\""
+	@$(DIEGEN) die:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 vendor: go.mod go.sum $(GO_SOURCES)
 	go mod tidy

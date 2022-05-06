@@ -5,6 +5,7 @@
 package tools
 
 import (
+	_ "dies.dev/diegen"
 	_ "golang.org/x/tools/cmd/goimports"
 	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
 )

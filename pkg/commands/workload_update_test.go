@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	diecorev1 "dies.dev/apis/core/v1"
+	diemetav1 "dies.dev/apis/meta/v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
 	corev1 "k8s.io/api/core/v1"
@@ -43,6 +45,7 @@ import (
 	watchhelper "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch"
 	watchfakes "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch/fake"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
+	diecartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
@@ -97,6 +100,16 @@ func TestWorkloadUpdateCommand(t *testing.T) {
 
 	var cmd *cobra.Command
 
+	parent := diecartov1alpha1.WorkloadBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name(workloadName)
+			d.Namespace(defaultNamespace)
+		})
+	sprintPetclinicWorkload := diecartov1alpha1.WorkloadBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name("spring-petclinic")
+			d.Namespace(defaultNamespace)
+		})
 	table := clitesting.CommandTestSuite{
 		{
 			Name:        "invalid args",
@@ -106,16 +119,11 @@ func TestWorkloadUpdateCommand(t *testing.T) {
 		{
 			Name: "noop",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+					d.Image("ubuntu:bionic")
+				},
+				),
 			},
 			ExpectOutput: `
 Workload is unchanged, skipping update
@@ -124,14 +132,8 @@ Workload is unchanged, skipping update
 		{
 			Name: "invalid resource",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ShouldError: true,
 			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
@@ -144,12 +146,15 @@ Workload is unchanged, skipping update
 		{
 			Name: "not found",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&corev1.Namespace{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				diecorev1.NamespaceBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name(defaultNamespace)
+					}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("foo")
+					}),
 			},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("get", "Workload", clitesting.InduceFailureOpts{
@@ -185,16 +190,11 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 		{
 			Name: "dry run",
 			Args: []string{workloadName, flags.DryRunFlagName, flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
 			},
 			ExpectOutput: `
 ---
@@ -217,17 +217,11 @@ status:
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("update", "Workload"),
 			},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-						Labels:    map[string]string{},
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -252,24 +246,20 @@ status:
 		{
 			Name: "update subPath for git source",
 			Args: []string{workloadName, flags.SubPathFlagName, "./app", flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-						Labels:    map[string]string{},
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &cartov1alpha1.Source{
-							Git: &cartov1alpha1.GitSource{
-								URL: "https://github.com/spring-projects/spring-petclinic.git",
-								Ref: cartov1alpha1.GitRef{
-									Branch: "main",
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(
+							&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/spring-projects/spring-petclinic.git",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+									},
 								},
 							},
-						},
-					},
-				}),
+						)
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -295,20 +285,16 @@ status:
 		{
 			Name: "override subPath for source image source",
 			Args: []string{workloadName, flags.SubPathFlagName, "./app", flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-						Labels:    map[string]string{},
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &cartov1alpha1.Source{
-							Image:   "ubuntu:source",
-							Subpath: "./cmd",
-						},
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(
+							&cartov1alpha1.Source{
+								Image:   "ubuntu:source",
+								Subpath: "./cmd",
+							},
+						)
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -329,24 +315,20 @@ status:
 		{
 			Name: "unset subPath for git source",
 			Args: []string{workloadName, flags.SubPathFlagName, "./app", flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-						Labels:    map[string]string{},
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &cartov1alpha1.Source{
-							Git: &cartov1alpha1.GitSource{
-								URL: "https://github.com/spring-projects/spring-petclinic.git",
-								Ref: cartov1alpha1.GitRef{
-									Branch: "main",
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(
+							&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/spring-projects/spring-petclinic.git",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+									},
 								},
 							},
-						},
-					},
-				}),
+						)
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -377,17 +359,11 @@ status:
 					Error: apierrors.NewConflict(schema.GroupResource{Group: "carto.run", Resource: "workloads"}, workloadName, fmt.Errorf("induced conflict")),
 				}),
 			},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-						Labels:    map[string]string{},
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -425,16 +401,11 @@ Error: conflict updating workload, the object was modified by another user; plea
 		{
 			Name: "wait error with timeout",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -502,16 +473,11 @@ To view status run: tanzu apps workload get my-workload --namespace default
 		{
 			Name: "wait error for false condition",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -580,16 +546,11 @@ Error: Failed to become ready: a hopefully informative message about what went w
 		{
 			Name: "successful wait for ready condition",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -687,16 +648,11 @@ Workload "my-workload" is ready
 				tailer.AssertExpectations(t)
 				return nil
 			},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -774,17 +730,13 @@ Workload "my-workload" is ready
 				tailer.AssertExpectations(t)
 				return nil
 			},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
 			},
+
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -829,25 +781,18 @@ Workload "my-workload" is ready
 		{
 			Name: "filepath",
 			Args: []string{flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      "spring-petclinic",
-						Labels: map[string]string{
-							"preserve-me": "should-exist",
-						},
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-						Env: []corev1.EnvVar{
-							{
-								Name:  "OVERRIDE_VAR",
-								Value: "doesnt matter",
-							},
-						},
-					},
-				}),
+			GivenObjects: []client.Object{
+				sprintPetclinicWorkload.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel("preserve-me", "should-exist")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+						d.Env(corev1.EnvVar{
+							Name:  "OVERRIDE_VAR",
+							Value: "doesnt matter",
+						})
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -955,25 +900,18 @@ spec:
       ref:
         branch: main
 `),
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      "spring-petclinic",
-						Labels: map[string]string{
-							"preserve-me": "should-exist",
-						},
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-						Env: []corev1.EnvVar{
-							{
-								Name:  "OVERRIDE_VAR",
-								Value: "doesnt matter",
-							},
-						},
-					},
-				}),
+			GivenObjects: []client.Object{
+				sprintPetclinicWorkload.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel("preserve-me", "should-exist")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+						d.Env(corev1.EnvVar{
+							Name:  "OVERRIDE_VAR",
+							Value: "doesnt matter",
+						})
+					}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -1056,16 +994,11 @@ Updated workload "spring-petclinic"
 		{
 			Name: "accept yaml file through stdin - using --dry-run flag",
 			Args: []string{flags.FilePathFlagName, "-", flags.DryRunFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
 			},
 			Stdin: []byte(`
 ---
@@ -1116,26 +1049,21 @@ spec:
 		{
 			Name: "filepath - custom namespace and name",
 			Args: []string{workloadName, flags.NamespaceFlagName, "test-namespace", flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: "test-namespace",
-						Name:      workloadName,
-						Labels: map[string]string{
-							"preserve-me": "should-exist",
-						},
+			GivenObjects: []client.Object{
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Namespace("test-namespace")
+						d.Name(workloadName)
+						d.AddLabel("preserve-me", "should-exist")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+						d.Env(corev1.EnvVar{
+							Name:  "OVERRIDE_VAR",
+							Value: "doesnt matter",
+						})
 					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "ubuntu:bionic",
-						Env: []corev1.EnvVar{
-							{
-								Name:  "OVERRIDE_VAR",
-								Value: "doesnt matter",
-							},
-						},
-					},
-				}),
-			},
+					)},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1222,13 +1150,8 @@ Updated workload "my-workload"
 		{
 			Name: "local path - missing fields",
 			Args: []string{workloadName, flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ShouldError: true,
 			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {

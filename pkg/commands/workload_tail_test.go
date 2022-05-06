@@ -22,11 +22,12 @@ import (
 	"testing"
 	"time"
 
+	diemetav1 "dies.dev/apis/meta/v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -35,6 +36,7 @@ import (
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
+	diecartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
@@ -111,6 +113,12 @@ func TestWorkloadTailCommand(t *testing.T) {
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
 
+	parent := diecartov1alpha1.WorkloadBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name(workloadName)
+			d.Namespace(defaultNamespace)
+		})
+
 	table := clitesting.CommandTestSuite{
 		{
 			Name:        "empty",
@@ -121,13 +129,8 @@ func TestWorkloadTailCommand(t *testing.T) {
 			Name:        "invalid namespace",
 			Args:        []string{flags.NamespaceFlagName, "other-namespce", workloadName},
 			ShouldError: true,
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ExpectOutput: `
 Workload "other-namespce/test-workload" not found
@@ -168,13 +171,8 @@ Workload "default/test-workload" not found
 				tailer.AssertExpectations(t)
 				return nil
 			},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ExpectOutput: `
 ...tail output...
@@ -198,13 +196,8 @@ Workload "default/test-workload" not found
 				tailer.AssertExpectations(t)
 				return nil
 			},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ExpectOutput: `
 ...tail output...
@@ -225,13 +218,8 @@ Workload "default/test-workload" not found
 				tailer.AssertExpectations(t)
 				return nil
 			},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ShouldError: true,
 			ExpectOutput: `
@@ -256,13 +244,8 @@ Workload "default/test-workload" not found
 				tailer.AssertExpectations(t)
 				return nil
 			},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ExpectOutput: `
 ...tail output...
