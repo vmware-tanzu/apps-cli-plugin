@@ -1,6 +1,6 @@
 module github.com/vmware-tanzu/apps-cli-plugin
 
-go 1.17
+go 1.18
 
 require (
 	dies.dev v0.3.0
