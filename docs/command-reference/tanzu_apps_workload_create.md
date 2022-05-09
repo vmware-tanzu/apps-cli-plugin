@@ -27,12 +27,12 @@ tanzu apps workload create --file workload.yaml
 ### Options
 
 ```
-      --annotation "key=value" pair    annotation is represented as a "key=value" pair, or "key-" to remove. This flag may be specified multiple times
+      --annotation "key=value" pair    annotation is represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --app name                       application name the workload is a part of
-      --build-env "key=value" pair     build environment variables represented as a "key=value" pair, or "key-" to remove. This flag may be specified multiple times
+      --build-env "key=value" pair     build environment variables represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --debug                          put the workload in debug mode, --debug=false to disable
       --dry-run                        print kubernetes resources to stdout rather than apply them to the cluster, messages normally on stdout will be sent to stderr
-      --env "key=value" pair           environment variables represented as a "key=value" pair, or "key-" to remove. This flag may be specified multiple times
+      --env "key=value" pair           environment variables represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
   -f, --file file path                 file path containing the description of a single workload, other flags are layered on top of this resource. Use value "-" to read from stdin
       --git-branch branch              branch within the git repo to checkout
       --git-commit SHA                 commit SHA within the git repo to checkout
@@ -40,16 +40,16 @@ tanzu apps workload create --file workload.yaml
       --git-tag tag                    tag within the git repo to checkout
   -h, --help                           help for create
       --image image                    pre-built image, skips the source resolution and build phases of the supply chain
-      --label "key=value" pair         label is represented as a "key=value" pair, or "key-" to remove. This flag may be specified multiple times
+      --label "key=value" pair         label is represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --limit-cpu cores                the maximum amount of cpu allowed, in CPU cores (500m = .5 cores)
       --limit-memory bytes             the maximum amount of memory allowed, in bytes (500Mi = 500MiB = 500 * 1024 * 1024)
       --live-update                    put the workload in live update mode, --live-update=false to disable
       --local-path path                path on the local file system to a directory of source code to build for the workload
   -n, --namespace name                 kubernetes namespace (defaulted from kube config)
-      --param "key=value" pair         additional parameters represented as a "key=value" pair, or "key-" to remove. This flag may be specified multiple times
+      --param "key=value" pair         additional parameters represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --request-cpu cores              the minimum amount of cpu required, in CPU cores (500m = .5 cores)
       --request-memory bytes           the minimum amount of memory required, in bytes (500Mi = 500MiB = 500 * 1024 * 1024)
-      --service-ref object reference   object reference for a service to bind to the workload "database=rabbitmq.com/v1beta1:RabbitmqCluster:my-broker", or "database-" to delete. This flag may be specified multiple times.
+      --service-ref object reference   object reference for a service to bind to the workload "database=rabbitmq.com/v1beta1:RabbitmqCluster:my-broker" ("database-" to remove, flag can be used multiple times)
       --source-image image             destination image repository where source code is staged before being built
       --sub-path path                  relative path within source directory containing workload source code. To unset, pass empty string
       --tail                           show logs while waiting for workload to become ready
