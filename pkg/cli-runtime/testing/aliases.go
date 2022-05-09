@@ -23,7 +23,6 @@ import (
 const TestField = "test-field"
 
 type ReactionFunc = rtesting.ReactionFunc
-type Factory = rtesting.Factory
 
 type Action = rtesting.Action
 type GetAction = rtesting.GetAction

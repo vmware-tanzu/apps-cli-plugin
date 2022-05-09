@@ -154,14 +154,14 @@ Created resource "my-resource"
 		{
 			Name: "create failed",
 			Args: []string{"my-resource"},
-			GivenObjects: []rtesting.Factory{
-				clitesting.Wrapper(&rtesting.TestResource{
+			GivenObjects: []client.Object{
+				&rtesting.TestResource{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "default",
 						Name:      "my-resource",
 					},
 					Spec: rtesting.TestResourceSpec{},
-				}),
+				},
 			},
 			ExpectCreates: []client.Object{
 				&rtesting.TestResource{

@@ -20,10 +20,13 @@ import (
 	"testing"
 	"time"
 
+	diecorev1 "dies.dev/apis/core/v1"
+	diemetav1 "dies.dev/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -33,6 +36,8 @@ import (
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
+	diecartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
+	diev1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/knative/serving/v1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
@@ -112,6 +117,55 @@ func TestWorkloadGetCommand(t *testing.T) {
 	_ = corev1.AddToScheme(scheme)
 	_ = knativeservingv1.AddToScheme(scheme)
 
+	parent := diecartov1alpha1.WorkloadBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name(workloadName)
+			d.Namespace(defaultNamespace)
+		})
+
+	pod1Die := diecorev1.PodBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name("pod1")
+			d.Namespace(defaultNamespace)
+			d.AddLabel(cartov1alpha1.WorkloadLabelName, workloadName)
+		})
+
+	pod2Die := diecorev1.PodBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name("pod2")
+			d.Namespace(defaultNamespace)
+			d.AddLabel(cartov1alpha1.WorkloadLabelName, workloadName)
+		})
+	ksvcDieWithURL := diev1.ServiceBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name("ksvc1")
+			d.Namespace(defaultNamespace)
+			d.AddLabel(cartov1alpha1.WorkloadLabelName, workloadName)
+		}).
+		StatusDie(func(d *diev1.ServiceStatusDie) {
+			d.Conditions(
+				metav1.Condition{
+					Status: metav1.ConditionTrue,
+					Type:   knativeservingv1.ServiceConditionReady,
+				},
+			)
+			d.URL(url)
+		})
+	ksvcDieWithNoURL := diev1.ServiceBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name("ksvc2")
+			d.Namespace(defaultNamespace)
+			d.AddLabel(cartov1alpha1.WorkloadLabelName, workloadName)
+		}).
+		StatusDie(func(d *diev1.ServiceStatusDie) {
+			d.Conditions(
+				metav1.Condition{
+					Status: metav1.ConditionFalse,
+					Type:   knativeservingv1.ServiceConditionReady,
+				},
+			)
+		})
+
 	table := clitesting.CommandTestSuite{
 		{
 			Name:        "invalid args",
@@ -120,36 +174,28 @@ func TestWorkloadGetCommand(t *testing.T) {
 		}, {
 			Name: "show status and service ref",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{{
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.ServiceClaims(cartov1alpha1.WorkloadServiceClaim{
 							Name: "database",
 							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
 								APIVersion: "services.tanzu.vmware.com/v1alpha1",
 								Kind:       "PostgreSQL",
 								Name:       "my-prod-db",
 							},
-						}},
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionFalse,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
+						})
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong").
+								LastTransitionTime(metav1.Time{
 									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								},
-							},
-						},
-					},
-				}),
+								}),
+						)
+					}),
 			},
 			ExpectOutput: `
 # my-workload: OopsieDoodle
@@ -172,26 +218,18 @@ No pods found for workload.
 		{
 			Name: "show status",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionFalse,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong").
+								LastTransitionTime(metav1.Time{
 									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								},
-							},
-						},
-					},
-				}),
+								}),
+						)
+					}),
 			},
 			ExpectOutput: `
 # my-workload: OopsieDoodle
@@ -210,14 +248,10 @@ No pods found for workload.
 		{
 			Name: "show source info - git",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &cartov1alpha1.Source{
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
 							Git: &cartov1alpha1.GitSource{
 								URL: url,
 								Ref: cartov1alpha1.GitRef{
@@ -226,22 +260,18 @@ No pods found for workload.
 									Commit: "abcdef",
 								},
 							},
-						},
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionFalse,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
+						})
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong").
+								LastTransitionTime(metav1.Time{
 									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								},
-							},
-						},
-					},
-				}),
+								}),
+						)
+					}),
 			},
 			ExpectOutput: `
 # my-workload: OopsieDoodle
@@ -267,31 +297,25 @@ No pods found for workload.
 		{
 			Name: "show source info - local path",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &cartov1alpha1.Source{
-							Image: "my-registry/my-image:v1.0.0",
-						},
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionFalse,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(
+							&cartov1alpha1.Source{
+								Image: "my-registry/my-image:v1.0.0",
 							},
-						},
-					},
-				}),
+						)
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong").
+								LastTransitionTime(metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+								}),
+						)
+					}),
 			},
 			ExpectOutput: `
 # my-workload: OopsieDoodle
@@ -314,29 +338,21 @@ No pods found for workload.
 		{
 			Name: "show source info - image",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Image: "docker.io/library/nginx:latest",
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionFalse,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("docker.io/library/nginx:latest")
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong").
+								LastTransitionTime(metav1.Time{
 									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								},
-							},
-						},
-					},
-				}),
+								}),
+						)
+					}),
 			},
 			ExpectOutput: `
 # my-workload: OopsieDoodle
@@ -359,14 +375,10 @@ No pods found for workload.
 		{
 			Name: "show resources",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &cartov1alpha1.Source{
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
 							Git: &cartov1alpha1.GitSource{
 								URL: url,
 								Ref: cartov1alpha1.GitRef{
@@ -375,59 +387,57 @@ No pods found for workload.
 									Commit: "abcdef",
 								},
 							},
-						},
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionFalse,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
+						})
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong").
+								LastTransitionTime(metav1.Time{
 									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+								}),
+						)
+						d.Resources([]cartov1alpha1.RealizedResource{
+							{
+								Name: "source-provider",
+								Conditions: []metav1.Condition{
+									{
+										Type:   "Ready",
+										Status: "True",
+									},
+									{
+										Type:   "ResourceSubmitted",
+										Status: "True",
+									},
+								},
+							}, {
+								Name: "deliverable",
+								Conditions: []metav1.Condition{
+									{
+										Type:   "Ready",
+										Status: "Unknown",
+									},
+									{
+										Type:   "ResourceSubmitted",
+										Status: "Unknown",
+									},
+								},
+							}, {
+								Name: "image-builder",
+								Conditions: []metav1.Condition{
+									{
+										Type:   "Ready",
+										Status: "False",
+									},
+									{
+										Type:   "ResourceSubmitted",
+										Status: "False",
+									},
 								},
 							},
-						},
-						Resources: []cartov1alpha1.RealizedResource{{
-							Name: "source-provider",
-							Conditions: []metav1.Condition{
-								{
-									Type:   "Ready",
-									Status: "True",
-								},
-								{
-									Type:   "ResourceSubmitted",
-									Status: "True",
-								},
-							},
-						}, {
-							Name: "deliverable",
-							Conditions: []metav1.Condition{
-								{
-									Type:   "Ready",
-									Status: "Unknown",
-								},
-								{
-									Type:   "ResourceSubmitted",
-									Status: "Unknown",
-								},
-							},
-						}, {
-							Name: "image-builder",
-							Conditions: []metav1.Condition{
-								{
-									Type:   "Ready",
-									Status: "False",
-								},
-								{
-									Type:   "ResourceSubmitted",
-									Status: "False",
-								},
-							},
-						}},
-					},
-				}),
+						}...)
+					}),
 			},
 			ExpectOutput: `
 # my-workload: OopsieDoodle
@@ -456,59 +466,36 @@ No pods found for workload.
 		{
 			Name: "show pods",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionUnknown,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionUnknown).
+								Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong").
+								LastTransitionTime(metav1.Time{
 									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								},
-							},
-						},
-					},
-				}),
-				clitesting.Wrapper(&corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "pod1",
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							cartov1alpha1.WorkloadLabelName: workloadName,
-						},
-					},
-					Status: corev1.PodStatus{
-						Phase: corev1.PodRunning,
-					},
-				}),
-				clitesting.Wrapper(&corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "pod2",
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							cartov1alpha1.WorkloadLabelName: workloadName,
-						},
-					},
-					Status: corev1.PodStatus{
-						Phase: corev1.PodFailed,
-					},
-				}),
-				clitesting.Wrapper(&corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "diff-workload-pod",
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							cartov1alpha1.WorkloadLabelName: "diff-workload",
-						},
-					},
-				}),
+								}),
+						)
+					}),
+				pod1Die.
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodRunning)
+					}),
+				pod2Die.
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodFailed)
+					}),
+				diecorev1.PodBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("pod-something-else")
+						d.Namespace(defaultNamespace)
+						d.AddLabel(cartov1alpha1.WorkloadLabelName, "diff-workload")
+					}).
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodFailed)
+					}),
 			},
 			ExpectOutput: `
 # my-workload: Unknown
@@ -530,72 +517,35 @@ pod2   Failed    0          <unknown>
 		{
 			Name: "show knative services",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionUnknown,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionUnknown).
+								Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong").
+								LastTransitionTime(metav1.Time{
 									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								},
+								}),
+						)
+					}),
+				ksvcDieWithURL,
+				ksvcDieWithNoURL,
+				diev1.ServiceBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("ksvc3")
+						d.Namespace(defaultNamespace)
+						d.AddLabel(cartov1alpha1.WorkloadLabelName, "diff-workload")
+					}).
+					StatusDie(func(d *diev1.ServiceStatusDie) {
+						d.Conditions(
+							metav1.Condition{
+								Status: metav1.ConditionTrue,
+								Type:   knativeservingv1.ServiceConditionReady,
 							},
-						},
-					},
-				}),
-				clitesting.Wrapper(&knativeservingv1.Service{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "ksvc1",
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							cartov1alpha1.WorkloadLabelName: workloadName,
-						},
-					},
-					Status: knativeservingv1.ServiceStatus{
-						Conditions: []metav1.Condition{{
-							Status: metav1.ConditionTrue,
-							Type:   knativeservingv1.ServiceConditionReady,
-						}},
-						URL: url,
-					},
-				}),
-				clitesting.Wrapper(&knativeservingv1.Service{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "ksvc2",
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							cartov1alpha1.WorkloadLabelName: workloadName,
-						},
-					},
-					Status: knativeservingv1.ServiceStatus{
-						Conditions: []metav1.Condition{{
-							Status: metav1.ConditionFalse,
-							Type:   knativeservingv1.ServiceConditionReady,
-						}},
-					},
-				}),
-				clitesting.Wrapper(&knativeservingv1.Service{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "ksvc3",
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							cartov1alpha1.WorkloadLabelName: "diff-workload",
-						},
-					},
-					Status: knativeservingv1.ServiceStatus{
-						Conditions: []metav1.Condition{{
-							Status: metav1.ConditionTrue,
-							Type:   knativeservingv1.ServiceConditionReady,
-						}},
-					},
-				}),
+						)
+					}),
 			},
 			ExpectOutput: `
 # my-workload: Unknown
@@ -619,81 +569,29 @@ ksvc2   not-Ready   <empty>
 		{
 			Name: "show pods and knative services",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionTrue,
-								Reason:  "Worked",
-								Message: "Ready",
-								LastTransitionTime: metav1.Time{
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionTrue).
+								Reason("Worked").
+								Message("Ready").
+								LastTransitionTime(metav1.Time{
 									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								},
-							},
-						},
-					},
-				}),
-				clitesting.Wrapper(&knativeservingv1.Service{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "ksvc1",
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							cartov1alpha1.WorkloadLabelName: workloadName,
-						},
-					},
-					Status: knativeservingv1.ServiceStatus{
-						Conditions: []metav1.Condition{{
-							Status: metav1.ConditionTrue,
-							Type:   knativeservingv1.ServiceConditionReady,
-						}},
-						URL: url,
-					},
-				}),
-				clitesting.Wrapper(&knativeservingv1.Service{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "ksvc2",
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							cartov1alpha1.WorkloadLabelName: workloadName,
-						},
-					},
-					Status: knativeservingv1.ServiceStatus{
-						Conditions: []metav1.Condition{{
-							Status: metav1.ConditionFalse,
-							Type:   knativeservingv1.ServiceConditionReady,
-						}},
-					},
-				}),
-				clitesting.Wrapper(&corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "pod1",
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							cartov1alpha1.WorkloadLabelName: workloadName,
-						},
-					},
-					Status: corev1.PodStatus{
-						Phase: corev1.PodRunning,
-					},
-				}),
-				clitesting.Wrapper(&corev1.Pod{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "pod2",
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							cartov1alpha1.WorkloadLabelName: workloadName,
-						},
-					},
-					Status: corev1.PodStatus{
-						Phase: corev1.PodFailed,
-					},
-				}),
+								}),
+						)
+					}),
+				ksvcDieWithURL,
+				ksvcDieWithNoURL,
+				pod1Die.
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodRunning)
+					}),
+				pod2Die.
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodFailed)
+					}),
 			},
 			ExpectOutput: `
 # my-workload: Ready
@@ -720,12 +618,16 @@ ksvc2   not-Ready   <empty>
 		{
 			Name: "not found",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&corev1.Namespace{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: defaultNamespace,
+			GivenObjects: []client.Object{
+				diecorev1.NamespaceBlank.MetadataDie(
+					func(d *diemetav1.ObjectMetaDie) {
+						d.Name("default")
 					},
-				}),
+				),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("notfound")
+					}),
 			},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("get", "Workload", clitesting.InduceFailureOpts{
@@ -753,26 +655,18 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 		{
 			Name: "get error",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionTrue,
-								Reason:  "OopsieDoodle",
-								Message: "a hopefully informative message about what went wrong",
-								LastTransitionTime: metav1.Time{
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionTrue).Reason("OopsieDoodle").
+								Message("a hopefully informative message").
+								LastTransitionTime(metav1.Time{
 									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								},
-							},
-						},
-					},
-				}),
+								}),
+						)
+					}),
 			},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("get", "Workload"),
@@ -782,13 +676,8 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 		{
 			Name: "get error for listing pods",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("list", "PodList"),
@@ -805,13 +694,8 @@ Failed to list pods:
 		{
 			Name: "get error for listing knative services",
 			Args: []string{workloadName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("list", "KnativeServiceList"),
@@ -827,27 +711,18 @@ No pods found for workload.
 		{
 			Name: "get workload exported data",
 			Args: []string{workloadName, flags.ExportFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							apis.AppPartOfLabelName: workloadName,
-						},
-						CreationTimestamp: metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionUnknown,
-								Reason:  "Workload Reason",
-								Message: "a hopefully informative message about what went wrong",
-							},
-						},
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel(apis.AppPartOfLabelName, workloadName)
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionUnknown).Reason("Workload Reason").
+								Message("a hopefully informative message about what went wrong"),
+						)
+					}),
 			},
 			ExpectOutput: `
 ---
@@ -864,27 +739,20 @@ spec: {}
 		{
 			Name: "get workload exported data in json format",
 			Args: []string{workloadName, flags.ExportFlagName, flags.OutputFlagName, printer.OutputFormatJson},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							apis.AppPartOfLabelName: workloadName,
-						},
-						CreationTimestamp: metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionUnknown,
-								Reason:  "Workload Reason",
-								Message: "a hopefully informative message about what went wrong",
-							},
-						},
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel(apis.AppPartOfLabelName, workloadName)
+						d.CreationTimestamp(metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC))
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionUnknown).
+								Reason("Workload Reason").
+								Message("a hopefully informative message about what went wrong"),
+						)
+					}),
 			},
 			ExpectOutput: `
 {
@@ -904,26 +772,19 @@ spec: {}
 		{
 			Name: "get workload outputted data in yaml format",
 			Args: []string{workloadName, flags.OutputFlagName, "yaml"},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							apis.AppPartOfLabelName: workloadName,
-						},
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionUnknown,
-								Reason:  "Workload Reason",
-								Message: "a hopefully informative message about what went wrong",
-							},
-						},
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel(apis.AppPartOfLabelName, workloadName)
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionUnknown).
+								Reason("Workload Reason").
+								Message("a hopefully informative message about what went wrong"),
+						)
+					}),
 			},
 			ExpectOutput: `
 ---
@@ -950,26 +811,19 @@ status:
 		{
 			Name: "get workload outputted data in json format",
 			Args: []string{workloadName, flags.OutputFlagName, "json"},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-						Labels: map[string]string{
-							apis.AppPartOfLabelName: workloadName,
-						},
-					},
-					Status: cartov1alpha1.WorkloadStatus{
-						Conditions: []metav1.Condition{
-							{
-								Type:    cartov1alpha1.WorkloadConditionReady,
-								Status:  metav1.ConditionUnknown,
-								Reason:  "Workload Reason",
-								Message: "a hopefully informative message about what went wrong",
-							},
-						},
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel(apis.AppPartOfLabelName, workloadName)
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionUnknown).
+								Reason("Workload Reason").
+								Message("a hopefully informative message about what went wrong"),
+						)
+					}),
 			},
 			ExpectOutput: `
 {

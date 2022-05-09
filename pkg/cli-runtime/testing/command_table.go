@@ -86,7 +86,7 @@ type CommandTestCase struct {
 
 	// GivenObjects represents resources that would already exist within Kubernetes. These
 	// resources are passed directly to the fake client.
-	GivenObjects []Factory
+	GivenObjects []client.Object
 	// WithReactors installs each ReactionFunc into each fake client. ReactionFuncs intercept
 	// each call to the client providing the ability to mutate the resource or inject an error.
 	WithReactors []ReactionFunc
@@ -202,8 +202,7 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 		// Record the given objects
 		givenObjects := make([]client.Object, 0, len(tc.GivenObjects))
 		originalGivenObjects := make([]client.Object, 0, len(tc.GivenObjects))
-		for _, f := range tc.GivenObjects {
-			object := f.CreateObject()
+		for _, object := range tc.GivenObjects {
 			givenObjects = append(givenObjects, object.DeepCopyObject().(client.Object))
 			originalGivenObjects = append(originalGivenObjects, object.DeepCopyObject().(client.Object))
 		}

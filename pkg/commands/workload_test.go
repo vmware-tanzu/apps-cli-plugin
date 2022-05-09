@@ -1191,7 +1191,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 						apis.AppPartOfLabelName: workloadName,
 					},
 					Annotations: map[string]string{
-						apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"cache":{"namespace":"my-prod-ns"}}}}`,
+						apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"cache":{"namespace":"my-cache-ns"}}}}`,
 					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
@@ -1311,7 +1311,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 			},
 		},
 		{
-			name: "update service references with namespaces",
+			name: "update service reference without namespaces",
 			args: []string{flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:MySQL:my-prod-ns:my-prod-db"},
 			input: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1372,6 +1372,156 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 								APIVersion: "services.tanzu.vmware.com/v1alpha1",
 								Kind:       "MySQL",
 								Name:       "my-prod-db",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "remove service references namespaces",
+			args: []string{flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:MySQL:my-prod-db"},
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+					Labels: map[string]string{
+						apis.AppPartOfLabelName: workloadName,
+					},
+					Annotations: map[string]string{
+						apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"database":{"namespace":"my-prod-delete-me"}}}}`,
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Git: &cartov1alpha1.GitSource{
+							URL: "https://github.com/spring-projects/spring-petclinic.git",
+							Ref: cartov1alpha1.GitRef{
+								Branch: "main",
+							},
+						},
+					},
+					ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+						{
+							Name: "database",
+							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+								APIVersion: "services.tanzu.vmware.com/v1alpha1",
+								Kind:       "MySQL",
+								Name:       "my-prod-db",
+							},
+						},
+					},
+				},
+			},
+			expected: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+					Labels: map[string]string{
+						apis.AppPartOfLabelName: workloadName,
+					},
+					Annotations: map[string]string{},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Git: &cartov1alpha1.GitSource{
+							URL: "https://github.com/spring-projects/spring-petclinic.git",
+							Ref: cartov1alpha1.GitRef{
+								Branch: "main",
+							},
+						},
+					},
+					ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+						{
+							Name: "database",
+							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+								APIVersion: "services.tanzu.vmware.com/v1alpha1",
+								Kind:       "MySQL",
+								Name:       "my-prod-db",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "remove service references namespaces from multiple services",
+			args: []string{flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:MySQL:my-prod-db"},
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+					Labels: map[string]string{
+						apis.AppPartOfLabelName: workloadName,
+					},
+					Annotations: map[string]string{
+						apis.ServiceClaimAnnotationName: `{"kind": "ServiceClaimsExtension","apiVersion": "supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec": {"serviceClaims": {"database": {"namespace": "my-prod-delete-me","name": "my-prod-db"},"cache": {"namespace": "my-prod-cache-ns","name": "my-prod-cache"}}}}`,
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Git: &cartov1alpha1.GitSource{
+							URL: "https://github.com/spring-projects/spring-petclinic.git",
+							Ref: cartov1alpha1.GitRef{
+								Branch: "main",
+							},
+						},
+					},
+					ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+						{
+							Name: "database",
+							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+								APIVersion: "services.tanzu.vmware.com/v1alpha1",
+								Kind:       "MySQL",
+								Name:       "my-prod-db",
+							},
+						},
+						{
+							Name: "cache",
+							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+								APIVersion: "services.tanzu.vmware.com/v1alpha1",
+								Kind:       "MySQL",
+								Name:       "my-prod-cache",
+							},
+						},
+					},
+				},
+			},
+			expected: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+					Labels: map[string]string{
+						apis.AppPartOfLabelName: workloadName,
+					},
+					Annotations: map[string]string{
+						apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"cache":{"name":"my-prod-cache","namespace":"my-prod-cache-ns"}}}}`,
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Git: &cartov1alpha1.GitSource{
+							URL: "https://github.com/spring-projects/spring-petclinic.git",
+							Ref: cartov1alpha1.GitRef{
+								Branch: "main",
+							},
+						},
+					},
+					ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+						{
+							Name: "database",
+							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+								APIVersion: "services.tanzu.vmware.com/v1alpha1",
+								Kind:       "MySQL",
+								Name:       "my-prod-db",
+							},
+						},
+						{
+							Name: "cache",
+							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+								APIVersion: "services.tanzu.vmware.com/v1alpha1",
+								Kind:       "MySQL",
+								Name:       "my-prod-cache",
 							},
 						},
 					},

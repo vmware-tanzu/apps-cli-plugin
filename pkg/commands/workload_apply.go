@@ -97,6 +97,9 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 
 	workload.Name = opts.Name
 	workload.Namespace = opts.Namespace
+	if opts.FilePath != "" {
+		workload.MergeServiceAccountName(fileWorkload.Spec.ServiceAccountName)
+	}
 	workload.Merge(fileWorkload)
 
 	opts.ApplyOptionsToWorkload(ctx, workload)

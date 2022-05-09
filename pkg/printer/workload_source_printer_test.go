@@ -204,11 +204,11 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 					Name: "source-provider",
 					Conditions: []metav1.Condition{
 						{
-							Type:   "Ready",
+							Type:   cartov1alpha1.ResourceReady,
 							Status: "True",
 						},
 						{
-							Type:   "ResourceSubmitted",
+							Type:   cartov1alpha1.ResourceSubmitted,
 							Status: "True",
 						},
 					},
@@ -216,11 +216,11 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 					Name: "deliverable",
 					Conditions: []metav1.Condition{
 						{
-							Type:   "Ready",
+							Type:   cartov1alpha1.ResourceReady,
 							Status: "Unknown",
 						},
 						{
-							Type:   "ResourceSubmitted",
+							Type:   cartov1alpha1.ResourceSubmitted,
 							Status: "Unknown",
 						},
 					},
@@ -228,11 +228,11 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 					Name: "image-builder",
 					Conditions: []metav1.Condition{
 						{
-							Type:   "Ready",
+							Type:   cartov1alpha1.ResourceReady,
 							Status: "False",
 						},
 						{
-							Type:   "ResourceSubmitted",
+							Type:   cartov1alpha1.ResourceSubmitted,
 							Status: "False",
 						},
 					},
@@ -268,7 +268,7 @@ RESOURCE   READY   TIME
 					Name: "source-provider",
 					Conditions: []metav1.Condition{
 						{
-							Type:   "ResourceSubmitted",
+							Type:   cartov1alpha1.ResourceSubmitted,
 							Status: "True",
 						},
 					},
@@ -276,7 +276,7 @@ RESOURCE   READY   TIME
 					Name: "deliverable",
 					Conditions: []metav1.Condition{
 						{
-							Type:   "ResourceSubmitted",
+							Type:   cartov1alpha1.ResourceSubmitted,
 							Status: "Unknown",
 						},
 					},
@@ -284,11 +284,11 @@ RESOURCE   READY   TIME
 					Name: "image-builder",
 					Conditions: []metav1.Condition{
 						{
-							Type:   "Ready",
+							Type:   cartov1alpha1.ResourceReady,
 							Status: "False",
 						},
 						{
-							Type:   "ResourceSubmitted",
+							Type:   cartov1alpha1.ResourceSubmitted,
 							Status: "False",
 						},
 					},

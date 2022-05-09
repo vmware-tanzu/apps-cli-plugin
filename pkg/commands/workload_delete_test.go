@@ -23,8 +23,9 @@ import (
 	"testing"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	diemetav1 "dies.dev/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
@@ -32,6 +33,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/wait"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
+	diecartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
@@ -146,6 +148,12 @@ func TestWorkloadDeleteCommand(t *testing.T) {
 		}
 	}
 
+	parent := diecartov1alpha1.WorkloadBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name(workloadName)
+			d.Namespace(defaultNamespace)
+		})
+
 	table := clitesting.CommandTestSuite{
 		{
 			Name:        "invalid args",
@@ -155,13 +163,8 @@ func TestWorkloadDeleteCommand(t *testing.T) {
 		{
 			Name: "delete all workloads",
 			Args: []string{flags.AllFlagName, flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ExpectDeleteCollections: []clitesting.DeleteCollectionRef{{
 				Group:     "carto.run",
@@ -178,13 +181,8 @@ Deleted workloads in namespace "default"
 			Name:  "delete all workloads, prompt confirmed",
 			Args:  []string{flags.AllFlagName},
 			Stdin: []byte("yes"),
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ExpectDeleteCollections: []clitesting.DeleteCollectionRef{{
 				Group:     "carto.run",
@@ -204,13 +202,8 @@ Deleted workloads in namespace "default"
 			Name:  "delete all workloads, prompt denied",
 			Args:  []string{flags.AllFlagName},
 			Stdin: []byte("no"),
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			Verify: func(t *testing.T, output string, err error) {
 				if !strings.Contains(output, `Really delete all workloads in the namespace "default"?`) {
@@ -224,13 +217,8 @@ Deleted workloads in namespace "default"
 		{
 			Name: "delete all workloads error",
 			Args: []string{flags.AllFlagName, flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("delete-collection", "Workload"),
@@ -245,13 +233,8 @@ Deleted workloads in namespace "default"
 		{
 			Name: "delete workload",
 			Args: []string{workloadName, flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -269,13 +252,8 @@ Deleted workload "test-workload"
 			Name:  "delete workload, prompt confirmed",
 			Args:  []string{workloadName},
 			Stdin: []byte("yes"),
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -296,13 +274,8 @@ Deleted workload "test-workload"
 			Name:  "delete workload, prompt denied",
 			Args:  []string{workloadName},
 			Stdin: []byte("no"),
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			Verify: func(t *testing.T, output string, err error) {
 				if !strings.Contains(output, `Really delete the workload "test-workload"?`) {
@@ -316,19 +289,13 @@ Deleted workload "test-workload"
 		{
 			Name: "delete workloads",
 			Args: []string{workloadName, workloadOtherName, flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadOtherName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name(workloadOtherName)
+						d.Namespace(defaultNamespace)
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -356,13 +323,8 @@ Workload "test-workload" does not exist
 		{
 			Name: "delete error",
 			Args: []string{workloadName, flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("delete", "Workload"),
@@ -378,13 +340,8 @@ Workload "test-workload" does not exist
 		{
 			Name: "delete workload confirmed after wait",
 			Args: []string{workloadName, flags.YesFlagName, flags.WaitFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -401,13 +358,8 @@ Workload "test-workload" was deleted
 		{
 			Name: "delete workload failed with wait",
 			Args: []string{workloadName, flags.YesFlagName, flags.WaitFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			WithReactors: []clitesting.ReactionFunc{
 				// 1st get call needs to be successul
@@ -424,13 +376,8 @@ Workload "test-workload" was deleted
 		}, {
 			Name: "delete workload failed with wait timeout error",
 			Args: []string{workloadName, flags.YesFlagName, flags.WaitFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				ctx, cancel := context.WithTimeout(ctx, 1*time.Nanosecond)
@@ -480,13 +427,12 @@ spec:
       ref:
         branch: main
 `),
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "spring-petclinic",
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace(defaultNamespace)
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -563,13 +509,12 @@ spec:
 		{
 			Name: "delete workload from file",
 			Args: []string{flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "spring-petclinic",
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace(defaultNamespace)
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -589,13 +534,12 @@ Deleted workload "spring-petclinic"
 		{
 			Name: "delete workload from file with custom namespace",
 			Args: []string{flags.NamespaceFlagName, "test-namespace", flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "spring-petclinic",
-						Namespace: "test-namespace",
-					},
-				}),
+			GivenObjects: []client.Object{
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace("test-namespace")
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -610,13 +554,12 @@ Deleted workload "spring-petclinic"
 		{
 			Name: "delete workload from file with custom namespace in file",
 			Args: []string{flags.FilePathFlagName, "testdata/workload-custom-namespace.yaml", flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "spring-petclinic",
-						Namespace: "test-namespace",
-					},
-				}),
+			GivenObjects: []client.Object{
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace("test-namespace")
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -631,13 +574,12 @@ Deleted workload "spring-petclinic"
 		{
 			Name: "delete workload from file with namespace from cli args",
 			Args: []string{workloadName, flags.NamespaceFlagName, "test", flags.FilePathFlagName, "testdata/workload-custom-namespace.yaml", flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "spring-petclinic",
-						Namespace: "test",
-					},
-				}),
+			GivenObjects: []client.Object{
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace("test")
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{{
 				Group:     "carto.run",
@@ -653,19 +595,14 @@ Deleted workload "spring-petclinic"
 		{
 			Name: "delete workload with file and a name from cli args",
 			Args: []string{workloadName, flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
-			GivenObjects: []clitesting.Factory{
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "spring-petclinic",
-						Namespace: defaultNamespace,
-					},
-				}),
-				clitesting.Wrapper(&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      workloadName,
-						Namespace: defaultNamespace,
-					},
-				}),
+			GivenObjects: []client.Object{
+				parent,
+
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.Namespace(defaultNamespace)
+					}),
 			},
 			ExpectDeletes: []clitesting.DeleteRef{
 				{

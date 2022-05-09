@@ -1591,6 +1591,50 @@ func TestWorkloadReadyConditionFunc(t *testing.T) {
 	}
 }
 
+func TestMergeServiceClaimAnnotation(t *testing.T) {
+	tests := []struct {
+		name             string
+		seed             map[string]string
+		serviceClaimName string
+		want             map[string]string
+		claimValue       map[string]string
+	}{{
+		name:             "add new",
+		serviceClaimName: "cache",
+		seed: map[string]string{
+			apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"database":{"namespace":"my-prod-ns"}}}}`,
+		},
+		claimValue: map[string]string{"namespace": "test-ns"},
+		want: map[string]string{
+			apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"cache":{"namespace":"test-ns"},"database":{"namespace":"my-prod-ns"}}}}`,
+		},
+	}, {
+		name:             "override existing",
+		serviceClaimName: "database",
+		claimValue:       map[string]string{"namespace": "my-new-prod-ns"},
+		seed: map[string]string{
+			apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"database":{"namespace":"my-prod-ns"}}}}`,
+		},
+		want: map[string]string{
+			apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"database":{"namespace":"my-new-prod-ns"}}}}`,
+		},
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := &Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: test.seed,
+				},
+			}
+			got.MergeServiceClaimAnnotation(test.serviceClaimName, test.claimValue)
+			if diff := cmp.Diff(test.want, got.GetAnnotations()); diff != "" {
+				t.Errorf("MergeServiceClaimAnnotation() (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 func TestDeleteServiceClaimAnnotation(t *testing.T) {
 	tests := []struct {
 		name             string
@@ -1624,12 +1668,11 @@ func TestDeleteServiceClaimAnnotation(t *testing.T) {
 			}
 			got.DeleteServiceClaimAnnotation(test.serviceClaimName)
 			if diff := cmp.Diff(test.want, got.GetAnnotations()); diff != "" {
-				t.Errorf("DeleteServiceClaim() (-want, +got) = %v", diff)
+				t.Errorf("DeleteServiceClaimAnnotation() (-want, +got) = %v", diff)
 			}
 		})
 	}
 }
-
 func TestWorkloadSpec_MergeBuildEnv(t *testing.T) {
 	tests := []struct {
 		name string

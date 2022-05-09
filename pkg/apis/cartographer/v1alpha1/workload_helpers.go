@@ -78,6 +78,10 @@ func (w *Workload) loadAndValidateDocuments(in io.Reader) error {
 	return nil
 }
 
+func (w *Workload) MergeServiceAccountName(serviceAccountName string) {
+	w.Spec.ServiceAccountName = serviceAccountName
+}
+
 func (w *Workload) Merge(updates *Workload) {
 	for k, v := range updates.Annotations {
 		w.MergeAnnotations(k, v)
@@ -146,8 +150,6 @@ func (w *GitSource) Validate() validation.FieldErrors {
 }
 
 func (w *WorkloadSpec) Merge(updates *WorkloadSpec) {
-	w.ServiceAccountName = updates.ServiceAccountName
-
 	for _, p := range updates.Params {
 		w.MergeParams(p.Name, p.Value)
 	}
@@ -328,19 +330,32 @@ func (w *Workload) MergeLabels(key, value string) {
 	w.Labels[key] = value
 }
 
+func (w *Workload) MergeServiceClaimAnnotation(name string, value interface{}) {
+	annotationServiceClaims, err := servicesv1alpha1.NewServiceClaimWorkloadConfigFromAnnotation(w.GetAnnotations()[apis.ServiceClaimAnnotationName])
+	if err != nil {
+		return
+	}
+
+	annotationServiceClaims.AddServiceClaim(name, value)
+	if len(annotationServiceClaims.Spec.ServiceClaims) > 0 {
+		w.MergeAnnotations(apis.ServiceClaimAnnotationName, annotationServiceClaims.Annotation())
+	}
+}
+
 func (w *Workload) DeleteServiceClaimAnnotation(name string) {
-	currentServiceClaims, err := servicesv1alpha1.NewServiceClaimWorkloadConfigFromAnnotation(w.GetAnnotations()[apis.ServiceClaimAnnotationName])
+	annotationServiceClaims, err := servicesv1alpha1.NewServiceClaimWorkloadConfigFromAnnotation(w.GetAnnotations()[apis.ServiceClaimAnnotationName])
 	if err != nil {
 		return
 	}
 
 	sc := servicesv1alpha1.NewServiceClaimWorkloadConfig()
 
-	for claimName, claimValue := range currentServiceClaims.Spec.ServiceClaims {
+	for claimName, claimValue := range annotationServiceClaims.Spec.ServiceClaims {
 		if claimName != name {
 			sc.AddServiceClaim(claimName, claimValue)
 		}
 	}
+
 	if len(sc.Spec.ServiceClaims) > 0 {
 		w.MergeAnnotations(apis.ServiceClaimAnnotationName, sc.Annotation())
 	} else {
