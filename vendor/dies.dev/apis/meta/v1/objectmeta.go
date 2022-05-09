@@ -209,12 +209,12 @@ func (d *FrozenObjectMeta) SetOwnerReferences([]metav1.OwnerReference) {
 	panic(fmt.Errorf("SetOwnerReferences() is not implemented"))
 }
 
-func (d *FrozenObjectMeta) GetClusterName() string {
-	return d.r.DeepCopy().GetClusterName()
+func (d *FrozenObjectMeta) GetZZZ_DeprecatedClusterName() string {
+	return d.r.DeepCopy().GetZZZ_DeprecatedClusterName()
 }
 
-func (d *FrozenObjectMeta) SetClusterName(clusterName string) {
-	panic(fmt.Errorf("SetClusterName() is not implemented"))
+func (d *FrozenObjectMeta) SetZZZ_DeprecatedClusterName(clusterName string) {
+	panic(fmt.Errorf("SetZZZ_DeprecatedClusterName() is not implemented"))
 }
 
 func (d *FrozenObjectMeta) GetManagedFields() []metav1.ManagedFieldsEntry {
