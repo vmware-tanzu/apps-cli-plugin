@@ -56,7 +56,7 @@ Workload configuration includes:
 - environment variables
 - services to bind
 `),
-		Aliases: []string{"workloads"},
+		Aliases: []string{"workloads", "wld"},
 	}
 
 	cmd.AddCommand(NewWorkloadListCommand(ctx, c))
