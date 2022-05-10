@@ -114,8 +114,7 @@ spec: {}
 				ManagedFields: []metav1.ManagedFieldsEntry{
 					{Manager: "tanzu"},
 				},
-				ClusterName: "my-cluster",
-				SelfLink:    "/default/my-workload",
+				SelfLink: "/default/my-workload",
 				OwnerReferences: []metav1.OwnerReference{
 					{
 						APIVersion: "v1",
@@ -163,8 +162,7 @@ spec: {}
 				ManagedFields: []metav1.ManagedFieldsEntry{
 					{Manager: "tanzu"},
 				},
-				ClusterName: "my-cluster",
-				SelfLink:    "/default/my-workload",
+				SelfLink: "/default/my-workload",
 				OwnerReferences: []metav1.OwnerReference{
 					{
 						APIVersion: "v1",
@@ -289,8 +287,7 @@ func TestOutputResource(t *testing.T) {
 				ManagedFields: []metav1.ManagedFieldsEntry{
 					{Manager: "tanzu"},
 				},
-				ClusterName: "my-cluster",
-				SelfLink:    "/default/my-workload",
+				SelfLink: "/default/my-workload",
 				OwnerReferences: []metav1.OwnerReference{
 					{
 						APIVersion: "v1",
@@ -320,7 +317,6 @@ kind: Workload
 metadata:
   annotations:
     name: value
-  clusterName: my-cluster
   creationTimestamp: "2021-09-10T15:00:00Z"
   deletionGracePeriodSeconds: 5
   deletionTimestamp: "2021-09-10T15:00:00Z"
@@ -374,8 +370,7 @@ status:
 				ManagedFields: []metav1.ManagedFieldsEntry{
 					{Manager: "tanzu"},
 				},
-				ClusterName: "my-cluster",
-				SelfLink:    "/default/my-workload",
+				SelfLink: "/default/my-workload",
 				OwnerReferences: []metav1.OwnerReference{
 					{
 						APIVersion: "v1",
@@ -429,7 +424,6 @@ status:
 		"finalizers": [
 			"my.finalizer"
 		],
-		"clusterName": "my-cluster",
 		"managedFields": [
 			{
 				"manager": "tanzu"
@@ -505,8 +499,7 @@ func TestOutputResources(t *testing.T) {
 					ManagedFields: []metav1.ManagedFieldsEntry{
 						{Manager: "tanzu"},
 					},
-					ClusterName: "my-cluster",
-					SelfLink:    "/default/my-workload",
+					SelfLink: "/default/my-workload",
 					OwnerReferences: []metav1.OwnerReference{
 						{
 							APIVersion: "v1",
@@ -546,8 +539,7 @@ func TestOutputResources(t *testing.T) {
 					ManagedFields: []metav1.ManagedFieldsEntry{
 						{Manager: "tanzu"},
 					},
-					ClusterName: "my-cluster",
-					SelfLink:    "/default/my-workload",
+					SelfLink: "/default/my-workload",
 					OwnerReferences: []metav1.OwnerReference{
 						{
 							APIVersion: "v1",
@@ -578,7 +570,6 @@ func TestOutputResources(t *testing.T) {
   metadata:
     annotations:
       name: value
-    clusterName: my-cluster
     creationTimestamp: "2021-09-10T15:00:00Z"
     deletionGracePeriodSeconds: 5
     deletionTimestamp: "2021-09-10T15:00:00Z"
@@ -611,7 +602,6 @@ func TestOutputResources(t *testing.T) {
 - apiVersion: carto.run/v1alpha1
   kind: Workload
   metadata:
-    clusterName: my-cluster
     creationTimestamp: "2021-09-10T15:00:00Z"
     deletionGracePeriodSeconds: 5
     deletionTimestamp: "2021-09-10T15:00:00Z"
@@ -662,8 +652,7 @@ func TestOutputResources(t *testing.T) {
 					ManagedFields: []metav1.ManagedFieldsEntry{
 						{Manager: "tanzu"},
 					},
-					ClusterName: "my-cluster",
-					SelfLink:    "/default/my-workload",
+					SelfLink: "/default/my-workload",
 					OwnerReferences: []metav1.OwnerReference{
 						{
 							APIVersion: "v1",
@@ -703,8 +692,7 @@ func TestOutputResources(t *testing.T) {
 					ManagedFields: []metav1.ManagedFieldsEntry{
 						{Manager: "tanzu"},
 					},
-					ClusterName: "my-cluster",
-					SelfLink:    "/default/my-workload",
+					SelfLink: "/default/my-workload",
 					OwnerReferences: []metav1.OwnerReference{
 						{
 							APIVersion: "v1",
@@ -757,7 +745,6 @@ func TestOutputResources(t *testing.T) {
 			"finalizers": [
 				"my.finalizer"
 			],
-			"clusterName": "my-cluster",
 			"managedFields": [
 				{
 					"manager": "tanzu"
@@ -805,7 +792,6 @@ func TestOutputResources(t *testing.T) {
 			"finalizers": [
 				"my.finalizer"
 			],
-			"clusterName": "my-cluster",
 			"managedFields": [
 				{
 					"manager": "tanzu"

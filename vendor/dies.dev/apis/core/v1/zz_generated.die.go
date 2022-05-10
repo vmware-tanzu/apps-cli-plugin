@@ -504,14 +504,14 @@ func (d *SecretReferenceDie) DeepCopy() *SecretReferenceDie {
 	}
 }
 
-// Name is unique within a namespace to reference a secret resource.
+// name is unique within a namespace to reference a secret resource.
 func (d *SecretReferenceDie) Name(v string) *SecretReferenceDie {
 	return d.DieStamp(func(r *corev1.SecretReference) {
 		r.Name = v
 	})
 }
 
-// Namespace defines the space within which the secret name must be unique.
+// namespace defines the space within which the secret name must be unique.
 func (d *SecretReferenceDie) Namespace(v string) *SecretReferenceDie {
 	return d.DieStamp(func(r *corev1.SecretReference) {
 		r.Namespace = v
@@ -995,21 +995,21 @@ func (d *ContainerDie) Name(v string) *ContainerDie {
 	})
 }
 
-// Docker image name. More info: https://kubernetes.io/docs/concepts/containers/images This field is optional to allow higher level config management to default or override container images in workload controllers like Deployments and StatefulSets.
+// Container image name. More info: https://kubernetes.io/docs/concepts/containers/images This field is optional to allow higher level config management to default or override container images in workload controllers like Deployments and StatefulSets.
 func (d *ContainerDie) Image(v string) *ContainerDie {
 	return d.DieStamp(func(r *corev1.Container) {
 		r.Image = v
 	})
 }
 
-// Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container's environment. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+// Entrypoint array. Not executed within a shell. The container image's ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container's environment. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
 func (d *ContainerDie) Command(v ...string) *ContainerDie {
 	return d.DieStamp(func(r *corev1.Container) {
 		r.Command = v
 	})
 }
 
-// Arguments to the entrypoint. The docker image's CMD is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container's environment. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+// Arguments to the entrypoint. The container image's CMD is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container's environment. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
 func (d *ContainerDie) Args(v ...string) *ContainerDie {
 	return d.DieStamp(func(r *corev1.Container) {
 		r.Args = v
@@ -2666,7 +2666,7 @@ func (d *ProbeHandlerDie) TCPSocket(v *corev1.TCPSocketAction) *ProbeHandlerDie 
 	})
 }
 
-// GRPC specifies an action involving a GRPC port. This is an alpha field and requires enabling GRPCContainerProbe feature gate.
+// GRPC specifies an action involving a GRPC port. This is a beta field and requires enabling GRPCContainerProbe feature gate.
 func (d *ProbeHandlerDie) GRPC(v *corev1.GRPCAction) *ProbeHandlerDie {
 	return d.DieStamp(func(r *corev1.ProbeHandler) {
 		r.GRPC = v
@@ -3736,7 +3736,7 @@ func (d *ContainerStatusDie) ImageID(v string) *ContainerStatusDie {
 	})
 }
 
-// Container's ID in the format 'docker://<container_id>'.
+// Container's ID in the format '<type>://<container_id>'.
 func (d *ContainerStatusDie) ContainerID(v string) *ContainerStatusDie {
 	return d.DieStamp(func(r *corev1.ContainerStatus) {
 		r.ContainerID = v
@@ -4102,7 +4102,7 @@ func (d *ContainerStateTerminatedDie) FinishedAt(v apismetav1.Time) *ContainerSt
 	})
 }
 
-// Container's ID in the format 'docker://<container_id>'
+// Container's ID in the format '<type>://<container_id>'
 func (d *ContainerStateTerminatedDie) ContainerID(v string) *ContainerStateTerminatedDie {
 	return d.DieStamp(func(r *corev1.ContainerStateTerminated) {
 		r.ContainerID = v
@@ -4504,7 +4504,7 @@ func (d *EndpointPortDie) Protocol(v corev1.Protocol) *EndpointPortDie {
 	})
 }
 
-// The application protocol for this port. This field follows standard Kubernetes label syntax. Un-prefixed names are reserved for IANA standard service names (as per RFC-6335 and http://www.iana.org/assignments/service-names). Non-standard protocols should use prefixed names such as mycompany.com/my-custom-protocol.
+// The application protocol for this port. This field follows standard Kubernetes label syntax. Un-prefixed names are reserved for IANA standard service names (as per RFC-6335 and https://www.iana.org/assignments/service-names). Non-standard protocols should use prefixed names such as mycompany.com/my-custom-protocol.
 func (d *EndpointPortDie) AppProtocol(v *string) *EndpointPortDie {
 	return d.DieStamp(func(r *corev1.EndpointPort) {
 		r.AppProtocol = v
@@ -5759,7 +5759,7 @@ func (d *NodeSpecDie) Taints(v ...corev1.Taint) *NodeSpecDie {
 	})
 }
 
-// Deprecated. If specified, the source of the node's configuration. The DynamicKubeletConfig feature gate must be enabled for the Kubelet to use this field. This field is deprecated as of 1.22: https://git.k8s.io/enhancements/keps/sig-node/281-dynamic-kubelet-configuration
+// Deprecated: Previously used to specify the source of the node's configuration for the DynamicKubeletConfig feature. This feature is removed from Kubelets as of 1.24 and will be fully removed in 1.26.
 func (d *NodeSpecDie) ConfigSource(v *corev1.NodeConfigSource) *NodeSpecDie {
 	return d.DieStamp(func(r *corev1.NodeSpec) {
 		r.ConfigSource = v
@@ -6519,7 +6519,7 @@ func (d *NodeSystemInfoDie) OSImage(v string) *NodeSystemInfoDie {
 	})
 }
 
-// ContainerRuntime Version reported by the node through runtime remote API (e.g. docker://1.5.0).
+// ContainerRuntime Version reported by the node through runtime remote API (e.g. containerd://1.4.2).
 func (d *NodeSystemInfoDie) ContainerRuntimeVersion(v string) *NodeSystemInfoDie {
 	return d.DieStamp(func(r *corev1.NodeSystemInfo) {
 		r.ContainerRuntimeVersion = v
@@ -6946,14 +6946,14 @@ func (d *PersistentVolumeDie) StatusDie(fn func(d *PersistentVolumeStatusDie)) *
 	})
 }
 
-// Spec defines a specification of a persistent volume owned by the cluster. Provisioned by an administrator. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistent-volumes
+// spec defines a specification of a persistent volume owned by the cluster. Provisioned by an administrator. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistent-volumes
 func (d *PersistentVolumeDie) Spec(v corev1.PersistentVolumeSpec) *PersistentVolumeDie {
 	return d.DieStamp(func(r *corev1.PersistentVolume) {
 		r.Spec = v
 	})
 }
 
-// Status represents the current information/status for the persistent volume. Populated by the system. Read-only. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistent-volumes
+// status represents the current information/status for the persistent volume. Populated by the system. Read-only. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistent-volumes
 func (d *PersistentVolumeDie) Status(v corev1.PersistentVolumeStatus) *PersistentVolumeDie {
 	return d.DieStamp(func(r *corev1.PersistentVolume) {
 		r.Status = v
@@ -7027,49 +7027,49 @@ func (d *PersistentVolumeSpecDie) DeepCopy() *PersistentVolumeSpecDie {
 	}
 }
 
-// A description of the persistent volume's resources and capacity. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity
+// capacity is the description of the persistent volume's resources and capacity. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#capacity
 func (d *PersistentVolumeSpecDie) Capacity(v corev1.ResourceList) *PersistentVolumeSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeSpec) {
 		r.Capacity = v
 	})
 }
 
-// The actual volume backing the persistent volume.
+// persistentVolumeSource is the actual volume backing the persistent volume.
 func (d *PersistentVolumeSpecDie) PersistentVolumeSource(v corev1.PersistentVolumeSource) *PersistentVolumeSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeSpec) {
 		r.PersistentVolumeSource = v
 	})
 }
 
-// AccessModes contains all ways the volume can be mounted. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes
+// accessModes contains all ways the volume can be mounted. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes
 func (d *PersistentVolumeSpecDie) AccessModes(v ...corev1.PersistentVolumeAccessMode) *PersistentVolumeSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeSpec) {
 		r.AccessModes = v
 	})
 }
 
-// ClaimRef is part of a bi-directional binding between PersistentVolume and PersistentVolumeClaim. Expected to be non-nil when bound. claim.VolumeName is the authoritative bind between PV and PVC. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#binding
+// claimRef is part of a bi-directional binding between PersistentVolume and PersistentVolumeClaim. Expected to be non-nil when bound. claim.VolumeName is the authoritative bind between PV and PVC. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#binding
 func (d *PersistentVolumeSpecDie) ClaimRef(v *corev1.ObjectReference) *PersistentVolumeSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeSpec) {
 		r.ClaimRef = v
 	})
 }
 
-// What happens to a persistent volume when released from its claim. Valid options are Retain (default for manually created PersistentVolumes), Delete (default for dynamically provisioned PersistentVolumes), and Recycle (deprecated). Recycle must be supported by the volume plugin underlying this PersistentVolume. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#reclaiming
+// persistentVolumeReclaimPolicy defines what happens to a persistent volume when released from its claim. Valid options are Retain (default for manually created PersistentVolumes), Delete (default for dynamically provisioned PersistentVolumes), and Recycle (deprecated). Recycle must be supported by the volume plugin underlying this PersistentVolume. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#reclaiming
 func (d *PersistentVolumeSpecDie) PersistentVolumeReclaimPolicy(v corev1.PersistentVolumeReclaimPolicy) *PersistentVolumeSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeSpec) {
 		r.PersistentVolumeReclaimPolicy = v
 	})
 }
 
-// Name of StorageClass to which this persistent volume belongs. Empty value means that this volume does not belong to any StorageClass.
+// storageClassName is the name of StorageClass to which this persistent volume belongs. Empty value means that this volume does not belong to any StorageClass.
 func (d *PersistentVolumeSpecDie) StorageClassName(v string) *PersistentVolumeSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeSpec) {
 		r.StorageClassName = v
 	})
 }
 
-// A list of mount options, e.g. ["ro", "soft"]. Not validated - mount will simply fail if one is invalid. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#mount-options
+// mountOptions is the list of mount options, e.g. ["ro", "soft"]. Not validated - mount will simply fail if one is invalid. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#mount-options
 func (d *PersistentVolumeSpecDie) MountOptions(v ...string) *PersistentVolumeSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeSpec) {
 		r.MountOptions = v
@@ -7083,7 +7083,7 @@ func (d *PersistentVolumeSpecDie) VolumeMode(v *corev1.PersistentVolumeMode) *Pe
 	})
 }
 
-// NodeAffinity defines constraints that limit what nodes this volume can be accessed from. This field influences the scheduling of pods that use this volume.
+// nodeAffinity defines constraints that limit what nodes this volume can be accessed from. This field influences the scheduling of pods that use this volume.
 func (d *PersistentVolumeSpecDie) NodeAffinity(v *corev1.VolumeNodeAffinity) *PersistentVolumeSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeSpec) {
 		r.NodeAffinity = v
@@ -7157,21 +7157,21 @@ func (d *PersistentVolumeStatusDie) DeepCopy() *PersistentVolumeStatusDie {
 	}
 }
 
-// Phase indicates if a volume is available, bound to a claim, or released by a claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#phase
+// phase indicates if a volume is available, bound to a claim, or released by a claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#phase
 func (d *PersistentVolumeStatusDie) Phase(v corev1.PersistentVolumePhase) *PersistentVolumeStatusDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeStatus) {
 		r.Phase = v
 	})
 }
 
-// A human-readable message indicating details about why the volume is in this state.
+// message is a human-readable message indicating details about why the volume is in this state.
 func (d *PersistentVolumeStatusDie) Message(v string) *PersistentVolumeStatusDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeStatus) {
 		r.Message = v
 	})
 }
 
-// Reason is a brief CamelCase string that describes any failure and is meant for machine parsing and tidy display in the CLI.
+// reason is a brief CamelCase string that describes any failure and is meant for machine parsing and tidy display in the CLI.
 func (d *PersistentVolumeStatusDie) Reason(v string) *PersistentVolumeStatusDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeStatus) {
 		r.Reason = v
@@ -7245,28 +7245,28 @@ func (d *GlusterfsPersistentVolumeSourceDie) DeepCopy() *GlusterfsPersistentVolu
 	}
 }
 
-// EndpointsName is the endpoint name that details Glusterfs topology. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
+// endpoints is the endpoint name that details Glusterfs topology. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
 func (d *GlusterfsPersistentVolumeSourceDie) EndpointsName(v string) *GlusterfsPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GlusterfsPersistentVolumeSource) {
 		r.EndpointsName = v
 	})
 }
 
-// Path is the Glusterfs volume path. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
+// path is the Glusterfs volume path. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
 func (d *GlusterfsPersistentVolumeSourceDie) Path(v string) *GlusterfsPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GlusterfsPersistentVolumeSource) {
 		r.Path = v
 	})
 }
 
-// ReadOnly here will force the Glusterfs volume to be mounted with read-only permissions. Defaults to false. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
+// readOnly here will force the Glusterfs volume to be mounted with read-only permissions. Defaults to false. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
 func (d *GlusterfsPersistentVolumeSourceDie) ReadOnly(v bool) *GlusterfsPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GlusterfsPersistentVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// EndpointsNamespace is the namespace that contains Glusterfs endpoint. If this field is empty, the EndpointNamespace defaults to the same namespace as the bound PVC. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
+// endpointsNamespace is the namespace that contains Glusterfs endpoint. If this field is empty, the EndpointNamespace defaults to the same namespace as the bound PVC. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
 func (d *GlusterfsPersistentVolumeSourceDie) EndpointsNamespace(v *string) *GlusterfsPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GlusterfsPersistentVolumeSource) {
 		r.EndpointsNamespace = v
@@ -7340,56 +7340,56 @@ func (d *RBDPersistentVolumeSourceDie) DeepCopy() *RBDPersistentVolumeSourceDie 
 	}
 }
 
-// A collection of Ceph monitors. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// monitors is a collection of Ceph monitors. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDPersistentVolumeSourceDie) CephMonitors(v ...string) *RBDPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDPersistentVolumeSource) {
 		r.CephMonitors = v
 	})
 }
 
-// The rados image name. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// image is the rados image name. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDPersistentVolumeSourceDie) RBDImage(v string) *RBDPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDPersistentVolumeSource) {
 		r.RBDImage = v
 	})
 }
 
-// Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#rbd TODO: how do we prevent errors in the filesystem from compromising the machine
+// fsType is the filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#rbd TODO: how do we prevent errors in the filesystem from compromising the machine
 func (d *RBDPersistentVolumeSourceDie) FSType(v string) *RBDPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDPersistentVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// The rados pool name. Default is rbd. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// pool is the rados pool name. Default is rbd. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDPersistentVolumeSourceDie) RBDPool(v string) *RBDPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDPersistentVolumeSource) {
 		r.RBDPool = v
 	})
 }
 
-// The rados user name. Default is admin. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// user is the rados user name. Default is admin. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDPersistentVolumeSourceDie) RadosUser(v string) *RBDPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDPersistentVolumeSource) {
 		r.RadosUser = v
 	})
 }
 
-// Keyring is the path to key ring for RBDUser. Default is /etc/ceph/keyring. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// keyring is the path to key ring for RBDUser. Default is /etc/ceph/keyring. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDPersistentVolumeSourceDie) Keyring(v string) *RBDPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDPersistentVolumeSource) {
 		r.Keyring = v
 	})
 }
 
-// SecretRef is name of the authentication secret for RBDUser. If provided overrides keyring. Default is nil. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// secretRef is name of the authentication secret for RBDUser. If provided overrides keyring. Default is nil. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDPersistentVolumeSourceDie) SecretRef(v *corev1.SecretReference) *RBDPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDPersistentVolumeSource) {
 		r.SecretRef = v
 	})
 }
 
-// ReadOnly here will force the ReadOnly setting in VolumeMounts. Defaults to false. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// readOnly here will force the ReadOnly setting in VolumeMounts. Defaults to false. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDPersistentVolumeSourceDie) ReadOnly(v bool) *RBDPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDPersistentVolumeSource) {
 		r.ReadOnly = v
@@ -7463,77 +7463,77 @@ func (d *ISCSIPersistentVolumeSourceDie) DeepCopy() *ISCSIPersistentVolumeSource
 	}
 }
 
-// iSCSI Target Portal. The Portal is either an IP or ip_addr:port if the port is other than default (typically TCP ports 860 and 3260).
+// targetPortal is iSCSI Target Portal. The Portal is either an IP or ip_addr:port if the port is other than default (typically TCP ports 860 and 3260).
 func (d *ISCSIPersistentVolumeSourceDie) TargetPortal(v string) *ISCSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIPersistentVolumeSource) {
 		r.TargetPortal = v
 	})
 }
 
-// Target iSCSI Qualified Name.
+// iqn is Target iSCSI Qualified Name.
 func (d *ISCSIPersistentVolumeSourceDie) IQN(v string) *ISCSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIPersistentVolumeSource) {
 		r.IQN = v
 	})
 }
 
-// iSCSI Target Lun number.
+// lun is iSCSI Target Lun number.
 func (d *ISCSIPersistentVolumeSourceDie) Lun(v int32) *ISCSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIPersistentVolumeSource) {
 		r.Lun = v
 	})
 }
 
-// iSCSI Interface Name that uses an iSCSI transport. Defaults to 'default' (tcp).
+// iscsiInterface is the interface Name that uses an iSCSI transport. Defaults to 'default' (tcp).
 func (d *ISCSIPersistentVolumeSourceDie) ISCSIInterface(v string) *ISCSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIPersistentVolumeSource) {
 		r.ISCSIInterface = v
 	})
 }
 
-// Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#iscsi TODO: how do we prevent errors in the filesystem from compromising the machine
+// fsType is the filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#iscsi TODO: how do we prevent errors in the filesystem from compromising the machine
 func (d *ISCSIPersistentVolumeSourceDie) FSType(v string) *ISCSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIPersistentVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// ReadOnly here will force the ReadOnly setting in VolumeMounts. Defaults to false.
+// readOnly here will force the ReadOnly setting in VolumeMounts. Defaults to false.
 func (d *ISCSIPersistentVolumeSourceDie) ReadOnly(v bool) *ISCSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIPersistentVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// iSCSI Target Portal List. The Portal is either an IP or ip_addr:port if the port is other than default (typically TCP ports 860 and 3260).
+// portals is the iSCSI Target Portal List. The Portal is either an IP or ip_addr:port if the port is other than default (typically TCP ports 860 and 3260).
 func (d *ISCSIPersistentVolumeSourceDie) Portals(v ...string) *ISCSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIPersistentVolumeSource) {
 		r.Portals = v
 	})
 }
 
-// whether support iSCSI Discovery CHAP authentication
+// chapAuthDiscovery defines whether support iSCSI Discovery CHAP authentication
 func (d *ISCSIPersistentVolumeSourceDie) DiscoveryCHAPAuth(v bool) *ISCSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIPersistentVolumeSource) {
 		r.DiscoveryCHAPAuth = v
 	})
 }
 
-// whether support iSCSI Session CHAP authentication
+// chapAuthSession defines whether support iSCSI Session CHAP authentication
 func (d *ISCSIPersistentVolumeSourceDie) SessionCHAPAuth(v bool) *ISCSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIPersistentVolumeSource) {
 		r.SessionCHAPAuth = v
 	})
 }
 
-// CHAP Secret for iSCSI target and initiator authentication
+// secretRef is the CHAP Secret for iSCSI target and initiator authentication
 func (d *ISCSIPersistentVolumeSourceDie) SecretRef(v *corev1.SecretReference) *ISCSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIPersistentVolumeSource) {
 		r.SecretRef = v
 	})
 }
 
-// Custom iSCSI Initiator Name. If initiatorName is specified with iscsiInterface simultaneously, new iSCSI interface <target portal>:<volume name> will be created for the connection.
+// initiatorName is the custom iSCSI Initiator Name. If initiatorName is specified with iscsiInterface simultaneously, new iSCSI interface <target portal>:<volume name> will be created for the connection.
 func (d *ISCSIPersistentVolumeSourceDie) InitiatorName(v *string) *ISCSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIPersistentVolumeSource) {
 		r.InitiatorName = v
@@ -7607,28 +7607,28 @@ func (d *CinderPersistentVolumeSourceDie) DeepCopy() *CinderPersistentVolumeSour
 	}
 }
 
-// volume id used to identify the volume in cinder. More info: https://examples.k8s.io/mysql-cinder-pd/README.md
+// volumeID used to identify the volume in cinder. More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 func (d *CinderPersistentVolumeSourceDie) VolumeID(v string) *CinderPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CinderPersistentVolumeSource) {
 		r.VolumeID = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://examples.k8s.io/mysql-cinder-pd/README.md
+// fsType Filesystem type to mount. Must be a filesystem type supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 func (d *CinderPersistentVolumeSourceDie) FSType(v string) *CinderPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CinderPersistentVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Optional: Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts. More info: https://examples.k8s.io/mysql-cinder-pd/README.md
+// readOnly is Optional: Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts. More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 func (d *CinderPersistentVolumeSourceDie) ReadOnly(v bool) *CinderPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CinderPersistentVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// Optional: points to a secret object containing parameters used to connect to OpenStack.
+// secretRef is Optional: points to a secret object containing parameters used to connect to OpenStack.
 func (d *CinderPersistentVolumeSourceDie) SecretRef(v *corev1.SecretReference) *CinderPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CinderPersistentVolumeSource) {
 		r.SecretRef = v
@@ -7702,42 +7702,42 @@ func (d *CephFSPersistentVolumeSourceDie) DeepCopy() *CephFSPersistentVolumeSour
 	}
 }
 
-// Required: Monitors is a collection of Ceph monitors More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+// monitors is Required: Monitors is a collection of Ceph monitors More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 func (d *CephFSPersistentVolumeSourceDie) Monitors(v ...string) *CephFSPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CephFSPersistentVolumeSource) {
 		r.Monitors = v
 	})
 }
 
-// Optional: Used as the mounted root, rather than the full Ceph tree, default is /
+// path is Optional: Used as the mounted root, rather than the full Ceph tree, default is /
 func (d *CephFSPersistentVolumeSourceDie) Path(v string) *CephFSPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CephFSPersistentVolumeSource) {
 		r.Path = v
 	})
 }
 
-// Optional: User is the rados user name, default is admin More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+// user is Optional: User is the rados user name, default is admin More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 func (d *CephFSPersistentVolumeSourceDie) User(v string) *CephFSPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CephFSPersistentVolumeSource) {
 		r.User = v
 	})
 }
 
-// Optional: SecretFile is the path to key ring for User, default is /etc/ceph/user.secret More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+// secretFile is Optional: SecretFile is the path to key ring for User, default is /etc/ceph/user.secret More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 func (d *CephFSPersistentVolumeSourceDie) SecretFile(v string) *CephFSPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CephFSPersistentVolumeSource) {
 		r.SecretFile = v
 	})
 }
 
-// Optional: SecretRef is reference to the authentication secret for User, default is empty. More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+// secretRef is Optional: SecretRef is reference to the authentication secret for User, default is empty. More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 func (d *CephFSPersistentVolumeSourceDie) SecretRef(v *corev1.SecretReference) *CephFSPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CephFSPersistentVolumeSource) {
 		r.SecretRef = v
 	})
 }
 
-// Optional: Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts. More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+// readOnly is Optional: Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts. More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 func (d *CephFSPersistentVolumeSourceDie) ReadOnly(v bool) *CephFSPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CephFSPersistentVolumeSource) {
 		r.ReadOnly = v
@@ -7811,35 +7811,35 @@ func (d *FlexPersistentVolumeSourceDie) DeepCopy() *FlexPersistentVolumeSourceDi
 	}
 }
 
-// Driver is the name of the driver to use for this volume.
+// driver is the name of the driver to use for this volume.
 func (d *FlexPersistentVolumeSourceDie) Driver(v string) *FlexPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FlexPersistentVolumeSource) {
 		r.Driver = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". The default filesystem depends on FlexVolume script.
+// fsType is the Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". The default filesystem depends on FlexVolume script.
 func (d *FlexPersistentVolumeSourceDie) FSType(v string) *FlexPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FlexPersistentVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Optional: SecretRef is reference to the secret object containing sensitive information to pass to the plugin scripts. This may be empty if no secret object is specified. If the secret object contains more than one secret, all secrets are passed to the plugin scripts.
+// secretRef is Optional: SecretRef is reference to the secret object containing sensitive information to pass to the plugin scripts. This may be empty if no secret object is specified. If the secret object contains more than one secret, all secrets are passed to the plugin scripts.
 func (d *FlexPersistentVolumeSourceDie) SecretRef(v *corev1.SecretReference) *FlexPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FlexPersistentVolumeSource) {
 		r.SecretRef = v
 	})
 }
 
-// Optional: Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+// readOnly is Optional: defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
 func (d *FlexPersistentVolumeSourceDie) ReadOnly(v bool) *FlexPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FlexPersistentVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// Optional: Extra command options if any.
+// options is Optional: this field holds extra command options if any.
 func (d *FlexPersistentVolumeSourceDie) Options(v map[string]string) *FlexPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FlexPersistentVolumeSource) {
 		r.Options = v
@@ -7913,28 +7913,28 @@ func (d *AzureFilePersistentVolumeSourceDie) DeepCopy() *AzureFilePersistentVolu
 	}
 }
 
-// the name of secret that contains Azure Storage Account Name and Key
+// secretName is the name of secret that contains Azure Storage Account Name and Key
 func (d *AzureFilePersistentVolumeSourceDie) SecretName(v string) *AzureFilePersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureFilePersistentVolumeSource) {
 		r.SecretName = v
 	})
 }
 
-// Share Name
+// shareName is the azure Share Name
 func (d *AzureFilePersistentVolumeSourceDie) ShareName(v string) *AzureFilePersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureFilePersistentVolumeSource) {
 		r.ShareName = v
 	})
 }
 
-// Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+// readOnly defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
 func (d *AzureFilePersistentVolumeSourceDie) ReadOnly(v bool) *AzureFilePersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureFilePersistentVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// the namespace of the secret that contains Azure Storage Account Name and Key default is the same as the Pod
+// secretNamespace is the namespace of the secret that contains Azure Storage Account Name and Key default is the same as the Pod
 func (d *AzureFilePersistentVolumeSourceDie) SecretNamespace(v *string) *AzureFilePersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureFilePersistentVolumeSource) {
 		r.SecretNamespace = v
@@ -8008,70 +8008,70 @@ func (d *ScaleIOPersistentVolumeSourceDie) DeepCopy() *ScaleIOPersistentVolumeSo
 	}
 }
 
-// The host address of the ScaleIO API Gateway.
+// gateway is the host address of the ScaleIO API Gateway.
 func (d *ScaleIOPersistentVolumeSourceDie) Gateway(v string) *ScaleIOPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOPersistentVolumeSource) {
 		r.Gateway = v
 	})
 }
 
-// The name of the storage system as configured in ScaleIO.
+// system is the name of the storage system as configured in ScaleIO.
 func (d *ScaleIOPersistentVolumeSourceDie) System(v string) *ScaleIOPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOPersistentVolumeSource) {
 		r.System = v
 	})
 }
 
-// SecretRef references to the secret for ScaleIO user and other sensitive information. If this is not provided, Login operation will fail.
+// secretRef references to the secret for ScaleIO user and other sensitive information. If this is not provided, Login operation will fail.
 func (d *ScaleIOPersistentVolumeSourceDie) SecretRef(v *corev1.SecretReference) *ScaleIOPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOPersistentVolumeSource) {
 		r.SecretRef = v
 	})
 }
 
-// Flag to enable/disable SSL communication with Gateway, default false
+// sslEnabled is the flag to enable/disable SSL communication with Gateway, default false
 func (d *ScaleIOPersistentVolumeSourceDie) SSLEnabled(v bool) *ScaleIOPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOPersistentVolumeSource) {
 		r.SSLEnabled = v
 	})
 }
 
-// The name of the ScaleIO Protection Domain for the configured storage.
+// protectionDomain is the name of the ScaleIO Protection Domain for the configured storage.
 func (d *ScaleIOPersistentVolumeSourceDie) ProtectionDomain(v string) *ScaleIOPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOPersistentVolumeSource) {
 		r.ProtectionDomain = v
 	})
 }
 
-// The ScaleIO Storage Pool associated with the protection domain.
+// storagePool is the ScaleIO Storage Pool associated with the protection domain.
 func (d *ScaleIOPersistentVolumeSourceDie) StoragePool(v string) *ScaleIOPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOPersistentVolumeSource) {
 		r.StoragePool = v
 	})
 }
 
-// Indicates whether the storage for a volume should be ThickProvisioned or ThinProvisioned. Default is ThinProvisioned.
+// storageMode indicates whether the storage for a volume should be ThickProvisioned or ThinProvisioned. Default is ThinProvisioned.
 func (d *ScaleIOPersistentVolumeSourceDie) StorageMode(v string) *ScaleIOPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOPersistentVolumeSource) {
 		r.StorageMode = v
 	})
 }
 
-// The name of a volume already created in the ScaleIO system that is associated with this volume source.
+// volumeName is the name of a volume already created in the ScaleIO system that is associated with this volume source.
 func (d *ScaleIOPersistentVolumeSourceDie) VolumeName(v string) *ScaleIOPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOPersistentVolumeSource) {
 		r.VolumeName = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Default is "xfs"
+// fsType is the filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Default is "xfs"
 func (d *ScaleIOPersistentVolumeSourceDie) FSType(v string) *ScaleIOPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOPersistentVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+// readOnly defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
 func (d *ScaleIOPersistentVolumeSourceDie) ReadOnly(v bool) *ScaleIOPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOPersistentVolumeSource) {
 		r.ReadOnly = v
@@ -8145,14 +8145,14 @@ func (d *LocalVolumeSourceDie) DeepCopy() *LocalVolumeSourceDie {
 	}
 }
 
-// The full path to the volume on the node. It can be either a directory or block device (disk, partition, ...).
+// path of the full path to the volume on the node. It can be either a directory or block device (disk, partition, ...).
 func (d *LocalVolumeSourceDie) Path(v string) *LocalVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.LocalVolumeSource) {
 		r.Path = v
 	})
 }
 
-// Filesystem type to mount. It applies only when the Path is a block device. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". The default value is to auto-select a filesystem if unspecified.
+// fsType is the filesystem type to mount. It applies only when the Path is a block device. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". The default value is to auto-select a filesystem if unspecified.
 func (d *LocalVolumeSourceDie) FSType(v *string) *LocalVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.LocalVolumeSource) {
 		r.FSType = v
@@ -8226,35 +8226,35 @@ func (d *StorageOSPersistentVolumeSourceDie) DeepCopy() *StorageOSPersistentVolu
 	}
 }
 
-// VolumeName is the human-readable name of the StorageOS volume.  Volume names are only unique within a namespace.
+// volumeName is the human-readable name of the StorageOS volume.  Volume names are only unique within a namespace.
 func (d *StorageOSPersistentVolumeSourceDie) VolumeName(v string) *StorageOSPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.StorageOSPersistentVolumeSource) {
 		r.VolumeName = v
 	})
 }
 
-// VolumeNamespace specifies the scope of the volume within StorageOS.  If no namespace is specified then the Pod's namespace will be used.  This allows the Kubernetes name scoping to be mirrored within StorageOS for tighter integration. Set VolumeName to any name to override the default behaviour. Set to "default" if you are not using namespaces within StorageOS. Namespaces that do not pre-exist within StorageOS will be created.
+// volumeNamespace specifies the scope of the volume within StorageOS.  If no namespace is specified then the Pod's namespace will be used.  This allows the Kubernetes name scoping to be mirrored within StorageOS for tighter integration. Set VolumeName to any name to override the default behaviour. Set to "default" if you are not using namespaces within StorageOS. Namespaces that do not pre-exist within StorageOS will be created.
 func (d *StorageOSPersistentVolumeSourceDie) VolumeNamespace(v string) *StorageOSPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.StorageOSPersistentVolumeSource) {
 		r.VolumeNamespace = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+// fsType is the filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 func (d *StorageOSPersistentVolumeSourceDie) FSType(v string) *StorageOSPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.StorageOSPersistentVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+// readOnly defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
 func (d *StorageOSPersistentVolumeSourceDie) ReadOnly(v bool) *StorageOSPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.StorageOSPersistentVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// SecretRef specifies the secret to use for obtaining the StorageOS API credentials.  If not specified, default values will be attempted.
+// secretRef specifies the secret to use for obtaining the StorageOS API credentials.  If not specified, default values will be attempted.
 func (d *StorageOSPersistentVolumeSourceDie) SecretRef(v *corev1.ObjectReference) *StorageOSPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.StorageOSPersistentVolumeSource) {
 		r.SecretRef = v
@@ -8328,63 +8328,63 @@ func (d *CSIPersistentVolumeSourceDie) DeepCopy() *CSIPersistentVolumeSourceDie 
 	}
 }
 
-// Driver is the name of the driver to use for this volume. Required.
+// driver is the name of the driver to use for this volume. Required.
 func (d *CSIPersistentVolumeSourceDie) Driver(v string) *CSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIPersistentVolumeSource) {
 		r.Driver = v
 	})
 }
 
-// VolumeHandle is the unique volume name returned by the CSI volume plugin’s CreateVolume to refer to the volume on all subsequent calls. Required.
+// volumeHandle is the unique volume name returned by the CSI volume plugin’s CreateVolume to refer to the volume on all subsequent calls. Required.
 func (d *CSIPersistentVolumeSourceDie) VolumeHandle(v string) *CSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIPersistentVolumeSource) {
 		r.VolumeHandle = v
 	})
 }
 
-// Optional: The value to pass to ControllerPublishVolumeRequest. Defaults to false (read/write).
+// readOnly value to pass to ControllerPublishVolumeRequest. Defaults to false (read/write).
 func (d *CSIPersistentVolumeSourceDie) ReadOnly(v bool) *CSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIPersistentVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs".
+// fsType to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs".
 func (d *CSIPersistentVolumeSourceDie) FSType(v string) *CSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIPersistentVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Attributes of the volume to publish.
+// volumeAttributes of the volume to publish.
 func (d *CSIPersistentVolumeSourceDie) VolumeAttributes(v map[string]string) *CSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIPersistentVolumeSource) {
 		r.VolumeAttributes = v
 	})
 }
 
-// ControllerPublishSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI ControllerPublishVolume and ControllerUnpublishVolume calls. This field is optional, and may be empty if no secret is required. If the secret object contains more than one secret, all secrets are passed.
+// controllerPublishSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI ControllerPublishVolume and ControllerUnpublishVolume calls. This field is optional, and may be empty if no secret is required. If the secret object contains more than one secret, all secrets are passed.
 func (d *CSIPersistentVolumeSourceDie) ControllerPublishSecretRef(v *corev1.SecretReference) *CSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIPersistentVolumeSource) {
 		r.ControllerPublishSecretRef = v
 	})
 }
 
-// NodeStageSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI NodeStageVolume and NodeStageVolume and NodeUnstageVolume calls. This field is optional, and may be empty if no secret is required. If the secret object contains more than one secret, all secrets are passed.
+// nodeStageSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI NodeStageVolume and NodeStageVolume and NodeUnstageVolume calls. This field is optional, and may be empty if no secret is required. If the secret object contains more than one secret, all secrets are passed.
 func (d *CSIPersistentVolumeSourceDie) NodeStageSecretRef(v *corev1.SecretReference) *CSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIPersistentVolumeSource) {
 		r.NodeStageSecretRef = v
 	})
 }
 
-// NodePublishSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI NodePublishVolume and NodeUnpublishVolume calls. This field is optional, and may be empty if no secret is required. If the secret object contains more than one secret, all secrets are passed.
+// nodePublishSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI NodePublishVolume and NodeUnpublishVolume calls. This field is optional, and may be empty if no secret is required. If the secret object contains more than one secret, all secrets are passed.
 func (d *CSIPersistentVolumeSourceDie) NodePublishSecretRef(v *corev1.SecretReference) *CSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIPersistentVolumeSource) {
 		r.NodePublishSecretRef = v
 	})
 }
 
-// ControllerExpandSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI ControllerExpandVolume call. This is an alpha field and requires enabling ExpandCSIVolumes feature gate. This field is optional, and may be empty if no secret is required. If the secret object contains more than one secret, all secrets are passed.
+// controllerExpandSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI ControllerExpandVolume call. This is an alpha field and requires enabling ExpandCSIVolumes feature gate. This field is optional, and may be empty if no secret is required. If the secret object contains more than one secret, all secrets are passed.
 func (d *CSIPersistentVolumeSourceDie) ControllerExpandSecretRef(v *corev1.SecretReference) *CSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIPersistentVolumeSource) {
 		r.ControllerExpandSecretRef = v
@@ -8458,7 +8458,7 @@ func (d *VolumeNodeAffinityDie) DeepCopy() *VolumeNodeAffinityDie {
 	}
 }
 
-// Required specifies hard node constraints that must be met.
+// required specifies hard node constraints that must be met.
 func (d *VolumeNodeAffinityDie) Required(v *corev1.NodeSelector) *VolumeNodeAffinityDie {
 	return d.DieStamp(func(r *corev1.VolumeNodeAffinity) {
 		r.Required = v
@@ -8843,14 +8843,14 @@ func (d *PersistentVolumeClaimDie) StatusDie(fn func(d *PersistentVolumeClaimSta
 	})
 }
 
-// Spec defines the desired characteristics of a volume requested by a pod author. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
+// spec defines the desired characteristics of a volume requested by a pod author. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 func (d *PersistentVolumeClaimDie) Spec(v corev1.PersistentVolumeClaimSpec) *PersistentVolumeClaimDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaim) {
 		r.Spec = v
 	})
 }
 
-// Status represents the current information/status of a persistent volume claim. Read-only. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
+// status represents the current information/status of a persistent volume claim. Read-only. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 func (d *PersistentVolumeClaimDie) Status(v corev1.PersistentVolumeClaimStatus) *PersistentVolumeClaimDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaim) {
 		r.Status = v
@@ -8924,35 +8924,35 @@ func (d *PersistentVolumeClaimSpecDie) DeepCopy() *PersistentVolumeClaimSpecDie 
 	}
 }
 
-// AccessModes contains the desired access modes the volume should have. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1
+// accessModes contains the desired access modes the volume should have. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1
 func (d *PersistentVolumeClaimSpecDie) AccessModes(v ...corev1.PersistentVolumeAccessMode) *PersistentVolumeClaimSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimSpec) {
 		r.AccessModes = v
 	})
 }
 
-// A label query over volumes to consider for binding.
+// selector is a label query over volumes to consider for binding.
 func (d *PersistentVolumeClaimSpecDie) Selector(v *apismetav1.LabelSelector) *PersistentVolumeClaimSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimSpec) {
 		r.Selector = v
 	})
 }
 
-// Resources represents the minimum resources the volume should have. If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements that are lower than previous value but must still be higher than capacity recorded in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
+// resources represents the minimum resources the volume should have. If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements that are lower than previous value but must still be higher than capacity recorded in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
 func (d *PersistentVolumeClaimSpecDie) Resources(v corev1.ResourceRequirements) *PersistentVolumeClaimSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimSpec) {
 		r.Resources = v
 	})
 }
 
-// VolumeName is the binding reference to the PersistentVolume backing this claim.
+// volumeName is the binding reference to the PersistentVolume backing this claim.
 func (d *PersistentVolumeClaimSpecDie) VolumeName(v string) *PersistentVolumeClaimSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimSpec) {
 		r.VolumeName = v
 	})
 }
 
-// Name of the StorageClass required by the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#class-1
+// storageClassName is the name of the StorageClass required by the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#class-1
 func (d *PersistentVolumeClaimSpecDie) StorageClassName(v *string) *PersistentVolumeClaimSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimSpec) {
 		r.StorageClassName = v
@@ -8966,14 +8966,14 @@ func (d *PersistentVolumeClaimSpecDie) VolumeMode(v *corev1.PersistentVolumeMode
 	})
 }
 
-// This field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. If the AnyVolumeDataSource feature gate is enabled, this field will always have the same contents as the DataSourceRef field.
+// dataSource field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. If the AnyVolumeDataSource feature gate is enabled, this field will always have the same contents as the DataSourceRef field.
 func (d *PersistentVolumeClaimSpecDie) DataSource(v *corev1.TypedLocalObjectReference) *PersistentVolumeClaimSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimSpec) {
 		r.DataSource = v
 	})
 }
 
-// Specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef   allows any non-core object, as well as PersistentVolumeClaim objects. * While DataSource ignores disallowed values (dropping them), DataSourceRef   preserves all values, and generates an error if a disallowed value is   specified. (Alpha) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
+// dataSourceRef specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef allows any non-core object, as well as PersistentVolumeClaim objects. * While DataSource ignores disallowed values (dropping them), DataSourceRef preserves all values, and generates an error if a disallowed value is specified. (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
 func (d *PersistentVolumeClaimSpecDie) DataSourceRef(v *corev1.TypedLocalObjectReference) *PersistentVolumeClaimSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimSpec) {
 		r.DataSourceRef = v
@@ -9047,42 +9047,42 @@ func (d *PersistentVolumeClaimStatusDie) DeepCopy() *PersistentVolumeClaimStatus
 	}
 }
 
-// Phase represents the current phase of PersistentVolumeClaim.
+// phase represents the current phase of PersistentVolumeClaim.
 func (d *PersistentVolumeClaimStatusDie) Phase(v corev1.PersistentVolumeClaimPhase) *PersistentVolumeClaimStatusDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimStatus) {
 		r.Phase = v
 	})
 }
 
-// AccessModes contains the actual access modes the volume backing the PVC has. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1
+// accessModes contains the actual access modes the volume backing the PVC has. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1
 func (d *PersistentVolumeClaimStatusDie) AccessModes(v ...corev1.PersistentVolumeAccessMode) *PersistentVolumeClaimStatusDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimStatus) {
 		r.AccessModes = v
 	})
 }
 
-// Represents the actual resources of the underlying volume.
+// capacity represents the actual resources of the underlying volume.
 func (d *PersistentVolumeClaimStatusDie) Capacity(v corev1.ResourceList) *PersistentVolumeClaimStatusDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimStatus) {
 		r.Capacity = v
 	})
 }
 
-// Current Condition of persistent volume claim. If underlying persistent volume is being resized then the Condition will be set to 'ResizeStarted'.
+// conditions is the current Condition of persistent volume claim. If underlying persistent volume is being resized then the Condition will be set to 'ResizeStarted'.
 func (d *PersistentVolumeClaimStatusDie) Conditions(v ...corev1.PersistentVolumeClaimCondition) *PersistentVolumeClaimStatusDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimStatus) {
 		r.Conditions = v
 	})
 }
 
-// The storage resource within AllocatedResources tracks the capacity allocated to a PVC. It may be larger than the actual capacity when a volume expansion operation is requested. For storage quota, the larger value from allocatedResources and PVC.spec.resources is used. If allocatedResources is not set, PVC.spec.resources alone is used for quota calculation. If a volume expansion capacity request is lowered, allocatedResources is only lowered if there are no expansion operations in progress and if the actual volume capacity is equal or lower than the requested capacity. This is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.
+// allocatedResources is the storage resource within AllocatedResources tracks the capacity allocated to a PVC. It may be larger than the actual capacity when a volume expansion operation is requested. For storage quota, the larger value from allocatedResources and PVC.spec.resources is used. If allocatedResources is not set, PVC.spec.resources alone is used for quota calculation. If a volume expansion capacity request is lowered, allocatedResources is only lowered if there are no expansion operations in progress and if the actual volume capacity is equal or lower than the requested capacity. This is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.
 func (d *PersistentVolumeClaimStatusDie) AllocatedResources(v corev1.ResourceList) *PersistentVolumeClaimStatusDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimStatus) {
 		r.AllocatedResources = v
 	})
 }
 
-// ResizeStatus stores status of resize operation. ResizeStatus is not set by default but when expansion is complete resizeStatus is set to empty string by resize controller or kubelet. This is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.
+// resizeStatus stores status of resize operation. ResizeStatus is not set by default but when expansion is complete resizeStatus is set to empty string by resize controller or kubelet. This is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.
 func (d *PersistentVolumeClaimStatusDie) ResizeStatus(v *corev1.PersistentVolumeClaimResizeStatus) *PersistentVolumeClaimStatusDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimStatus) {
 		r.ResizeStatus = v
@@ -9512,7 +9512,7 @@ func (d *PodSpecDie) SecurityContext(v *corev1.PodSecurityContext) *PodSpecDie {
 	})
 }
 
-// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. For example, in the case of docker, only DockerConfig type secrets are honored. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
+// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
 func (d *PodSpecDie) ImagePullSecrets(v ...corev1.LocalObjectReference) *PodSpecDie {
 	return d.DieStamp(func(r *corev1.PodSpec) {
 		r.ImagePullSecrets = v
@@ -9589,7 +9589,7 @@ func (d *PodSpecDie) ReadinessGates(v ...corev1.PodReadinessGate) *PodSpecDie {
 	})
 }
 
-// RuntimeClassName refers to a RuntimeClass object in the node.k8s.io group, which should be used to run this pod.  If no RuntimeClass resource matches the named class, the pod will not be run. If unset or empty, the "legacy" RuntimeClass will be used, which is an implicit class with an empty definition that uses the default runtime handler. More info: https://git.k8s.io/enhancements/keps/sig-node/585-runtime-class This is a beta feature as of Kubernetes v1.14.
+// RuntimeClassName refers to a RuntimeClass object in the node.k8s.io group, which should be used to run this pod.  If no RuntimeClass resource matches the named class, the pod will not be run. If unset or empty, the "legacy" RuntimeClass will be used, which is an implicit class with an empty definition that uses the default runtime handler. More info: https://git.k8s.io/enhancements/keps/sig-node/585-runtime-class
 func (d *PodSpecDie) RuntimeClassName(v *string) *PodSpecDie {
 	return d.DieStamp(func(r *corev1.PodSpec) {
 		r.RuntimeClassName = v
@@ -9603,14 +9603,14 @@ func (d *PodSpecDie) EnableServiceLinks(v *bool) *PodSpecDie {
 	})
 }
 
-// PreemptionPolicy is the Policy for preempting pods with lower priority. One of Never, PreemptLowerPriority. Defaults to PreemptLowerPriority if unset. This field is beta-level, gated by the NonPreemptingPriority feature-gate.
+// PreemptionPolicy is the Policy for preempting pods with lower priority. One of Never, PreemptLowerPriority. Defaults to PreemptLowerPriority if unset.
 func (d *PodSpecDie) PreemptionPolicy(v *corev1.PreemptionPolicy) *PodSpecDie {
 	return d.DieStamp(func(r *corev1.PodSpec) {
 		r.PreemptionPolicy = v
 	})
 }
 
-// Overhead represents the resource overhead associated with running a pod for a given RuntimeClass. This field will be autopopulated at admission time by the RuntimeClass admission controller. If the RuntimeClass admission controller is enabled, overhead must not be set in Pod create requests. The RuntimeClass admission controller will reject Pod create requests which have the overhead already set. If RuntimeClass is configured and selected in the PodSpec, Overhead will be set to the value defined in the corresponding RuntimeClass, otherwise it will remain unset and treated as zero. More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md This field is beta-level as of Kubernetes v1.18, and is only honored by servers that enable the PodOverhead feature.
+// Overhead represents the resource overhead associated with running a pod for a given RuntimeClass. This field will be autopopulated at admission time by the RuntimeClass admission controller. If the RuntimeClass admission controller is enabled, overhead must not be set in Pod create requests. The RuntimeClass admission controller will reject Pod create requests which have the overhead already set. If RuntimeClass is configured and selected in the PodSpec, Overhead will be set to the value defined in the corresponding RuntimeClass, otherwise it will remain unset and treated as zero. More info: https://git.k8s.io/enhancements/keps/sig-node/688-pod-overhead/README.md
 func (d *PodSpecDie) Overhead(v corev1.ResourceList) *PodSpecDie {
 	return d.DieStamp(func(r *corev1.PodSpec) {
 		r.Overhead = v
@@ -9635,7 +9635,7 @@ func (d *PodSpecDie) SetHostnameAsFQDN(v *bool) *PodSpecDie {
 //
 // If the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions
 //
-// If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup This is an alpha field and requires the IdentifyPodOS feature
+// If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup This is a beta field and requires the IdentifyPodOS feature
 func (d *PodSpecDie) OS(v *corev1.PodOS) *PodSpecDie {
 	return d.DieStamp(func(r *corev1.PodSpec) {
 		r.OS = v
@@ -10356,21 +10356,21 @@ func (d *TopologySpreadConstraintDie) DeepCopy() *TopologySpreadConstraintDie {
 	}
 }
 
-// MaxSkew describes the degree to which pods may be unevenly distributed. When `whenUnsatisfiable=DoNotSchedule`, it is the maximum permitted difference between the number of matching pods in the target topology and the global minimum. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 1/1/0: | zone1 | zone2 | zone3 | |   P   |   P   |       | - if MaxSkew is 1, incoming pod can only be scheduled to zone3 to become 1/1/1; scheduling it onto zone1(zone2) would make the ActualSkew(2-0) on zone1(zone2) violate MaxSkew(1). - if MaxSkew is 2, incoming pod can be scheduled onto any zone. When `whenUnsatisfiable=ScheduleAnyway`, it is used to give higher precedence to topologies that satisfy it. It's a required field. Default value is 1 and 0 is not allowed.
+// MaxSkew describes the degree to which pods may be unevenly distributed. When `whenUnsatisfiable=DoNotSchedule`, it is the maximum permitted difference between the number of matching pods in the target topology and the global minimum. The global minimum is the minimum number of matching pods in an eligible domain or zero if the number of eligible domains is less than MinDomains. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 2/2/1: In this case, the global minimum is 1. | zone1 | zone2 | zone3 | |  P P  |  P P  |   P   | - if MaxSkew is 1, incoming pod can only be scheduled to zone3 to become 2/2/2; scheduling it onto zone1(zone2) would make the ActualSkew(3-1) on zone1(zone2) violate MaxSkew(1). - if MaxSkew is 2, incoming pod can be scheduled onto any zone. When `whenUnsatisfiable=ScheduleAnyway`, it is used to give higher precedence to topologies that satisfy it. It's a required field. Default value is 1 and 0 is not allowed.
 func (d *TopologySpreadConstraintDie) MaxSkew(v int32) *TopologySpreadConstraintDie {
 	return d.DieStamp(func(r *corev1.TopologySpreadConstraint) {
 		r.MaxSkew = v
 	})
 }
 
-// TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. It's a required field.
+// TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes match the node selector. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
 func (d *TopologySpreadConstraintDie) TopologyKey(v string) *TopologySpreadConstraintDie {
 	return d.DieStamp(func(r *corev1.TopologySpreadConstraint) {
 		r.TopologyKey = v
 	})
 }
 
-// WhenUnsatisfiable indicates how to deal with a pod if it doesn't satisfy the spread constraint. - DoNotSchedule (default) tells the scheduler not to schedule it. - ScheduleAnyway tells the scheduler to schedule the pod in any location,   but giving higher precedence to topologies that would help reduce the   skew. A constraint is considered "Unsatisfiable" for an incoming pod if and only if every possible node assignment for that pod would violate "MaxSkew" on some topology. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 3/1/1: | zone1 | zone2 | zone3 | | P P P |   P   |   P   | If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler won't make it *more* imbalanced. It's a required field.
+// WhenUnsatisfiable indicates how to deal with a pod if it doesn't satisfy the spread constraint. - DoNotSchedule (default) tells the scheduler not to schedule it. - ScheduleAnyway tells the scheduler to schedule the pod in any location, but giving higher precedence to topologies that would help reduce the skew. A constraint is considered "Unsatisfiable" for an incoming pod if and only if every possible node assignment for that pod would violate "MaxSkew" on some topology. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 3/1/1: | zone1 | zone2 | zone3 | | P P P |   P   |   P   | If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler won't make it *more* imbalanced. It's a required field.
 func (d *TopologySpreadConstraintDie) WhenUnsatisfiable(v corev1.UnsatisfiableConstraintAction) *TopologySpreadConstraintDie {
 	return d.DieStamp(func(r *corev1.TopologySpreadConstraint) {
 		r.WhenUnsatisfiable = v
@@ -10381,6 +10381,17 @@ func (d *TopologySpreadConstraintDie) WhenUnsatisfiable(v corev1.UnsatisfiableCo
 func (d *TopologySpreadConstraintDie) LabelSelector(v *apismetav1.LabelSelector) *TopologySpreadConstraintDie {
 	return d.DieStamp(func(r *corev1.TopologySpreadConstraint) {
 		r.LabelSelector = v
+	})
+}
+
+// MinDomains indicates a minimum number of eligible domains. When the number of eligible domains with matching topology keys is less than minDomains, Pod Topology Spread treats "global minimum" as 0, and then the calculation of Skew is performed. And when the number of eligible domains with matching topology keys equals or greater than minDomains, this value has no effect on scheduling. As a result, when the number of eligible domains is less than minDomains, scheduler won't schedule more than maxSkew Pods to those domains. If value is nil, the constraint behaves as if MinDomains is equal to 1. Valid values are integers greater than 0. When value is not nil, WhenUnsatisfiable must be DoNotSchedule.
+//
+// For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same labelSelector spread as 2/2/2: | zone1 | zone2 | zone3 | |  P P  |  P P  |  P P  | The number of domains is less than 5(MinDomains), so "global minimum" is treated as 0. In this situation, new pod with the same labelSelector cannot be scheduled, because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones, it will violate MaxSkew.
+//
+// This is an alpha field and requires enabling MinDomainsInPodTopologySpread feature gate.
+func (d *TopologySpreadConstraintDie) MinDomains(v *int32) *TopologySpreadConstraintDie {
+	return d.DieStamp(func(r *corev1.TopologySpreadConstraint) {
+		r.MinDomains = v
 	})
 }
 
@@ -10599,7 +10610,7 @@ func (d *PodStatusDie) InitContainerStatuses(v ...corev1.ContainerStatus) *PodSt
 	})
 }
 
-// The list has one entry per container in the manifest. Each entry is currently the output of `docker inspect`. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status
+// The list has one entry per container in the manifest. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#pod-and-container-status
 func (d *PodStatusDie) ContainerStatuses(v ...corev1.ContainerStatus) *PodStatusDie {
 	return d.DieStamp(func(r *corev1.PodStatus) {
 		r.ContainerStatuses = v
@@ -12056,7 +12067,7 @@ func (d *ServiceSpecDie) SessionAffinity(v corev1.ServiceAffinity) *ServiceSpecD
 	})
 }
 
-// Only applies to Service Type: LoadBalancer LoadBalancer will get created with the IP specified in this field. This feature depends on whether the underlying cloud-provider supports specifying the loadBalancerIP when a load balancer is created. This field will be ignored if the cloud-provider does not support the feature.
+// Only applies to Service Type: LoadBalancer. This feature depends on whether the underlying cloud-provider supports specifying the loadBalancerIP when a load balancer is created. This field will be ignored if the cloud-provider does not support the feature. Deprecated: This field was under-specified and its meaning varies across implementations, and it cannot support dual-stack. As of Kubernetes v1.24, users are encouraged to use implementation-specific annotations when available. This field may be removed in a future API version.
 func (d *ServiceSpecDie) LoadBalancerIP(v string) *ServiceSpecDie {
 	return d.DieStamp(func(r *corev1.ServiceSpec) {
 		r.LoadBalancerIP = v
@@ -12121,7 +12132,7 @@ func (d *ServiceSpecDie) IPFamilyPolicy(v *corev1.IPFamilyPolicyType) *ServiceSp
 	})
 }
 
-// allocateLoadBalancerNodePorts defines if NodePorts will be automatically allocated for services with type LoadBalancer.  Default is "true". It may be set to "false" if the cluster load-balancer does not rely on NodePorts.  If the caller requests specific NodePorts (by specifying a value), those requests will be respected, regardless of this field. This field may only be set for services with type LoadBalancer and will be cleared if the type is changed to any other type. This field is beta-level and is only honored by servers that enable the ServiceLBNodePortControl feature.
+// allocateLoadBalancerNodePorts defines if NodePorts will be automatically allocated for services with type LoadBalancer.  Default is "true". It may be set to "false" if the cluster load-balancer does not rely on NodePorts.  If the caller requests specific NodePorts (by specifying a value), those requests will be respected, regardless of this field. This field may only be set for services with type LoadBalancer and will be cleared if the type is changed to any other type.
 func (d *ServiceSpecDie) AllocateLoadBalancerNodePorts(v *bool) *ServiceSpecDie {
 	return d.DieStamp(func(r *corev1.ServiceSpec) {
 		r.AllocateLoadBalancerNodePorts = v
@@ -12223,7 +12234,7 @@ func (d *ServicePortDie) Protocol(v corev1.Protocol) *ServicePortDie {
 	})
 }
 
-// The application protocol for this port. This field follows standard Kubernetes label syntax. Un-prefixed names are reserved for IANA standard service names (as per RFC-6335 and http://www.iana.org/assignments/service-names). Non-standard protocols should use prefixed names such as mycompany.com/my-custom-protocol.
+// The application protocol for this port. This field follows standard Kubernetes label syntax. Un-prefixed names are reserved for IANA standard service names (as per RFC-6335 and https://www.iana.org/assignments/service-names). Non-standard protocols should use prefixed names such as mycompany.com/my-custom-protocol.
 func (d *ServicePortDie) AppProtocol(v *string) *ServicePortDie {
 	return d.DieStamp(func(r *corev1.ServicePort) {
 		r.AppProtocol = v
@@ -12737,7 +12748,7 @@ func (d *PortStatusDie) Protocol(v corev1.Protocol) *PortStatusDie {
 	})
 }
 
-// Error is to record the problem with the service port The format of the error shall comply with the following rules: - built-in error values shall be specified in this file and those shall use   CamelCase names - cloud provider specific error values must have names that comply with the   format foo.example.com/CamelCase. --- The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+// Error is to record the problem with the service port The format of the error shall comply with the following rules: - built-in error values shall be specified in this file and those shall use CamelCase names - cloud provider specific error values must have names that comply with the format foo.example.com/CamelCase. --- The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
 func (d *PortStatusDie) Error(v *string) *PortStatusDie {
 	return d.DieStamp(func(r *corev1.PortStatus) {
 		r.Error = v
@@ -12861,7 +12872,7 @@ func (d *ServiceAccountDie) MetadataDie(fn func(d *metav1.ObjectMetaDie)) *Servi
 	})
 }
 
-// Secrets is the list of secrets allowed to be used by pods running using this ServiceAccount. More info: https://kubernetes.io/docs/concepts/configuration/secret
+// Secrets is a list of the secrets in the same namespace that pods running using this ServiceAccount are allowed to use. Pods are only limited to this list if this service account has a "kubernetes.io/enforce-mountable-secrets" annotation set to "true". This field should not be used to find auto-generated service account token secrets for use outside of pods. Instead, tokens can be requested directly using the TokenRequest API, or service account token secrets can be manually created. More info: https://kubernetes.io/docs/concepts/configuration/secret
 func (d *ServiceAccountDie) Secrets(v ...corev1.ObjectReference) *ServiceAccountDie {
 	return d.DieStamp(func(r *corev1.ServiceAccount) {
 		r.Secrets = v
@@ -12949,14 +12960,14 @@ func (d *VolumeDie) DeepCopy() *VolumeDie {
 	}
 }
 
-// Volume's name. Must be a DNS_LABEL and unique within the pod. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+// name of the volume. Must be a DNS_LABEL and unique within the pod. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 func (d *VolumeDie) Name(v string) *VolumeDie {
 	return d.DieStamp(func(r *corev1.Volume) {
 		r.Name = v
 	})
 }
 
-// VolumeSource represents the location and type of the mounted volume. If not specified, the Volume is implied to be an EmptyDir. This implied behavior is deprecated and will be removed in a future version.
+// volumeSource represents the location and type of the mounted volume. If not specified, the Volume is implied to be an EmptyDir. This implied behavior is deprecated and will be removed in a future version.
 func (d *VolumeDie) VolumeSource(v corev1.VolumeSource) *VolumeDie {
 	return d.DieStamp(func(r *corev1.Volume) {
 		r.VolumeSource = v
@@ -13030,14 +13041,14 @@ func (d *HostPathVolumeSourceDie) DeepCopy() *HostPathVolumeSourceDie {
 	}
 }
 
-// Path of the directory on the host. If the path is a symlink, it will follow the link to the real path. More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath
+// path of the directory on the host. If the path is a symlink, it will follow the link to the real path. More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath
 func (d *HostPathVolumeSourceDie) Path(v string) *HostPathVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.HostPathVolumeSource) {
 		r.Path = v
 	})
 }
 
-// Type for HostPath Volume Defaults to "" More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath
+// type for HostPath Volume Defaults to "" More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath
 func (d *HostPathVolumeSourceDie) Type(v *corev1.HostPathType) *HostPathVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.HostPathVolumeSource) {
 		r.Type = v
@@ -13111,14 +13122,14 @@ func (d *EmptyDirVolumeSourceDie) DeepCopy() *EmptyDirVolumeSourceDie {
 	}
 }
 
-// What type of storage medium should back this directory. The default is "" which means to use the node's default medium. Must be an empty string (default) or Memory. More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
+// medium represents what type of storage medium should back this directory. The default is "" which means to use the node's default medium. Must be an empty string (default) or Memory. More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
 func (d *EmptyDirVolumeSourceDie) Medium(v corev1.StorageMedium) *EmptyDirVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.EmptyDirVolumeSource) {
 		r.Medium = v
 	})
 }
 
-// Total amount of local storage required for this EmptyDir volume. The size limit is also applicable for memory medium. The maximum usage on memory medium EmptyDir would be the minimum value between the SizeLimit specified here and the sum of memory limits of all containers in a pod. The default is nil which means that the limit is undefined. More info: http://kubernetes.io/docs/user-guide/volumes#emptydir
+// sizeLimit is the total amount of local storage required for this EmptyDir volume. The size limit is also applicable for memory medium. The maximum usage on memory medium EmptyDir would be the minimum value between the SizeLimit specified here and the sum of memory limits of all containers in a pod. The default is nil which means that the limit is undefined. More info: http://kubernetes.io/docs/user-guide/volumes#emptydir
 func (d *EmptyDirVolumeSourceDie) SizeLimit(v *resource.Quantity) *EmptyDirVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.EmptyDirVolumeSource) {
 		r.SizeLimit = v
@@ -13192,28 +13203,28 @@ func (d *GCEPersistentDiskVolumeSourceDie) DeepCopy() *GCEPersistentDiskVolumeSo
 	}
 }
 
-// Unique name of the PD resource in GCE. Used to identify the disk in GCE. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
+// pdName is unique name of the PD resource in GCE. Used to identify the disk in GCE. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
 func (d *GCEPersistentDiskVolumeSourceDie) PDName(v string) *GCEPersistentDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GCEPersistentDiskVolumeSource) {
 		r.PDName = v
 	})
 }
 
-// Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk TODO: how do we prevent errors in the filesystem from compromising the machine
+// fsType is filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk TODO: how do we prevent errors in the filesystem from compromising the machine
 func (d *GCEPersistentDiskVolumeSourceDie) FSType(v string) *GCEPersistentDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GCEPersistentDiskVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// The partition in the volume that you want to mount. If omitted, the default is to mount by volume name. Examples: For volume /dev/sda1, you specify the partition as "1". Similarly, the volume partition for /dev/sda is "0" (or you can leave the property empty). More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
+// partition is the partition in the volume that you want to mount. If omitted, the default is to mount by volume name. Examples: For volume /dev/sda1, you specify the partition as "1". Similarly, the volume partition for /dev/sda is "0" (or you can leave the property empty). More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
 func (d *GCEPersistentDiskVolumeSourceDie) Partition(v int32) *GCEPersistentDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GCEPersistentDiskVolumeSource) {
 		r.Partition = v
 	})
 }
 
-// ReadOnly here will force the ReadOnly setting in VolumeMounts. Defaults to false. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
+// readOnly here will force the ReadOnly setting in VolumeMounts. Defaults to false. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
 func (d *GCEPersistentDiskVolumeSourceDie) ReadOnly(v bool) *GCEPersistentDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GCEPersistentDiskVolumeSource) {
 		r.ReadOnly = v
@@ -13287,28 +13298,28 @@ func (d *AWSElasticBlockStoreVolumeSourceDie) DeepCopy() *AWSElasticBlockStoreVo
 	}
 }
 
-// Unique ID of the persistent disk resource in AWS (Amazon EBS volume). More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
+// volumeID is unique ID of the persistent disk resource in AWS (Amazon EBS volume). More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
 func (d *AWSElasticBlockStoreVolumeSourceDie) VolumeID(v string) *AWSElasticBlockStoreVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AWSElasticBlockStoreVolumeSource) {
 		r.VolumeID = v
 	})
 }
 
-// Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore TODO: how do we prevent errors in the filesystem from compromising the machine
+// fsType is the filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore TODO: how do we prevent errors in the filesystem from compromising the machine
 func (d *AWSElasticBlockStoreVolumeSourceDie) FSType(v string) *AWSElasticBlockStoreVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AWSElasticBlockStoreVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// The partition in the volume that you want to mount. If omitted, the default is to mount by volume name. Examples: For volume /dev/sda1, you specify the partition as "1". Similarly, the volume partition for /dev/sda is "0" (or you can leave the property empty).
+// partition is the partition in the volume that you want to mount. If omitted, the default is to mount by volume name. Examples: For volume /dev/sda1, you specify the partition as "1". Similarly, the volume partition for /dev/sda is "0" (or you can leave the property empty).
 func (d *AWSElasticBlockStoreVolumeSourceDie) Partition(v int32) *AWSElasticBlockStoreVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AWSElasticBlockStoreVolumeSource) {
 		r.Partition = v
 	})
 }
 
-// Specify "true" to force and set the ReadOnly property in VolumeMounts to "true". If omitted, the default is "false". More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
+// readOnly value true will force the readOnly setting in VolumeMounts. More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
 func (d *AWSElasticBlockStoreVolumeSourceDie) ReadOnly(v bool) *AWSElasticBlockStoreVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AWSElasticBlockStoreVolumeSource) {
 		r.ReadOnly = v
@@ -13382,21 +13393,21 @@ func (d *GitRepoVolumeSourceDie) DeepCopy() *GitRepoVolumeSourceDie {
 	}
 }
 
-// Repository URL
+// repository is the URL
 func (d *GitRepoVolumeSourceDie) Repository(v string) *GitRepoVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GitRepoVolumeSource) {
 		r.Repository = v
 	})
 }
 
-// Commit hash for the specified revision.
+// revision is the commit hash for the specified revision.
 func (d *GitRepoVolumeSourceDie) Revision(v string) *GitRepoVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GitRepoVolumeSource) {
 		r.Revision = v
 	})
 }
 
-// Target directory name. Must not contain or start with '..'.  If '.' is supplied, the volume directory will be the git repository.  Otherwise, if specified, the volume will contain the git repository in the subdirectory with the given name.
+// directory is the target directory name. Must not contain or start with '..'.  If '.' is supplied, the volume directory will be the git repository.  Otherwise, if specified, the volume will contain the git repository in the subdirectory with the given name.
 func (d *GitRepoVolumeSourceDie) Directory(v string) *GitRepoVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GitRepoVolumeSource) {
 		r.Directory = v
@@ -13470,28 +13481,28 @@ func (d *SecretVolumeSourceDie) DeepCopy() *SecretVolumeSourceDie {
 	}
 }
 
-// Name of the secret in the pod's namespace to use. More info: https://kubernetes.io/docs/concepts/storage/volumes#secret
+// secretName is the name of the secret in the pod's namespace to use. More info: https://kubernetes.io/docs/concepts/storage/volumes#secret
 func (d *SecretVolumeSourceDie) SecretName(v string) *SecretVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.SecretVolumeSource) {
 		r.SecretName = v
 	})
 }
 
-// If unspecified, each key-value pair in the Data field of the referenced Secret will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the specified paths, and unlisted keys will not be present. If a key is specified which is not present in the Secret, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'.
+// items If unspecified, each key-value pair in the Data field of the referenced Secret will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the specified paths, and unlisted keys will not be present. If a key is specified which is not present in the Secret, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'.
 func (d *SecretVolumeSourceDie) Items(v ...corev1.KeyToPath) *SecretVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.SecretVolumeSource) {
 		r.Items = v
 	})
 }
 
-// Optional: mode bits used to set permissions on created files by default. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. Defaults to 0644. Directories within the path are not affected by this setting. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
+// defaultMode is Optional: mode bits used to set permissions on created files by default. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. Defaults to 0644. Directories within the path are not affected by this setting. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
 func (d *SecretVolumeSourceDie) DefaultMode(v *int32) *SecretVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.SecretVolumeSource) {
 		r.DefaultMode = v
 	})
 }
 
-// Specify whether the Secret or its keys must be defined
+// optional field specify whether the Secret or its keys must be defined
 func (d *SecretVolumeSourceDie) Optional(v *bool) *SecretVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.SecretVolumeSource) {
 		r.Optional = v
@@ -13565,21 +13576,21 @@ func (d *NFSVolumeSourceDie) DeepCopy() *NFSVolumeSourceDie {
 	}
 }
 
-// Server is the hostname or IP address of the NFS server. More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
+// server is the hostname or IP address of the NFS server. More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
 func (d *NFSVolumeSourceDie) Server(v string) *NFSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.NFSVolumeSource) {
 		r.Server = v
 	})
 }
 
-// Path that is exported by the NFS server. More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
+// path that is exported by the NFS server. More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
 func (d *NFSVolumeSourceDie) Path(v string) *NFSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.NFSVolumeSource) {
 		r.Path = v
 	})
 }
 
-// ReadOnly here will force the NFS export to be mounted with read-only permissions. Defaults to false. More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
+// readOnly here will force the NFS export to be mounted with read-only permissions. Defaults to false. More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
 func (d *NFSVolumeSourceDie) ReadOnly(v bool) *NFSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.NFSVolumeSource) {
 		r.ReadOnly = v
@@ -13653,77 +13664,77 @@ func (d *ISCSIVolumeSourceDie) DeepCopy() *ISCSIVolumeSourceDie {
 	}
 }
 
-// iSCSI Target Portal. The Portal is either an IP or ip_addr:port if the port is other than default (typically TCP ports 860 and 3260).
+// targetPortal is iSCSI Target Portal. The Portal is either an IP or ip_addr:port if the port is other than default (typically TCP ports 860 and 3260).
 func (d *ISCSIVolumeSourceDie) TargetPortal(v string) *ISCSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIVolumeSource) {
 		r.TargetPortal = v
 	})
 }
 
-// Target iSCSI Qualified Name.
+// iqn is the target iSCSI Qualified Name.
 func (d *ISCSIVolumeSourceDie) IQN(v string) *ISCSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIVolumeSource) {
 		r.IQN = v
 	})
 }
 
-// iSCSI Target Lun number.
+// lun represents iSCSI Target Lun number.
 func (d *ISCSIVolumeSourceDie) Lun(v int32) *ISCSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIVolumeSource) {
 		r.Lun = v
 	})
 }
 
-// iSCSI Interface Name that uses an iSCSI transport. Defaults to 'default' (tcp).
+// iscsiInterface is the interface Name that uses an iSCSI transport. Defaults to 'default' (tcp).
 func (d *ISCSIVolumeSourceDie) ISCSIInterface(v string) *ISCSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIVolumeSource) {
 		r.ISCSIInterface = v
 	})
 }
 
-// Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#iscsi TODO: how do we prevent errors in the filesystem from compromising the machine
+// fsType is the filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#iscsi TODO: how do we prevent errors in the filesystem from compromising the machine
 func (d *ISCSIVolumeSourceDie) FSType(v string) *ISCSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// ReadOnly here will force the ReadOnly setting in VolumeMounts. Defaults to false.
+// readOnly here will force the ReadOnly setting in VolumeMounts. Defaults to false.
 func (d *ISCSIVolumeSourceDie) ReadOnly(v bool) *ISCSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// iSCSI Target Portal List. The portal is either an IP or ip_addr:port if the port is other than default (typically TCP ports 860 and 3260).
+// portals is the iSCSI Target Portal List. The portal is either an IP or ip_addr:port if the port is other than default (typically TCP ports 860 and 3260).
 func (d *ISCSIVolumeSourceDie) Portals(v ...string) *ISCSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIVolumeSource) {
 		r.Portals = v
 	})
 }
 
-// whether support iSCSI Discovery CHAP authentication
+// chapAuthDiscovery defines whether support iSCSI Discovery CHAP authentication
 func (d *ISCSIVolumeSourceDie) DiscoveryCHAPAuth(v bool) *ISCSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIVolumeSource) {
 		r.DiscoveryCHAPAuth = v
 	})
 }
 
-// whether support iSCSI Session CHAP authentication
+// chapAuthSession defines whether support iSCSI Session CHAP authentication
 func (d *ISCSIVolumeSourceDie) SessionCHAPAuth(v bool) *ISCSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIVolumeSource) {
 		r.SessionCHAPAuth = v
 	})
 }
 
-// CHAP Secret for iSCSI target and initiator authentication
+// secretRef is the CHAP Secret for iSCSI target and initiator authentication
 func (d *ISCSIVolumeSourceDie) SecretRef(v *corev1.LocalObjectReference) *ISCSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIVolumeSource) {
 		r.SecretRef = v
 	})
 }
 
-// Custom iSCSI Initiator Name. If initiatorName is specified with iscsiInterface simultaneously, new iSCSI interface <target portal>:<volume name> will be created for the connection.
+// initiatorName is the custom iSCSI Initiator Name. If initiatorName is specified with iscsiInterface simultaneously, new iSCSI interface <target portal>:<volume name> will be created for the connection.
 func (d *ISCSIVolumeSourceDie) InitiatorName(v *string) *ISCSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ISCSIVolumeSource) {
 		r.InitiatorName = v
@@ -13797,21 +13808,21 @@ func (d *GlusterfsVolumeSourceDie) DeepCopy() *GlusterfsVolumeSourceDie {
 	}
 }
 
-// EndpointsName is the endpoint name that details Glusterfs topology. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
+// endpoints is the endpoint name that details Glusterfs topology. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
 func (d *GlusterfsVolumeSourceDie) EndpointsName(v string) *GlusterfsVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GlusterfsVolumeSource) {
 		r.EndpointsName = v
 	})
 }
 
-// Path is the Glusterfs volume path. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
+// path is the Glusterfs volume path. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
 func (d *GlusterfsVolumeSourceDie) Path(v string) *GlusterfsVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GlusterfsVolumeSource) {
 		r.Path = v
 	})
 }
 
-// ReadOnly here will force the Glusterfs volume to be mounted with read-only permissions. Defaults to false. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
+// readOnly here will force the Glusterfs volume to be mounted with read-only permissions. Defaults to false. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
 func (d *GlusterfsVolumeSourceDie) ReadOnly(v bool) *GlusterfsVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.GlusterfsVolumeSource) {
 		r.ReadOnly = v
@@ -13885,14 +13896,14 @@ func (d *PersistentVolumeClaimVolumeSourceDie) DeepCopy() *PersistentVolumeClaim
 	}
 }
 
-// ClaimName is the name of a PersistentVolumeClaim in the same namespace as the pod using this volume. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
+// claimName is the name of a PersistentVolumeClaim in the same namespace as the pod using this volume. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 func (d *PersistentVolumeClaimVolumeSourceDie) ClaimName(v string) *PersistentVolumeClaimVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimVolumeSource) {
 		r.ClaimName = v
 	})
 }
 
-// Will force the ReadOnly setting in VolumeMounts. Default false.
+// readOnly Will force the ReadOnly setting in VolumeMounts. Default false.
 func (d *PersistentVolumeClaimVolumeSourceDie) ReadOnly(v bool) *PersistentVolumeClaimVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimVolumeSource) {
 		r.ReadOnly = v
@@ -13966,56 +13977,56 @@ func (d *RBDVolumeSourceDie) DeepCopy() *RBDVolumeSourceDie {
 	}
 }
 
-// A collection of Ceph monitors. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// monitors is a collection of Ceph monitors. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDVolumeSourceDie) CephMonitors(v ...string) *RBDVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDVolumeSource) {
 		r.CephMonitors = v
 	})
 }
 
-// The rados image name. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// image is the rados image name. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDVolumeSourceDie) RBDImage(v string) *RBDVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDVolumeSource) {
 		r.RBDImage = v
 	})
 }
 
-// Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#rbd TODO: how do we prevent errors in the filesystem from compromising the machine
+// fsType is the filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://kubernetes.io/docs/concepts/storage/volumes#rbd TODO: how do we prevent errors in the filesystem from compromising the machine
 func (d *RBDVolumeSourceDie) FSType(v string) *RBDVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// The rados pool name. Default is rbd. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// pool is the rados pool name. Default is rbd. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDVolumeSourceDie) RBDPool(v string) *RBDVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDVolumeSource) {
 		r.RBDPool = v
 	})
 }
 
-// The rados user name. Default is admin. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// user is the rados user name. Default is admin. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDVolumeSourceDie) RadosUser(v string) *RBDVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDVolumeSource) {
 		r.RadosUser = v
 	})
 }
 
-// Keyring is the path to key ring for RBDUser. Default is /etc/ceph/keyring. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// keyring is the path to key ring for RBDUser. Default is /etc/ceph/keyring. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDVolumeSourceDie) Keyring(v string) *RBDVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDVolumeSource) {
 		r.Keyring = v
 	})
 }
 
-// SecretRef is name of the authentication secret for RBDUser. If provided overrides keyring. Default is nil. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// secretRef is name of the authentication secret for RBDUser. If provided overrides keyring. Default is nil. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDVolumeSourceDie) SecretRef(v *corev1.LocalObjectReference) *RBDVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDVolumeSource) {
 		r.SecretRef = v
 	})
 }
 
-// ReadOnly here will force the ReadOnly setting in VolumeMounts. Defaults to false. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
+// readOnly here will force the ReadOnly setting in VolumeMounts. Defaults to false. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 func (d *RBDVolumeSourceDie) ReadOnly(v bool) *RBDVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.RBDVolumeSource) {
 		r.ReadOnly = v
@@ -14089,35 +14100,35 @@ func (d *FlexVolumeSourceDie) DeepCopy() *FlexVolumeSourceDie {
 	}
 }
 
-// Driver is the name of the driver to use for this volume.
+// driver is the name of the driver to use for this volume.
 func (d *FlexVolumeSourceDie) Driver(v string) *FlexVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FlexVolumeSource) {
 		r.Driver = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". The default filesystem depends on FlexVolume script.
+// fsType is the filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". The default filesystem depends on FlexVolume script.
 func (d *FlexVolumeSourceDie) FSType(v string) *FlexVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FlexVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Optional: SecretRef is reference to the secret object containing sensitive information to pass to the plugin scripts. This may be empty if no secret object is specified. If the secret object contains more than one secret, all secrets are passed to the plugin scripts.
+// secretRef is Optional: secretRef is reference to the secret object containing sensitive information to pass to the plugin scripts. This may be empty if no secret object is specified. If the secret object contains more than one secret, all secrets are passed to the plugin scripts.
 func (d *FlexVolumeSourceDie) SecretRef(v *corev1.LocalObjectReference) *FlexVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FlexVolumeSource) {
 		r.SecretRef = v
 	})
 }
 
-// Optional: Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+// readOnly is Optional: defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
 func (d *FlexVolumeSourceDie) ReadOnly(v bool) *FlexVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FlexVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// Optional: Extra command options if any.
+// options is Optional: this field holds extra command options if any.
 func (d *FlexVolumeSourceDie) Options(v map[string]string) *FlexVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FlexVolumeSource) {
 		r.Options = v
@@ -14191,28 +14202,28 @@ func (d *CinderVolumeSourceDie) DeepCopy() *CinderVolumeSourceDie {
 	}
 }
 
-// volume id used to identify the volume in cinder. More info: https://examples.k8s.io/mysql-cinder-pd/README.md
+// volumeID used to identify the volume in cinder. More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 func (d *CinderVolumeSourceDie) VolumeID(v string) *CinderVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CinderVolumeSource) {
 		r.VolumeID = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://examples.k8s.io/mysql-cinder-pd/README.md
+// fsType is the filesystem type to mount. Must be a filesystem type supported by the host operating system. Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 func (d *CinderVolumeSourceDie) FSType(v string) *CinderVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CinderVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Optional: Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts. More info: https://examples.k8s.io/mysql-cinder-pd/README.md
+// readOnly defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts. More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 func (d *CinderVolumeSourceDie) ReadOnly(v bool) *CinderVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CinderVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// Optional: points to a secret object containing parameters used to connect to OpenStack.
+// secretRef is optional: points to a secret object containing parameters used to connect to OpenStack.
 func (d *CinderVolumeSourceDie) SecretRef(v *corev1.LocalObjectReference) *CinderVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CinderVolumeSource) {
 		r.SecretRef = v
@@ -14286,42 +14297,42 @@ func (d *CephFSVolumeSourceDie) DeepCopy() *CephFSVolumeSourceDie {
 	}
 }
 
-// Required: Monitors is a collection of Ceph monitors More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+// monitors is Required: Monitors is a collection of Ceph monitors More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 func (d *CephFSVolumeSourceDie) Monitors(v ...string) *CephFSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CephFSVolumeSource) {
 		r.Monitors = v
 	})
 }
 
-// Optional: Used as the mounted root, rather than the full Ceph tree, default is /
+// path is Optional: Used as the mounted root, rather than the full Ceph tree, default is /
 func (d *CephFSVolumeSourceDie) Path(v string) *CephFSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CephFSVolumeSource) {
 		r.Path = v
 	})
 }
 
-// Optional: User is the rados user name, default is admin More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+// user is optional: User is the rados user name, default is admin More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 func (d *CephFSVolumeSourceDie) User(v string) *CephFSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CephFSVolumeSource) {
 		r.User = v
 	})
 }
 
-// Optional: SecretFile is the path to key ring for User, default is /etc/ceph/user.secret More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+// secretFile is Optional: SecretFile is the path to key ring for User, default is /etc/ceph/user.secret More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 func (d *CephFSVolumeSourceDie) SecretFile(v string) *CephFSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CephFSVolumeSource) {
 		r.SecretFile = v
 	})
 }
 
-// Optional: SecretRef is reference to the authentication secret for User, default is empty. More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+// secretRef is Optional: SecretRef is reference to the authentication secret for User, default is empty. More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 func (d *CephFSVolumeSourceDie) SecretRef(v *corev1.LocalObjectReference) *CephFSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CephFSVolumeSource) {
 		r.SecretRef = v
 	})
 }
 
-// Optional: Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts. More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
+// readOnly is Optional: Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts. More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 func (d *CephFSVolumeSourceDie) ReadOnly(v bool) *CephFSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CephFSVolumeSource) {
 		r.ReadOnly = v
@@ -14395,14 +14406,14 @@ func (d *FlockerVolumeSourceDie) DeepCopy() *FlockerVolumeSourceDie {
 	}
 }
 
-// Name of the dataset stored as metadata -> name on the dataset for Flocker should be considered as deprecated
+// datasetName is Name of the dataset stored as metadata -> name on the dataset for Flocker should be considered as deprecated
 func (d *FlockerVolumeSourceDie) DatasetName(v string) *FlockerVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FlockerVolumeSource) {
 		r.DatasetName = v
 	})
 }
 
-// UUID of the dataset. This is unique identifier of a Flocker dataset
+// datasetUUID is the UUID of the dataset. This is unique identifier of a Flocker dataset
 func (d *FlockerVolumeSourceDie) DatasetUUID(v string) *FlockerVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FlockerVolumeSource) {
 		r.DatasetUUID = v
@@ -14652,35 +14663,35 @@ func (d *FCVolumeSourceDie) DeepCopy() *FCVolumeSourceDie {
 	}
 }
 
-// Optional: FC target worldwide names (WWNs)
+// targetWWNs is Optional: FC target worldwide names (WWNs)
 func (d *FCVolumeSourceDie) TargetWWNs(v ...string) *FCVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FCVolumeSource) {
 		r.TargetWWNs = v
 	})
 }
 
-// Optional: FC target lun number
+// lun is Optional: FC target lun number
 func (d *FCVolumeSourceDie) Lun(v *int32) *FCVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FCVolumeSource) {
 		r.Lun = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. TODO: how do we prevent errors in the filesystem from compromising the machine
+// fsType is the filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified. TODO: how do we prevent errors in the filesystem from compromising the machine
 func (d *FCVolumeSourceDie) FSType(v string) *FCVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FCVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Optional: Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+// readOnly is Optional: Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
 func (d *FCVolumeSourceDie) ReadOnly(v bool) *FCVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FCVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// Optional: FC volume world wide identifiers (wwids) Either wwids or combination of targetWWNs and lun must be set, but not both simultaneously.
+// wwids Optional: FC volume world wide identifiers (wwids) Either wwids or combination of targetWWNs and lun must be set, but not both simultaneously.
 func (d *FCVolumeSourceDie) WWIDs(v ...string) *FCVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.FCVolumeSource) {
 		r.WWIDs = v
@@ -14754,21 +14765,21 @@ func (d *AzureFileVolumeSourceDie) DeepCopy() *AzureFileVolumeSourceDie {
 	}
 }
 
-// the name of secret that contains Azure Storage Account Name and Key
+// secretName is the  name of secret that contains Azure Storage Account Name and Key
 func (d *AzureFileVolumeSourceDie) SecretName(v string) *AzureFileVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureFileVolumeSource) {
 		r.SecretName = v
 	})
 }
 
-// Share Name
+// shareName is the azure share Name
 func (d *AzureFileVolumeSourceDie) ShareName(v string) *AzureFileVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureFileVolumeSource) {
 		r.ShareName = v
 	})
 }
 
-// Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+// readOnly defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
 func (d *AzureFileVolumeSourceDie) ReadOnly(v bool) *AzureFileVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureFileVolumeSource) {
 		r.ReadOnly = v
@@ -14848,21 +14859,21 @@ func (d *ConfigMapVolumeSourceDie) LocalObjectReference(v corev1.LocalObjectRefe
 	})
 }
 
-// If unspecified, each key-value pair in the Data field of the referenced ConfigMap will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the specified paths, and unlisted keys will not be present. If a key is specified which is not present in the ConfigMap, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'.
+// items if unspecified, each key-value pair in the Data field of the referenced ConfigMap will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the specified paths, and unlisted keys will not be present. If a key is specified which is not present in the ConfigMap, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'.
 func (d *ConfigMapVolumeSourceDie) Items(v ...corev1.KeyToPath) *ConfigMapVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ConfigMapVolumeSource) {
 		r.Items = v
 	})
 }
 
-// Optional: mode bits used to set permissions on created files by default. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. Defaults to 0644. Directories within the path are not affected by this setting. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
+// defaultMode is optional: mode bits used to set permissions on created files by default. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. Defaults to 0644. Directories within the path are not affected by this setting. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
 func (d *ConfigMapVolumeSourceDie) DefaultMode(v *int32) *ConfigMapVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ConfigMapVolumeSource) {
 		r.DefaultMode = v
 	})
 }
 
-// Specify whether the ConfigMap or its keys must be defined
+// optional specify whether the ConfigMap or its keys must be defined
 func (d *ConfigMapVolumeSourceDie) Optional(v *bool) *ConfigMapVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ConfigMapVolumeSource) {
 		r.Optional = v
@@ -14936,28 +14947,28 @@ func (d *VsphereVirtualDiskVolumeSourceDie) DeepCopy() *VsphereVirtualDiskVolume
 	}
 }
 
-// Path that identifies vSphere volume vmdk
+// volumePath is the path that identifies vSphere volume vmdk
 func (d *VsphereVirtualDiskVolumeSourceDie) VolumePath(v string) *VsphereVirtualDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.VsphereVirtualDiskVolumeSource) {
 		r.VolumePath = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+// fsType is filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 func (d *VsphereVirtualDiskVolumeSourceDie) FSType(v string) *VsphereVirtualDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.VsphereVirtualDiskVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Storage Policy Based Management (SPBM) profile name.
+// storagePolicyName is the storage Policy Based Management (SPBM) profile name.
 func (d *VsphereVirtualDiskVolumeSourceDie) StoragePolicyName(v string) *VsphereVirtualDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.VsphereVirtualDiskVolumeSource) {
 		r.StoragePolicyName = v
 	})
 }
 
-// Storage Policy Based Management (SPBM) profile ID associated with the StoragePolicyName.
+// storagePolicyID is the storage Policy Based Management (SPBM) profile ID associated with the StoragePolicyName.
 func (d *VsphereVirtualDiskVolumeSourceDie) StoragePolicyID(v string) *VsphereVirtualDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.VsphereVirtualDiskVolumeSource) {
 		r.StoragePolicyID = v
@@ -15031,42 +15042,42 @@ func (d *QuobyteVolumeSourceDie) DeepCopy() *QuobyteVolumeSourceDie {
 	}
 }
 
-// Registry represents a single or multiple Quobyte Registry services specified as a string as host:port pair (multiple entries are separated with commas) which acts as the central registry for volumes
+// registry represents a single or multiple Quobyte Registry services specified as a string as host:port pair (multiple entries are separated with commas) which acts as the central registry for volumes
 func (d *QuobyteVolumeSourceDie) Registry(v string) *QuobyteVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.QuobyteVolumeSource) {
 		r.Registry = v
 	})
 }
 
-// Volume is a string that references an already created Quobyte volume by name.
+// volume is a string that references an already created Quobyte volume by name.
 func (d *QuobyteVolumeSourceDie) Volume(v string) *QuobyteVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.QuobyteVolumeSource) {
 		r.Volume = v
 	})
 }
 
-// ReadOnly here will force the Quobyte volume to be mounted with read-only permissions. Defaults to false.
+// readOnly here will force the Quobyte volume to be mounted with read-only permissions. Defaults to false.
 func (d *QuobyteVolumeSourceDie) ReadOnly(v bool) *QuobyteVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.QuobyteVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// User to map volume access to Defaults to serivceaccount user
+// user to map volume access to Defaults to serivceaccount user
 func (d *QuobyteVolumeSourceDie) User(v string) *QuobyteVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.QuobyteVolumeSource) {
 		r.User = v
 	})
 }
 
-// Group to map volume access to Default is no group
+// group to map volume access to Default is no group
 func (d *QuobyteVolumeSourceDie) Group(v string) *QuobyteVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.QuobyteVolumeSource) {
 		r.Group = v
 	})
 }
 
-// Tenant owning the given Quobyte volume in the Backend Used with dynamically provisioned Quobyte volumes, value is set by the plugin
+// tenant owning the given Quobyte volume in the Backend Used with dynamically provisioned Quobyte volumes, value is set by the plugin
 func (d *QuobyteVolumeSourceDie) Tenant(v string) *QuobyteVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.QuobyteVolumeSource) {
 		r.Tenant = v
@@ -15140,42 +15151,42 @@ func (d *AzureDiskVolumeSourceDie) DeepCopy() *AzureDiskVolumeSourceDie {
 	}
 }
 
-// The Name of the data disk in the blob storage
+// diskName is the Name of the data disk in the blob storage
 func (d *AzureDiskVolumeSourceDie) DiskName(v string) *AzureDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureDiskVolumeSource) {
 		r.DiskName = v
 	})
 }
 
-// The URI the data disk in the blob storage
+// diskURI is the URI of data disk in the blob storage
 func (d *AzureDiskVolumeSourceDie) DataDiskURI(v string) *AzureDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureDiskVolumeSource) {
 		r.DataDiskURI = v
 	})
 }
 
-// Host Caching mode: None, Read Only, Read Write.
+// cachingMode is the Host Caching mode: None, Read Only, Read Write.
 func (d *AzureDiskVolumeSourceDie) CachingMode(v *corev1.AzureDataDiskCachingMode) *AzureDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureDiskVolumeSource) {
 		r.CachingMode = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+// fsType is Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 func (d *AzureDiskVolumeSourceDie) FSType(v *string) *AzureDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureDiskVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+// readOnly Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
 func (d *AzureDiskVolumeSourceDie) ReadOnly(v *bool) *AzureDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureDiskVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// Expected values Shared: multiple blob disks per storage account  Dedicated: single blob disk per storage account  Managed: azure managed data disk (only in managed availability set). defaults to shared
+// kind expected values are Shared: multiple blob disks per storage account  Dedicated: single blob disk per storage account  Managed: azure managed data disk (only in managed availability set). defaults to shared
 func (d *AzureDiskVolumeSourceDie) Kind(v *corev1.AzureDataDiskKind) *AzureDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.AzureDiskVolumeSource) {
 		r.Kind = v
@@ -15249,14 +15260,14 @@ func (d *PhotonPersistentDiskVolumeSourceDie) DeepCopy() *PhotonPersistentDiskVo
 	}
 }
 
-// ID that identifies Photon Controller persistent disk
+// pdID is the ID that identifies Photon Controller persistent disk
 func (d *PhotonPersistentDiskVolumeSourceDie) PdID(v string) *PhotonPersistentDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.PhotonPersistentDiskVolumeSource) {
 		r.PdID = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+// fsType is the filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 func (d *PhotonPersistentDiskVolumeSourceDie) FSType(v string) *PhotonPersistentDiskVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.PhotonPersistentDiskVolumeSource) {
 		r.FSType = v
@@ -15330,14 +15341,14 @@ func (d *ProjectedVolumeSourceDie) DeepCopy() *ProjectedVolumeSourceDie {
 	}
 }
 
-// list of volume projections
+// sources is the list of volume projections
 func (d *ProjectedVolumeSourceDie) Sources(v ...corev1.VolumeProjection) *ProjectedVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ProjectedVolumeSource) {
 		r.Sources = v
 	})
 }
 
-// Mode bits used to set permissions on created files by default. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. Directories within the path are not affected by this setting. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
+// defaultMode are the mode bits used to set permissions on created files by default. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. Directories within the path are not affected by this setting. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
 func (d *ProjectedVolumeSourceDie) DefaultMode(v *int32) *ProjectedVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ProjectedVolumeSource) {
 		r.DefaultMode = v
@@ -15411,28 +15422,28 @@ func (d *VolumeProjectionDie) DeepCopy() *VolumeProjectionDie {
 	}
 }
 
-// information about the secret data to project
+// secret information about the secret data to project
 func (d *VolumeProjectionDie) Secret(v *corev1.SecretProjection) *VolumeProjectionDie {
 	return d.DieStamp(func(r *corev1.VolumeProjection) {
 		r.Secret = v
 	})
 }
 
-// information about the downwardAPI data to project
+// downwardAPI information about the downwardAPI data to project
 func (d *VolumeProjectionDie) DownwardAPI(v *corev1.DownwardAPIProjection) *VolumeProjectionDie {
 	return d.DieStamp(func(r *corev1.VolumeProjection) {
 		r.DownwardAPI = v
 	})
 }
 
-// information about the configMap data to project
+// configMap information about the configMap data to project
 func (d *VolumeProjectionDie) ConfigMap(v *corev1.ConfigMapProjection) *VolumeProjectionDie {
 	return d.DieStamp(func(r *corev1.VolumeProjection) {
 		r.ConfigMap = v
 	})
 }
 
-// information about the serviceAccountToken data to project
+// serviceAccountToken is information about the serviceAccountToken data to project
 func (d *VolumeProjectionDie) ServiceAccountToken(v *corev1.ServiceAccountTokenProjection) *VolumeProjectionDie {
 	return d.DieStamp(func(r *corev1.VolumeProjection) {
 		r.ServiceAccountToken = v
@@ -15512,14 +15523,14 @@ func (d *SecretProjectionDie) LocalObjectReference(v corev1.LocalObjectReference
 	})
 }
 
-// If unspecified, each key-value pair in the Data field of the referenced Secret will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the specified paths, and unlisted keys will not be present. If a key is specified which is not present in the Secret, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'.
+// items if unspecified, each key-value pair in the Data field of the referenced Secret will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the specified paths, and unlisted keys will not be present. If a key is specified which is not present in the Secret, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'.
 func (d *SecretProjectionDie) Items(v ...corev1.KeyToPath) *SecretProjectionDie {
 	return d.DieStamp(func(r *corev1.SecretProjection) {
 		r.Items = v
 	})
 }
 
-// Specify whether the Secret or its key must be defined
+// optional field specify whether the Secret or its key must be defined
 func (d *SecretProjectionDie) Optional(v *bool) *SecretProjectionDie {
 	return d.DieStamp(func(r *corev1.SecretProjection) {
 		r.Optional = v
@@ -15673,14 +15684,14 @@ func (d *ConfigMapProjectionDie) LocalObjectReference(v corev1.LocalObjectRefere
 	})
 }
 
-// If unspecified, each key-value pair in the Data field of the referenced ConfigMap will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the specified paths, and unlisted keys will not be present. If a key is specified which is not present in the ConfigMap, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'.
+// items if unspecified, each key-value pair in the Data field of the referenced ConfigMap will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the specified paths, and unlisted keys will not be present. If a key is specified which is not present in the ConfigMap, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'.
 func (d *ConfigMapProjectionDie) Items(v ...corev1.KeyToPath) *ConfigMapProjectionDie {
 	return d.DieStamp(func(r *corev1.ConfigMapProjection) {
 		r.Items = v
 	})
 }
 
-// Specify whether the ConfigMap or its keys must be defined
+// optional specify whether the ConfigMap or its keys must be defined
 func (d *ConfigMapProjectionDie) Optional(v *bool) *ConfigMapProjectionDie {
 	return d.DieStamp(func(r *corev1.ConfigMapProjection) {
 		r.Optional = v
@@ -15754,21 +15765,21 @@ func (d *ServiceAccountTokenProjectionDie) DeepCopy() *ServiceAccountTokenProjec
 	}
 }
 
-// Audience is the intended audience of the token. A recipient of a token must identify itself with an identifier specified in the audience of the token, and otherwise should reject the token. The audience defaults to the identifier of the apiserver.
+// audience is the intended audience of the token. A recipient of a token must identify itself with an identifier specified in the audience of the token, and otherwise should reject the token. The audience defaults to the identifier of the apiserver.
 func (d *ServiceAccountTokenProjectionDie) Audience(v string) *ServiceAccountTokenProjectionDie {
 	return d.DieStamp(func(r *corev1.ServiceAccountTokenProjection) {
 		r.Audience = v
 	})
 }
 
-// ExpirationSeconds is the requested duration of validity of the service account token. As the token approaches expiration, the kubelet volume plugin will proactively rotate the service account token. The kubelet will start trying to rotate the token if the token is older than 80 percent of its time to live or if the token is older than 24 hours.Defaults to 1 hour and must be at least 10 minutes.
+// expirationSeconds is the requested duration of validity of the service account token. As the token approaches expiration, the kubelet volume plugin will proactively rotate the service account token. The kubelet will start trying to rotate the token if the token is older than 80 percent of its time to live or if the token is older than 24 hours.Defaults to 1 hour and must be at least 10 minutes.
 func (d *ServiceAccountTokenProjectionDie) ExpirationSeconds(v *int64) *ServiceAccountTokenProjectionDie {
 	return d.DieStamp(func(r *corev1.ServiceAccountTokenProjection) {
 		r.ExpirationSeconds = v
 	})
 }
 
-// Path is the path relative to the mount point of the file to project the token into.
+// path is the path relative to the mount point of the file to project the token into.
 func (d *ServiceAccountTokenProjectionDie) Path(v string) *ServiceAccountTokenProjectionDie {
 	return d.DieStamp(func(r *corev1.ServiceAccountTokenProjection) {
 		r.Path = v
@@ -15842,21 +15853,21 @@ func (d *PortworxVolumeSourceDie) DeepCopy() *PortworxVolumeSourceDie {
 	}
 }
 
-// VolumeID uniquely identifies a Portworx volume
+// volumeID uniquely identifies a Portworx volume
 func (d *PortworxVolumeSourceDie) VolumeID(v string) *PortworxVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.PortworxVolumeSource) {
 		r.VolumeID = v
 	})
 }
 
-// FSType represents the filesystem type to mount Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs". Implicitly inferred to be "ext4" if unspecified.
+// fSType represents the filesystem type to mount Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs". Implicitly inferred to be "ext4" if unspecified.
 func (d *PortworxVolumeSourceDie) FSType(v string) *PortworxVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.PortworxVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+// readOnly defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
 func (d *PortworxVolumeSourceDie) ReadOnly(v bool) *PortworxVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.PortworxVolumeSource) {
 		r.ReadOnly = v
@@ -15930,70 +15941,70 @@ func (d *ScaleIOVolumeSourceDie) DeepCopy() *ScaleIOVolumeSourceDie {
 	}
 }
 
-// The host address of the ScaleIO API Gateway.
+// gateway is the host address of the ScaleIO API Gateway.
 func (d *ScaleIOVolumeSourceDie) Gateway(v string) *ScaleIOVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOVolumeSource) {
 		r.Gateway = v
 	})
 }
 
-// The name of the storage system as configured in ScaleIO.
+// system is the name of the storage system as configured in ScaleIO.
 func (d *ScaleIOVolumeSourceDie) System(v string) *ScaleIOVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOVolumeSource) {
 		r.System = v
 	})
 }
 
-// SecretRef references to the secret for ScaleIO user and other sensitive information. If this is not provided, Login operation will fail.
+// secretRef references to the secret for ScaleIO user and other sensitive information. If this is not provided, Login operation will fail.
 func (d *ScaleIOVolumeSourceDie) SecretRef(v *corev1.LocalObjectReference) *ScaleIOVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOVolumeSource) {
 		r.SecretRef = v
 	})
 }
 
-// Flag to enable/disable SSL communication with Gateway, default false
+// sslEnabled Flag enable/disable SSL communication with Gateway, default false
 func (d *ScaleIOVolumeSourceDie) SSLEnabled(v bool) *ScaleIOVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOVolumeSource) {
 		r.SSLEnabled = v
 	})
 }
 
-// The name of the ScaleIO Protection Domain for the configured storage.
+// protectionDomain is the name of the ScaleIO Protection Domain for the configured storage.
 func (d *ScaleIOVolumeSourceDie) ProtectionDomain(v string) *ScaleIOVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOVolumeSource) {
 		r.ProtectionDomain = v
 	})
 }
 
-// The ScaleIO Storage Pool associated with the protection domain.
+// storagePool is the ScaleIO Storage Pool associated with the protection domain.
 func (d *ScaleIOVolumeSourceDie) StoragePool(v string) *ScaleIOVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOVolumeSource) {
 		r.StoragePool = v
 	})
 }
 
-// Indicates whether the storage for a volume should be ThickProvisioned or ThinProvisioned. Default is ThinProvisioned.
+// storageMode indicates whether the storage for a volume should be ThickProvisioned or ThinProvisioned. Default is ThinProvisioned.
 func (d *ScaleIOVolumeSourceDie) StorageMode(v string) *ScaleIOVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOVolumeSource) {
 		r.StorageMode = v
 	})
 }
 
-// The name of a volume already created in the ScaleIO system that is associated with this volume source.
+// volumeName is the name of a volume already created in the ScaleIO system that is associated with this volume source.
 func (d *ScaleIOVolumeSourceDie) VolumeName(v string) *ScaleIOVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOVolumeSource) {
 		r.VolumeName = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Default is "xfs".
+// fsType is the filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Default is "xfs".
 func (d *ScaleIOVolumeSourceDie) FSType(v string) *ScaleIOVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+// readOnly Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
 func (d *ScaleIOVolumeSourceDie) ReadOnly(v bool) *ScaleIOVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.ScaleIOVolumeSource) {
 		r.ReadOnly = v
@@ -16067,35 +16078,35 @@ func (d *StorageOSVolumeSourceDie) DeepCopy() *StorageOSVolumeSourceDie {
 	}
 }
 
-// VolumeName is the human-readable name of the StorageOS volume.  Volume names are only unique within a namespace.
+// volumeName is the human-readable name of the StorageOS volume.  Volume names are only unique within a namespace.
 func (d *StorageOSVolumeSourceDie) VolumeName(v string) *StorageOSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.StorageOSVolumeSource) {
 		r.VolumeName = v
 	})
 }
 
-// VolumeNamespace specifies the scope of the volume within StorageOS.  If no namespace is specified then the Pod's namespace will be used.  This allows the Kubernetes name scoping to be mirrored within StorageOS for tighter integration. Set VolumeName to any name to override the default behaviour. Set to "default" if you are not using namespaces within StorageOS. Namespaces that do not pre-exist within StorageOS will be created.
+// volumeNamespace specifies the scope of the volume within StorageOS.  If no namespace is specified then the Pod's namespace will be used.  This allows the Kubernetes name scoping to be mirrored within StorageOS for tighter integration. Set VolumeName to any name to override the default behaviour. Set to "default" if you are not using namespaces within StorageOS. Namespaces that do not pre-exist within StorageOS will be created.
 func (d *StorageOSVolumeSourceDie) VolumeNamespace(v string) *StorageOSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.StorageOSVolumeSource) {
 		r.VolumeNamespace = v
 	})
 }
 
-// Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
+// fsType is the filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 func (d *StorageOSVolumeSourceDie) FSType(v string) *StorageOSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.StorageOSVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
+// readOnly defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
 func (d *StorageOSVolumeSourceDie) ReadOnly(v bool) *StorageOSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.StorageOSVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// SecretRef specifies the secret to use for obtaining the StorageOS API credentials.  If not specified, default values will be attempted.
+// secretRef specifies the secret to use for obtaining the StorageOS API credentials.  If not specified, default values will be attempted.
 func (d *StorageOSVolumeSourceDie) SecretRef(v *corev1.LocalObjectReference) *StorageOSVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.StorageOSVolumeSource) {
 		r.SecretRef = v
@@ -16169,35 +16180,35 @@ func (d *CSIVolumeSourceDie) DeepCopy() *CSIVolumeSourceDie {
 	}
 }
 
-// Driver is the name of the CSI driver that handles this volume. Consult with your admin for the correct name as registered in the cluster.
+// driver is the name of the CSI driver that handles this volume. Consult with your admin for the correct name as registered in the cluster.
 func (d *CSIVolumeSourceDie) Driver(v string) *CSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIVolumeSource) {
 		r.Driver = v
 	})
 }
 
-// Specifies a read-only configuration for the volume. Defaults to false (read/write).
+// readOnly specifies a read-only configuration for the volume. Defaults to false (read/write).
 func (d *CSIVolumeSourceDie) ReadOnly(v *bool) *CSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIVolumeSource) {
 		r.ReadOnly = v
 	})
 }
 
-// Filesystem type to mount. Ex. "ext4", "xfs", "ntfs". If not provided, the empty value is passed to the associated CSI driver which will determine the default filesystem to apply.
+// fsType to mount. Ex. "ext4", "xfs", "ntfs". If not provided, the empty value is passed to the associated CSI driver which will determine the default filesystem to apply.
 func (d *CSIVolumeSourceDie) FSType(v *string) *CSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIVolumeSource) {
 		r.FSType = v
 	})
 }
 
-// VolumeAttributes stores driver-specific properties that are passed to the CSI driver. Consult your driver's documentation for supported values.
+// volumeAttributes stores driver-specific properties that are passed to the CSI driver. Consult your driver's documentation for supported values.
 func (d *CSIVolumeSourceDie) VolumeAttributes(v map[string]string) *CSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIVolumeSource) {
 		r.VolumeAttributes = v
 	})
 }
 
-// NodePublishSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI NodePublishVolume and NodeUnpublishVolume calls. This field is optional, and  may be empty if no secret is required. If the secret object contains more than one secret, all secret references are passed.
+// nodePublishSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI NodePublishVolume and NodeUnpublishVolume calls. This field is optional, and  may be empty if no secret is required. If the secret object contains more than one secret, all secret references are passed.
 func (d *CSIVolumeSourceDie) NodePublishSecretRef(v *corev1.LocalObjectReference) *CSIVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIVolumeSource) {
 		r.NodePublishSecretRef = v
@@ -16351,21 +16362,21 @@ func (d *KeyToPathDie) DeepCopy() *KeyToPathDie {
 	}
 }
 
-// The key to project.
+// key is the key to project.
 func (d *KeyToPathDie) Key(v string) *KeyToPathDie {
 	return d.DieStamp(func(r *corev1.KeyToPath) {
 		r.Key = v
 	})
 }
 
-// The relative path of the file to map the key to. May not be an absolute path. May not contain the path element '..'. May not start with the string '..'.
+// path is the relative path of the file to map the key to. May not be an absolute path. May not contain the path element '..'. May not start with the string '..'.
 func (d *KeyToPathDie) Path(v string) *KeyToPathDie {
 	return d.DieStamp(func(r *corev1.KeyToPath) {
 		r.Path = v
 	})
 }
 
-// Optional: mode bits used to set permissions on this file. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. If not specified, the volume defaultMode will be used. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
+// mode is Optional: mode bits used to set permissions on this file. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. If not specified, the volume defaultMode will be used. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
 func (d *KeyToPathDie) Mode(v *int32) *KeyToPathDie {
 	return d.DieStamp(func(r *corev1.KeyToPath) {
 		r.Mode = v
