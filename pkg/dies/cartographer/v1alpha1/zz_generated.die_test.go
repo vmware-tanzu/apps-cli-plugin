@@ -80,3 +80,12 @@ func TestWorkloadStatusDie_MissingMethods(t *testingx.T) {
 		t.Errorf("found missing fields for WorkloadStatusDie: %s", diff.List())
 	}
 }
+
+func TestRealizedResourceDie_MissingMethods(t *testingx.T) {
+	die := RealizedResourceBlank
+	ignore := []string{}
+	diff := testing.DieFieldDiff(die).Delete(ignore...)
+	if diff.Len() != 0 {
+		t.Errorf("found missing fields for RealizedResourceDie: %s", diff.List())
+	}
+}

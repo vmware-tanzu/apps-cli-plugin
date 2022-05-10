@@ -20,6 +20,7 @@ import (
 	"io"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -162,21 +163,21 @@ func WorkloadSourceGitPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 
 func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error {
 	printResourceInfoRow := func(resource *cartov1alpha1.RealizedResource, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		var lastTransitionTime string
 		var ready string
-		for _, r := range resource.Conditions {
-			if r.Type == cartov1alpha1.ResourceReady {
-				ready = string(r.Status)
-				lastTransitionTime = printer.TimestampSince(r.LastTransitionTime, time.Now())
-				break
-			}
+		var elapsedTransitionTime string
+
+		conditionReady := meta.FindStatusCondition(resource.Conditions, cartov1alpha1.ConditionResourceReady)
+
+		if conditionReady != nil {
+			ready = string(conditionReady.Status)
+			elapsedTransitionTime = printer.TimestampSince(conditionReady.LastTransitionTime, time.Now())
 		}
 
 		row := metav1beta1.TableRow{
 			Cells: []interface{}{
 				resource.Name,
 				ready,
-				lastTransitionTime,
+				elapsedTransitionTime,
 			},
 		}
 		return []metav1beta1.TableRow{row}, nil

@@ -140,7 +140,9 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 	c.Printf("\n")
 	if len(workload.Status.Resources) > 0 {
-		printer.WorkloadResourcesPrinter(c.Stdout, workload)
+		if err := printer.WorkloadResourcesPrinter(c.Stdout, workload); err != nil {
+			return err
+		}
 	} else {
 		c.Infof("Supply Chain resources not found\n")
 	}

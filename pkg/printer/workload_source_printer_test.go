@@ -204,11 +204,11 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 					Name: "source-provider",
 					Conditions: []metav1.Condition{
 						{
-							Type:   cartov1alpha1.ResourceReady,
+							Type:   cartov1alpha1.ConditionResourceReady,
 							Status: "True",
 						},
 						{
-							Type:   cartov1alpha1.ResourceSubmitted,
+							Type:   cartov1alpha1.ConditionResourceSubmitted,
 							Status: "True",
 						},
 					},
@@ -216,11 +216,11 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 					Name: "deliverable",
 					Conditions: []metav1.Condition{
 						{
-							Type:   cartov1alpha1.ResourceReady,
+							Type:   cartov1alpha1.ConditionResourceReady,
 							Status: "Unknown",
 						},
 						{
-							Type:   cartov1alpha1.ResourceSubmitted,
+							Type:   cartov1alpha1.ConditionResourceSubmitted,
 							Status: "Unknown",
 						},
 					},
@@ -228,11 +228,11 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 					Name: "image-builder",
 					Conditions: []metav1.Condition{
 						{
-							Type:   cartov1alpha1.ResourceReady,
+							Type:   cartov1alpha1.ConditionResourceReady,
 							Status: "False",
 						},
 						{
-							Type:   cartov1alpha1.ResourceSubmitted,
+							Type:   cartov1alpha1.ConditionResourceSubmitted,
 							Status: "False",
 						},
 					},
@@ -268,7 +268,7 @@ RESOURCE   READY   TIME
 					Name: "source-provider",
 					Conditions: []metav1.Condition{
 						{
-							Type:   cartov1alpha1.ResourceSubmitted,
+							Type:   cartov1alpha1.ConditionResourceSubmitted,
 							Status: "True",
 						},
 					},
@@ -276,7 +276,7 @@ RESOURCE   READY   TIME
 					Name: "deliverable",
 					Conditions: []metav1.Condition{
 						{
-							Type:   cartov1alpha1.ResourceSubmitted,
+							Type:   cartov1alpha1.ConditionResourceSubmitted,
 							Status: "Unknown",
 						},
 					},
@@ -284,11 +284,11 @@ RESOURCE   READY   TIME
 					Name: "image-builder",
 					Conditions: []metav1.Condition{
 						{
-							Type:   cartov1alpha1.ResourceReady,
+							Type:   cartov1alpha1.ConditionResourceReady,
 							Status: "False",
 						},
 						{
-							Type:   cartov1alpha1.ResourceSubmitted,
+							Type:   cartov1alpha1.ConditionResourceSubmitted,
 							Status: "False",
 						},
 					},

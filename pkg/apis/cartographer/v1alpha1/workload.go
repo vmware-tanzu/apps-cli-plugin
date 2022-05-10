@@ -39,8 +39,8 @@ const (
 )
 
 const (
-	ResourceReady     = "Ready"
-	ResourceSubmitted = "ResourceSubmitted"
+	ConditionResourceReady     = "Ready"
+	ConditionResourceSubmitted = "ResourceSubmitted"
 )
 
 // +kubebuilder:object:root=true

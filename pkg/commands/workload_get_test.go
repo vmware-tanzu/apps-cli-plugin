@@ -398,45 +398,32 @@ No pods found for workload.
 									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
 								}),
 						)
-						d.Resources([]cartov1alpha1.RealizedResource{
-							{
-								Name: "source-provider",
-								Conditions: []metav1.Condition{
-									{
-										Type:   "Ready",
-										Status: "True",
-									},
-									{
-										Type:   "ResourceSubmitted",
-										Status: "True",
-									},
-								},
-							}, {
-								Name: "deliverable",
-								Conditions: []metav1.Condition{
-									{
-										Type:   "Ready",
-										Status: "Unknown",
-									},
-									{
-										Type:   "ResourceSubmitted",
-										Status: "Unknown",
-									},
-								},
-							}, {
-								Name: "image-builder",
-								Conditions: []metav1.Condition{
-									{
-										Type:   "Ready",
-										Status: "False",
-									},
-									{
-										Type:   "ResourceSubmitted",
-										Status: "False",
-									},
-								},
-							},
-						}...)
+						d.Resources(
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("source-provider").
+								ConditionsDie(
+									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
+										Status(metav1.ConditionTrue),
+									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
+										Status(metav1.ConditionTrue),
+								).DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("deliverable").
+								ConditionsDie(
+									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
+										Status(metav1.ConditionUnknown),
+									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
+										Status(metav1.ConditionUnknown),
+								).DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("image-builder").
+								ConditionsDie(
+									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
+										Status(metav1.ConditionFalse),
+									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
+										Status(metav1.ConditionFalse),
+								).DieRelease(),
+						)
 					}),
 			},
 			ExpectOutput: `
