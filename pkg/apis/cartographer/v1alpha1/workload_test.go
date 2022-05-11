@@ -128,6 +128,67 @@ func TestWorkload_Load(t *testing.T) {
 	}
 }
 
+func TestWorkload_MergeServiceAccountName(t *testing.T) {
+	serviceAccount := "test-service-account"
+	updatedServiceAccount := "updated-service-account"
+	tests := []struct {
+		name   string
+		seed   *Workload
+		update string
+		want   *Workload
+	}{{
+		name:   "empty",
+		seed:   &Workload{},
+		update: "",
+		want:   &Workload{},
+	}, {
+		name: "update service account",
+		seed: &Workload{
+			Spec: WorkloadSpec{
+				ServiceAccountName: &serviceAccount,
+			},
+		},
+		update: updatedServiceAccount,
+		want: &Workload{
+			Spec: WorkloadSpec{
+				ServiceAccountName: &updatedServiceAccount,
+			},
+		},
+	}, {
+		name: "delete service account",
+		seed: &Workload{
+			Spec: WorkloadSpec{
+				ServiceAccountName: &serviceAccount,
+			},
+		},
+		update: "",
+		want: &Workload{
+			Spec: WorkloadSpec{
+				ServiceAccountName: nil,
+			},
+		},
+	}, {
+		name:   "add service account",
+		seed:   &Workload{},
+		update: updatedServiceAccount,
+		want: &Workload{
+			Spec: WorkloadSpec{
+				ServiceAccountName: &updatedServiceAccount,
+			},
+		},
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.seed.DeepCopy()
+			got.Spec.MergeServiceAccountName(test.update)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("Merge() (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 func TestWorkload_Validate(t *testing.T) {
 	tests := []struct {
 		name     string

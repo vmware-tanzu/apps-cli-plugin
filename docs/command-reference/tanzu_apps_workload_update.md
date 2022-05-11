@@ -51,6 +51,7 @@ tanzu apps workload update --file workload.yaml
       --param "key=value" pair         additional parameters represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --request-cpu cores              the minimum amount of cpu required, in CPU cores (500m = .5 cores)
       --request-memory bytes           the minimum amount of memory required, in bytes (500Mi = 500MiB = 500 * 1024 * 1024)
+  -s, --service-account name           name of the service account to use for the workload
       --service-ref object reference   object reference for a service to bind to the workload "database=rabbitmq.com/v1beta1:RabbitmqCluster:my-broker" ("database-" to remove, flag can be used multiple times)
       --source-image image             destination image repository where source code is staged before being built
       --sub-path path                  relative path within source directory containing workload source code. To unset, pass empty string

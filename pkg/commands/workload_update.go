@@ -97,7 +97,15 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	}
 	currentWorkload := workload.DeepCopy()
 	if opts.FilePath != "" {
-		workload.MergeServiceAccountName(fileWorkload.Spec.ServiceAccountName)
+		var serviceAccountCopy string
+		// avoid passing a nil pointer to MergeServiceAccountName func
+		if fileWorkload.Spec.ServiceAccountName == nil {
+			serviceAccountCopy = ""
+		} else {
+			serviceAccountCopy = *fileWorkload.Spec.ServiceAccountName
+		}
+
+		workload.Spec.MergeServiceAccountName(serviceAccountCopy)
 	}
 	workload.Merge(fileWorkload)
 
