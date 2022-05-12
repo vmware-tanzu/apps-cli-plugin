@@ -31,7 +31,7 @@ func NewClusterSupplyChainCommand(ctx context.Context, c *cli.Config) *cobra.Com
 		// 		Long: strings.TrimSpace(`
 		// <todo>
 		// `),
-		Aliases: []string{"cluster-supply-chains", "clustersupplychain", "clustersupplychains"},
+		Aliases: []string{"cluster-supply-chains", "clustersupplychain", "clustersupplychains", "csc"},
 	}
 
 	cmd.AddCommand(NewClusterSupplyChainListCommand(ctx, c))
