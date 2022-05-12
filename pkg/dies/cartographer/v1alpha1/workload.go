@@ -45,5 +45,19 @@ func (d *WorkloadStatusDie) ConditionsDie(conditions ...*diemetav1.ConditionDie)
 }
 
 var (
-	WorkloadConditionReadyBlank = diemetav1.ConditionBlank.Type(cartov1alpha1.WorkloadConditionReady)
+	WorkloadConditionReadyBlank             = diemetav1.ConditionBlank.Type(cartov1alpha1.WorkloadConditionReady)
+	WorkloadConditionResourceSubmittedBlank = diemetav1.ConditionBlank.Type(cartov1alpha1.ConditionResourceSubmitted)
+	WorkloadConditionResourceReadyBlank     = diemetav1.ConditionBlank.Type(cartov1alpha1.ConditionResourceReady)
 )
+
+// +die
+type _ = cartov1alpha1.RealizedResource
+
+func (d *RealizedResourceDie) ConditionsDie(conditions ...*diemetav1.ConditionDie) *RealizedResourceDie {
+	return d.DieStamp(func(r *cartov1alpha1.RealizedResource) {
+		r.Conditions = make([]metav1.Condition, len(conditions))
+		for i := range conditions {
+			r.Conditions[i] = conditions[i].DieRelease()
+		}
+	})
+}

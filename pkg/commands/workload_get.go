@@ -23,7 +23,6 @@ import (
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -74,7 +73,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	if err != nil {
 		if apierrs.IsNotFound(err) {
 			nsGet := &corev1.Namespace{}
-			if getErr := c.Get(ctx, types.NamespacedName{Name: opts.Namespace}, nsGet); getErr != nil && apierrors.IsNotFound(getErr) {
+			if getErr := c.Get(ctx, types.NamespacedName{Name: opts.Namespace}, nsGet); getErr != nil && apierrs.IsNotFound(getErr) {
 				c.Eprintf("%s %s\n", printer.Serrorf("Error:"), fmt.Sprintf("namespace %q not found, it may not exist or user does not have permissions to read it.", opts.Namespace))
 				return cli.SilenceError(getErr)
 			}
@@ -137,6 +136,15 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 				}
 			}
 		}
+	}
+
+	c.Printf("\n")
+	if len(workload.Status.Resources) > 0 {
+		if err := printer.WorkloadResourcesPrinter(c.Stdout, workload); err != nil {
+			return err
+		}
+	} else {
+		c.Infof("Supply Chain resources not found\n")
 	}
 
 	if len(workload.Spec.ServiceClaims) > 0 {

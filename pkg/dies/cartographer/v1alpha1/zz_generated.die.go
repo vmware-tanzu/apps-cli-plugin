@@ -709,3 +709,112 @@ func (d *WorkloadStatusDie) Resources(v ...cartographerv1alpha1.RealizedResource
 		r.Resources = v
 	})
 }
+
+var RealizedResourceBlank = (&RealizedResourceDie{}).DieFeed(cartographerv1alpha1.RealizedResource{})
+
+type RealizedResourceDie struct {
+	mutable bool
+	r       cartographerv1alpha1.RealizedResource
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *RealizedResourceDie) DieImmutable(immutable bool) *RealizedResourceDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *RealizedResourceDie) DieFeed(r cartographerv1alpha1.RealizedResource) *RealizedResourceDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &RealizedResourceDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *RealizedResourceDie) DieFeedPtr(r *cartographerv1alpha1.RealizedResource) *RealizedResourceDie {
+	if r == nil {
+		r = &cartographerv1alpha1.RealizedResource{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *RealizedResourceDie) DieRelease() cartographerv1alpha1.RealizedResource {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *RealizedResourceDie) DieReleasePtr() *cartographerv1alpha1.RealizedResource {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *RealizedResourceDie) DieStamp(fn func(r *cartographerv1alpha1.RealizedResource)) *RealizedResourceDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *RealizedResourceDie) DeepCopy() *RealizedResourceDie {
+	r := *d.r.DeepCopy()
+	return &RealizedResourceDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// Name is the name of the resource in the blueprint
+func (d *RealizedResourceDie) Name(v string) *RealizedResourceDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.RealizedResource) {
+		r.Name = v
+	})
+}
+
+// StampedRef is a reference to the object that was created by the resource
+func (d *RealizedResourceDie) StampedRef(v *corev1.ObjectReference) *RealizedResourceDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.RealizedResource) {
+		r.StampedRef = v
+	})
+}
+
+// TemplateRef is a reference to the template used to create the object in StampedRef
+func (d *RealizedResourceDie) TemplateRef(v *corev1.ObjectReference) *RealizedResourceDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.RealizedResource) {
+		r.TemplateRef = v
+	})
+}
+
+// Inputs are references to resources that were used to template the object in StampedRef
+func (d *RealizedResourceDie) Inputs(v ...cartographerv1alpha1.Input) *RealizedResourceDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.RealizedResource) {
+		r.Inputs = v
+	})
+}
+
+// Outputs are values from the object in StampedRef that can be consumed by other resources
+func (d *RealizedResourceDie) Outputs(v ...cartographerv1alpha1.Output) *RealizedResourceDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.RealizedResource) {
+		r.Outputs = v
+	})
+}
+
+// Conditions describing this resource's reconcile state. The top level condition is of type `Ready`, and follows these Kubernetes conventions: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+func (d *RealizedResourceDie) Conditions(v ...metav1.Condition) *RealizedResourceDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.RealizedResource) {
+		r.Conditions = v
+	})
+}
