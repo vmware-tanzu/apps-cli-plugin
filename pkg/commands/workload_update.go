@@ -97,7 +97,7 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	}
 	currentWorkload := workload.DeepCopy()
 	if opts.FilePath != "" {
-		workload.MergeServiceAccountName(fileWorkload.Spec.ServiceAccountName)
+		workload.Spec.MergeServiceAccountName(fileWorkload.Spec.ServiceAccountName)
 	}
 	workload.Merge(fileWorkload)
 
