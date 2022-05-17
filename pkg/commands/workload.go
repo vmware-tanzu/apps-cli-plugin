@@ -330,8 +330,23 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 		return okToPush, nil
 	}
 
+	var contentDir string
+	if source.IsDir(opts.LocalPath) {
+		contentDir = opts.LocalPath
+	} else if source.IsZip(opts.LocalPath) {
+		zipContentsDir, err := source.HandleZip(opts.LocalPath)
+		if err != nil {
+			c.Errorf("Failed to extract file contents from %q. \n", opts.LocalPath)
+			return false, err
+		}
+		defer os.RemoveAll(zipContentsDir)
+		contentDir = zipContentsDir
+	} else {
+		return false, fmt.Errorf("unsupported file format %q", opts.LocalPath)
+	}
+
 	c.Infof("Publishing source in %q to %q...\n", opts.LocalPath, taggedImage)
-	digestedImage, err := source.ImgpkgPush(ctx, opts.LocalPath, taggedImage)
+	digestedImage, err := source.ImgpkgPush(ctx, contentDir, taggedImage)
 	if err != nil {
 		return okToPush, err
 	}
@@ -483,7 +498,7 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.Flags().StringVar(&opts.GitTag, cli.StripDash(flags.GitTagFlagName), "", "`tag` within the git repo to checkout")
 	cmd.Flags().StringVar(&opts.SourceImage, cli.StripDash(flags.SourceImageFlagName), "", "destination `image` repository where source code is staged before being built")
 	cmd.Flags().StringVar(&opts.SubPath, cli.StripDash(flags.SubPathFlagName), "", "relative `path` within source directory containing workload source code. To unset, pass empty string")
-	cmd.Flags().StringVar(&opts.LocalPath, cli.StripDash(flags.LocalPathFlagName), "", "`path` on the local file system to a directory of source code to build for the workload")
+	cmd.Flags().StringVar(&opts.LocalPath, cli.StripDash(flags.LocalPathFlagName), "", "`path` to a directory, .zip, or .jar file containing workload source code")
 	cmd.MarkFlagDirname(cli.StripDash(flags.LocalPathFlagName))
 	cmd.Flags().StringVar(&opts.Image, cli.StripDash(flags.ImageFlagName), "", "pre-built `image`, skips the source resolution and build phases of the supply chain")
 	cmd.Flags().StringArrayVar(&opts.Env, cli.StripDash(flags.EnvFlagName), []string{}, "environment variables represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
