@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -19,13 +20,18 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/cache"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/cluster"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/vmware-labs/reconciler-runtime/tracker"
@@ -41,22 +47,51 @@ type Config struct {
 	client.Client
 	APIReader client.Reader
 	Recorder  record.EventRecorder
-	Log       logr.Logger
 	Tracker   tracker.Tracker
+
+	// Deprecated: use a logger from the context instead. For example:
+	//  * `log, err := logr.FromContext(ctx)`
+	//  * `log := logr.FromContextOrDiscard(ctx)`
+	Log logr.Logger
+}
+
+func (c Config) IsEmpty() bool {
+	return c == Config{}
+}
+
+// WithCluster extends the config to access a new cluster.
+func (c Config) WithCluster(cluster cluster.Cluster) Config {
+	return Config{
+		Client:    cluster.GetClient(),
+		APIReader: cluster.GetAPIReader(),
+		Recorder:  cluster.GetEventRecorderFor("controller"),
+		Log:       c.Log,
+		Tracker:   c.Tracker,
+	}
+}
+
+// TrackAndGet tracks the resources for changes and returns the current value. The track is
+// registered even when the resource does not exists so that its creation can be tracked.
+//
+// Equivlent to calling both `c.Tracker.Track(...)` and `c.Client.Get(...)`
+func (c Config) TrackAndGet(ctx context.Context, key types.NamespacedName, obj client.Object) error {
+	c.Tracker.Track(
+		ctx,
+		tracker.NewKey(gvk(obj, c.Scheme()), key),
+		RetrieveRequest(ctx).NamespacedName,
+	)
+	return c.Get(ctx, key, obj)
 }
 
 // NewConfig creates a Config for a specific API type. Typically passed into a
 // reconciler.
 func NewConfig(mgr ctrl.Manager, apiType client.Object, syncPeriod time.Duration) Config {
 	name := typeName(apiType)
-	log := ctrl.Log.WithName("controllers").WithName(name)
+	log := newWarnOnceLogger(ctrl.Log.WithName("controllers").WithName(name))
 	return Config{
-		Client:    mgr.GetClient(),
-		APIReader: mgr.GetAPIReader(),
-		Recorder:  mgr.GetEventRecorderFor(name),
-		Log:       log,
-		Tracker:   tracker.New(syncPeriod, log.WithName("tracker")),
-	}
+		Log:     log,
+		Tracker: tracker.New(2 * syncPeriod),
+	}.WithCluster(mgr)
 }
 
 // ParentReconciler is a controller-runtime reconciler that reconciles a given
@@ -65,6 +100,12 @@ func NewConfig(mgr ctrl.Manager, apiType client.Object, syncPeriod time.Duration
 // resource's status is compared with the original status, updating the API
 // server if needed.
 type ParentReconciler struct {
+	// Name used to identify this reconciler.  Defaults to `{Type}ParentReconciler`.  Ideally
+	// unique, but not required to be so.
+	//
+	// +optional
+	Name string
+
 	// Type of resource to reconcile
 	Type client.Object
 
@@ -73,12 +114,28 @@ type ParentReconciler struct {
 	// multiple SubReconcilers.
 	Reconciler SubReconciler
 
-	Config
+	Config Config
 }
 
 func (r *ParentReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
+	if r.Name == "" {
+		r.Name = fmt.Sprintf("%sParentReconciler", typeName(r.Type))
+	}
+
+	log := logr.FromContextOrDiscard(ctx).
+		WithName(r.Name).
+		WithValues("parentType", gvk(r.Type, r.Config.Scheme()))
+	ctx = logr.NewContext(ctx, log)
+
+	ctx = StashConfig(ctx, r.Config)
+	ctx = StashParentConfig(ctx, r.Config)
 	ctx = StashParentType(ctx, r.Type)
 	ctx = StashCastParentType(ctx, r.Type)
+
+	if err := r.validate(ctx); err != nil {
+		return err
+	}
+
 	bldr := ctrl.NewControllerManagedBy(mgr).For(r.Type)
 	if err := r.Reconciler.SetupWithManager(ctx, mgr, bldr); err != nil {
 		return err
@@ -86,15 +143,70 @@ func (r *ParentReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manage
 	return bldr.Complete(r)
 }
 
+func (r *ParentReconciler) validate(ctx context.Context) error {
+	// validate Type value
+	if r.Type == nil {
+		return fmt.Errorf("ParentReconciler %q must define Type", r.Name)
+	}
+
+	// validate Reconciler value
+	if r.Reconciler == nil {
+		return fmt.Errorf("ParentReconciler %q must define Reconciler", r.Name)
+	}
+
+	// warn users of common pitfalls. These are not blockers.
+
+	log := logr.FromContextOrDiscard(ctx)
+
+	parentType := reflect.TypeOf(r.Type).Elem()
+	statusField, hasStatus := parentType.FieldByName("Status")
+	if !hasStatus {
+		log.Info("parent resource missing status field, operations related to status will be skipped")
+		return nil
+	}
+
+	statusType := statusField.Type
+	if statusType.Kind() == reflect.Ptr {
+		log.Info("parent status is nilable, status is typically a struct")
+		statusType = statusType.Elem()
+	}
+
+	observedGenerationField, hasObservedGeneration := statusType.FieldByName("ObservedGeneration")
+	if !hasObservedGeneration || observedGenerationField.Type.Kind() != reflect.Int64 {
+		log.Info("parent status missing ObservedGeneration field of type int64, generation will not be managed")
+	}
+
+	initializeConditionsMethod, hasInitializeConditions := reflect.PtrTo(statusType).MethodByName("InitializeConditions")
+	if !hasInitializeConditions || initializeConditionsMethod.Type.NumIn() != 1 || initializeConditionsMethod.Type.NumOut() != 0 {
+		log.Info("parent status missing InitializeConditions() method, conditions will not be auto-initialized")
+	}
+
+	conditionsField, hasConditions := statusType.FieldByName("Conditions")
+	if !hasConditions || !conditionsField.Type.AssignableTo(reflect.TypeOf([]metav1.Condition{})) {
+		log.Info("parent status is missing field Conditions of type []metav1.Condition, condition timestamps will not be managed")
+	}
+
+	return nil
+}
+
 func (r *ParentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	ctx = WithStash(ctx)
-	log := r.Log.WithValues("request", req.NamespacedName)
 
+	c := r.Config
+
+	log := logr.FromContextOrDiscard(ctx).
+		WithName(r.Name).
+		WithValues("parentType", gvk(r.Type, c.Scheme()))
+	ctx = logr.NewContext(ctx, log)
+
+	ctx = StashRequest(ctx, req)
+	ctx = StashConfig(ctx, c)
+	ctx = StashParentConfig(ctx, c)
 	ctx = StashParentType(ctx, r.Type)
 	ctx = StashCastParentType(ctx, r.Type)
 	originalParent := r.Type.DeepCopyObject().(client.Object)
 
-	if err := r.Get(ctx, req.NamespacedName, originalParent); err != nil {
+	if err := c.Get(ctx, req.NamespacedName, originalParent); err != nil {
 		if apierrs.IsNotFound(err) {
 			// we'll ignore not-found errors, since they can't be fixed by an immediate
 			// requeue (we'll need to wait for a new notification), and we can get them
@@ -111,29 +223,25 @@ func (r *ParentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		defaulter.Default()
 	}
 
-	if r.hasStatus(originalParent) {
-		if initializeConditions := reflect.ValueOf(parent).Elem().FieldByName("Status").Addr().MethodByName("InitializeConditions"); initializeConditions.Kind() == reflect.Func {
-			// parent.Status.InitializeConditions()
-			initializeConditions.Call([]reflect.Value{})
-		}
-	}
+	r.initializeConditions(parent)
 	result, err := r.reconcile(ctx, parent)
 
 	if r.hasStatus(originalParent) {
 		// restore last transition time for unchanged conditions
-		r.syncLastTransitionTime(r.statusConditions(parent), r.statusConditions(originalParent))
+		r.syncLastTransitionTime(r.conditions(parent), r.conditions(originalParent))
 
 		// check if status has changed before updating
-		if !equality.Semantic.DeepEqual(r.status(parent), r.status(originalParent)) && parent.GetDeletionTimestamp() == nil {
+		parentStatus, originalParentStatus := r.status(parent), r.status(originalParent)
+		if !equality.Semantic.DeepEqual(parentStatus, originalParentStatus) && parent.GetDeletionTimestamp() == nil {
 			// update status
-			log.Info("updating status", "diff", cmp.Diff(r.status(originalParent), r.status(parent)))
-			if updateErr := r.Status().Update(ctx, parent); updateErr != nil {
-				log.Error(updateErr, "unable to update status", typeName(r.Type), parent)
-				r.Recorder.Eventf(parent, corev1.EventTypeWarning, "StatusUpdateFailed",
+			log.Info("updating status", "diff", cmp.Diff(originalParentStatus, parentStatus))
+			if updateErr := c.Status().Update(ctx, parent); updateErr != nil {
+				log.Error(updateErr, "unable to update status")
+				c.Recorder.Eventf(parent, corev1.EventTypeWarning, "StatusUpdateFailed",
 					"Failed to update status: %v", updateErr)
 				return ctrl.Result{}, updateErr
 			}
-			r.Recorder.Eventf(parent, corev1.EventTypeNormal, "StatusUpdated",
+			c.Recorder.Eventf(parent, corev1.EventTypeNormal, "StatusUpdated",
 				"Updated status")
 		}
 	}
@@ -142,7 +250,8 @@ func (r *ParentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 }
 
 func (r *ParentReconciler) reconcile(ctx context.Context, parent client.Object) (ctrl.Result, error) {
-	if parent.GetDeletionTimestamp() != nil {
+	if parent.GetDeletionTimestamp() != nil && len(parent.GetFinalizers()) == 0 {
+		// resource is being deleted and has no pending finalizers, nothing to do
 		return ctrl.Result{}, nil
 	}
 
@@ -154,27 +263,31 @@ func (r *ParentReconciler) reconcile(ctx context.Context, parent client.Object) 
 	r.copyGeneration(parent)
 	return result, nil
 }
-func (r *ParentReconciler) hasStatus(obj client.Object) bool {
-	return reflect.ValueOf(obj).Elem().FieldByName("Status").IsValid()
-}
 
-func (r *ParentReconciler) copyGeneration(obj client.Object) {
-	if r.hasStatus(obj) {
-		// obj.Status.ObservedGeneration = obj.Generation
-		objVal := reflect.ValueOf(obj).Elem()
-		generation := objVal.FieldByName("Generation").Int()
-		objVal.FieldByName("Status").FieldByName("ObservedGeneration").SetInt(generation)
+func (r *ParentReconciler) initializeConditions(obj client.Object) {
+	status := r.status(obj)
+	if status == nil {
+		return
 	}
+	initializeConditions := reflect.ValueOf(status).MethodByName("InitializeConditions")
+	if !initializeConditions.IsValid() {
+		return
+	}
+	if t := initializeConditions.Type(); t.Kind() != reflect.Func || t.NumIn() != 0 || t.NumOut() != 0 {
+		return
+	}
+	initializeConditions.Call([]reflect.Value{})
 }
 
-func (r *ParentReconciler) status(obj client.Object) interface{} {
-	return reflect.ValueOf(obj).Elem().FieldByName("Status").Addr().Interface()
-}
-
-func (r *ParentReconciler) statusConditions(obj client.Object) []metav1.Condition {
-	statusValue := reflect.ValueOf(r.status(obj)).Elem()
+func (r *ParentReconciler) conditions(obj client.Object) []metav1.Condition {
+	// return obj.Status.Conditions
+	status := r.status(obj)
+	if status == nil {
+		return nil
+	}
+	statusValue := reflect.ValueOf(status).Elem()
 	conditionsValue := statusValue.FieldByName("Conditions")
-	if conditionsValue.IsZero() {
+	if !conditionsValue.IsValid() || conditionsValue.IsZero() {
 		return nil
 	}
 	conditions, ok := conditionsValue.Interface().([]metav1.Condition)
@@ -182,6 +295,43 @@ func (r *ParentReconciler) statusConditions(obj client.Object) []metav1.Conditio
 		return nil
 	}
 	return conditions
+}
+
+func (r *ParentReconciler) copyGeneration(obj client.Object) {
+	// obj.Status.ObservedGeneration = obj.Generation
+	status := r.status(obj)
+	if status == nil {
+		return
+	}
+	statusValue := reflect.ValueOf(status).Elem()
+	if !statusValue.IsValid() {
+		return
+	}
+	observedGenerationValue := statusValue.FieldByName("ObservedGeneration")
+	if observedGenerationValue.Kind() != reflect.Int64 || !observedGenerationValue.CanSet() {
+		return
+	}
+	generation := obj.GetGeneration()
+	observedGenerationValue.SetInt(generation)
+}
+
+func (r *ParentReconciler) hasStatus(obj client.Object) bool {
+	status := r.status(obj)
+	return status != nil
+}
+
+func (r *ParentReconciler) status(obj client.Object) interface{} {
+	if obj == nil {
+		return nil
+	}
+	statusValue := reflect.ValueOf(obj).Elem().FieldByName("Status")
+	if statusValue.Kind() == reflect.Ptr {
+		statusValue = statusValue.Elem()
+	}
+	if !statusValue.IsValid() || !statusValue.CanAddr() {
+		return nil
+	}
+	return statusValue.Addr().Interface()
 }
 
 // syncLastTransitionTime restores a condition's LastTransitionTime value for
@@ -205,8 +355,23 @@ func (r *ParentReconciler) syncLastTransitionTime(proposed, original []metav1.Co
 	}
 }
 
+const requestStashKey StashKey = "reconciler-runtime:request"
+const configStashKey StashKey = "reconciler-runtime:config"
+const parentConfigStashKey StashKey = "reconciler-runtime:parentConfig"
 const parentTypeStashKey StashKey = "reconciler-runtime:parentType"
 const castParentTypeStashKey StashKey = "reconciler-runtime:castParentType"
+
+func StashRequest(ctx context.Context, req ctrl.Request) context.Context {
+	return context.WithValue(ctx, requestStashKey, req)
+}
+
+func StashConfig(ctx context.Context, config Config) context.Context {
+	return context.WithValue(ctx, configStashKey, config)
+}
+
+func StashParentConfig(ctx context.Context, parentConfig Config) context.Context {
+	return context.WithValue(ctx, parentConfigStashKey, parentConfig)
+}
 
 func StashParentType(ctx context.Context, parentType client.Object) context.Context {
 	return context.WithValue(ctx, parentTypeStashKey, parentType)
@@ -216,6 +381,54 @@ func StashCastParentType(ctx context.Context, currentType client.Object) context
 	return context.WithValue(ctx, castParentTypeStashKey, currentType)
 }
 
+// RetrieveRequest returns the reconciler Request from the context, or empty if not found.
+func RetrieveRequest(ctx context.Context) ctrl.Request {
+	value := ctx.Value(requestStashKey)
+	if req, ok := value.(ctrl.Request); ok {
+		return req
+	}
+	return ctrl.Request{}
+}
+
+// RetrieveConfig returns the Config from the context. An error is returned if not found.
+func RetrieveConfig(ctx context.Context) (Config, error) {
+	value := ctx.Value(configStashKey)
+	if config, ok := value.(Config); ok {
+		return config, nil
+	}
+	return Config{}, fmt.Errorf("config must exist on the context. Check that the context is from a ParentReconciler or WithConfig")
+}
+
+// RetrieveConfigOrDie returns the Config from the context. Panics if not found.
+func RetrieveConfigOrDie(ctx context.Context) Config {
+	config, err := RetrieveConfig(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return config
+}
+
+// RetrieveParentConfig returns the Config from the context used to load the parent resource. An
+// error is returned if not found.
+func RetrieveParentConfig(ctx context.Context) (Config, error) {
+	value := ctx.Value(parentConfigStashKey)
+	if parentConfig, ok := value.(Config); ok {
+		return parentConfig, nil
+	}
+	return Config{}, fmt.Errorf("parent config must exist on the context. Check that the context is from a ParentReconciler")
+}
+
+// RetrieveParentConfigOrDie returns the Config from the context used to load the parent resource.
+// Panics if not found.
+func RetrieveParentConfigOrDie(ctx context.Context) Config {
+	config, err := RetrieveParentConfig(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return config
+}
+
+// RetrieveParentType returns the parent type object, or nil if not found.
 func RetrieveParentType(ctx context.Context) client.Object {
 	value := ctx.Value(parentTypeStashKey)
 	if parentType, ok := value.(client.Object); ok {
@@ -224,6 +437,7 @@ func RetrieveParentType(ctx context.Context) client.Object {
 	return nil
 }
 
+// RetrieveCastParentType returns the parent type object, or nil if not found.
 func RetrieveCastParentType(ctx context.Context) client.Object {
 	value := ctx.Value(castParentTypeStashKey)
 	if currentType, ok := value.(client.Object); ok {
@@ -245,28 +459,59 @@ var (
 	_ SubReconciler = (*ChildReconciler)(nil)
 	_ SubReconciler = (Sequence)(nil)
 	_ SubReconciler = (*CastParent)(nil)
+	_ SubReconciler = (*WithConfig)(nil)
+	_ SubReconciler = (*WithFinalizer)(nil)
 )
 
 // SyncReconciler is a sub reconciler for custom reconciliation logic. No
 // behavior is defined directly.
 type SyncReconciler struct {
+	// Name used to identify this reconciler.  Defaults to `SyncReconciler`.  Ideally unique, but
+	// not required to be so.
+	//
+	// +optional
+	Name string
+
 	// Setup performs initialization on the manager and builder this reconciler
 	// will run with. It's common to setup field indexes and watch resources.
 	//
 	// +optional
 	Setup func(ctx context.Context, mgr ctrl.Manager, bldr *builder.Builder) error
 
-	// Sync does whatever work is necessary for the reconciler
+	// SyncDuringFinalization indicates the Sync method should be called when the resource is pending deletion.
+	SyncDuringFinalization bool
+
+	// Sync does whatever work is necessary for the reconciler.
+	//
+	// If SyncDuringFinalization is true this method is called when the resource is pending
+	// deletion. This is useful if the reconciler is managing reference data.
 	//
 	// Expected function signature:
 	//     func(ctx context.Context, parent client.Object) error
 	//     func(ctx context.Context, parent client.Object) (ctrl.Result, error)
 	Sync interface{}
 
-	Config
+	// Finalize does whatever work is necessary for the reconciler when the resource is pending
+	// deletion. If this reconciler sets a finalizer it should do the necessary work to clean up
+	// state the finalizer represents and then clear the finalizer.
+	//
+	// Expected function signature:
+	//     func(ctx context.Context, parent client.Object) error
+	//     func(ctx context.Context, parent client.Object) (ctrl.Result, error)
+	//
+	// +optional
+	Finalize interface{}
 }
 
 func (r *SyncReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, bldr *builder.Builder) error {
+	if r.Name == "" {
+		r.Name = "SyncReconciler"
+	}
+
+	log := logr.FromContextOrDiscard(ctx).
+		WithName(r.Name)
+	ctx = logr.NewContext(ctx, log)
+
 	if r.Setup == nil {
 		return nil
 	}
@@ -281,11 +526,39 @@ func (r *SyncReconciler) validate(ctx context.Context) error {
 	//     func(ctx context.Context, parent client.Object) error
 	//     func(ctx context.Context, parent client.Object) (ctrl.Result, error)
 	if r.Sync == nil {
-		return fmt.Errorf("SyncReconciler must implement Sync")
+		return fmt.Errorf("SyncReconciler %q must implement Sync", r.Name)
 	} else {
 		castParentType := RetrieveCastParentType(ctx)
 		fn := reflect.TypeOf(r.Sync)
-		err := fmt.Errorf("SyncReconciler must implement Sync: func(context.Context, %s) error | func(context.Context, %s) (ctrl.Result, error), found: %s", reflect.TypeOf(castParentType), reflect.TypeOf(castParentType), fn)
+		err := fmt.Errorf("SyncReconciler %q must implement Sync: func(context.Context, %s) error | func(context.Context, %s) (ctrl.Result, error), found: %s", r.Name, reflect.TypeOf(castParentType), reflect.TypeOf(castParentType), fn)
+		if fn.NumIn() != 2 ||
+			!reflect.TypeOf((*context.Context)(nil)).Elem().AssignableTo(fn.In(0)) ||
+			!reflect.TypeOf(castParentType).AssignableTo(fn.In(1)) {
+			return err
+		}
+		switch fn.NumOut() {
+		case 1:
+			if !reflect.TypeOf((*error)(nil)).Elem().AssignableTo(fn.Out(0)) {
+				return err
+			}
+		case 2:
+			if !reflect.TypeOf(ctrl.Result{}).AssignableTo(fn.Out(0)) ||
+				!reflect.TypeOf((*error)(nil)).Elem().AssignableTo(fn.Out(1)) {
+				return err
+			}
+		default:
+			return err
+		}
+	}
+
+	// validate Finalize function signature:
+	//     nil
+	//     func(ctx context.Context, parent client.Object) error
+	//     func(ctx context.Context, parent client.Object) (ctrl.Result, error)
+	if r.Finalize != nil {
+		castParentType := RetrieveCastParentType(ctx)
+		fn := reflect.TypeOf(r.Finalize)
+		err := fmt.Errorf("SyncReconciler %q must implement Finalize: nil | func(context.Context, %s) error | func(context.Context, %s) (ctrl.Result, error), found: %s", r.Name, reflect.TypeOf(castParentType), reflect.TypeOf(castParentType), fn)
 		if fn.NumIn() != 2 ||
 			!reflect.TypeOf((*context.Context)(nil)).Elem().AssignableTo(fn.In(0)) ||
 			!reflect.TypeOf(castParentType).AssignableTo(fn.In(1)) {
@@ -310,10 +583,28 @@ func (r *SyncReconciler) validate(ctx context.Context) error {
 }
 
 func (r *SyncReconciler) Reconcile(ctx context.Context, parent client.Object) (ctrl.Result, error) {
-	result, err := r.sync(ctx, parent)
-	if err != nil {
-		r.Log.Error(err, "unable to sync", typeName(parent), parent)
-		return ctrl.Result{}, err
+	log := logr.FromContextOrDiscard(ctx).
+		WithName(r.Name)
+	ctx = logr.NewContext(ctx, log)
+
+	result := ctrl.Result{}
+
+	if parent.GetDeletionTimestamp() == nil || r.SyncDuringFinalization {
+		syncResult, err := r.sync(ctx, parent)
+		if err != nil {
+			log.Error(err, "unable to sync")
+			return ctrl.Result{}, err
+		}
+		result = AggregateResults(result, syncResult)
+	}
+
+	if parent.GetDeletionTimestamp() != nil {
+		finalizeResult, err := r.finalize(ctx, parent)
+		if err != nil {
+			log.Error(err, "unable to finalize")
+			return ctrl.Result{}, err
+		}
+		result = AggregateResults(result, finalizeResult)
 	}
 
 	return result, nil
@@ -321,6 +612,32 @@ func (r *SyncReconciler) Reconcile(ctx context.Context, parent client.Object) (c
 
 func (r *SyncReconciler) sync(ctx context.Context, parent client.Object) (ctrl.Result, error) {
 	fn := reflect.ValueOf(r.Sync)
+	out := fn.Call([]reflect.Value{
+		reflect.ValueOf(ctx),
+		reflect.ValueOf(parent),
+	})
+	result := ctrl.Result{}
+	var err error
+	switch len(out) {
+	case 2:
+		result = out[0].Interface().(ctrl.Result)
+		if !out[1].IsNil() {
+			err = out[1].Interface().(error)
+		}
+	case 1:
+		if !out[0].IsNil() {
+			err = out[0].Interface().(error)
+		}
+	}
+	return result, err
+}
+
+func (r *SyncReconciler) finalize(ctx context.Context, parent client.Object) (ctrl.Result, error) {
+	if r.Finalize == nil {
+		return ctrl.Result{}, nil
+	}
+
+	fn := reflect.ValueOf(r.Finalize)
 	out := fn.Call([]reflect.Value{
 		reflect.ValueOf(ctx),
 		reflect.ValueOf(parent),
@@ -363,6 +680,12 @@ var (
 //
 // During setup, the child resource type is registered to watch for changes.
 type ChildReconciler struct {
+	// Name used to identify this reconciler.  Defaults to `{ChildType}ChildReconciler`.  Ideally
+	// unique, but not required to be so.
+	//
+	// +optional
+	Name string
+
 	// ChildType is the resource being created/updated/deleted by the
 	// reconciler. For example, a parent Deployment would have a ReplicaSet as a
 	// child.
@@ -370,6 +693,27 @@ type ChildReconciler struct {
 	// ChildListType is the listing type for the child type. For example,
 	// PodList is the list type for Pod
 	ChildListType client.ObjectList
+
+	// Finalizer is set on the parent resource before a child resource is created, and cleared
+	// after a child resource is deleted. The value must be unique to this specific reconciler
+	// instance and not shared. Reusing a value may result in orphaned resources when the parent
+	// resource is deleted.
+	//
+	// Using a finalizer is encouraged when the Kubernetes garbage collector is unable to delete
+	// the child resource automatically, like when the parent and child are in different
+	// namespaces, scopes or clusters.
+	//
+	// Use of a finalizer implies that SkipOwnerReference is true, and OurChild must be defined.
+	//
+	// +optional
+	Finalizer string
+
+	// SkipOwnerReference when true will not create and find child resources via an owner
+	// reference. OurChild must be defined for the reconciler to distinguish the child being
+	// reconciled from other resources of the same type.
+	//
+	// Any child resource created is tracked for changes.
+	SkipOwnerReference bool
 
 	// Setup performs initialization on the manager and builder this reconciler
 	// will run with. It's common to setup field indexes and watch resources.
@@ -421,14 +765,30 @@ type ChildReconciler struct {
 	//     func(a1, a2 client.Object) bool
 	SemanticEquals interface{}
 
+	// ListOptions allows custom options to be use when listing potential child resources. Each
+	// resource retrieved as part of the listing is confirmed via OurChild.
+	//
+	// Defaults to filtering by the parent's namespace:
+	//     []client.ListOption{
+	//         client.InNamespace(parent.GetNamespace()),
+	//     }
+	//
+	// Expected function signature:
+	//     func(ctx context.Context, parent client.Object) []client.ListOption
+	//
+	// +optional
+	ListOptions interface{}
+
 	// OurChild is used when there are multiple ChildReconciler for the same ChildType
 	// controlled by the same parent object. The function return true for child resources
 	// managed by this ChildReconciler. Objects returned from the DesiredChild function
 	// should match this function, otherwise they may be orphaned. If not specified, all
 	// children match.
 	//
+	// OurChild is required when a Finalizer is defined or SkipOwnerReference is true.
+	//
 	// Expected function signature:
-	//     func(child client.Object) bool
+	//     func(parent, child client.Object) bool
 	//
 	// +optional
 	OurChild interface{}
@@ -443,20 +803,34 @@ type ChildReconciler struct {
 	// +optional
 	Sanitize interface{}
 
-	Config
-
 	// mutationCache holds patches received from updates to a resource made by
 	// mutation webhooks. This cache is used to avoid unnecessary update calls
 	// that would actually have no effect.
 	mutationCache *cache.Expiring
+	lazyInit      sync.Once
 }
 
 func (r *ChildReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, bldr *builder.Builder) error {
+	c := RetrieveConfigOrDie(ctx)
+
+	if r.Name == "" {
+		r.Name = fmt.Sprintf("%sChildReconciler", typeName(r.ChildType))
+	}
+
+	log := logr.FromContextOrDiscard(ctx).
+		WithName(r.Name).
+		WithValues("childType", gvk(r.ChildType, c.Scheme()))
+	ctx = logr.NewContext(ctx, log)
+
 	if err := r.validate(ctx); err != nil {
 		return err
 	}
 
-	bldr.Owns(r.ChildType)
+	if r.SkipOwnerReference {
+		bldr.Watches(&source.Kind{Type: r.ChildType}, EnqueueTracked(ctx, r.ChildType))
+	} else {
+		bldr.Owns(r.ChildType)
+	}
 
 	if r.Setup == nil {
 		return nil
@@ -467,20 +841,25 @@ func (r *ChildReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager
 func (r *ChildReconciler) validate(ctx context.Context) error {
 	castParentType := RetrieveCastParentType(ctx)
 
+	// default implicit values
+	if r.Finalizer != "" {
+		r.SkipOwnerReference = true
+	}
+
 	// validate ChildType value
 	if r.ChildType == nil {
-		return fmt.Errorf("ChildType must be defined")
+		return fmt.Errorf("ChildReconciler %q must define ChildType", r.Name)
 	}
 
 	// validate ChildListType value
 	if r.ChildListType == nil {
-		return fmt.Errorf("ChildListType must be defined")
+		return fmt.Errorf("ChildReconciler %q must define ChildListType", r.Name)
 	}
 
 	// validate DesiredChild function signature:
 	//     func(ctx context.Context, parent client.Object) (client.Object, error)
 	if r.DesiredChild == nil {
-		return fmt.Errorf("ChildReconciler must implement DesiredChild")
+		return fmt.Errorf("ChildReconciler %q must implement DesiredChild", r.Name)
 	} else {
 		fn := reflect.TypeOf(r.DesiredChild)
 		if fn.NumIn() != 2 || fn.NumOut() != 2 ||
@@ -488,21 +867,21 @@ func (r *ChildReconciler) validate(ctx context.Context) error {
 			!reflect.TypeOf(castParentType).AssignableTo(fn.In(1)) ||
 			!reflect.TypeOf(r.ChildType).AssignableTo(fn.Out(0)) ||
 			!reflect.TypeOf((*error)(nil)).Elem().AssignableTo(fn.Out(1)) {
-			return fmt.Errorf("ChildReconciler must implement DesiredChild: func(context.Context, %s) (%s, error), found: %s", reflect.TypeOf(castParentType), reflect.TypeOf(r.ChildType), fn)
+			return fmt.Errorf("ChildReconciler %q must implement DesiredChild: func(context.Context, %s) (%s, error), found: %s", r.Name, reflect.TypeOf(castParentType), reflect.TypeOf(r.ChildType), fn)
 		}
 	}
 
 	// validate ReflectChildStatusOnParent function signature:
 	//     func(parent, child client.Object, err error)
 	if r.ReflectChildStatusOnParent == nil {
-		return fmt.Errorf("ChildReconciler must implement ReflectChildStatusOnParent")
+		return fmt.Errorf("ChildReconciler %q must implement ReflectChildStatusOnParent", r.Name)
 	} else {
 		fn := reflect.TypeOf(r.ReflectChildStatusOnParent)
 		if fn.NumIn() != 3 || fn.NumOut() != 0 ||
 			!reflect.TypeOf(castParentType).AssignableTo(fn.In(0)) ||
 			!reflect.TypeOf(r.ChildType).AssignableTo(fn.In(1)) ||
 			!reflect.TypeOf((*error)(nil)).Elem().AssignableTo(fn.In(2)) {
-			return fmt.Errorf("ChildReconciler must implement ReflectChildStatusOnParent: func(%s, %s, error), found: %s", reflect.TypeOf(castParentType), reflect.TypeOf(r.ChildType), fn)
+			return fmt.Errorf("ChildReconciler %q must implement ReflectChildStatusOnParent: func(%s, %s, error), found: %s", r.Name, reflect.TypeOf(castParentType), reflect.TypeOf(r.ChildType), fn)
 		}
 	}
 
@@ -514,47 +893,65 @@ func (r *ChildReconciler) validate(ctx context.Context) error {
 		if fn.NumIn() != 2 || fn.NumOut() != 0 ||
 			!reflect.TypeOf(r.ChildType).AssignableTo(fn.In(0)) ||
 			!reflect.TypeOf(r.ChildType).AssignableTo(fn.In(1)) {
-			return fmt.Errorf("ChildReconciler must implement HarmonizeImmutableFields: nil | func(%s, %s), found: %s", reflect.TypeOf(r.ChildType), reflect.TypeOf(r.ChildType), fn)
+			return fmt.Errorf("ChildReconciler %q must implement HarmonizeImmutableFields: nil | func(%s, %s), found: %s", r.Name, reflect.TypeOf(r.ChildType), reflect.TypeOf(r.ChildType), fn)
 		}
 	}
 
 	// validate MergeBeforeUpdate function signature:
 	//     func(current, desired client.Object)
 	if r.MergeBeforeUpdate == nil {
-		return fmt.Errorf("ChildReconciler must implement MergeBeforeUpdate")
+		return fmt.Errorf("ChildReconciler %q must implement MergeBeforeUpdate", r.Name)
 	} else {
 		fn := reflect.TypeOf(r.MergeBeforeUpdate)
 		if fn.NumIn() != 2 || fn.NumOut() != 0 ||
 			!reflect.TypeOf(r.ChildType).AssignableTo(fn.In(0)) ||
 			!reflect.TypeOf(r.ChildType).AssignableTo(fn.In(1)) {
-			return fmt.Errorf("ChildReconciler must implement MergeBeforeUpdate: nil | func(%s, %s), found: %s", reflect.TypeOf(r.ChildType), reflect.TypeOf(r.ChildType), fn)
+			return fmt.Errorf("ChildReconciler %q must implement MergeBeforeUpdate: func(%s, %s), found: %s", r.Name, reflect.TypeOf(r.ChildType), reflect.TypeOf(r.ChildType), fn)
 		}
 	}
 
 	// validate SemanticEquals function signature:
 	//     func(a1, a2 client.Object) bool
 	if r.SemanticEquals == nil {
-		return fmt.Errorf("ChildReconciler must implement SemanticEquals")
+		return fmt.Errorf("ChildReconciler %q must implement SemanticEquals", r.Name)
 	} else {
 		fn := reflect.TypeOf(r.SemanticEquals)
 		if fn.NumIn() != 2 || fn.NumOut() != 1 ||
 			!reflect.TypeOf(r.ChildType).AssignableTo(fn.In(0)) ||
 			!reflect.TypeOf(r.ChildType).AssignableTo(fn.In(1)) ||
 			fn.Out(0).Kind() != reflect.Bool {
-			return fmt.Errorf("ChildReconciler must implement SemanticEquals: nil | func(%s, %s) bool, found: %s", reflect.TypeOf(r.ChildType), reflect.TypeOf(r.ChildType), fn)
+			return fmt.Errorf("ChildReconciler %q must implement SemanticEquals: func(%s, %s) bool, found: %s", r.Name, reflect.TypeOf(r.ChildType), reflect.TypeOf(r.ChildType), fn)
+		}
+	}
+
+	// validate ListOptions function signature:
+	//     nil
+	//     func(ctx context.Context, parent client.Object) []client.ListOption
+	if r.ListOptions != nil {
+		fn := reflect.TypeOf(r.ListOptions)
+		if fn.NumIn() != 2 || fn.NumOut() != 1 ||
+			!reflect.TypeOf((*context.Context)(nil)).Elem().AssignableTo(fn.In(0)) ||
+			!reflect.TypeOf(castParentType).AssignableTo(fn.In(1)) ||
+			!reflect.TypeOf([]client.ListOption{}).AssignableTo(fn.Out(0)) {
+			return fmt.Errorf("ChildReconciler %q must implement ListOptions: nil | func(context.Context, %s) []client.ListOption, found: %s", r.Name, reflect.TypeOf(castParentType), fn)
 		}
 	}
 
 	// validate OurChild function signature:
 	//     nil
-	//     func(child client.Object) interface{}
+	//     func(parent, child client.Object) bool
 	if r.OurChild != nil {
 		fn := reflect.TypeOf(r.OurChild)
-		if fn.NumIn() != 1 || fn.NumOut() != 1 ||
-			!reflect.TypeOf(r.ChildType).AssignableTo(fn.In(0)) ||
+		if fn.NumIn() != 2 || fn.NumOut() != 1 ||
+			!reflect.TypeOf(castParentType).AssignableTo(fn.In(0)) ||
+			!reflect.TypeOf(r.ChildType).AssignableTo(fn.In(1)) ||
 			fn.Out(0).Kind() != reflect.Bool {
-			return fmt.Errorf("ChildReconciler must implement OurChild: nil | func(%s) bool, found: %s", reflect.TypeOf(r.ChildType), fn)
+			return fmt.Errorf("ChildReconciler %q must implement OurChild: nil | func(%s, %s) bool, found: %s", r.Name, reflect.TypeOf(castParentType), reflect.TypeOf(r.ChildType), fn)
 		}
+	}
+	if r.OurChild == nil && r.SkipOwnerReference {
+		// OurChild is required when SkipOwnerReference is true
+		return fmt.Errorf("ChildReconciler %q must implement OurChild since owner references are not used", r.Name)
 	}
 
 	// validate Sanitize function signature:
@@ -564,7 +961,7 @@ func (r *ChildReconciler) validate(ctx context.Context) error {
 		fn := reflect.TypeOf(r.Sanitize)
 		if fn.NumIn() != 1 || fn.NumOut() != 1 ||
 			!reflect.TypeOf(r.ChildType).AssignableTo(fn.In(0)) {
-			return fmt.Errorf("ChildReconciler must implement Sanitize: nil | func(%s) interface{}, found: %s", reflect.TypeOf(r.ChildType), fn)
+			return fmt.Errorf("ChildReconciler %q must implement Sanitize: nil | func(%s) interface{}, found: %s", r.Name, reflect.TypeOf(r.ChildType), fn)
 		}
 	}
 
@@ -572,29 +969,38 @@ func (r *ChildReconciler) validate(ctx context.Context) error {
 }
 
 func (r *ChildReconciler) Reconcile(ctx context.Context, parent client.Object) (ctrl.Result, error) {
-	if r.mutationCache == nil {
+	c := RetrieveConfigOrDie(ctx)
+
+	log := logr.FromContextOrDiscard(ctx).
+		WithName(r.Name).
+		WithValues("childType", gvk(r.ChildType, c.Scheme()))
+	ctx = logr.NewContext(ctx, log)
+
+	r.lazyInit.Do(func() {
 		r.mutationCache = cache.NewExpiring()
-	}
+	})
 
 	child, err := r.reconcile(ctx, parent)
+	if parent.GetDeletionTimestamp() != nil {
+		return ctrl.Result{}, err
+	}
 	if err != nil {
-		parentType := RetrieveParentType(ctx)
 		if apierrs.IsAlreadyExists(err) {
 			// check if the resource blocking create is owned by the parent.
 			// the created child from a previous turn may be slow to appear in the informer cache, but shouldn't appear
 			// on the parent as being not ready.
 			apierr := err.(apierrs.APIStatus)
-			conflicted := r.ChildType.DeepCopyObject().(client.Object)
-			_ = r.APIReader.Get(ctx, types.NamespacedName{Namespace: parent.GetNamespace(), Name: apierr.Status().Details.Name}, conflicted)
-			if metav1.IsControlledBy(conflicted, parent) {
+			conflicted := newEmpty(r.ChildType).(client.Object)
+			_ = c.APIReader.Get(ctx, types.NamespacedName{Namespace: parent.GetNamespace(), Name: apierr.Status().Details.Name}, conflicted)
+			if r.ourChild(parent, conflicted) {
 				// skip updating the parent's status, fail and try again
 				return ctrl.Result{}, err
 			}
-			r.Log.Info("unable to reconcile child, not owned", typeName(parentType), parent, typeName(r.ChildType), r.sanitize(child))
+			log.Info("unable to reconcile child, not owned", "child", namespaceName(conflicted), "ownerRefs", conflicted.GetOwnerReferences())
 			r.reflectChildStatusOnParent(parent, child, err)
 			return ctrl.Result{}, nil
 		}
-		r.Log.Error(err, "unable to reconcile child", typeName(parentType), parent)
+		log.Error(err, "unable to reconcile child")
 		return ctrl.Result{}, err
 	}
 	r.reflectChildStatusOnParent(parent, child, err)
@@ -603,9 +1009,13 @@ func (r *ChildReconciler) Reconcile(ctx context.Context, parent client.Object) (
 }
 
 func (r *ChildReconciler) reconcile(ctx context.Context, parent client.Object) (client.Object, error) {
-	actual := r.ChildType.DeepCopyObject().(client.Object)
-	children := r.ChildListType.DeepCopyObject().(client.ObjectList)
-	if err := r.List(ctx, children, client.InNamespace(parent.GetNamespace())); err != nil {
+	log := logr.FromContextOrDiscard(ctx)
+	pc := RetrieveParentConfigOrDie(ctx)
+	c := RetrieveConfigOrDie(ctx)
+
+	actual := newEmpty(r.ChildType).(client.Object)
+	children := newEmpty(r.ChildListType).(client.ObjectList)
+	if err := c.List(ctx, children, r.listOptions(ctx, parent)...); err != nil {
 		return nil, err
 	}
 	items := r.filterChildren(parent, children)
@@ -614,13 +1024,13 @@ func (r *ChildReconciler) reconcile(ctx context.Context, parent client.Object) (
 	} else if len(items) > 1 {
 		// this shouldn't happen, delete everything to a clean slate
 		for _, extra := range items {
-			r.Log.Info("deleting extra child", typeName(r.ChildType), r.sanitize(extra))
-			if err := r.Delete(ctx, extra); err != nil {
-				r.Recorder.Eventf(parent, corev1.EventTypeWarning, "DeleteFailed",
+			log.Info("deleting extra child", "child", namespaceName(extra))
+			if err := c.Delete(ctx, extra); err != nil {
+				pc.Recorder.Eventf(parent, corev1.EventTypeWarning, "DeleteFailed",
 					"Failed to delete %s %q: %v", typeName(r.ChildType), extra.GetName(), err)
 				return nil, err
 			}
-			r.Recorder.Eventf(parent, corev1.EventTypeNormal, "Deleted",
+			pc.Recorder.Eventf(parent, corev1.EventTypeNormal, "Deleted",
 				"Deleted %s %q", typeName(r.ChildType), extra.GetName())
 		}
 	}
@@ -633,40 +1043,59 @@ func (r *ChildReconciler) reconcile(ctx context.Context, parent client.Object) (
 		return nil, err
 	}
 	if desired != nil {
-		if err := ctrl.SetControllerReference(parent, desired, r.Scheme()); err != nil {
-			return nil, err
+		if !r.SkipOwnerReference {
+			if err := ctrl.SetControllerReference(parent, desired, c.Scheme()); err != nil {
+				return nil, err
+			}
 		}
 		if !r.ourChild(parent, desired) {
-			r.Log.Info("object returned from DesiredChild does not match OurChild, this can result in orphaned children", "child", r.sanitize(desired))
+			log.Info("object returned from DesiredChild does not match OurChild, this can result in orphaned children", "child", namespaceName(desired))
 		}
 	}
 
 	// delete child if no longer needed
 	if desired == nil {
 		if !actual.GetCreationTimestamp().Time.IsZero() {
-			r.Log.Info("deleting unwanted child", typeName(r.ChildType), r.sanitize(actual))
-			if err := r.Delete(ctx, actual); err != nil {
-				r.Log.Error(err, "unable to delete unwanted child", typeName(r.ChildType), r.sanitize(actual))
-				r.Recorder.Eventf(parent, corev1.EventTypeWarning, "DeleteFailed",
+			log.Info("deleting unwanted child", "child", namespaceName(actual))
+			if err := c.Delete(ctx, actual); err != nil {
+				log.Error(err, "unable to delete unwanted child", "child", namespaceName(actual))
+				pc.Recorder.Eventf(parent, corev1.EventTypeWarning, "DeleteFailed",
 					"Failed to delete %s %q: %v", typeName(r.ChildType), actual.GetName(), err)
 				return nil, err
 			}
-			r.Recorder.Eventf(parent, corev1.EventTypeNormal, "Deleted",
+			pc.Recorder.Eventf(parent, corev1.EventTypeNormal, "Deleted",
 				"Deleted %s %q", typeName(r.ChildType), actual.GetName())
+
+			if err := ClearParentFinalizer(ctx, parent, r.Finalizer); err != nil {
+				return nil, err
+			}
 		}
 		return nil, nil
 	}
 
+	if err := AddParentFinalizer(ctx, parent, r.Finalizer); err != nil {
+		return nil, err
+	}
+
 	// create child if it doesn't exist
 	if actual.GetName() == "" {
-		r.Log.Info("creating child", typeName(r.ChildType), r.sanitize(desired))
-		if err := r.Create(ctx, desired); err != nil {
-			r.Log.Error(err, "unable to create child", typeName(r.ChildType), r.sanitize(desired))
-			r.Recorder.Eventf(parent, corev1.EventTypeWarning, "CreationFailed",
+		log.Info("creating child", "child", r.sanitize(desired))
+		if err := c.Create(ctx, desired); err != nil {
+			log.Error(err, "unable to create child", "child", namespaceName(desired))
+			pc.Recorder.Eventf(parent, corev1.EventTypeWarning, "CreationFailed",
 				"Failed to create %s %q: %v", typeName(r.ChildType), desired.GetName(), err)
 			return nil, err
 		}
-		r.Recorder.Eventf(parent, corev1.EventTypeNormal, "Created",
+		if r.SkipOwnerReference {
+			// track since we can't lean on owner refs
+
+			// normally tracks should occur before API operations, but when creating a resource with a
+			// generated name, we need to know the actual resource name.
+			if err := c.Tracker.TrackChild(ctx, parent, desired, c.Scheme()); err != nil {
+				return nil, err
+			}
+		}
+		pc.Recorder.Eventf(parent, corev1.EventTypeNormal, "Created",
 			"Created %s %q", typeName(r.ChildType), desired.GetName())
 		return desired, nil
 	}
@@ -681,7 +1110,7 @@ func (r *ChildReconciler) reconcile(ctx context.Context, parent client.Object) (
 		err := patch.(*Patch).Apply(desiredPatched)
 		if err != nil {
 			// there's not much we can do, but let the normal update proceed
-			r.Log.Info("unable to patch desired child from mutation cache")
+			log.Info("unable to patch desired child from mutation cache")
 		}
 	}
 
@@ -693,10 +1122,16 @@ func (r *ChildReconciler) reconcile(ctx context.Context, parent client.Object) (
 	// update child with desired changes
 	current := actual.DeepCopyObject().(client.Object)
 	r.mergeBeforeUpdate(current, desiredPatched)
-	r.Log.Info("reconciling child", "diff", cmp.Diff(r.sanitize(actual), r.sanitize(current)))
-	if err := r.Update(ctx, current); err != nil {
-		r.Log.Error(err, "unable to update child", typeName(r.ChildType), r.sanitize(current))
-		r.Recorder.Eventf(parent, corev1.EventTypeWarning, "UpdateFailed",
+	log.Info("updating child", "diff", cmp.Diff(r.sanitize(actual), r.sanitize(current)))
+	if r.SkipOwnerReference {
+		// track since we can't lean on owner refs
+		if err := c.Tracker.TrackChild(ctx, parent, current, c.Scheme()); err != nil {
+			return nil, err
+		}
+	}
+	if err := c.Update(ctx, current); err != nil {
+		log.Error(err, "unable to update child", "child", namespaceName(current))
+		pc.Recorder.Eventf(parent, corev1.EventTypeWarning, "UpdateFailed",
 			"Failed to update %s %q: %v", typeName(r.ChildType), current.GetName(), err)
 		return nil, err
 	}
@@ -707,12 +1142,13 @@ func (r *ChildReconciler) reconcile(ctx context.Context, parent client.Object) (
 		r.mergeBeforeUpdate(base, desired)
 		patch, err := NewPatch(base, current)
 		if err != nil {
-			r.Log.Error(err, "unable to generate mutation patch", "snapshot", r.sanitize(desired), "base", r.sanitize(base))
+			log.Error(err, "unable to generate mutation patch", "snapshot", r.sanitize(desired), "base", r.sanitize(base))
 		} else {
 			r.mutationCache.Set(current.GetUID(), patch, 1*time.Hour)
 		}
 	}
-	r.Recorder.Eventf(parent, corev1.EventTypeNormal, "Updated",
+	log.Info("updated child")
+	pc.Recorder.Eventf(parent, corev1.EventTypeNormal, "Updated",
 		"Updated %s %q", typeName(r.ChildType), current.GetName())
 
 	return current, nil
@@ -728,6 +1164,11 @@ func (r *ChildReconciler) semanticEquals(a1, a2 client.Object) bool {
 }
 
 func (r *ChildReconciler) desiredChild(ctx context.Context, parent client.Object) (client.Object, error) {
+	if parent.GetDeletionTimestamp() != nil {
+		// the parent is pending deletion, cleanup the child resource
+		return nil, nil
+	}
+
 	fn := reflect.ValueOf(r.DesiredChild)
 	out := fn.Call([]reflect.Value{
 		reflect.ValueOf(ctx),
@@ -789,6 +1230,10 @@ func (r *ChildReconciler) sanitize(child client.Object) interface{} {
 	if child == nil {
 		return nil
 	}
+
+	// avoid accidental mutations in Sanitize method
+	child = child.DeepCopyObject().(client.Object)
+
 	fn := reflect.ValueOf(r.Sanitize)
 	out := fn.Call([]reflect.Value{
 		reflect.ValueOf(child),
@@ -813,8 +1258,22 @@ func (r *ChildReconciler) filterChildren(parent client.Object, children client.O
 	return items
 }
 
+func (r *ChildReconciler) listOptions(ctx context.Context, parent client.Object) []client.ListOption {
+	if r.ListOptions == nil {
+		return []client.ListOption{
+			client.InNamespace(parent.GetNamespace()),
+		}
+	}
+	fn := reflect.ValueOf(r.ListOptions)
+	out := fn.Call([]reflect.Value{
+		reflect.ValueOf(ctx),
+		reflect.ValueOf(parent),
+	})
+	return out[0].Interface().([]client.ListOption)
+}
+
 func (r *ChildReconciler) ourChild(parent, obj client.Object) bool {
-	if !metav1.IsControlledBy(obj, parent) {
+	if !r.SkipOwnerReference && !metav1.IsControlledBy(obj, parent) {
 		return false
 	}
 	// TODO do we need to remove resources pending deletion?
@@ -823,6 +1282,7 @@ func (r *ChildReconciler) ourChild(parent, obj client.Object) bool {
 	}
 	fn := reflect.ValueOf(r.OurChild)
 	out := fn.Call([]reflect.Value{
+		reflect.ValueOf(parent),
 		reflect.ValueOf(obj),
 	})
 	keep := true
@@ -837,7 +1297,11 @@ func (r *ChildReconciler) ourChild(parent, obj client.Object) bool {
 type Sequence []SubReconciler
 
 func (r Sequence) SetupWithManager(ctx context.Context, mgr ctrl.Manager, bldr *builder.Builder) error {
-	for _, reconciler := range r {
+	for i, reconciler := range r {
+		log := logr.FromContextOrDiscard(ctx).
+			WithName(fmt.Sprintf("%d", i))
+		ctx = logr.NewContext(ctx, log)
+
 		err := reconciler.SetupWithManager(ctx, mgr, bldr)
 		if err != nil {
 			return err
@@ -848,26 +1312,19 @@ func (r Sequence) SetupWithManager(ctx context.Context, mgr ctrl.Manager, bldr *
 
 func (r Sequence) Reconcile(ctx context.Context, parent client.Object) (ctrl.Result, error) {
 	aggregateResult := ctrl.Result{}
-	for _, reconciler := range r {
+	for i, reconciler := range r {
+		log := logr.FromContextOrDiscard(ctx).
+			WithName(fmt.Sprintf("%d", i))
+		ctx = logr.NewContext(ctx, log)
+
 		result, err := reconciler.Reconcile(ctx, parent)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-		aggregateResult = r.aggregateResult(result, aggregateResult)
+		aggregateResult = AggregateResults(result, aggregateResult)
 	}
 
 	return aggregateResult, nil
-}
-
-func (r Sequence) aggregateResult(result, aggregate ctrl.Result) ctrl.Result {
-	if result.RequeueAfter != 0 && (aggregate.RequeueAfter == 0 || result.RequeueAfter < aggregate.RequeueAfter) {
-		aggregate.RequeueAfter = result.RequeueAfter
-	}
-	if result.Requeue {
-		aggregate.Requeue = true
-	}
-
-	return aggregate
 }
 
 // CastParent casts the ParentReconciler's type by projecting the resource data
@@ -879,6 +1336,12 @@ func (r Sequence) aggregateResult(result, aggregate ctrl.Result) ctrl.Result {
 // cast parent are read-only. Attempts to mutate the parent will result in the
 // reconciler erring.
 type CastParent struct {
+	// Name used to identify this reconciler.  Defaults to `{Type}CastParent`.  Ideally unique, but
+	// not required to be so.
+	//
+	// +optional
+	Name string
+
 	// Type of resource to reconcile
 	Type client.Object
 
@@ -889,6 +1352,15 @@ type CastParent struct {
 }
 
 func (r *CastParent) SetupWithManager(ctx context.Context, mgr ctrl.Manager, bldr *builder.Builder) error {
+	if r.Name == "" {
+		r.Name = fmt.Sprintf("%sCastParent", typeName(r.Type))
+	}
+
+	log := logr.FromContextOrDiscard(ctx).
+		WithName(r.Name).
+		WithValues("castParentType", typeName(r.Type))
+	ctx = logr.NewContext(ctx, log)
+
 	if err := r.validate(ctx); err != nil {
 		return err
 	}
@@ -898,18 +1370,23 @@ func (r *CastParent) SetupWithManager(ctx context.Context, mgr ctrl.Manager, bld
 func (r *CastParent) validate(ctx context.Context) error {
 	// validate Type value
 	if r.Type == nil {
-		return fmt.Errorf("Type must be defined")
+		return fmt.Errorf("CastParent %q must define Type", r.Name)
 	}
 
 	// validate Reconciler value
 	if r.Reconciler == nil {
-		return fmt.Errorf("Reconciler must be defined")
+		return fmt.Errorf("CastParent %q must define Reconciler", r.Name)
 	}
 
 	return nil
 }
 
 func (r *CastParent) Reconcile(ctx context.Context, parent client.Object) (ctrl.Result, error) {
+	log := logr.FromContextOrDiscard(ctx).
+		WithName(r.Name).
+		WithValues("castParentType", typeName(r.Type))
+	ctx = logr.NewContext(ctx, log)
+
 	ctx, castParent, err := r.cast(ctx, parent)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -939,13 +1416,160 @@ func (r *CastParent) cast(ctx context.Context, parent client.Object) (context.Co
 	if err != nil {
 		return nil, nil, err
 	}
-	castParent := r.Type.DeepCopyObject().(client.Object)
+	castParent := newEmpty(r.Type).(client.Object)
 	err = json.Unmarshal(data, castParent)
 	if err != nil {
 		return nil, nil, err
 	}
 	ctx = StashCastParentType(ctx, castParent)
 	return ctx, castParent, nil
+}
+
+// WithConfig injects the provided config into the reconcilers nested under it. For example, the
+// client can be swapped to use a service account with different permissions, or to target an
+// entirely different cluster.
+//
+// The specified config can be accessed with `RetrieveConfig(ctx)`, the original config used to
+// load the parent resource can be accessed with `RetrieveParentConfig(ctx)`.
+type WithConfig struct {
+	// Name used to identify this reconciler.  Defaults to `WithConfig`.  Ideally unique, but
+	// not required to be so.
+	//
+	// +optional
+	Name string
+
+	// Config to use for this portion of the reconciler hierarchy. This method is called during
+	// setup and during reconciliation, if context is needed, it should be available durring both
+	// phases.
+	Config func(context.Context, Config) (Config, error)
+
+	// Reconciler is called for each reconciler request with the parent
+	// resource being reconciled. Typically a Sequence is used to compose
+	// multiple SubReconcilers.
+	Reconciler SubReconciler
+}
+
+func (r *WithConfig) SetupWithManager(ctx context.Context, mgr ctrl.Manager, bldr *builder.Builder) error {
+	if r.Name == "" {
+		r.Name = "WithConfig"
+	}
+
+	log := logr.FromContextOrDiscard(ctx).
+		WithName(r.Name)
+	ctx = logr.NewContext(ctx, log)
+
+	if err := r.validate(ctx); err != nil {
+		return err
+	}
+	c, err := r.Config(ctx, RetrieveConfigOrDie(ctx))
+	if err != nil {
+		return err
+	}
+	ctx = StashConfig(ctx, c)
+	return r.Reconciler.SetupWithManager(ctx, mgr, bldr)
+}
+
+func (r *WithConfig) validate(ctx context.Context) error {
+	// validate Config value
+	if r.Config == nil {
+		return fmt.Errorf("WithConfig %q must define Config", r.Name)
+	}
+
+	// validate Reconciler value
+	if r.Reconciler == nil {
+		return fmt.Errorf("WithConfig %q must define Reconciler", r.Name)
+	}
+
+	return nil
+}
+
+func (r *WithConfig) Reconcile(ctx context.Context, parent client.Object) (ctrl.Result, error) {
+	log := logr.FromContextOrDiscard(ctx).
+		WithName(r.Name)
+	ctx = logr.NewContext(ctx, log)
+
+	c, err := r.Config(ctx, RetrieveConfigOrDie(ctx))
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	ctx = StashConfig(ctx, c)
+	return r.Reconciler.Reconcile(ctx, parent)
+}
+
+// WithFinalizer ensures the resource being reconciled has the desired finalizer set so that state
+// can be cleaned up upon the resource being deleted. The finalizer is added to the resource, if not
+// already set, before calling the nested reconciler. When the resource is terminating, the
+// finalizer is cleared after returning from the nested reconciler without error.
+type WithFinalizer struct {
+	// Name used to identify this reconciler.  Defaults to `WithFinalizer`.  Ideally unique, but
+	// not required to be so.
+	//
+	// +optional
+	Name string
+
+	// Finalizer to set on the parent resource. The value must be unique to this specific
+	// reconciler instance and not shared. Reusing a value may result in orphaned state when
+	// the parent resource is deleted.
+	//
+	// Using a finalizer is encouraged when state needs to be manually cleaned up before a resource
+	// is fully deleted. This commonly include state allocated outside of the current cluster.
+	Finalizer string
+
+	// Reconciler is called for each reconciler request with the parent
+	// resource being reconciled. Typically a Sequence is used to compose
+	// multiple SubReconcilers.
+	Reconciler SubReconciler
+}
+
+func (r *WithFinalizer) SetupWithManager(ctx context.Context, mgr ctrl.Manager, bldr *builder.Builder) error {
+	if r.Name == "" {
+		r.Name = "WithFinalizer"
+	}
+
+	log := logr.FromContextOrDiscard(ctx).
+		WithName(r.Name)
+	ctx = logr.NewContext(ctx, log)
+
+	if err := r.validate(ctx); err != nil {
+		return err
+	}
+	return r.Reconciler.SetupWithManager(ctx, mgr, bldr)
+}
+
+func (r *WithFinalizer) validate(ctx context.Context) error {
+	// validate Finalizer value
+	if r.Finalizer == "" {
+		return fmt.Errorf("WithFinalizer %q must define Finalizer", r.Name)
+	}
+
+	// validate Reconciler value
+	if r.Reconciler == nil {
+		return fmt.Errorf("WithFinalizer %q must define Reconciler", r.Name)
+	}
+
+	return nil
+}
+
+func (r *WithFinalizer) Reconcile(ctx context.Context, parent client.Object) (ctrl.Result, error) {
+	log := logr.FromContextOrDiscard(ctx).
+		WithName(r.Name)
+	ctx = logr.NewContext(ctx, log)
+
+	if parent.GetDeletionTimestamp() == nil {
+		if err := AddParentFinalizer(ctx, parent, r.Finalizer); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+	result, err := r.Reconciler.Reconcile(ctx, parent)
+	if err != nil {
+		return result, err
+	}
+	if parent.GetDeletionTimestamp() != nil {
+		if err := ClearParentFinalizer(ctx, parent, r.Finalizer); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+	return result, err
 }
 
 func typeName(i interface{}) string {
@@ -955,6 +1579,104 @@ func typeName(i interface{}) string {
 		t = t.Elem()
 	}
 	return t.Name()
+}
+
+func gvk(obj client.Object, scheme *runtime.Scheme) schema.GroupVersionKind {
+	gvks, _, err := scheme.ObjectKinds(obj)
+	if err != nil {
+		return schema.GroupVersionKind{}
+	}
+	return gvks[0]
+}
+
+func namespaceName(obj client.Object) types.NamespacedName {
+	return types.NamespacedName{
+		Namespace: obj.GetNamespace(),
+		Name:      obj.GetName(),
+	}
+}
+
+// AddParentFinalizer ensures the desired finalizer exists on the parent resource. The client that
+// loaded the parent resource is used to patch it with the finalizer if not already set.
+func AddParentFinalizer(ctx context.Context, parent client.Object, finalizer string) error {
+	return ensureParentFinalizer(ctx, parent, finalizer, true)
+}
+
+// ClearParentFinalizer ensures the desired finalizer does not exist on the parent resource. The
+// client that loaded the parent resource is used to patch it with the finalizer if set.
+func ClearParentFinalizer(ctx context.Context, parent client.Object, finalizer string) error {
+	return ensureParentFinalizer(ctx, parent, finalizer, false)
+}
+
+func ensureParentFinalizer(ctx context.Context, parent client.Object, finalizer string, add bool) error {
+	config := RetrieveParentConfigOrDie(ctx)
+	if config.IsEmpty() {
+		panic(fmt.Errorf("parent config must exist on the context. Check that the context from a ParentReconciler"))
+	}
+	parentType := RetrieveParentType(ctx)
+	if parentType == nil {
+		panic(fmt.Errorf("parent type must exist on the context. Check that the context from a ParentReconciler"))
+	}
+
+	if finalizer == "" || controllerutil.ContainsFinalizer(parent, finalizer) == add {
+		// nothing to do
+		return nil
+	}
+
+	// cast the current object back to the parent so scheme-aware, typed client can operate on it
+	cast := &CastParent{
+		Type: parentType,
+		Reconciler: &SyncReconciler{
+			SyncDuringFinalization: true,
+			Sync: func(ctx context.Context, current client.Object) error {
+				log := logr.FromContextOrDiscard(ctx)
+
+				desired := current.DeepCopyObject().(client.Object)
+				if add {
+					log.Info("adding parent finalizer", "finalizer", finalizer)
+					controllerutil.AddFinalizer(desired, finalizer)
+				} else {
+					log.Info("removing parent finalizer", "finalizer", finalizer)
+					controllerutil.RemoveFinalizer(desired, finalizer)
+				}
+
+				patch := client.MergeFromWithOptions(current, client.MergeFromWithOptimisticLock{})
+				if err := config.Patch(ctx, desired, patch); err != nil {
+					log.Error(err, "unable to patch parent finalizers", "finalizer", finalizer)
+					config.Recorder.Eventf(current, corev1.EventTypeWarning, "FinalizerPatchFailed",
+						"Failed to patch finalizer %q: %s", finalizer, err)
+					return err
+				}
+				config.Recorder.Eventf(current, corev1.EventTypeNormal, "FinalizerPatched",
+					"Patched finalizer %q", finalizer)
+
+				// update current object with values from the api server after patching
+				current.SetFinalizers(desired.GetFinalizers())
+				current.SetResourceVersion(desired.GetResourceVersion())
+				current.SetGeneration(desired.GetGeneration())
+
+				return nil
+			},
+		},
+	}
+
+	_, err := cast.Reconcile(ctx, parent)
+	return err
+}
+
+// AggregateResults combines multiple results into a single result. If any result requests
+// requeue, the aggregate is requeued. The shortest non-zero requeue after is the aggregate value.
+func AggregateResults(results ...ctrl.Result) ctrl.Result {
+	aggregate := ctrl.Result{}
+	for _, result := range results {
+		if result.RequeueAfter != 0 && (aggregate.RequeueAfter == 0 || result.RequeueAfter < aggregate.RequeueAfter) {
+			aggregate.RequeueAfter = result.RequeueAfter
+		}
+		if result.Requeue {
+			aggregate.Requeue = true
+		}
+	}
+	return aggregate
 }
 
 // MergeMaps flattens a sequence of maps into a single map. Keys in latter maps
@@ -967,4 +1689,16 @@ func MergeMaps(maps ...map[string]string) map[string]string {
 		}
 	}
 	return out
+}
+
+// replaceWithEmpty overwrite the underlying value with it's empty value
+func replaceWithEmpty(x interface{}) {
+	v := reflect.ValueOf(x).Elem()
+	v.Set(reflect.Zero(v.Type()))
+}
+
+// newEmpty returns a new empty value of the same underlying type, preserving the existing value
+func newEmpty(x interface{}) interface{} {
+	t := reflect.TypeOf(x).Elem()
+	return reflect.New(t).Interface()
 }
