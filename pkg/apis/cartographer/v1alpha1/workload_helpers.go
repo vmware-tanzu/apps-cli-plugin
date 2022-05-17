@@ -167,6 +167,9 @@ func (w *WorkloadSpec) Merge(updates *WorkloadSpec) {
 		if s.Image != "" {
 			w.MergeSourceImage(s.Image)
 		}
+		if s.Subpath != "" {
+			w.MergeSubPath(s.Subpath)
+		}
 	}
 	for _, e := range updates.Env {
 		w.MergeEnv(e)

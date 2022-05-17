@@ -489,7 +489,7 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.Flags().StringArrayVar(&opts.Env, cli.StripDash(flags.EnvFlagName), []string{}, "environment variables represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
 	cmd.Flags().StringArrayVar(&opts.BuildEnv, cli.StripDash(flags.BuildEnvFlagName), []string{}, "build environment variables represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
 	cmd.Flags().StringArrayVar(&opts.ServiceRefs, cli.StripDash(flags.ServiceRefFlagName), []string{}, "`object reference` for a service to bind to the workload \"database=rabbitmq.com/v1beta1:RabbitmqCluster:my-broker\" (\"database-\" to remove, flag can be used multiple times)")
-	cmd.Flags().StringVarP(&opts.ServiceAccountName, cli.StripDash(flags.ServiceAccountFlagName), "s", "", "service account to be used to deliver the workload (to unset, pass empty string)")
+	cmd.Flags().StringVarP(&opts.ServiceAccountName, cli.StripDash(flags.ServiceAccountFlagName), "s", "", "name of service account permitted to create resources submitted by the supply chain (to unset, pass empty string \"\")")
 	cmd.Flags().StringVar(&opts.LimitCPU, cli.StripDash(flags.LimitCPUFlagName), "", "the maximum amount of cpu allowed, in CPU `cores` (500m = .5 cores)")
 	cmd.Flags().StringVar(&opts.LimitMemory, cli.StripDash(flags.LimitMemoryFlagName), "", "the maximum amount of memory allowed, in `bytes` (500Mi = 500MiB = 500 * 1024 * 1024)")
 	cmd.Flags().StringVar(&opts.RequestCPU, cli.StripDash(flags.RequestCPUFlagName), "", "the minimum amount of cpu required, in CPU `cores` (500m = .5 cores)")

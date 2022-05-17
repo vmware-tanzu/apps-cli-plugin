@@ -99,9 +99,7 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	if opts.FilePath != "" {
 		var serviceAccountCopy string
 		// avoid passing a nil pointer to MergeServiceAccountName func
-		if fileWorkload.Spec.ServiceAccountName == nil {
-			serviceAccountCopy = ""
-		} else {
+		if fileWorkload.Spec.ServiceAccountName != nil {
 			serviceAccountCopy = *fileWorkload.Spec.ServiceAccountName
 		}
 

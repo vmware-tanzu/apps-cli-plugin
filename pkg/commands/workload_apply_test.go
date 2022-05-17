@@ -175,6 +175,94 @@ Created workload "my-workload"
 `,
 		},
 		{
+			Name: "Update git source with subPath from file",
+			Args: []string{workloadName, flags.FilePathFlagName, "./testdata/workload-subPath.yaml", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+							Subpath: "./app",
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Update workload:
+...
+  9,  9   |    git:
+ 10, 10   |      ref:
+ 11, 11   |        branch: main
+ 12, 12   |      url: https://github.com/spring-projects/spring-petclinic.git
+     13 + |    subPath: ./app
+
+Updated workload "my-workload"
+`,
+		},
+		{
+			Name: "Create git source with subPath from file",
+			Args: []string{workloadName, flags.FilePathFlagName, "./testdata/workload-subPath.yaml", flags.YesFlagName},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+							Subpath: "./app",
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  source:
+      9 + |    git:
+     10 + |      ref:
+     11 + |        branch: main
+     12 + |      url: https://github.com/spring-projects/spring-petclinic.git
+     13 + |    subPath: ./app
+
+Created workload "my-workload"
+`,
+		},
+		{
 			Name:        "subPath with no source",
 			Args:        []string{workloadName, flags.SubPathFlagName, "./app", flags.YesFlagName},
 			ShouldError: true,
