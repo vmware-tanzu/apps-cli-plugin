@@ -78,7 +78,7 @@ type WorkloadSpec struct {
 	// code.
 	Image              string                       `json:"image,omitempty"`
 	Resources          *corev1.ResourceRequirements `json:"resources,omitempty"`
-	ServiceAccountName string                       `json:"serviceAccountName,omitempty"`
+	ServiceAccountName *string                      `json:"serviceAccountName,omitempty"`
 	ServiceClaims      []WorkloadServiceClaim       `json:"serviceClaims,omitempty"`
 }
 

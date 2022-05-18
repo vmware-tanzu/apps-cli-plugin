@@ -98,7 +98,13 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 	workload.Name = opts.Name
 	workload.Namespace = opts.Namespace
 	if opts.FilePath != "" {
-		workload.Spec.MergeServiceAccountName(fileWorkload.Spec.ServiceAccountName)
+		var serviceAccountCopy string
+		// avoid passing a nil pointer to MergeServiceAccountName func
+		if fileWorkload.Spec.ServiceAccountName != nil {
+			serviceAccountCopy = *fileWorkload.Spec.ServiceAccountName
+		}
+
+		workload.Spec.MergeServiceAccountName(serviceAccountCopy)
 	}
 
 	workload.Merge(fileWorkload)

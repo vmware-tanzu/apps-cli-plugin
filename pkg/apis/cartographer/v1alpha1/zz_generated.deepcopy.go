@@ -596,6 +596,11 @@ func (in *WorkloadSpec) DeepCopyInto(out *WorkloadSpec) {
 		*out = new(corev1.ResourceRequirements)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ServiceAccountName != nil {
+		in, out := &in.ServiceAccountName, &out.ServiceAccountName
+		*out = new(string)
+		**out = **in
+	}
 	if in.ServiceClaims != nil {
 		in, out := &in.ServiceClaims, &out.ServiceClaims
 		*out = make([]WorkloadServiceClaim, len(*in))
