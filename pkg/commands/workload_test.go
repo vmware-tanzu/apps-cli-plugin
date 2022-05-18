@@ -452,6 +452,24 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			},
 			ShouldValidate: true,
 		},
+		{
+			Name: "param yaml",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:  "default",
+				Name:       "my-resource",
+				ParamsYaml: []string{"ports_json={\"name\": \"smtp\", \"port\": 1026}", "ports_nesting_yaml=- deployment:\n    name: smtp\n    port: 1026"},
+			},
+			ShouldValidate: true,
+		},
+		{
+			Name: "dry run",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:  "default",
+				Name:       "my-resource",
+				ParamsYaml: []string{"ports_nesting_yaml=- deployment:\n    name: smtp\n    port: 1026", "ports_json={\"name\": \"smtp\", \"port\": 1026"},
+			},
+			ExpectFieldErrors: validation.ErrInvalidValue("ports_json={\"name\": \"smtp\", \"port\": 1026", flags.ParamYamlFlagName+"[1]"),
+		},
 	}
 
 	table.Run(t)

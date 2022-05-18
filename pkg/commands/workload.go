@@ -80,6 +80,7 @@ type WorkloadOptions struct {
 	Labels      []string
 	Annotations []string
 	Params      []string
+	ParamsYaml  []string
 	Debug       bool
 	LiveUpdate  bool
 
@@ -125,6 +126,7 @@ func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldError
 	errs = errs.Also(validation.DeletableKeyValues(opts.Labels, flags.LabelFlagName))
 	errs = errs.Also(validation.DeletableKeyValues(opts.Annotations, flags.AnnotationFlagName))
 	errs = errs.Also(validation.DeletableKeyValues(opts.Params, flags.ParamFlagName))
+	errs = errs.Also(validation.JsonOrYamlKeyValues(opts.ParamsYaml, flags.ParamYamlFlagName))
 	errs = errs.Also(validation.DeletableEnvVars(opts.Env, flags.EnvFlagName))
 	errs = errs.Also(validation.DeletableEnvVars(opts.BuildEnv, flags.BuildEnvFlagName))
 	errs = errs.Also(validation.DeletableKeyObjectReferences(opts.ServiceRefs, flags.ServiceRefFlagName))
@@ -192,6 +194,20 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 			workload.Spec.RemoveParam(kv[0])
 		} else {
 			workload.Spec.MergeParams(kv[0], kv[1])
+		}
+	}
+
+	for _, p := range opts.ParamsYaml {
+		kv := parsers.DeletableKeyValue(p)
+		if len(kv) == 1 {
+			workload.Spec.RemoveParam(kv[0])
+		} else {
+			o, err := parsers.JsonYamlToObject(kv[1])
+			if err != nil {
+				// errors should be caught during the validation phase
+				panic(err)
+			}
+			workload.Spec.MergeParams(kv[0], o)
 		}
 	}
 
@@ -494,6 +510,7 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.Flags().StringSliceVar(&opts.Labels, cli.StripDash(flags.LabelFlagName), []string{}, "label is represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
 	cmd.Flags().StringSliceVar(&opts.Annotations, cli.StripDash(flags.AnnotationFlagName), []string{}, "annotation is represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
 	cmd.Flags().StringArrayVar(&opts.Params, cli.StripDash(flags.ParamFlagName), []string{}, "additional parameters represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
+	cmd.Flags().StringArrayVar(&opts.ParamsYaml, cli.StripDash(flags.ParamYamlFlagName), []string{}, "specify nested parameters using YAML or JSON formatted values represented as a `\"key=value\" pair` (\"key-\" to remove, flag may be used multiple times)")
 	cmd.Flags().BoolVar(&opts.Debug, cli.StripDash(flags.DebugFlagName), false, "put the workload in debug mode ("+flags.DebugFlagName+"=false to disable)")
 	cmd.Flags().BoolVar(&opts.LiveUpdate, cli.StripDash(flags.LiveUpdateFlagName), false, "put the workload in live update mode ("+flags.LiveUpdateFlagName+"=false to disable)")
 	cmd.Flags().StringVar(&opts.GitRepo, cli.StripDash(flags.GitRepoFlagName), "", "git `url` to remote source code")

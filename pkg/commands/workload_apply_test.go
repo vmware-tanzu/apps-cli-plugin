@@ -2317,6 +2317,146 @@ Create workload:
 Created workload "spring-petclinic"
 `,
 		},
+		{
+			Name: "create with multiple param-yaml using valid json and yaml",
+			Args: []string{flags.FilePathFlagName, "testdata/param-yaml.yaml",
+				flags.ParamYamlFlagName, `ports_json={"name": "smtp", "port": 1026}`,
+				flags.ParamYamlFlagName, "ports_nesting_yaml=- deployment:\n    name: smtp\n    port: 1026",
+				flags.YesFlagName},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							apis.AppPartOfLabelName:               "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "my-reponame/my-image:my-tag",
+						Params: []cartov1alpha1.Param{
+							{
+								Name:  "ports_json",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"name":"smtp","port":1026}`)},
+							}, {
+								Name:  "ports_nesting_yaml",
+								Value: apiextensionsv1.JSON{Raw: []byte(`[{"deployment":{"name":"smtp","port":1026}}]`)},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    app.kubernetes.io/part-of: spring-petclinic
+      7 + |    apps.tanzu.vmware.com/workload-type: web
+      8 + |  name: spring-petclinic
+      9 + |  namespace: default
+     10 + |spec:
+     11 + |  image: my-reponame/my-image:my-tag
+     12 + |  params:
+     13 + |  - name: ports_json
+     14 + |    value:
+     15 + |      name: smtp
+     16 + |      port: 1026
+     17 + |  - name: ports_nesting_yaml
+     18 + |    value:
+     19 + |    - deployment:
+     20 + |        name: smtp
+     21 + |        port: 1026
+
+Created workload "spring-petclinic"
+`,
+		},
+		{
+			ShouldError: true,
+			Name:        "failse create with multiple param-yaml using invalid json",
+			Args: []string{flags.FilePathFlagName, "testdata/param-yaml.yaml",
+				flags.ParamYamlFlagName, `ports_json={"name": "smtp", "port": 1026`,
+				flags.ParamYamlFlagName, `ports_nesting_yaml=- deployment:\n    name: smtp\n    port: 1026`,
+				flags.YesFlagName},
+			ExpectOutput: "",
+		},
+		{
+			Name: "create with multiple param-yaml using valid json and yaml from file",
+			Args: []string{flags.FilePathFlagName, "testdata/workload-param-yaml.yaml",
+				flags.YesFlagName},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							apis.AppPartOfLabelName:               "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						},
+						Params: []cartov1alpha1.Param{
+							{
+								Name:  "ports",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"ports":[{"name":"http","port":8080,"protocol":"TCP","targetPort":8080},{"name":"https","port":8443,"protocol":"TCP","targetPort":8443}]}`)},
+							}, {
+								Name:  "services",
+								Value: apiextensionsv1.JSON{Raw: []byte(`[{"image":"mysql:5.7","name":"mysql"},{"image":"postgres:9.6","name":"postgres"}]`)},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    app.kubernetes.io/part-of: spring-petclinic
+      7 + |    apps.tanzu.vmware.com/workload-type: web
+      8 + |  name: spring-petclinic
+      9 + |  namespace: default
+     10 + |spec:
+     11 + |  params:
+     12 + |  - name: ports
+     13 + |    value:
+     14 + |      ports:
+     15 + |      - name: http
+     16 + |        port: 8080
+     17 + |        protocol: TCP
+     18 + |        targetPort: 8080
+     19 + |      - name: https
+     20 + |        port: 8443
+     21 + |        protocol: TCP
+     22 + |        targetPort: 8443
+     23 + |  - name: services
+     24 + |    value:
+     25 + |    - image: mysql:5.7
+     26 + |      name: mysql
+     27 + |    - image: postgres:9.6
+     28 + |      name: postgres
+     29 + |  source:
+     30 + |    git:
+     31 + |      ref:
+     32 + |        branch: main
+     33 + |      url: https://github.com/spring-projects/spring-petclinic.git
+
+Created workload "spring-petclinic"
+`,
+		},
 	}
 
 	table.Run(t, scheme, func(ctx context.Context, c *cli.Config) *cobra.Command {

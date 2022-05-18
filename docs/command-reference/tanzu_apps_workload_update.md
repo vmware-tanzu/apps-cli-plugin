@@ -49,6 +49,7 @@ tanzu apps workload update --file workload.yaml
       --local-path path                path to a directory, .zip, or .jar file containing workload source code
   -n, --namespace name                 kubernetes namespace (defaulted from kube config)
       --param "key=value" pair         additional parameters represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
+      --param-yaml "key=value" pair    specify nested parameters using YAML or JSON formatted values represented as a "key=value" pair ("key-" to remove, flag may be used multiple times)
       --request-cpu cores              the minimum amount of cpu required, in CPU cores (500m = .5 cores)
       --request-memory bytes           the minimum amount of memory required, in bytes (500Mi = 500MiB = 500 * 1024 * 1024)
   -s, --service-account string         name of service account permitted to create resources submitted by the supply chain (to unset, pass empty string "")
