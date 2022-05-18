@@ -19,35 +19,24 @@ package source
 import (
 	"archive/zip"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 )
 
-func HandleZip(fileName string) (string, error) {
-	tmpDir, err := ioutil.TempDir("", "")
-	if err != nil {
-		return "", err
-	}
+// ExtractZip extracts contents of fileName zip file to dir
+// Returns error if there is any error reading from zip file into dir
+func ExtractZip(dir, fileName string) error {
 	file, err := os.Open(fileName)
 	if err != nil {
-		return "", err
+		return err
 	}
 	info, err := file.Stat()
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	defer file.Close()
-	if err = ExtractZip(file, info.Size(), tmpDir); err != nil {
-		return "", err
-	}
-	return tmpDir, nil
-}
-
-func ExtractZip(reader io.ReaderAt, size int64, dir string) error {
-	zipReader, err := zip.NewReader(reader, size)
+	zipReader, err := zip.NewReader(file, info.Size())
 	if err != nil {
 		return err
 	}

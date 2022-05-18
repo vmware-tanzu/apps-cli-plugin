@@ -37,6 +37,10 @@ func TestIsDir(t *testing.T) {
 		name:     "valid dir",
 		expected: true,
 		dirName:  "testdata/hello_jar",
+	}, {
+		name:     "non existent file",
+		expected: false,
+		dirName:  "testdata/nondir",
 	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -119,14 +123,20 @@ func TestHandleZip(t *testing.T) {
 	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := HandleZip(test.file)
-			defer os.RemoveAll(got)
+			tmpDir, err := ioutil.TempDir("", "")
+			defer os.RemoveAll(tmpDir)
+			if err != nil {
+				t.Error("failed to create temp dir", err)
+				return
+			}
+
+			err = ExtractZip(tmpDir, test.file)
 			if (err == nil) == test.shouldErr {
-				t.Errorf("HandleZip() shouldErr %t %v", test.shouldErr, err)
+				t.Errorf("ExtractZip() shouldErr %t %v", test.shouldErr, err)
 			} else if test.shouldErr {
 				return
 			}
-			err = filepath.Walk(got,
+			err = filepath.Walk(tmpDir,
 				func(path string, info os.FileInfo, err error) error {
 					if err != nil {
 						return err
@@ -142,7 +152,7 @@ func TestHandleZip(t *testing.T) {
 					}
 
 					if diff := cmp.Diff(wantFile, gotFile); diff != "" {
-						t.Errorf("HandleZip() (-want, +got) = %v", diff)
+						t.Errorf("ExtractZip() (-want, +got) = %v", diff)
 					}
 					return nil
 				})

@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -334,12 +335,15 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	if source.IsDir(opts.LocalPath) {
 		contentDir = opts.LocalPath
 	} else if source.IsZip(opts.LocalPath) {
-		zipContentsDir, err := source.HandleZip(opts.LocalPath)
+		zipContentsDir, err := ioutil.TempDir("", "")
+		defer os.RemoveAll(zipContentsDir)
 		if err != nil {
+			return false, err
+		}
+		if err = source.ExtractZip(zipContentsDir, opts.LocalPath); err != nil {
 			c.Errorf("Failed to extract file contents from %q. \n", opts.LocalPath)
 			return false, err
 		}
-		defer os.RemoveAll(zipContentsDir)
 		contentDir = zipContentsDir
 	} else {
 		return false, fmt.Errorf("unsupported file format %q", opts.LocalPath)
