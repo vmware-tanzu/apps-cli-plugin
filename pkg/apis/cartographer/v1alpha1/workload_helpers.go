@@ -79,7 +79,11 @@ func (w *Workload) loadAndValidateDocuments(in io.Reader) error {
 }
 
 func (w *WorkloadSpec) MergeServiceAccountName(serviceAccountName string) {
-	w.ServiceAccountName = serviceAccountName
+	var serviceAccountNamePtr *string
+	if serviceAccountName != "" {
+		serviceAccountNamePtr = &serviceAccountName
+	}
+	w.ServiceAccountName = serviceAccountNamePtr
 }
 
 func (w *Workload) Merge(updates *Workload) {

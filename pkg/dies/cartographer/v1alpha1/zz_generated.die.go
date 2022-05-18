@@ -603,7 +603,7 @@ func (d *WorkloadSpecDie) Resources(v *corev1.ResourceRequirements) *WorkloadSpe
 	})
 }
 
-func (d *WorkloadSpecDie) ServiceAccountName(v string) *WorkloadSpecDie {
+func (d *WorkloadSpecDie) ServiceAccountName(v *string) *WorkloadSpecDie {
 	return d.DieStamp(func(r *cartographerv1alpha1.WorkloadSpec) {
 		r.ServiceAccountName = v
 	})
