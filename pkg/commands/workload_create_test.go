@@ -93,6 +93,7 @@ func TestWorkloadCreateCommand(t *testing.T) {
 	workloadName := "my-workload"
 	gitRepo := "https://example.com/repo.git"
 	gitBranch := "main"
+	serviceAccountName := "my-service-account"
 
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
@@ -763,7 +764,7 @@ spec:
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
-						ServiceAccountName: "my-service-account",
+						ServiceAccountName: &serviceAccountName,
 						Source: &cartov1alpha1.Source{
 							Git: &cartov1alpha1.GitSource{
 								URL: "https://github.com/sample-accelerators/spring-petclinic",

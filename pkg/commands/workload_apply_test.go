@@ -83,6 +83,8 @@ func TestWorkloadApplyCommand(t *testing.T) {
 	file := "testdata/workload.yaml"
 	gitRepo := "https://example.com/repo.git"
 	gitBranch := "main"
+	serviceAccountName := "my-service-account"
+	serviceAccountNameUpdated := "my-service-account-updated"
 
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
@@ -1780,7 +1782,7 @@ Created workload "my-workload"
 `,
 		},
 		{
-			Name: "update serviceAccountName",
+			Name: "update serviceAccountName via file",
 			Args: []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
@@ -1801,7 +1803,7 @@ Created workload "my-workload"
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
-						ServiceAccountName: "my-service-account",
+						ServiceAccountName: &serviceAccountName,
 						Source: &cartov1alpha1.Source{
 							Git: &cartov1alpha1.GitSource{
 								URL: "https://github.com/sample-accelerators/spring-petclinic",
@@ -1838,7 +1840,7 @@ Updated workload "spring-petclinic"
 `,
 		},
 		{
-			Name: "delete serviceAccountName by setting to empty",
+			Name: "delete serviceAccountName by setting to empty in file",
 			Args: []string{flags.FilePathFlagName, "testdata/no-service-account-name.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
@@ -1846,7 +1848,7 @@ Updated workload "spring-petclinic"
 						d.Name("spring-petclinic")
 						d.AddLabel("preserve-me", "should-exist")
 					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-					d.ServiceAccountName("my-service-account")
+					d.ServiceAccountName(&serviceAccountName)
 				}),
 			},
 			ExpectUpdates: []client.Object{
@@ -1861,7 +1863,7 @@ Updated workload "spring-petclinic"
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
-						ServiceAccountName: "",
+						ServiceAccountName: nil,
 						Source: &cartov1alpha1.Source{
 							Git: &cartov1alpha1.GitSource{
 								URL: "https://github.com/sample-accelerators/spring-petclinic",
@@ -1897,6 +1899,66 @@ Updated workload "spring-petclinic"
 `,
 		},
 		{
+			Name: "updated serviceAccountName taking priority from flag",
+			Args: []string{flags.FilePathFlagName, "testdata/no-service-account-name.yaml", flags.ServiceAccountFlagName, serviceAccountNameUpdated, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("preserve-me", "should-exist")
+					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+					d.ServiceAccountName(&serviceAccountName)
+				}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"preserve-me":                         "should-exist",
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: &serviceAccountNameUpdated,
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Update workload:
+...
+  2,  2   |apiVersion: carto.run/v1alpha1
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  labels:
+      6 + |    app.kubernetes.io/part-of: spring-petclinic
+      7 + |    apps.tanzu.vmware.com/workload-type: web
+  6,  8   |    preserve-me: should-exist
+  7,  9   |  name: spring-petclinic
+  8, 10   |  namespace: default
+  9, 11   |spec:
+ 10     - |  serviceAccountName: my-service-account
+     12 + |  serviceAccountName: my-service-account-updated
+     13 + |  source:
+     14 + |    git:
+     15 + |      ref:
+     16 + |        tag: tap-1.1
+     17 + |      url: https://github.com/sample-accelerators/spring-petclinic
+
+Updated workload "spring-petclinic"
+`,
+		},
+		{
 			Name: "delete serviceAccountName field",
 			Args: []string{flags.FilePathFlagName, "testdata/no-service-account-name.yaml", flags.YesFlagName},
 			GivenObjects: []client.Object{
@@ -1905,7 +1967,7 @@ Updated workload "spring-petclinic"
 						d.Name("spring-petclinic")
 						d.AddLabel("preserve-me", "should-exist")
 					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-					d.ServiceAccountName("my-service-account")
+					d.ServiceAccountName(&serviceAccountName)
 				}),
 			},
 			ExpectUpdates: []client.Object{
@@ -1961,7 +2023,7 @@ Updated workload "spring-petclinic"
 				parent.
 					SpecDie(
 						func(d *diecartov1alpha1.WorkloadSpecDie) {
-							d.ServiceAccountName("my-service-account")
+							d.ServiceAccountName(&serviceAccountName)
 							d.Source(&cartov1alpha1.Source{
 								Git: &cartov1alpha1.GitSource{
 									URL: "https://github.com/sample-accelerators/spring-petclinic",
@@ -1980,7 +2042,7 @@ Updated workload "spring-petclinic"
 						Labels:    map[string]string{},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
-						ServiceAccountName: "my-service-account",
+						ServiceAccountName: &serviceAccountName,
 						Source: &cartov1alpha1.Source{
 							Git: &cartov1alpha1.GitSource{
 								URL: "https://github.com/sample-accelerators/spring-petclinic",
@@ -2007,6 +2069,117 @@ Updated workload "my-workload"
 `,
 		},
 		{
+			Name: "update serviceAccountName field via flag",
+			Args: []string{workloadName, flags.ServiceAccountFlagName, serviceAccountNameUpdated, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
+							d.ServiceAccountName(&serviceAccountName)
+							d.Source(&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/sample-accelerators/spring-petclinic",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+									},
+								},
+							})
+						}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: &serviceAccountNameUpdated,
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Update workload:
+...
+  4,  4   |metadata:
+  5,  5   |  name: my-workload
+  6,  6   |  namespace: default
+  7,  7   |spec:
+  8     - |  serviceAccountName: my-service-account
+      8 + |  serviceAccountName: my-service-account-updated
+  9,  9   |  source:
+ 10, 10   |    git:
+ 11, 11   |      ref:
+ 12, 12   |        branch: main
+...
+
+Updated workload "my-workload"
+`,
+		},
+		{
+			Name: "delete serviceAccountName via flag",
+			Args: []string{workloadName, flags.ServiceAccountFlagName, "", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
+							d.ServiceAccountName(&serviceAccountName)
+							d.Source(&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/sample-accelerators/spring-petclinic",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+									},
+								},
+							})
+						}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: nil,
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Update workload:
+...
+  4,  4   |metadata:
+  5,  5   |  name: my-workload
+  6,  6   |  namespace: default
+  7,  7   |spec:
+  8     - |  serviceAccountName: my-service-account
+  9,  8   |  source:
+ 10,  9   |    git:
+ 11, 10   |      ref:
+ 12, 11   |        branch: main
+...
+
+Updated workload "my-workload"
+`,
+		},
+		{
 			Name: "create with serviceAccountName",
 			Args: []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.YesFlagName},
 			ExpectCreates: []client.Object{
@@ -2020,7 +2193,7 @@ Updated workload "my-workload"
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
-						ServiceAccountName: "my-service-account",
+						ServiceAccountName: &serviceAccountName,
 						Source: &cartov1alpha1.Source{
 							Git: &cartov1alpha1.GitSource{
 								URL: "https://github.com/sample-accelerators/spring-petclinic",
@@ -2045,6 +2218,96 @@ Create workload:
       9 + |  namespace: default
      10 + |spec:
      11 + |  serviceAccountName: my-service-account
+     12 + |  source:
+     13 + |    git:
+     14 + |      ref:
+     15 + |        tag: tap-1.1
+     16 + |      url: https://github.com/sample-accelerators/spring-petclinic
+
+Created workload "spring-petclinic"
+`,
+		},
+		{
+			Name: "create with serviceAccountName via flag",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.ServiceAccountFlagName, serviceAccountName, flags.YesFlagName},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: &serviceAccountName,
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  serviceAccountName: my-service-account
+      9 + |  source:
+     10 + |    git:
+     11 + |      ref:
+     12 + |        branch: main
+     13 + |      url: https://example.com/repo.git
+
+Created workload "my-workload"
+`,
+		},
+		{
+			Name: "create with serviceAccountName from file and flag",
+			Args: []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.ServiceAccountFlagName, serviceAccountNameUpdated, flags.YesFlagName},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							apis.AppPartOfLabelName:               "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: &serviceAccountNameUpdated,
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    app.kubernetes.io/part-of: spring-petclinic
+      7 + |    apps.tanzu.vmware.com/workload-type: web
+      8 + |  name: spring-petclinic
+      9 + |  namespace: default
+     10 + |spec:
+     11 + |  serviceAccountName: my-service-account-updated
      12 + |  source:
      13 + |    git:
      14 + |      ref:
