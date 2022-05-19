@@ -1591,42 +1591,50 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 		expected       string
 		shouldError    bool
 		expectedOutput string
-	}{
-		{
-			name:     "local source",
-			args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
-			input:    fmt.Sprintf("%s/hello:source", registryHost),
-			expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
-			expectedOutput: `
+	}{{
+		name:     "local source",
+		args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
+		input:    fmt.Sprintf("%s/hello:source", registryHost),
+		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expectedOutput: `
 Publishing source in "testdata/local-source" to "` + registryHost + `/hello:source"...
 Published source
 `,
-		},
-		{
-			name:     "with digest",
-			args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
-			input:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
-			expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
-			expectedOutput: `
+	}, {
+		name:     "jar file",
+		args:     []string{flags.LocalPathFlagName, "testdata/hello.go.jar", flags.YesFlagName},
+		input:    fmt.Sprintf("%s/hello:source", registryHost),
+		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		expectedOutput: `
+Publishing source in "testdata/hello.go.jar" to "` + registryHost + `/hello:source"...
+Published source
+`,
+	}, {
+		name:        "invalid file",
+		args:        []string{flags.LocalPathFlagName, "testdata/invalid.zip", flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source", registryHost),
+		shouldError: true,
+	}, {
+		name:     "with digest",
+		args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
+		input:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
+		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expectedOutput: `
 Publishing source in "testdata/local-source" to "` + registryHost + `/hello:source"...
 Published source
 `,
-		},
-		{
-			name:           "no local path",
-			args:           []string{},
-			input:          fmt.Sprintf("%s/hello:source", registryHost),
-			expected:       fmt.Sprintf("%s/hello:source", registryHost),
-			expectedOutput: "",
-		},
-		{
-			name:        "publish local source with error",
-			args:        []string{flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
-			input:       "a",
-			shouldError: true,
-		},
-	}
-
+	}, {
+		name:           "no local path",
+		args:           []string{},
+		input:          fmt.Sprintf("%s/hello:source", registryHost),
+		expected:       fmt.Sprintf("%s/hello:source", registryHost),
+		expectedOutput: "",
+	}, {
+		name:        "publish local source with error",
+		args:        []string{flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
+		input:       "a",
+		shouldError: true,
+	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			scheme := runtime.NewScheme()
