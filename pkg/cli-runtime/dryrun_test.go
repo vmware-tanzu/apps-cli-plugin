@@ -23,17 +23,17 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	rtesting "github.com/vmware-labs/reconciler-runtime/testing"
 
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
+	clitestingresource "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing/resource"
 )
 
 func TestDryRunResource(t *testing.T) {
 	stdout := &bytes.Buffer{}
 	ctx := cli.WithStdout(context.Background(), stdout)
-	resource := &rtesting.TestResource{}
+	resource := &clitestingresource.TestResource{}
 
-	cli.DryRunResource(ctx, resource, rtesting.GroupVersion.WithKind("TestResource"))
+	cli.DryRunResource(ctx, resource, clitestingresource.GroupVersion.WithKind("TestResource"))
 
 	expected := strings.TrimSpace(`
 ---
@@ -41,13 +41,7 @@ apiVersion: testing.reconciler.runtime/v1
 kind: TestResource
 metadata:
   creationTimestamp: null
-spec:
-  template:
-    metadata:
-      creationTimestamp: null
-    spec:
-      containers: null
-status: {}
+spec: {}
 `)
 	actual := strings.TrimSpace(stdout.String())
 	if diff := cmp.Diff(expected, actual); diff != "" {

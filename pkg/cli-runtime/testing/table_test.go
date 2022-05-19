@@ -23,13 +23,13 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	rtesting "github.com/vmware-labs/reconciler-runtime/testing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
+	clitestingresource "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing/resource"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 )
 
@@ -60,7 +60,7 @@ func (opts *TestResourceCreateOptions) Validate(ctx context.Context) validation.
 }
 
 func (opts *TestResourceCreateOptions) Exec(ctx context.Context, c *cli.Config) error {
-	resource := &rtesting.TestResource{
+	resource := &clitestingresource.TestResource{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: opts.Namespace,
 			Name:      opts.Name,
@@ -127,7 +127,7 @@ func TestValidatableTestSuite(t *testing.T) {
 
 func TestWorkloadCreateCommand(t *testing.T) {
 	scheme := runtime.NewScheme()
-	_ = rtesting.AddToScheme(scheme)
+	_ = clitestingresource.AddToScheme(scheme)
 
 	table := clitesting.CommandTestSuite{
 		{
@@ -139,12 +139,12 @@ func TestWorkloadCreateCommand(t *testing.T) {
 			Name: "create resource",
 			Args: []string{"my-resource"},
 			ExpectCreates: []client.Object{
-				&rtesting.TestResource{
+				&clitestingresource.TestResource{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "default",
 						Name:      "my-resource",
 					},
-					Spec: rtesting.TestResourceSpec{},
+					Spec: clitestingresource.TestResourceSpec{},
 				},
 			},
 			ExpectOutput: `
@@ -155,21 +155,21 @@ Created resource "my-resource"
 			Name: "create failed",
 			Args: []string{"my-resource"},
 			GivenObjects: []client.Object{
-				&rtesting.TestResource{
+				&clitestingresource.TestResource{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "default",
 						Name:      "my-resource",
 					},
-					Spec: rtesting.TestResourceSpec{},
+					Spec: clitestingresource.TestResourceSpec{},
 				},
 			},
 			ExpectCreates: []client.Object{
-				&rtesting.TestResource{
+				&clitestingresource.TestResource{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: "default",
 						Name:      "my-resource",
 					},
-					Spec: rtesting.TestResourceSpec{},
+					Spec: clitestingresource.TestResourceSpec{},
 				},
 			},
 			ShouldError: true,

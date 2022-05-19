@@ -26,14 +26,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+
+	clitestingresource "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing/resource"
 )
 
 func TestNewClient(t *testing.T) {
 	scheme := runtime.NewScheme()
-	rtesting.AddToScheme(scheme)
+	clitestingresource.AddToScheme(scheme)
 
 	c := NewClient("testdata/.kube/config", "", scheme)
-	r := &rtesting.TestResource{
+	r := &clitestingresource.TestResource{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "my-namespace",
 			Name:      "my-resource",
@@ -53,12 +55,12 @@ func TestNewClient(t *testing.T) {
 		t.Errorf("expected discovery client")
 	}
 
-	tr := &rtesting.TestResource{}
+	tr := &clitestingresource.TestResource{}
 	if err := c.Get(ctx, types.NamespacedName{Namespace: "my-namespace", Name: "my-resource"}, tr); err != nil {
 		t.Errorf("error durring Get(): %v", err)
 	}
 
-	trl := &rtesting.TestResourceList{}
+	trl := &clitestingresource.TestResourceList{}
 	if err := c.List(ctx, trl); err != nil {
 		t.Errorf("error durring List(): %v", err)
 	} else if len(trl.Items) != 1 {
@@ -80,7 +82,7 @@ func TestNewClient(t *testing.T) {
 
 func TestNewClientWithEnvVarKubeconfig(t *testing.T) {
 	scheme := runtime.NewScheme()
-	rtesting.AddToScheme(scheme)
+	clitestingresource.AddToScheme(scheme)
 
 	kubeconfig, kubeconfigisset := os.LookupEnv("KUBECONFIG")
 	defer func() {
@@ -106,7 +108,7 @@ func TestNewClientWithEnvVarKubeconfig(t *testing.T) {
 
 func TestNewClientWithEnvVarKubeconfigPathWithColon(t *testing.T) {
 	scheme := runtime.NewScheme()
-	rtesting.AddToScheme(scheme)
+	clitestingresource.AddToScheme(scheme)
 
 	kubeconfig, kubeconfigisset := os.LookupEnv("KUBECONFIG")
 	defer func() {
