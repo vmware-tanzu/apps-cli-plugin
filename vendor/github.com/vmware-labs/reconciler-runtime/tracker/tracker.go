@@ -23,13 +23,16 @@ SPDX-License-Identifier: Apache-2.0
 package tracker
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Tracker defines the interface through which an object can register
@@ -37,10 +40,13 @@ import (
 type Tracker interface {
 	// Track tells us that "obj" is tracking changes to the
 	// referenced object.
-	Track(ref Key, obj types.NamespacedName)
+	Track(ctx context.Context, ref Key, obj types.NamespacedName)
+
+	// TrackChild tracks the child by the parent.
+	TrackChild(ctx context.Context, parent, child client.Object, s *runtime.Scheme) error
 
 	// Lookup returns actively tracked objects for the reference.
-	Lookup(ref Key) []types.NamespacedName
+	Lookup(ctx context.Context, ref Key) []types.NamespacedName
 }
 
 func NewKey(gvk schema.GroupVersionKind, namespacedName types.NamespacedName) Key {
@@ -63,9 +69,8 @@ func (k *Key) String() string {
 // register a particular resource as watching a resource for
 // a particular lease duration.  This watch must be refreshed
 // periodically (e.g. by a controller resync) or it will expire.
-func New(lease time.Duration, log logr.Logger) Tracker {
+func New(lease time.Duration) Tracker {
 	return &impl{
-		log:           log,
 		leaseDuration: lease,
 	}
 }
@@ -89,8 +94,27 @@ var _ Tracker = (*impl)(nil)
 // set is a map from keys to expirations
 type set map[types.NamespacedName]time.Time
 
+// TrackChild implements Tracker.
+func (i *impl) TrackChild(ctx context.Context, parent, child client.Object, s *runtime.Scheme) error {
+	gvks, _, err := s.ObjectKinds(child)
+	if err != nil {
+		return err
+	}
+	if len(gvks) != 1 {
+		return fmt.Errorf("expected exactly one GVK, found: %s", gvks)
+	}
+	i.Track(
+		ctx,
+		NewKey(gvks[0], types.NamespacedName{Namespace: child.GetNamespace(), Name: child.GetName()}),
+		types.NamespacedName{Namespace: parent.GetNamespace(), Name: parent.GetName()},
+	)
+	return nil
+}
+
 // Track implements Tracker.
-func (i *impl) Track(ref Key, obj types.NamespacedName) {
+func (i *impl) Track(ctx context.Context, ref Key, obj types.NamespacedName) {
+	log := logr.FromContextOrDiscard(ctx).WithName("tracker")
+
 	i.m.Lock()
 	defer i.m.Unlock()
 	if i.mapping == nil {
@@ -106,7 +130,7 @@ func (i *impl) Track(ref Key, obj types.NamespacedName) {
 
 	i.mapping[ref.String()] = l
 
-	i.log.Info("tracking resource", "ref", ref.String(), "obj", obj.String(), "ttl", l[obj].UTC().Format(time.RFC3339))
+	log.Info("tracking resource", "ref", ref.String(), "obj", obj.String(), "ttl", l[obj].UTC().Format(time.RFC3339))
 }
 
 func isExpired(expiry time.Time) bool {
@@ -114,7 +138,9 @@ func isExpired(expiry time.Time) bool {
 }
 
 // Lookup implements Tracker.
-func (i *impl) Lookup(ref Key) []types.NamespacedName {
+func (i *impl) Lookup(ctx context.Context, ref Key) []types.NamespacedName {
+	log := logr.FromContextOrDiscard(ctx).WithName("tracker")
+
 	items := []types.NamespacedName{}
 
 	// TODO(mattmoor): Consider locking the mapping (global) for a
@@ -123,7 +149,7 @@ func (i *impl) Lookup(ref Key) []types.NamespacedName {
 	defer i.m.Unlock()
 	s, ok := i.mapping[ref.String()]
 	if !ok {
-		i.log.V(2).Info("no tracked items found", "ref", ref.String())
+		log.V(2).Info("no tracked items found", "ref", ref.String())
 		return items
 	}
 
@@ -140,7 +166,7 @@ func (i *impl) Lookup(ref Key) []types.NamespacedName {
 		delete(i.mapping, ref.String())
 	}
 
-	i.log.V(1).Info("found tracked items", "ref", ref.String(), "items", items)
+	log.V(1).Info("found tracked items", "ref", ref.String(), "items", items)
 
 	return items
 }

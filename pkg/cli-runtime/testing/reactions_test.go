@@ -21,11 +21,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	rtesting "github.com/vmware-labs/reconciler-runtime/testing"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgotesting "k8s.io/client-go/testing"
 
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
+	clitestingresource "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing/resource"
 )
 
 func TestValidateCreates(t *testing.T) {
@@ -38,19 +38,19 @@ func TestValidateCreates(t *testing.T) {
 	}{{
 		name: "valid create",
 		action: clientgotesting.NewCreateAction(
-			rtesting.SchemeBuilder.GroupVersion.WithResource("TestResource"),
+			clitestingresource.SchemeBuilder.GroupVersion.WithResource("TestResource"),
 			"default",
-			&rtesting.TestResource{},
+			&clitestingresource.TestResource{},
 		),
 		handled:   false,
 		shouldErr: false,
 	}, {
 		name: "invalid create",
 		action: clientgotesting.NewCreateAction(
-			rtesting.SchemeBuilder.GroupVersion.WithResource("TestResource"),
+			clitestingresource.SchemeBuilder.GroupVersion.WithResource("TestResource"),
 			"default",
-			&rtesting.TestResource{
-				Spec: rtesting.TestResourceSpec{
+			&clitestingresource.TestResource{
+				Spec: clitestingresource.TestResourceSpec{
 					Fields: map[string]string{
 						"invalid": "true",
 					},
@@ -62,9 +62,9 @@ func TestValidateCreates(t *testing.T) {
 	}, {
 		name: "not validatable",
 		action: clientgotesting.NewCreateAction(
-			rtesting.SchemeBuilder.GroupVersion.WithResource("TestResourceNoStatus"),
+			clitestingresource.SchemeBuilder.GroupVersion.WithResource("TestResource"),
 			"default",
-			&rtesting.TestResourceNoStatus{},
+			&clitestingresource.TestResource{},
 		),
 		handled:   false,
 		shouldErr: false,
@@ -97,19 +97,19 @@ func TestValidateUpdates(t *testing.T) {
 	}{{
 		name: "valid create",
 		action: clientgotesting.NewUpdateAction(
-			rtesting.SchemeBuilder.GroupVersion.WithResource("TestResource"),
+			clitestingresource.SchemeBuilder.GroupVersion.WithResource("TestResource"),
 			"default",
-			&rtesting.TestResource{},
+			&clitestingresource.TestResource{},
 		),
 		handled:   false,
 		shouldErr: false,
 	}, {
 		name: "invalid create",
 		action: clientgotesting.NewUpdateAction(
-			rtesting.SchemeBuilder.GroupVersion.WithResource("TestResource"),
+			clitestingresource.SchemeBuilder.GroupVersion.WithResource("TestResource"),
 			"default",
-			&rtesting.TestResource{
-				Spec: rtesting.TestResourceSpec{
+			&clitestingresource.TestResource{
+				Spec: clitestingresource.TestResourceSpec{
 					Fields: map[string]string{
 						"invalid": "true",
 					},
@@ -121,9 +121,9 @@ func TestValidateUpdates(t *testing.T) {
 	}, {
 		name: "not validatable",
 		action: clientgotesting.NewUpdateAction(
-			rtesting.SchemeBuilder.GroupVersion.WithResource("TestResourceNoStatus"),
+			clitestingresource.SchemeBuilder.GroupVersion.WithResource("TestResourceNoStatus"),
 			"default",
-			&rtesting.TestResourceNoStatus{},
+			&clitestingresource.TestResource{},
 		),
 		handled:   false,
 		shouldErr: false,

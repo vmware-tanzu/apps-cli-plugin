@@ -690,9 +690,8 @@ github.com/vbatts/tar-split/archive/tar
 ## explicit
 github.com/vito/go-interact/interact
 github.com/vito/go-interact/interact/terminal
-# github.com/vmware-labs/reconciler-runtime v0.4.0
+# github.com/vmware-labs/reconciler-runtime v0.5.0
 ## explicit; go 1.17
-github.com/vmware-labs/reconciler-runtime/apis
 github.com/vmware-labs/reconciler-runtime/reconcilers
 github.com/vmware-labs/reconciler-runtime/testing
 github.com/vmware-labs/reconciler-runtime/tracker

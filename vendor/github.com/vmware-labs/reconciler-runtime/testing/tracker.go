@@ -6,9 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 package testing
 
 import (
+	"context"
+	"fmt"
 	"time"
 
-	"github.com/go-logr/logr"
 	"github.com/vmware-labs/reconciler-runtime/tracker"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -54,7 +55,7 @@ func NewTrackRequest(t, b client.Object, scheme *runtime.Scheme) TrackRequest {
 const maxDuration = time.Duration(1<<63 - 1)
 
 func createTracker() *mockTracker {
-	return &mockTracker{Tracker: tracker.New(maxDuration, logr.Discard()), reqs: []TrackRequest{}}
+	return &mockTracker{Tracker: tracker.New(maxDuration), reqs: []TrackRequest{}}
 }
 
 type mockTracker struct {
@@ -64,15 +65,27 @@ type mockTracker struct {
 
 var _ tracker.Tracker = &mockTracker{}
 
-func (t *mockTracker) Track(ref tracker.Key, obj types.NamespacedName) {
-	t.Tracker.Track(ref, obj)
+func (t *mockTracker) Track(ctx context.Context, ref tracker.Key, obj types.NamespacedName) {
+	t.Tracker.Track(ctx, ref, obj)
 	t.reqs = append(t.reqs, TrackRequest{Tracked: ref, Tracker: obj})
 }
 
-func (t *mockTracker) getTrackRequests() []TrackRequest {
-	result := []TrackRequest{}
-	for _, req := range t.reqs {
-		result = append(result, req)
+func (t *mockTracker) TrackChild(ctx context.Context, parent, child client.Object, s *runtime.Scheme) error {
+	gvks, _, err := s.ObjectKinds(child)
+	if err != nil {
+		return err
 	}
-	return result
+	if len(gvks) != 1 {
+		return fmt.Errorf("expected exactly one GVK, found: %s", gvks)
+	}
+	t.Track(
+		ctx,
+		tracker.NewKey(gvks[0], types.NamespacedName{Namespace: child.GetNamespace(), Name: child.GetName()}),
+		types.NamespacedName{Namespace: parent.GetNamespace(), Name: parent.GetName()},
+	)
+	return nil
+}
+
+func (t *mockTracker) getTrackRequests() []TrackRequest {
+	return append([]TrackRequest{}, t.reqs...)
 }

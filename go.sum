@@ -1684,8 +1684,8 @@ github.com/vishvananda/netns v0.0.0-20191106174202-0a2b9b5464df/go.mod h1:JP3t17
 github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae/go.mod h1:DD4vA1DwXk04H54A1oHXtwZmA0grkVMdPxx/VGLCah0=
 github.com/vito/go-interact v0.0.0-20171111012221-fa338ed9e9ec h1:Klu98tQ9Z1t23gvC7p7sCmvxkZxLhBHLNyrUPsWsYFg=
 github.com/vito/go-interact v0.0.0-20171111012221-fa338ed9e9ec/go.mod h1:wPlfmglZmRWMYv/qJy3P+fK/UnoQB5ISk4txfNd9tDo=
-github.com/vmware-labs/reconciler-runtime v0.4.0 h1:Pcuzt+m6mW9+4RhxhndKmcErLSa+cvBN8gvRWkySXEo=
-github.com/vmware-labs/reconciler-runtime v0.4.0/go.mod h1:Z9ZA9wMnhi2vbbKWpuuQfWpaxVjAYz6M3492vrc99DY=
+github.com/vmware-labs/reconciler-runtime v0.5.0 h1:e167re6eD8BoIjvmnFJaa4Iit/kyGRNVCaNR97XEUnk=
+github.com/vmware-labs/reconciler-runtime v0.5.0/go.mod h1:T1tBdp+m9MW3OS/addHIle+qZE4IwcU0u+nTC+PdbPk=
 github.com/vmware-tanzu/carvel-imgpkg v0.23.1 h1:sUHDtnvcIMMcY/Pudym6DJ0kv7+uyMCAqQby0SLnQVs=
 github.com/vmware-tanzu/carvel-imgpkg v0.23.1/go.mod h1:2XNe+P0MDgya0FPEMOVZLAXku05VZhccVdDcXChhvy8=
 github.com/vmware-tanzu/carvel-kapp-controller v0.25.0 h1:/weI9nz749qwKFD/QGITlxSeRxuhNRSvH02nwWLNJlY=

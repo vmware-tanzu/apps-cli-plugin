@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/vmware-labs/reconciler-runtime/reconcilers"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -59,8 +60,12 @@ type SubReconcilerTestCase struct {
 	ExpectCreates []client.Object
 	// ExpectUpdates builds the ordered list of objects expected to be updated during reconciliation
 	ExpectUpdates []client.Object
+	// ExpectPatches builds the ordered list of objects expected to be patched during reconciliation
+	ExpectPatches []PatchRef
 	// ExpectDeletes holds the ordered list of objects expected to be deleted during reconciliation
 	ExpectDeletes []DeleteRef
+	// ExpectDeleteCollections holds the ordered list of collections expected to be deleted during reconciliation
+	ExpectDeleteCollections []DeleteCollectionRef
 
 	// outputs
 
@@ -88,13 +93,6 @@ type SubReconcilerTestCase struct {
 // SubReconcilerTestSuite represents a list of subreconciler test cases.
 type SubReconcilerTestSuite []SubReconcilerTestCase
 
-// Deprecated: Use Run instead
-// Test executes the test case.
-func (tc *SubReconcilerTestCase) Test(t *testing.T, scheme *runtime.Scheme, factory SubReconcilerFactory) {
-	t.Helper()
-	tc.Run(t, scheme, factory)
-}
-
 // Run executes the test case.
 func (tc *SubReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, factory SubReconcilerFactory) {
 	t.Helper()
@@ -115,26 +113,27 @@ func (tc *SubReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, facto
 		apiGivenObjects = append(apiGivenObjects, f.DeepCopyObject().(client.Object))
 	}
 
-	clientWrapper := NewFakeClient(scheme, givenObjects...)
+	clientWrapper := NewFakeClient(scheme, append(givenObjects, tc.Parent.DeepCopyObject().(client.Object))...)
 	for i := range tc.WithReactors {
 		// in reverse order since we prepend
 		reactor := tc.WithReactors[len(tc.WithReactors)-1-i]
 		clientWrapper.PrependReactor("*", "*", reactor)
 	}
-	apiReader := NewFakeClient(scheme, apiGivenObjects...)
+	apiReader := NewFakeClient(scheme, append(apiGivenObjects, tc.Parent.DeepCopyObject().(client.Object))...)
 	tracker := createTracker()
 	recorder := &eventRecorder{
 		events: []Event{},
 		scheme: scheme,
 	}
 	log := logrtesting.NewTestLogger(t)
-	c := factory(t, tc, reconcilers.Config{
+	c := reconcilers.Config{
 		Client:    clientWrapper,
 		APIReader: apiReader,
 		Tracker:   tracker,
 		Recorder:  recorder,
 		Log:       log,
-	})
+	}
+	r := factory(t, tc, c)
 
 	if tc.CleanUp != nil {
 		defer func() {
@@ -151,13 +150,23 @@ func (tc *SubReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, facto
 
 	ctx := reconcilers.WithStash(context.Background())
 	for k, v := range tc.GivenStashedValues {
-		if f, ok := v.(Factory); ok {
-			v = f.CreateObject()
+		if f, ok := v.(runtime.Object); ok {
+			v = f.DeepCopyObject()
 		}
 		reconcilers.StashValue(ctx, k, v)
 	}
 
+	ctx = reconcilers.StashConfig(ctx, c)
+	ctx = reconcilers.StashParentConfig(ctx, c)
+
 	parent := tc.Parent.DeepCopyObject().(client.Object)
+	if parent.GetResourceVersion() == "" {
+		// this value is also set by the test client when resource are added as givens
+		parent.SetResourceVersion("999")
+	}
+	ctx = reconcilers.StashRequest(ctx, reconcile.Request{
+		NamespacedName: types.NamespacedName{Namespace: parent.GetNamespace(), Name: parent.GetName()},
+	})
 	ctx = reconcilers.StashParentType(ctx, parent.DeepCopyObject().(client.Object))
 	ctx = reconcilers.StashCastParentType(ctx, parent.DeepCopyObject().(client.Object))
 
@@ -171,11 +180,11 @@ func (tc *SubReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, facto
 			}()
 		}
 
-		return c.Reconcile(ctx, parent)
+		return r.Reconcile(ctx, parent)
 	}(ctx, parent)
 
 	if (err != nil) != tc.ShouldErr {
-		t.Errorf("Reconcile() error = %v, ExpectErr %v", err, tc.ShouldErr)
+		t.Errorf("Reconcile() error = %v, ShouldErr %v", err, tc.ShouldErr)
 	}
 	if err == nil {
 		// result is only significant if there wasn't an error
@@ -188,17 +197,23 @@ func (tc *SubReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, facto
 		tc.Verify(t, result, err)
 	}
 
+	// compare parent
 	expectedParent := tc.Parent.DeepCopyObject().(client.Object)
 	if tc.ExpectParent != nil {
 		expectedParent = tc.ExpectParent.DeepCopyObject().(client.Object)
+	}
+	if expectedParent.GetResourceVersion() == "" {
+		// mirror defaulting of the parent
+		expectedParent.SetResourceVersion("999")
 	}
 	if diff := cmp.Diff(expectedParent, parent, IgnoreLastTransitionTime, SafeDeployDiff, IgnoreTypeMeta, cmpopts.EquateEmpty()); diff != "" {
 		t.Errorf("Unexpected parent mutations(-expected, +actual): %s", diff)
 	}
 
+	// compare stashed
 	for key, expected := range tc.ExpectStashedValues {
-		if f, ok := expected.(Factory); ok {
-			expected = f.CreateObject()
+		if f, ok := expected.(runtime.Object); ok {
+			expected = f.DeepCopyObject()
 		}
 		actual := reconcilers.RetrieveValue(ctx, key)
 		if diff := cmp.Diff(expected, actual, IgnoreLastTransitionTime, SafeDeployDiff, IgnoreTypeMeta, cmpopts.EquateEmpty()); diff != "" {
@@ -206,6 +221,7 @@ func (tc *SubReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, facto
 		}
 	}
 
+	// compare tracks
 	actualTracks := tracker.getTrackRequests()
 	for i, exp := range tc.ExpectTracks {
 		if i >= len(actualTracks) {
@@ -223,6 +239,7 @@ func (tc *SubReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, facto
 		}
 	}
 
+	// compare events
 	actualEvents := recorder.events
 	for i, exp := range tc.ExpectEvents {
 		if i >= len(actualEvents) {
@@ -240,9 +257,31 @@ func (tc *SubReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, facto
 		}
 	}
 
+	// compare create
 	CompareActions(t, "create", tc.ExpectCreates, clientWrapper.CreateActions, IgnoreLastTransitionTime, SafeDeployDiff, IgnoreTypeMeta, IgnoreResourceVersion, cmpopts.EquateEmpty())
+
+	// compare update
 	CompareActions(t, "update", tc.ExpectUpdates, clientWrapper.UpdateActions, IgnoreLastTransitionTime, SafeDeployDiff, IgnoreTypeMeta, IgnoreResourceVersion, cmpopts.EquateEmpty())
 
+	// compare patches
+	for i, exp := range tc.ExpectPatches {
+		if i >= len(clientWrapper.PatchActions) {
+			t.Errorf("Missing patch: %#v", exp)
+			continue
+		}
+		actual := NewPatchRef(clientWrapper.PatchActions[i])
+
+		if diff := cmp.Diff(exp, actual); diff != "" {
+			t.Errorf("Unexpected patch (-expected, +actual): %s", diff)
+		}
+	}
+	if actual, expected := len(clientWrapper.PatchActions), len(tc.ExpectPatches); actual > expected {
+		for _, extra := range clientWrapper.PatchActions[expected:] {
+			t.Errorf("Extra patch: %#v", extra)
+		}
+	}
+
+	// compare deletes
 	for i, exp := range tc.ExpectDeletes {
 		if i >= len(clientWrapper.DeleteActions) {
 			t.Errorf("Missing delete: %#v", exp)
@@ -260,17 +299,28 @@ func (tc *SubReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, facto
 		}
 	}
 
+	// compare delete collections
+	for i, exp := range tc.ExpectDeleteCollections {
+		if i >= len(clientWrapper.DeleteCollectionActions) {
+			t.Errorf("Missing delete collection: %#v", exp)
+			continue
+		}
+		actual := NewDeleteCollectionRef(clientWrapper.DeleteCollectionActions[i])
+
+		if diff := cmp.Diff(exp, actual); diff != "" {
+			t.Errorf("Unexpected delete collection (-expected, +actual): %s", diff)
+		}
+	}
+	if actual, expected := len(clientWrapper.DeleteCollectionActions), len(tc.ExpectDeleteCollections); actual > expected {
+		for _, extra := range clientWrapper.DeleteCollectionActions[expected:] {
+			t.Errorf("Extra delete collection: %#v", extra)
+		}
+	}
+
 	// Validate the given objects are not mutated by reconciliation
 	if diff := cmp.Diff(originalGivenObjects, givenObjects, SafeDeployDiff, IgnoreResourceVersion, cmpopts.EquateEmpty()); diff != "" {
 		t.Errorf("Given objects mutated by test %q (-expected, +actual): %v", tc.Name, diff)
 	}
-}
-
-// Deprecated: Use Run instead
-// Test executes the subreconciler test suite.
-func (ts SubReconcilerTestSuite) Test(t *testing.T, scheme *runtime.Scheme, factory SubReconcilerFactory) {
-	t.Helper()
-	ts.Run(t, scheme, factory)
 }
 
 // Run executes the subreconciler test suite.

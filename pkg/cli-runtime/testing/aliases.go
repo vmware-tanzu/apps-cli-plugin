@@ -28,7 +28,6 @@ type Action = rtesting.Action
 type GetAction = rtesting.GetAction
 
 var NewFakeClient = rtesting.NewFakeClient
-var Wrapper = rtesting.Wrapper
 
 var InduceFailure = rtesting.InduceFailure
 
