@@ -30,7 +30,7 @@ tanzu apps workload create --file workload.yaml
       --annotation "key=value" pair    annotation is represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --app name                       application name the workload is a part of
       --build-env "key=value" pair     build environment variables represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
-      --debug                          put the workload in debug mode, --debug=false to disable
+      --debug                          put the workload in debug mode (--debug=false to disable)
       --dry-run                        print kubernetes resources to stdout rather than apply them to the cluster, messages normally on stdout will be sent to stderr
       --env "key=value" pair           environment variables represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
   -f, --file file path                 file path containing the description of a single workload, other flags are layered on top of this resource. Use value "-" to read from stdin
@@ -43,7 +43,7 @@ tanzu apps workload create --file workload.yaml
       --label "key=value" pair         label is represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --limit-cpu cores                the maximum amount of cpu allowed, in CPU cores (500m = .5 cores)
       --limit-memory bytes             the maximum amount of memory allowed, in bytes (500Mi = 500MiB = 500 * 1024 * 1024)
-      --live-update                    put the workload in live update mode, --live-update=false to disable
+      --live-update                    put the workload in live update mode (--live-update=false to disable)
       --local-path path                path to a directory, .zip, or .jar file containing workload source code
   -n, --namespace name                 kubernetes namespace (defaulted from kube config)
       --param "key=value" pair         additional parameters represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
@@ -52,7 +52,7 @@ tanzu apps workload create --file workload.yaml
   -s, --service-account string         name of service account permitted to create resources submitted by the supply chain (to unset, pass empty string "")
       --service-ref object reference   object reference for a service to bind to the workload "database=rabbitmq.com/v1beta1:RabbitmqCluster:my-broker" ("database-" to remove, flag can be used multiple times)
       --source-image image             destination image repository where source code is staged before being built
-      --sub-path path                  relative path within source directory containing workload source code. To unset, pass empty string
+      --sub-path path                  relative path inside the repo or image to treat as application root (to unset, pass empty string "")
       --tail                           show logs while waiting for workload to become ready
       --tail-timestamp                 show logs and add timestamp to each log line while waiting for workload to become ready
       --type type                      distinguish workload type
