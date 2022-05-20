@@ -21,17 +21,13 @@ import (
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/yaml"
 )
 
 func ResourceStatus(name string, condition *metav1.Condition) string {
 	b := strings.Builder{}
+	b.WriteString("---\n")
 	b.WriteString(fmt.Sprintf("# %s: %s\n", name, ConditionStatus(condition)))
-	if condition != nil {
-		s, _ := yaml.Marshal(condition)
-		b.WriteString("---\n")
-		b.Write(s)
-	}
+	b.WriteString("---\n")
 	return b.String()
 }
 

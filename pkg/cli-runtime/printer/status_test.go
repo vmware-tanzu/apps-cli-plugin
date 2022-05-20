@@ -35,19 +35,17 @@ func TestResourceStatus(t *testing.T) {
 	}{{
 		name: "nil",
 		output: `
+---
 # test: <unknown>
+---
 `,
 	}, {
 		name:      "empty",
 		condition: &metav1.Condition{},
 		output: `
+---
 # test: <unknown>
 ---
-lastTransitionTime: null
-message: ""
-reason: ""
-status: ""
-type: ""
 `,
 	}, {
 		name: "unknown",
@@ -61,13 +59,9 @@ type: ""
 			},
 		},
 		output: `
+---
 # test: Unknown
 ---
-lastTransitionTime: "2019-06-29T01:44:05Z"
-message: a hopefully informative message about what's in flight
-reason: HangOn
-status: Unknown
-type: Ready
 `,
 	}, {
 		name: "ready",
@@ -79,13 +73,9 @@ type: Ready
 			},
 		},
 		output: `
+---
 # test: Ready
 ---
-lastTransitionTime: "2019-06-29T01:44:05Z"
-message: ""
-reason: ""
-status: "True"
-type: Ready
 `,
 	}, {
 		name: "failure",
@@ -99,13 +89,9 @@ type: Ready
 			},
 		},
 		output: `
+---
 # test: OopsieDoodle
 ---
-lastTransitionTime: "2019-06-29T01:44:05Z"
-message: a hopefully informative message about what went wrong
-reason: OopsieDoodle
-status: "False"
-type: Ready
 `,
 	}}
 

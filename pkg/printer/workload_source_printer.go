@@ -18,13 +18,10 @@ package printer
 
 import (
 	"io"
-	"time"
 
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer/table"
 )
 
@@ -158,52 +155,5 @@ func WorkloadSourceGitPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 		h.TableHandler(nil, printGitInfo)
 	})
 
-	return tablePrinter.PrintObj(workload, w)
-}
-
-func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error {
-	printResourceInfoRow := func(resource *cartov1alpha1.RealizedResource, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		var ready string
-		var elapsedTransitionTime string
-
-		conditionReady := meta.FindStatusCondition(resource.Conditions, cartov1alpha1.ConditionResourceReady)
-
-		if conditionReady != nil {
-			ready = string(conditionReady.Status)
-			elapsedTransitionTime = printer.TimestampSince(conditionReady.LastTransitionTime, time.Now())
-		}
-
-		row := metav1beta1.TableRow{
-			Cells: []interface{}{
-				resource.Name,
-				ready,
-				elapsedTransitionTime,
-			},
-		}
-		return []metav1beta1.TableRow{row}, nil
-	}
-
-	printResourceInfoList := func(workload *cartov1alpha1.Workload, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		resourcesList := &workload.Status.Resources
-		rows := make([]metav1beta1.TableRow, 0, len(*resourcesList))
-		for _, r := range *resourcesList {
-			row, err := printResourceInfoRow(&r, printOpts)
-			if err != nil {
-				return nil, err
-			}
-			rows = append(rows, row...)
-		}
-		return rows, nil
-	}
-
-	tablePrinter := table.NewTablePrinter(table.PrintOptions{}).With(func(h table.PrintHandler) {
-		columns := []metav1beta1.TableColumnDefinition{
-			{Name: "Resource", Type: "string"},
-			{Name: "Ready", Type: "string"},
-			{Name: "Time", Type: "string"},
-		}
-		h.TableHandler(columns, printResourceInfoList)
-		h.TableHandler(columns, printResourceInfoRow)
-	})
 	return tablePrinter.PrintObj(workload, w)
 }

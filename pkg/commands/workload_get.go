@@ -114,6 +114,16 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 	c.Printf(printer.ResourceStatus(workload.Name, printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadConditionReady)))
 
+	if workload.Status.SupplyChainRef == (cartov1alpha1.ObjectReference{}) && len(workload.Status.Conditions) == 0 {
+		c.Infof("Supply Chain reference not found.\n")
+	} else {
+		c.Printf("Supply Chain\n")
+
+		if err := printer.WorkloadSupplyChainInfoPrinter(c.Stdout, workload); err != nil {
+			return err
+		}
+	}
+
 	if workload.Spec.Image != "" || workload.Spec.Source != nil {
 		c.Printf("\n")
 		c.Printf("Source\n")
@@ -144,7 +154,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 			return err
 		}
 	} else {
-		c.Infof("Supply Chain resources not found\n")
+		c.Infof("Supply Chain resources not found.\n")
 	}
 
 	if len(workload.Spec.ServiceClaims) > 0 {

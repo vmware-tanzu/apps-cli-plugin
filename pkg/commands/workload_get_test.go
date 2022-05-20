@@ -172,6 +172,73 @@ func TestWorkloadGetCommand(t *testing.T) {
 			Args:        []string{},
 			ShouldError: true,
 		}, {
+			Name:         "no supply chain info",
+			Args:         []string{workloadName},
+			GivenObjects: []client.Object{parent},
+			ExpectOutput: `
+---
+# my-workload: <unknown>
+---
+Supply Chain reference not found.
+
+Supply Chain resources not found.
+
+No pods found for workload.
+`,
+		}, {
+			Name: "no supply chain ref but conditions in status",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						)
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: OopsieDoodle
+---
+Supply Chain
+name:          <none>
+last update:   <unknown>
+ready:         False
+
+Supply Chain resources not found.
+
+No pods found for workload.
+`,
+		}, {
+			Name: "supply chain ref but no condition in status",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: <unknown>
+---
+Supply Chain
+name:          my-supply-chain
+last update:   
+ready:         
+
+Supply Chain resources not found.
+
+No pods found for workload.
+`,
+		}, {
 			Name: "show status and service ref",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
@@ -190,23 +257,25 @@ func TestWorkloadGetCommand(t *testing.T) {
 						d.ConditionsDie(
 							diecartov1alpha1.WorkloadConditionReadyBlank.
 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-								Message("a hopefully informative message about what went wrong").
-								LastTransitionTime(metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								}),
-						)
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
 					}),
 			},
 			ExpectOutput: `
+---
 # my-workload: OopsieDoodle
 ---
-lastTransitionTime: "2019-06-29T01:44:05Z"
-message: a hopefully informative message about what went wrong
-reason: OopsieDoodle
-status: "False"
-type: Ready
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         False
 
-Supply Chain resources not found
+Supply Chain resources not found.
 
 Services
 CLAIM      NAME         KIND         API VERSION
@@ -224,23 +293,25 @@ No pods found for workload.
 						d.ConditionsDie(
 							diecartov1alpha1.WorkloadConditionReadyBlank.
 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-								Message("a hopefully informative message about what went wrong").
-								LastTransitionTime(metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								}),
-						)
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
 					}),
 			},
 			ExpectOutput: `
+---
 # my-workload: OopsieDoodle
 ---
-lastTransitionTime: "2019-06-29T01:44:05Z"
-message: a hopefully informative message about what went wrong
-reason: OopsieDoodle
-status: "False"
-type: Ready
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         False
 
-Supply Chain resources not found
+Supply Chain resources not found.
 
 No pods found for workload.
 `,
@@ -266,21 +337,23 @@ No pods found for workload.
 						d.ConditionsDie(
 							diecartov1alpha1.WorkloadConditionReadyBlank.
 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-								Message("a hopefully informative message about what went wrong").
-								LastTransitionTime(metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								}),
-						)
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
 					}),
 			},
 			ExpectOutput: `
+---
 # my-workload: OopsieDoodle
 ---
-lastTransitionTime: "2019-06-29T01:44:05Z"
-message: a hopefully informative message about what went wrong
-reason: OopsieDoodle
-status: "False"
-type: Ready
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         False
 
 Source
 type:     git
@@ -289,7 +362,7 @@ branch:   master
 tag:      v1.0.0
 commit:   abcdef
 
-Supply Chain resources not found
+Supply Chain resources not found.
 
 No pods found for workload.
 `,
@@ -310,27 +383,29 @@ No pods found for workload.
 						d.ConditionsDie(
 							diecartov1alpha1.WorkloadConditionReadyBlank.
 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-								Message("a hopefully informative message about what went wrong").
-								LastTransitionTime(metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								}),
-						)
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
 					}),
 			},
 			ExpectOutput: `
+---
 # my-workload: OopsieDoodle
 ---
-lastTransitionTime: "2019-06-29T01:44:05Z"
-message: a hopefully informative message about what went wrong
-reason: OopsieDoodle
-status: "False"
-type: Ready
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         False
 
 Source
 type:    source image
 image:   my-registry/my-image:v1.0.0
 
-Supply Chain resources not found
+Supply Chain resources not found.
 
 No pods found for workload.
 `,
@@ -347,27 +422,29 @@ No pods found for workload.
 						d.ConditionsDie(
 							diecartov1alpha1.WorkloadConditionReadyBlank.
 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-								Message("a hopefully informative message about what went wrong").
-								LastTransitionTime(metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								}),
-						)
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
 					}),
 			},
 			ExpectOutput: `
+---
 # my-workload: OopsieDoodle
 ---
-lastTransitionTime: "2019-06-29T01:44:05Z"
-message: a hopefully informative message about what went wrong
-reason: OopsieDoodle
-status: "False"
-type: Ready
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         False
 
 Source
 type:    image
 image:   docker.io/library/nginx:latest
 
-Supply Chain resources not found
+Supply Chain resources not found.
 
 No pods found for workload.
 `,
@@ -393,11 +470,13 @@ No pods found for workload.
 						d.ConditionsDie(
 							diecartov1alpha1.WorkloadConditionReadyBlank.
 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-								Message("a hopefully informative message about what went wrong").
-								LastTransitionTime(metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								}),
-						)
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
 						d.Resources(
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("source-provider").
@@ -427,13 +506,13 @@ No pods found for workload.
 					}),
 			},
 			ExpectOutput: `
+---
 # my-workload: OopsieDoodle
 ---
-lastTransitionTime: "2019-06-29T01:44:05Z"
-message: a hopefully informative message about what went wrong
-reason: OopsieDoodle
-status: "False"
-type: Ready
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         False
 
 Source
 type:     git
@@ -460,11 +539,13 @@ No pods found for workload.
 							diecartov1alpha1.WorkloadConditionReadyBlank.
 								Status(metav1.ConditionUnknown).
 								Reason("OopsieDoodle").
-								Message("a hopefully informative message about what went wrong").
-								LastTransitionTime(metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								}),
-						)
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
 					}),
 				pod1Die.
 					StatusDie(func(d *diecorev1.PodStatusDie) {
@@ -485,15 +566,15 @@ No pods found for workload.
 					}),
 			},
 			ExpectOutput: `
+---
 # my-workload: Unknown
 ---
-lastTransitionTime: "2019-06-29T01:44:05Z"
-message: a hopefully informative message about what went wrong
-reason: OopsieDoodle
-status: Unknown
-type: Ready
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         Unknown
 
-Supply Chain resources not found
+Supply Chain resources not found.
 
 Pods
 NAME   STATUS    RESTARTS   AGE
@@ -511,11 +592,13 @@ pod2   Failed    0          <unknown>
 							diecartov1alpha1.WorkloadConditionReadyBlank.
 								Status(metav1.ConditionUnknown).
 								Reason("OopsieDoodle").
-								Message("a hopefully informative message about what went wrong").
-								LastTransitionTime(metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								}),
-						)
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
 					}),
 				ksvcDieWithURL,
 				ksvcDieWithNoURL,
@@ -535,15 +618,15 @@ pod2   Failed    0          <unknown>
 					}),
 			},
 			ExpectOutput: `
+---
 # my-workload: Unknown
 ---
-lastTransitionTime: "2019-06-29T01:44:05Z"
-message: a hopefully informative message about what went wrong
-reason: OopsieDoodle
-status: Unknown
-type: Ready
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         Unknown
 
-Supply Chain resources not found
+Supply Chain resources not found.
 
 No pods found for workload.
 
@@ -563,11 +646,13 @@ ksvc2   not-Ready   <empty>
 							diecartov1alpha1.WorkloadConditionReadyBlank.
 								Status(metav1.ConditionTrue).
 								Reason("Worked").
-								Message("Ready").
-								LastTransitionTime(metav1.Time{
-									Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
-								}),
-						)
+								Message("Ready"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
 					}),
 				ksvcDieWithURL,
 				ksvcDieWithNoURL,
@@ -581,15 +666,15 @@ ksvc2   not-Ready   <empty>
 					}),
 			},
 			ExpectOutput: `
+---
 # my-workload: Ready
 ---
-lastTransitionTime: "2019-06-29T01:44:05Z"
-message: Ready
-reason: Worked
-status: "True"
-type: Ready
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         True
 
-Supply Chain resources not found
+Supply Chain resources not found.
 
 Pods
 NAME   STATUS    RESTARTS   AGE
@@ -670,9 +755,12 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 				clitesting.InduceFailure("list", "PodList"),
 			},
 			ExpectOutput: `
+---
 # my-workload: <unknown>
+---
+Supply Chain reference not found.
 
-Supply Chain resources not found
+Supply Chain resources not found.
 
 Failed to list pods:
   inducing failure for list PodList
@@ -688,9 +776,12 @@ Failed to list pods:
 				clitesting.InduceFailure("list", "KnativeServiceList"),
 			},
 			ExpectOutput: `
+---
 # my-workload: <unknown>
+---
+Supply Chain reference not found.
 
-Supply Chain resources not found
+Supply Chain resources not found.
 
 No pods found for workload.
 `,
