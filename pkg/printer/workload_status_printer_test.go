@@ -300,3 +300,106 @@ ready:         False
 		})
 	}
 }
+
+func TestWorkloadIssuesPrinter(t *testing.T) {
+	defaultNamespace := "default"
+	workloadName := "my-workload"
+
+	tests := []struct {
+		name           string
+		testWorkload   *cartov1alpha1.Workload
+		expectedOutput string
+	}{{
+		name: "condition ready with info",
+		testWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      workloadName,
+				Namespace: defaultNamespace,
+			},
+			Status: cartov1alpha1.WorkloadStatus{
+				Conditions: []metav1.Condition{{
+					Type:   cartov1alpha1.WorkloadSupplyChainReady,
+					Status: metav1.ConditionFalse,
+				}, {
+					Type:   cartov1alpha1.WorkloadResourceSubmitted,
+					Status: metav1.ConditionFalse,
+				}, {
+					Type:    cartov1alpha1.WorkloadReady,
+					Status:  metav1.ConditionFalse,
+					Message: "a hopefully informative message",
+					Reason:  "OopsieDoodle",
+				}},
+			},
+		},
+		expectedOutput: `
+reason:    OopsieDoodle
+message:   a hopefully informative message
+`,
+	}, {
+		name: "condition ready with no info",
+		testWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      workloadName,
+				Namespace: defaultNamespace,
+			},
+			Status: cartov1alpha1.WorkloadStatus{
+				Conditions: []metav1.Condition{{
+					Type:   cartov1alpha1.WorkloadSupplyChainReady,
+					Status: metav1.ConditionFalse,
+				}, {
+					Type:   cartov1alpha1.WorkloadResourceSubmitted,
+					Status: metav1.ConditionFalse,
+				}, {
+					Type:   cartov1alpha1.WorkloadReady,
+					Status: metav1.ConditionFalse,
+				}},
+			},
+		},
+		expectedOutput: `
+reason:    
+message:   
+`,
+	}, {
+		name: "no status",
+		testWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      workloadName,
+				Namespace: defaultNamespace,
+			},
+		},
+	}, {
+		name: "no ready condition",
+		testWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      workloadName,
+				Namespace: defaultNamespace,
+			},
+			Status: cartov1alpha1.WorkloadStatus{
+				Conditions: []metav1.Condition{{
+					Type:    cartov1alpha1.WorkloadSupplyChainReady,
+					Status:  metav1.ConditionUnknown,
+					Message: "a hopefully informative message",
+					Reason:  "OopsieDoodle",
+				}, {
+					Type:    cartov1alpha1.WorkloadResourceSubmitted,
+					Status:  metav1.ConditionUnknown,
+					Message: "a hopefully informative message",
+					Reason:  "OopsieDoodle",
+				}},
+			},
+		},
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			output := &bytes.Buffer{}
+			if err := printer.WorkloadIssuesPrinter(output, test.testWorkload); err != nil {
+				t.Errorf("WorkloadSourcePrinter() expected no error, got %v", err)
+			}
+			outputString := output.String()
+			if diff := cmp.Diff(strings.TrimPrefix(test.expectedOutput, "\n"), outputString); diff != "" {
+				t.Errorf("Unexpected output (-expected, +actual): %s", diff)
+			}
+		})
+	}
+}

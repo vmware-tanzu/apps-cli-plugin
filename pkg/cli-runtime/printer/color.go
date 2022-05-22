@@ -26,6 +26,7 @@ var (
 	SuccessColor = color.New(color.FgGreen)
 	WarnColor    = color.New(color.FgYellow)
 	ErrorColor   = color.New(color.FgRed)
+	BoldColor    = color.New(color.Bold)
 )
 
 func Sfaintf(format string, a ...interface{}) string {
@@ -46,4 +47,8 @@ func Swarnf(format string, a ...interface{}) string {
 
 func Serrorf(format string, a ...interface{}) string {
 	return ErrorColor.Sprintf(format, a...)
+}
+
+func Sboldf(format string, a ...interface{}) string {
+	return BoldColor.Sprintf(format, a...)
 }

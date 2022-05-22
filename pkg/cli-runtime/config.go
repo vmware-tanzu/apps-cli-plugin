@@ -96,6 +96,14 @@ func (c *Config) Efaintf(format string, a ...interface{}) (n int, err error) {
 	return printer.FaintColor.Fprintf(c.Stderr, format, a...)
 }
 
+func (c *Config) Boldf(format string, a ...interface{}) (n int, err error) {
+	return printer.BoldColor.Fprintf(c.Stdout, format, a...)
+}
+
+func (c *Config) Eboldf(format string, a ...interface{}) (n int, err error) {
+	return printer.BoldColor.Fprintf(c.Stderr, format, a...)
+}
+
 func Initialize(name string, scheme *runtime.Scheme) *Config {
 	c := NewDefaultConfig(name, scheme)
 
