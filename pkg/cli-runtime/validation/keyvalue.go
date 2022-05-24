@@ -18,6 +18,8 @@ package validation
 
 import (
 	"strings"
+
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/parsers"
 )
 
 func KeyValue(kv, field string) FieldErrors {
@@ -61,5 +63,24 @@ func DeletableKeyValues(kvs []string, field string) FieldErrors {
 		errs = errs.Also(DeletableKeyValue(kv, CurrentField).ViaFieldIndex(field, i))
 	}
 
+	return errs
+}
+
+func JsonOrYamlKeyValues(kvs []string, field string) FieldErrors {
+	errs := FieldErrors{}
+	for i, kv := range kvs {
+		if len(kv) > 0 {
+			errs = errs.Also(DeletableKeyValue(kv, CurrentField).ViaFieldIndex(field, i))
+			keyValue := parsers.DeletableKeyValue(kv)
+			if len(keyValue) > 1 {
+				_, err := parsers.JsonYamlToObject(keyValue[1])
+				if err != nil {
+					errs = errs.Also(ErrInvalidValue(kv, CurrentField).ViaFieldIndex(field, i))
+				}
+			}
+		} else {
+			errs = errs.Also(ErrInvalidValue(kv, CurrentField).ViaFieldIndex(field, i))
+		}
+	}
 	return errs
 }

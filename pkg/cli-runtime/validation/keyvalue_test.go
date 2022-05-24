@@ -166,3 +166,48 @@ func TestDeletableKeyValues(t *testing.T) {
 		})
 	}
 }
+
+func TestJsonOrYamlKeyValues(t *testing.T) {
+	tests := []struct {
+		name     string
+		expected validation.FieldErrors
+		value    []string
+	}{{
+		name:     "empty",
+		expected: validation.ErrInvalidValue("", validation.CurrentField).ViaFieldIndex(clitesting.TestField, 0),
+		value:    []string{""},
+	}, {
+		name:     "invalid key value",
+		expected: validation.ErrInvalidValue("MY_VAR", validation.CurrentField).ViaFieldIndex(clitesting.TestField, 0),
+		value:    []string{"MY_VAR"},
+	}, {
+		name:     "delete",
+		expected: validation.FieldErrors{},
+		value:    []string{"MY_VAR-"},
+	}, {
+		name:     "valid json",
+		expected: validation.FieldErrors{},
+		value:    []string{`js_obj=[{"foo": {"bar": "bazz", "foz": 0}}]`},
+	}, {
+		name:     "invalid json",
+		expected: validation.ErrInvalidValue("js_obj=[{\"foo\": {\"bar\": \"bazz\", \"foz\": 0}}", validation.CurrentField).ViaFieldIndex(clitesting.TestField, 0),
+		value:    []string{`js_obj=[{"foo": {"bar": "bazz", "foz": 0}}`},
+	}, {
+		name:     "valid yaml",
+		expected: validation.FieldErrors{},
+		value:    []string{"yml_obj=- foo:\n    bar: baz\n    foz: 0"},
+	}, {
+		name:     "invalid yaml",
+		expected: validation.ErrInvalidValue("yml_obj=- foo:\n    bar:baz\n    foz: 0", validation.CurrentField).ViaFieldIndex(clitesting.TestField, 0),
+		value:    []string{"yml_obj=- foo:\n    bar:baz\n    foz: 0"},
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := validation.JsonOrYamlKeyValues(test.value, clitesting.TestField)
+			if diff := cmp.Diff(test.expected, actual); diff != "" {
+				t.Errorf("JsonOrYamlKeyValues() = (-expected, +actual): %s", diff)
+			}
+		})
+	}
+}

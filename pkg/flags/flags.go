@@ -50,6 +50,7 @@ const (
 	NoColorFlagName        = cli.NoColorFlagName
 	OutputFlagName         = "--output"
 	ParamFlagName          = "--param"
+	ParamYamlFlagName      = "--param-yaml"
 	RequestCPUFlagName     = "--request-cpu"
 	RequestMemoryFlagName  = "--request-memory"
 	ServiceAccountFlagName = "--service-account"

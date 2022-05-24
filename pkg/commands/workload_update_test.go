@@ -37,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/logs"
@@ -1160,6 +1161,131 @@ Updated workload "my-workload"
 				}
 
 				return nil
+			},
+		},
+		{
+			Name: "update existing param-yaml",
+			Args: []string{workloadName, flags.ParamYamlFlagName, `ports_json={"name": "smtp", "port": 2026}`, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(
+							&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/spring-projects/spring-petclinic.git",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+									},
+								},
+							},
+						).Params(
+							cartov1alpha1.Param{
+								Name:  "ports_json",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"name":"smtp","port":1026}`)},
+							}, cartov1alpha1.Param{
+								Name:  "ports_nesting_yaml",
+								Value: apiextensionsv1.JSON{Raw: []byte(`[{"deployment":{"name":"smtp","port":1026}}]`)},
+							},
+						)
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						},
+						Params: []cartov1alpha1.Param{
+							{
+								Name:  "ports_json",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"name":"smtp","port":2026}`)},
+							}, {
+								Name:  "ports_nesting_yaml",
+								Value: apiextensionsv1.JSON{Raw: []byte(`[{"deployment":{"name":"smtp","port":1026}}]`)},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			ShouldError: true,
+			Name:        "fails create with multiple param-yaml using invalid json",
+			Args: []string{flags.FilePathFlagName, "testdata/param-yaml.yaml",
+				flags.ParamYamlFlagName, `ports_json={"name": "smtp", "port": 1026`,
+				flags.ParamYamlFlagName, `ports_nesting_yaml=- deployment:\n    name: smtp\n    port: 1026`,
+				flags.YesFlagName},
+			ExpectOutput: "",
+		},
+		{
+			Name: "update existing param-yaml from file",
+			Args: []string{workloadName, flags.FilePathFlagName, "testdata/workload-param-yaml.yaml", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(
+							&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/spring-projects/spring-petclinic.git",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+									},
+								},
+							},
+						).Params(
+							cartov1alpha1.Param{
+								Name:  "ports",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"name":"smtp","port":1026}`)},
+							}, cartov1alpha1.Param{
+								Name:  "ports_nesting_yaml",
+								Value: apiextensionsv1.JSON{Raw: []byte(`[{"deployment":{"name":"smtp","port":1026}}]`)},
+							},
+						)
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.AppPartOfLabelName:               "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						},
+						Params: []cartov1alpha1.Param{
+							{
+								Name:  "ports",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"ports":[{"name":"http","port":8080,"protocol":"TCP","targetPort":8080},{"name":"https","port":8443,"protocol":"TCP","targetPort":8443}]}`)},
+							}, {
+								Name:  "ports_nesting_yaml",
+								Value: apiextensionsv1.JSON{Raw: []byte(`[{"deployment":{"name":"smtp","port":1026}}]`)},
+							}, {
+								Name:  "services",
+								Value: apiextensionsv1.JSON{Raw: []byte(`[{"image":"mysql:5.7","name":"mysql"},{"image":"postgres:9.6","name":"postgres"}]`)},
+							},
+						},
+					},
+				},
 			},
 		},
 	}

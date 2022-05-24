@@ -1,0 +1,9 @@
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  name: spring-petclinic
+  labels:
+    app.kubernetes.io/part-of: spring-petclinic
+    apps.tanzu.vmware.com/workload-type: web
+spec:
+  image: my-reponame/my-image:my-tag
