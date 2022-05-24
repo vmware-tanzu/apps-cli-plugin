@@ -185,6 +185,7 @@ func (opts *WorkloadUpdateOptions) IsDryRun() bool {
 
 func NewWorkloadUpdateCommand(ctx context.Context, c *cli.Config) *cobra.Command {
 	opts := &WorkloadUpdateOptions{}
+	opts.LoadDefaults(c)
 
 	cmd := &cobra.Command{
 		Use:   "update",

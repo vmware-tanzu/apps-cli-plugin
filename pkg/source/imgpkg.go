@@ -28,9 +28,8 @@ import (
 	"github.com/k14s/imgpkg/pkg/imgpkg/registry"
 )
 
-func ImgpkgPush(ctx context.Context, dir string, image string) (string, error) {
+func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, image string) (string, error) {
 	options := RetrieveGgcrRemoteOptions(ctx)
-
 	// TODO support more registry options
 	reg, err := registry.NewRegistry(registry.Opts{VerifyCerts: true}, options...)
 	if err != nil {
@@ -42,7 +41,8 @@ func ImgpkgPush(ctx context.Context, dir string, image string) (string, error) {
 		return "", fmt.Errorf("parsing '%s': %s", image, err)
 	}
 
-	digest, err := plainimage.NewContents([]string{dir}, []string{path.Join(dir, ".imgpkg")}).Push(uploadRef, nil, reg, ui.NewNoopUI())
+	excludedFiles = append(excludedFiles, path.Join(dir, ".imgpkg"))
+	digest, err := plainimage.NewContents([]string{dir}, excludedFiles).Push(uploadRef, nil, reg, ui.NewNoopUI())
 	if err != nil {
 		return "", err
 	}

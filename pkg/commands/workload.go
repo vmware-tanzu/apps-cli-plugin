@@ -17,11 +17,14 @@ limitations under the License.
 package commands
 
 import (
+	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -84,15 +87,16 @@ type WorkloadOptions struct {
 	Debug       bool
 	LiveUpdate  bool
 
-	FilePath    string
-	GitRepo     string
-	GitCommit   string
-	GitBranch   string
-	GitTag      string
-	SourceImage string
-	LocalPath   string
-	Image       string
-	SubPath     string
+	FilePath        string
+	GitRepo         string
+	GitCommit       string
+	GitBranch       string
+	GitTag          string
+	SourceImage     string
+	LocalPath       string
+	ExcludePathFile string
+	Image           string
+	SubPath         string
 
 	BuildEnv    []string
 	Env         []string
@@ -168,6 +172,10 @@ func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldError
 	}
 
 	return errs
+}
+
+func (opts *WorkloadOptions) LoadDefaults(c *cli.Config) {
+	opts.ExcludePathFile = c.TanzuIgnoreFile
 }
 
 func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workload *cartov1alpha1.Workload) {
@@ -348,8 +356,10 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	}
 
 	var contentDir string
+	var fileExclusions []string
 	if source.IsDir(opts.LocalPath) {
 		contentDir = opts.LocalPath
+		fileExclusions = opts.loadExcludedPaths(c)
 	} else if source.IsZip(opts.LocalPath) {
 		zipContentsDir, err := ioutil.TempDir("", "")
 		defer os.RemoveAll(zipContentsDir)
@@ -361,12 +371,17 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 			return false, err
 		}
 		contentDir = zipContentsDir
+		tmpOpts := &WorkloadOptions{
+			LocalPath:       zipContentsDir,
+			ExcludePathFile: opts.ExcludePathFile,
+		}
+		fileExclusions = tmpOpts.loadExcludedPaths(c)
 	} else {
 		return false, fmt.Errorf("unsupported file format %q", opts.LocalPath)
 	}
 
 	c.Infof("Publishing source in %q to %q...\n", opts.LocalPath, taggedImage)
-	digestedImage, err := source.ImgpkgPush(ctx, contentDir, taggedImage)
+	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, taggedImage)
 	if err != nil {
 		return okToPush, err
 	}
@@ -388,6 +403,40 @@ func (opts *WorkloadOptions) checkToPublishLocalSource(taggedImage string, c *cl
 		}
 	}
 	return okToPush
+}
+
+func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config) []string {
+	exclude := []string{}
+	if opts.ExcludePathFile != "" {
+		p := filepath.Join(opts.LocalPath, opts.ExcludePathFile)
+		if _, err := os.Stat(p); errors.Is(err, os.ErrNotExist) {
+			return exclude
+		}
+
+		f, err := os.Open(p)
+		if err != nil {
+			c.Infof("Unable to read %s file.\n", opts.ExcludePathFile)
+			return exclude
+		}
+		defer f.Close()
+		r := bufio.NewReader(f)
+		for {
+			l, _, err := r.ReadLine()
+			if err == io.EOF {
+				break
+			}
+			p := strings.TrimSpace(string(l))
+			if len(p) == 0 || strings.HasPrefix(p, "#") {
+				continue
+			}
+			if strings.HasSuffix(p, string(os.PathSeparator)) {
+				p = p[:len(p)-1]
+			}
+			exclude = append(exclude, p)
+		}
+		c.Infof("The files and/or directories listed in the %s file are being excluded from the uploaded source code.\n", opts.ExcludePathFile)
+	}
+	return exclude
 }
 
 func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentWorkload *cartov1alpha1.Workload, workload *cartov1alpha1.Workload) (bool, error) {
