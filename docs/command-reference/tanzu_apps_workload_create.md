@@ -47,11 +47,11 @@ tanzu apps workload create --file workload.yaml
       --local-path path                path to a directory, .zip, or .jar file containing workload source code
   -n, --namespace name                 kubernetes namespace (defaulted from kube config)
       --param "key=value" pair         additional parameters represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
-      --param-yaml "key=value" pair    specify nested parameters using YAML or JSON formatted values represented as a "key=value" pair ("key-" to remove, flag may be used multiple times)
+      --param-yaml "key=value" pair    specify nested parameters using YAML or JSON formatted values represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --request-cpu cores              the minimum amount of cpu required, in CPU cores (500m = .5 cores)
       --request-memory bytes           the minimum amount of memory required, in bytes (500Mi = 500MiB = 500 * 1024 * 1024)
   -s, --service-account string         name of service account permitted to create resources submitted by the supply chain (to unset, pass empty string "")
-      --service-ref object reference   object reference for a service to bind to the workload "database=rabbitmq.com/v1beta1:RabbitmqCluster:my-broker" ("database-" to remove, flag can be used multiple times)
+      --service-ref object reference   object reference for a service to bind to the workload "service-ref-name=apiVersion:kind:service-binding-name" ("service-ref-name-" to remove, flag can be used multiple times)
       --source-image image             destination image repository where source code is staged before being built
       --sub-path path                  relative path inside the repo or image to treat as application root (to unset, pass empty string "")
       --tail                           show logs while waiting for workload to become ready
