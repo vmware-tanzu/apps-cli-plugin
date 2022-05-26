@@ -112,6 +112,37 @@ func WorkloadSupplyChainInfoPrinter(w io.Writer, workload *cartov1alpha1.Workloa
 	return tablePrinter.PrintObj(workload, w)
 }
 
+func WorkloadIssuesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error {
+	readyCondition := printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadReady)
+	if readyCondition == nil {
+		return nil
+	}
+	printIssues := func(workload *cartov1alpha1.Workload, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
+		reasonRow := metav1beta1.TableRow{
+			Cells: []interface{}{
+				"reason:",
+				readyCondition.Reason,
+			},
+		}
+
+		messageRow := metav1beta1.TableRow{
+			Cells: []interface{}{
+				"message:",
+				readyCondition.Message,
+			},
+		}
+
+		rows := []metav1beta1.TableRow{reasonRow, messageRow}
+		return rows, nil
+	}
+
+	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true}).With(func(h table.PrintHandler) {
+		h.TableHandler(nil, printIssues)
+	})
+
+	return tablePrinter.PrintObj(workload, w)
+}
+
 func findConditionReady(conditions []metav1.Condition, strReadyCondition string) (string, string) {
 	var ready string
 	var elapsedTransitionTime string

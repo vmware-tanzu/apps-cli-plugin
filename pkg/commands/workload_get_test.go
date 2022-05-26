@@ -183,6 +183,9 @@ Supply Chain reference not found.
 
 Supply Chain resources not found.
 
+Issues
+No issues reported.
+
 No pods found for workload.
 `,
 		}, {
@@ -208,6 +211,10 @@ last update:   <unknown>
 ready:         False
 
 Supply Chain resources not found.
+
+Issues
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 `,
@@ -235,6 +242,9 @@ last update:
 ready:         
 
 Supply Chain resources not found.
+
+Issues
+No issues reported.
 
 No pods found for workload.
 `,
@@ -277,15 +287,88 @@ ready:         False
 
 Supply Chain resources not found.
 
+Issues
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
+
 Services
 CLAIM      NAME         KIND         API VERSION
 database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
 
 No pods found for workload.
 `,
-		},
-		{
-			Name: "show status",
+		}, {
+			Name: "no issues reported",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionTrue).Reason("Ready").
+								Message(""),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: Ready
+---
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         True
+
+Supply Chain resources not found.
+
+Issues
+No issues reported.
+
+No pods found for workload.
+`,
+		}, {
+			Name: "show issues with unknown status",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionUnknown).
+								Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: Unknown
+---
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         Unknown
+
+Supply Chain resources not found.
+
+Issues
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
+
+No pods found for workload.
+`,
+		}, {
+			Name: "show status with false condition",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
 				parent.
@@ -313,10 +396,13 @@ ready:         False
 
 Supply Chain resources not found.
 
+Issues
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
+
 No pods found for workload.
 `,
-		},
-		{
+		}, {
 			Name: "show source info - git",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
@@ -350,11 +436,6 @@ No pods found for workload.
 ---
 # my-workload: OopsieDoodle
 ---
-Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         False
-
 Source
 type:     git
 url:      https://example.com
@@ -362,12 +443,20 @@ branch:   master
 tag:      v1.0.0
 commit:   abcdef
 
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         False
+
 Supply Chain resources not found.
+
+Issues
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 `,
-		},
-		{
+		}, {
 			Name: "show source info - local path",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
@@ -396,21 +485,24 @@ No pods found for workload.
 ---
 # my-workload: OopsieDoodle
 ---
+Source
+type:    source image
+image:   my-registry/my-image:v1.0.0
+
 Supply Chain
 name:          my-supply-chain
 last update:   <unknown>
 ready:         False
 
-Source
-type:    source image
-image:   my-registry/my-image:v1.0.0
-
 Supply Chain resources not found.
+
+Issues
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 `,
-		},
-		{
+		}, {
 			Name: "show source info - image",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
@@ -435,21 +527,24 @@ No pods found for workload.
 ---
 # my-workload: OopsieDoodle
 ---
+Source
+type:    image
+image:   docker.io/library/nginx:latest
+
 Supply Chain
 name:          my-supply-chain
 last update:   <unknown>
 ready:         False
 
-Source
-type:    image
-image:   docker.io/library/nginx:latest
-
 Supply Chain resources not found.
+
+Issues
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 `,
-		},
-		{
+		}, {
 			Name: "show resources",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
@@ -509,11 +604,6 @@ No pods found for workload.
 ---
 # my-workload: OopsieDoodle
 ---
-Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         False
-
 Source
 type:     git
 url:      https://example.com
@@ -521,15 +611,23 @@ branch:   master
 tag:      v1.0.0
 commit:   abcdef
 
+Supply Chain
+name:          my-supply-chain
+last update:   <unknown>
+ready:         False
+
 RESOURCE          READY     TIME
 source-provider   True      <unknown>
 deliverable       Unknown   <unknown>
 image-builder     False     <unknown>
 
+Issues
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
+
 No pods found for workload.
 `,
-		},
-		{
+		}, {
 			Name: "show pods",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
@@ -540,12 +638,7 @@ No pods found for workload.
 								Status(metav1.ConditionUnknown).
 								Reason("OopsieDoodle").
 								Message("a hopefully informative message about what went wrong"),
-						).SupplyChainRef(cartov1alpha1.ObjectReference{
-							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-							Kind:       "SupplyChain",
-							Name:       "my-supply-chain",
-							Namespace:  defaultNamespace,
-						})
+						)
 					}),
 				pod1Die.
 					StatusDie(func(d *diecorev1.PodStatusDie) {
@@ -570,19 +663,22 @@ No pods found for workload.
 # my-workload: Unknown
 ---
 Supply Chain
-name:          my-supply-chain
+name:          <none>
 last update:   <unknown>
 ready:         Unknown
 
 Supply Chain resources not found.
+
+Issues
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 Pods
 NAME   STATUS    RESTARTS   AGE
 pod1   Running   0          <unknown>
 pod2   Failed    0          <unknown>
 `,
-		},
-		{
+		}, {
 			Name: "show knative services",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
@@ -628,6 +724,10 @@ ready:         Unknown
 
 Supply Chain resources not found.
 
+Issues
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
+
 No pods found for workload.
 
 Knative Services
@@ -635,8 +735,7 @@ NAME    READY       URL
 ksvc1   Ready       https://example.com
 ksvc2   not-Ready   <empty>
 `,
-		},
-		{
+		}, {
 			Name: "show pods and knative services",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
@@ -676,6 +775,9 @@ ready:         True
 
 Supply Chain resources not found.
 
+Issues
+No issues reported.
+
 Pods
 NAME   STATUS    RESTARTS   AGE
 pod1   Running   0          <unknown>
@@ -686,8 +788,7 @@ NAME    READY       URL
 ksvc1   Ready       https://example.com
 ksvc2   not-Ready   <empty>
 `,
-		},
-		{
+		}, {
 			Name: "not found",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
@@ -723,8 +824,7 @@ Workload "default/my-workload" not found
 			ExpectOutput: `
 Error: namespace "foo" not found, it may not exist or user does not have permissions to read it.
 `,
-		},
-		{
+		}, {
 			Name: "get error",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
@@ -744,8 +844,7 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 				clitesting.InduceFailure("get", "Workload"),
 			},
 			ShouldError: true,
-		},
-		{
+		}, {
 			Name: "get error for listing pods",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
@@ -762,11 +861,13 @@ Supply Chain reference not found.
 
 Supply Chain resources not found.
 
+Issues
+No issues reported.
+
 Failed to list pods:
   inducing failure for list PodList
 `,
-		},
-		{
+		}, {
 			Name: "get error for listing knative services",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
@@ -783,10 +884,12 @@ Supply Chain reference not found.
 
 Supply Chain resources not found.
 
+Issues
+No issues reported.
+
 No pods found for workload.
 `,
-		},
-		{
+		}, {
 			Name: "get workload exported data",
 			Args: []string{workloadName, flags.ExportFlagName},
 			GivenObjects: []client.Object{
@@ -813,8 +916,7 @@ metadata:
   namespace: default
 spec: {}
 `,
-		},
-		{
+		}, {
 			Name: "get workload exported data in json format",
 			Args: []string{workloadName, flags.ExportFlagName, flags.OutputFlagName, printer.OutputFormatJson},
 			GivenObjects: []client.Object{
@@ -846,8 +948,7 @@ spec: {}
 	"spec": {}
 }
 `,
-		},
-		{
+		}, {
 			Name: "get workload outputted data in yaml format",
 			Args: []string{workloadName, flags.OutputFlagName, "yaml"},
 			GivenObjects: []client.Object{
@@ -885,8 +986,7 @@ status:
     type: Ready
   supplyChainRef: {}
 `,
-		},
-		{
+		}, {
 			Name: "get workload outputted data in json format",
 			Args: []string{workloadName, flags.OutputFlagName, "json"},
 			GivenObjects: []client.Object{

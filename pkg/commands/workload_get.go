@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -112,21 +113,12 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		return nil
 	}
 
-	c.Printf(printer.ResourceStatus(workload.Name, printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadConditionReady)))
+	workloadStatusReadyCond := printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadConditionReady)
+	c.Printf(printer.ResourceStatus(workload.Name, workloadStatusReadyCond))
 
-	if workload.Status.SupplyChainRef == (cartov1alpha1.ObjectReference{}) && len(workload.Status.Conditions) == 0 {
-		c.Infof("Supply Chain reference not found.\n")
-	} else {
-		c.Printf("Supply Chain\n")
-
-		if err := printer.WorkloadSupplyChainInfoPrinter(c.Stdout, workload); err != nil {
-			return err
-		}
-	}
-
+	// Print workload source
 	if workload.Spec.Image != "" || workload.Spec.Source != nil {
-		c.Printf("\n")
-		c.Printf("Source\n")
+		c.Boldf("Source\n")
 
 		if workload.Spec.Image != "" {
 			if err := printer.WorkloadSourceImagePrinter(c.Stdout, workload); err != nil {
@@ -146,20 +138,44 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 				}
 			}
 		}
+		c.Printf("\n")
 	}
 
+	// Print workload supply chain
+	if workload.Status.SupplyChainRef == (cartov1alpha1.ObjectReference{}) && len(workload.Status.Conditions) == 0 {
+		c.Infof("Supply Chain reference not found.\n")
+	} else {
+		c.Boldf("Supply Chain\n")
+
+		if err := printer.WorkloadSupplyChainInfoPrinter(c.Stdout, workload); err != nil {
+			return err
+		}
+	}
+
+	// Print workload resources
 	c.Printf("\n")
-	if len(workload.Status.Resources) > 0 {
+	if len(workload.Status.Resources) == 0 {
+		c.Infof("Supply Chain resources not found.\n")
+	} else {
 		if err := printer.WorkloadResourcesPrinter(c.Stdout, workload); err != nil {
 			return err
 		}
+	}
+
+	// Print workload issues
+	c.Printf("\n")
+	c.Boldf("Issues\n")
+	if workloadStatusReadyCond == nil || (workloadStatusReadyCond.Status == metav1.ConditionTrue || workloadStatusReadyCond.Message == "") {
+		c.Infof("No issues reported.\n")
 	} else {
-		c.Infof("Supply Chain resources not found.\n")
+		if err := printer.WorkloadIssuesPrinter(c.Stdout, workload); err != nil {
+			return err
+		}
 	}
 
 	if len(workload.Spec.ServiceClaims) > 0 {
 		c.Printf("\n")
-		c.Printf("Services\n")
+		c.Boldf("Services\n")
 		if err := cartov1alpha1.WorkloadServiceClaimPrinter(c.Stdout, workload); err != nil {
 			return err
 		}
@@ -179,7 +195,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 			pods = pods.DeepCopy()
 			printer.SortByNamespaceAndName(pods.Items)
 			c.Printf("\n")
-			c.Printf("Pods\n")
+			c.Boldf("Pods\n")
 			if err := printer.PodTablePrinter(c, pods); err != nil {
 				return err
 			}
@@ -192,7 +208,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		ksvcs = ksvcs.DeepCopy()
 		printer.SortByNamespaceAndName(ksvcs.Items)
 		c.Printf("\n")
-		c.Printf("Knative Services\n")
+		c.Boldf("Knative Services\n")
 		if err := printer.KnativeServicePrinter(c, ksvcs); err != nil {
 			return err
 		}

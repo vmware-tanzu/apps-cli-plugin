@@ -118,6 +118,18 @@ func TestConfig_Print(t *testing.T) {
 		args:    []interface{}{"hello"},
 		printer: config.Eerrorf,
 		stderr:  printer.ErrorColor.Sprint("hello"),
+	}, {
+		name:    "Boldf",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Boldf,
+		stdout:  printer.BoldColor.Sprint("hello"),
+	}, {
+		name:    "Eboldf",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Eboldf,
+		stderr:  printer.BoldColor.Sprint("hello"),
 	}}
 
 	for _, test := range tests {
