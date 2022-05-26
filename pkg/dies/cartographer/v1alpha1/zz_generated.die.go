@@ -255,9 +255,9 @@ func (d *SupplyChainSpecDie) Resources(v ...cartographerv1alpha1.SupplyChainReso
 	})
 }
 
-func (d *SupplyChainSpecDie) Selector(v map[string]string) *SupplyChainSpecDie {
+func (d *SupplyChainSpecDie) LegacySelector(v cartographerv1alpha1.Selector) *SupplyChainSpecDie {
 	return d.DieStamp(func(r *cartographerv1alpha1.SupplyChainSpec) {
-		r.Selector = v
+		r.LegacySelector = v
 	})
 }
 
