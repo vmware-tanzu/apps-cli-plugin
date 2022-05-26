@@ -35,6 +35,7 @@ func NewClusterSupplyChainCommand(ctx context.Context, c *cli.Config) *cobra.Com
 	}
 
 	cmd.AddCommand(NewClusterSupplyChainListCommand(ctx, c))
+	cmd.AddCommand(NewClusterSupplyChainGetCommand(ctx, c))
 
 	return cmd
 }
