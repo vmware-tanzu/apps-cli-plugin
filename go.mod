@@ -15,7 +15,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/stern/stern v1.21.0
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
-	github.com/vmware-labs/reconciler-runtime v0.5.0
+	github.com/vmware-labs/reconciler-runtime v0.6.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-framework v0.21.0
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
