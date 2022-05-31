@@ -19,19 +19,32 @@ package source
 import (
 	"context"
 	"fmt"
+
+	"os"
 	"path"
+	"time"
 
 	"github.com/cppforlife/go-cli-ui/ui"
 	regname "github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/k14s/imgpkg/pkg/imgpkg/plainimage"
-	"github.com/k14s/imgpkg/pkg/imgpkg/registry"
+	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/plainimage"
+	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry"
 )
 
 func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, image string) (string, error) {
 	options := RetrieveGgcrRemoteOptions(ctx)
-	// TODO support more registry options
-	reg, err := registry.NewRegistry(registry.Opts{VerifyCerts: true}, options...)
+	envFunction := func() []string {
+		envVars := os.Environ()
+		_, present := os.LookupEnv("IMGPKG_ENABLE_IAAS_AUTH")
+		if !present {
+			envVars = append(envVars, "IMGPKG_ENABLE_IAAS_AUTH=false")
+		}
+		return envVars
+	}
+
+	options.EnvironFunc = envFunction
+
+	// TODO: support more registry options using apps plugin configuration
+	reg, err := registry.NewSimpleRegistry(options)
 	if err != nil {
 		return "", fmt.Errorf("unable to create a registry with provided options: %v", err)
 	}
@@ -54,14 +67,18 @@ func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, image s
 
 type ggcrRemoteOptionsStashKey struct{}
 
-func StashGgcrRemoteOptions(ctx context.Context, options ...remote.Option) context.Context {
+func StashGgcrRemoteOptions(ctx context.Context, options registry.Opts) context.Context {
 	return context.WithValue(ctx, ggcrRemoteOptionsStashKey{}, options)
 }
 
-func RetrieveGgcrRemoteOptions(ctx context.Context) []remote.Option {
-	options, ok := ctx.Value(ggcrRemoteOptionsStashKey{}).([]remote.Option)
+func RetrieveGgcrRemoteOptions(ctx context.Context) registry.Opts {
+	options, ok := ctx.Value(ggcrRemoteOptionsStashKey{}).(registry.Opts)
 	if !ok {
-		return []remote.Option{}
+		return registry.Opts{
+			VerifyCerts:           true,
+			RetryCount:            8,
+			ResponseHeaderTimeout: 300 * time.Second,
+		}
 	}
 	return options
 }

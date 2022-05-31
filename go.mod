@@ -11,11 +11,11 @@ require (
 	github.com/go-logr/logr v1.2.3
 	github.com/google/go-cmp v0.5.8
 	github.com/google/go-containerregistry v0.9.0
-	github.com/k14s/imgpkg v0.17.0
 	github.com/spf13/cobra v1.4.0
 	github.com/stern/stern v1.21.0
-	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942
+	github.com/stretchr/testify v1.7.1
 	github.com/vmware-labs/reconciler-runtime v0.6.0
+	github.com/vmware-tanzu/carvel-imgpkg v0.25.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-framework v0.22.0
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
@@ -51,17 +51,20 @@ require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+	github.com/VividCortex/ewma v1.1.1 // indirect
 	github.com/adrg/xdg v0.2.1 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20220209173558-ad29539cd2e9 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aunum/log v0.0.0-20200821225356-38d2e2c8b489 // indirect
+	github.com/aws/aws-sdk-go v1.40.56 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/briandowns/spinner v1.18.0 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cheggaaa/pb v1.0.29 // indirect
+	github.com/cheggaaa/pb/v3 v3.0.8 // indirect
 	github.com/cncf/udpa/go v0.0.0-20210930031921-04548b0d99d4 // indirect
 	github.com/cncf/xds/go v0.0.0-20211130200136-a8f946100490 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.11.4 // indirect
@@ -114,9 +117,11 @@ require (
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b // indirect
+	github.com/k14s/imgpkg v0.17.0 // indirect
 	github.com/k14s/kbld v0.32.0 // indirect
 	github.com/k14s/semver/v4 v4.0.1-0.20210701191048-266d47ac6115 // indirect
 	github.com/k14s/starlark-go v0.0.0-20200720175618-3a5c849cc368 // indirect
@@ -163,8 +168,8 @@ require (
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/valyala/fastjson v1.6.3 // indirect
 	github.com/vbatts/tar-split v0.11.2 // indirect
+	github.com/vdemeester/k8s-pkg-credentialprovider v1.22.4 // indirect
 	github.com/vito/go-interact v1.0.1 // indirect
-	github.com/vmware-tanzu/carvel-imgpkg v0.25.0 // indirect
 	github.com/vmware-tanzu/carvel-kapp-controller v0.25.0 // indirect
 	github.com/vmware-tanzu/carvel-vendir v0.24.0 // indirect
 	github.com/vmware-tanzu/carvel-ytt v0.40.0 // indirect
@@ -194,11 +199,13 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0 // indirect
 	k8s.io/apiserver v0.24.0 // indirect
+	k8s.io/cloud-provider v0.22.4 // indirect
 	k8s.io/cluster-bootstrap v0.23.4 // indirect
 	k8s.io/component-base v0.24.0 // indirect
 	k8s.io/klog/v2 v2.60.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220328201542-3ee0da9b0b42 // indirect
 	k8s.io/kubectl v0.23.4 // indirect
+	k8s.io/legacy-cloud-providers v0.22.4 // indirect
 	sigs.k8s.io/cluster-api v1.1.3 // indirect
 	sigs.k8s.io/cluster-api-provider-aws v1.1.0 // indirect
 	sigs.k8s.io/cluster-api-provider-azure v1.0.1 // indirect

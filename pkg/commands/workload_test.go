@@ -21,14 +21,15 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	ggcrregistry "github.com/google/go-containerregistry/pkg/registry"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/types"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -47,7 +48,6 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
 )
 
 func TestWorkloadCommand(t *testing.T) {
@@ -1595,10 +1595,25 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 }
 
 func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
-	registry, err := ggcrregistry.TLS("localhost")
-	utilruntime.Must(err)
-	defer registry.Close()
-	u, err := url.Parse(registry.URL)
+	createServer := func(handler func(w http.ResponseWriter, r *http.Request)) *httptest.Server {
+		response := []byte("response")
+		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/v2/" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			w.Header().Set("Content-Type", string(types.DockerManifestSchema2))
+			handler(w, r)
+			w.Write(response)
+		}))
+	}
+	reg := createServer(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			w.Header().Set("Docker-Content-Digest", "sha")
+		}
+	})
+	defer reg.Close()
+	u, err := url.Parse(reg.URL)
 	utilruntime.Must(err)
 	registryHost := u.Host
 
@@ -1674,7 +1689,6 @@ Published source
 
 			cmd := &cobra.Command{}
 			ctx := cli.WithCommand(context.Background(), cmd)
-			ctx = source.StashGgcrRemoteOptions(ctx, remote.WithTransport(registry.Client().Transport))
 
 			opts := &commands.WorkloadOptions{}
 			opts.LoadDefaults(c)
