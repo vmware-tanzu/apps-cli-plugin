@@ -60,6 +60,7 @@ import (
 
 	cliv1alpha1 "github.com/vmware-tanzu/tanzu-framework/apis/cli/v1alpha1"
 	runv1alpha1 "github.com/vmware-tanzu/tanzu-framework/apis/run/v1alpha1"
+	runv1alpha3 "github.com/vmware-tanzu/tanzu-framework/apis/run/v1alpha3"
 	"github.com/vmware-tanzu/tanzu-framework/pkg/v1/buildinfo"
 	capdiscovery "github.com/vmware-tanzu/tanzu-framework/pkg/v1/sdk/capabilities/discovery"
 	tmcv1alpha1 "github.com/vmware-tanzu/tanzu-framework/pkg/v1/tkg/api/tmc/v1alpha1"
@@ -306,8 +307,12 @@ type Client interface {
 	// GetClusterInfrastructure gets cluster infrastructure name like VSphereCluster, AWSCluster, AzureCluster
 	GetClusterInfrastructure() (string, error)
 	// ActivateTanzuKubernetesReleases activates TanzuKubernetesRelease
+	// Deprecated: This would not be supported from TKR API version v1alpha3,
+	// user can use go client to set the labels to activate/deactivate the TKR
 	ActivateTanzuKubernetesReleases(tkrName string) error
 	// DeactivateTanzuKubernetesReleases deactivates TanzuKubernetesRelease
+	// Deprecated: This would not be supported from TKR API version v1alpha3,
+	// user can use go client to set the labels to activate/deactivate the TKR
 	DeactivateTanzuKubernetesReleases(tkrName string) error
 	// IsClusterRegisteredToTMC returns true if cluster is registered to Tanzu Mission Control
 	IsClusterRegisteredToTMC() (bool, error)
@@ -416,7 +421,7 @@ func init() {
 	_ = extensionsV1.AddToScheme(scheme)
 	_ = rbacv1.AddToScheme(scheme)
 	_ = addonsv1.AddToScheme(scheme)
-	_ = runv1alpha1.AddToScheme(scheme)
+	_ = runv1alpha3.AddToScheme(scheme)
 	_ = kappipkg.AddToScheme(scheme)
 	_ = cliv1alpha1.AddToScheme(scheme)
 }
@@ -629,7 +634,12 @@ func (c *client) WaitForAutoscalerDeployment(deploymentName, namespace string) e
 }
 
 func (c *client) WaitForAVIResourceCleanUp(statefulSetName, namespace string) error {
-	return c.GetResource(&appsv1.StatefulSet{}, statefulSetName, namespace, VerifyAVIResourceCleanupFinished, &PollOptions{Interval: CheckResourceInterval, Timeout: AVIResourceCleanupTimeout})
+	err := c.GetResource(&appsv1.StatefulSet{}, statefulSetName, namespace, VerifyAVIResourceCleanupFinished, &PollOptions{Interval: CheckResourceInterval, Timeout: AVIResourceCleanupTimeout})
+	// retry once when network condition is poor
+	if apierrors.IsServiceUnavailable(err) {
+		return c.GetResource(&appsv1.StatefulSet{}, statefulSetName, namespace, VerifyAVIResourceCleanupFinished, &PollOptions{Interval: CheckResourceInterval, Timeout: AVIResourceCleanupTimeout})
+	}
+	return err
 }
 
 func (c *client) WaitForPackageInstall(packageName, namespace string, packageInstallTimeout time.Duration) error {

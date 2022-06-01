@@ -730,7 +730,7 @@ github.com/vmware-tanzu/carvel-ytt/pkg/yttlibrary/overlay
 # github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 ## explicit
 github.com/vmware-tanzu/difflib
-# github.com/vmware-tanzu/tanzu-framework v0.21.0
+# github.com/vmware-tanzu/tanzu-framework v0.22.0
 ## explicit; go 1.17
 github.com/vmware-tanzu/tanzu-framework/apis/cli/v1alpha1
 github.com/vmware-tanzu/tanzu-framework/apis/config/v1alpha1
@@ -775,6 +775,7 @@ github.com/vmware-tanzu/tanzu-framework/pkg/v1/tkg/vc
 github.com/vmware-tanzu/tanzu-framework/pkg/v1/tkg/web/server/models
 github.com/vmware-tanzu/tanzu-framework/pkg/v1/tkr/pkg/constants
 github.com/vmware-tanzu/tanzu-framework/pkg/v1/tkr/pkg/registry
+github.com/vmware-tanzu/tanzu-framework/pkg/v2/tkr/util/version
 github.com/vmware-tanzu/tanzu-framework/util/conversion
 # github.com/vmware/govmomi v0.27.1
 ## explicit; go 1.14

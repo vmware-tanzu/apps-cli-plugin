@@ -1698,8 +1698,8 @@ github.com/vmware-tanzu/carvel-ytt v0.40.0 h1:WUWTtwvfqV9CN9v207oDt2xfhmuWHGwc4M
 github.com/vmware-tanzu/carvel-ytt v0.40.0/go.mod h1:crDcKbS1GM4Q34puoVxdrajWOXrxjOxvUCwtsNV5Etc=
 github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57 h1:NmeWaPuGdwr2+NdXEFqDfcBYiA8Qi/z+twfED7mqCyY=
 github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57/go.mod h1:q4R37lXdaJmkpws5TUoMwT2GXOMs8qJJ9P+zxrtHv28=
-github.com/vmware-tanzu/tanzu-framework v0.21.0 h1:F8ZOiiUqJmBOgKWwQThfWbtfJns1uzzhug3TDkV08gQ=
-github.com/vmware-tanzu/tanzu-framework v0.21.0/go.mod h1:GFersF16jeSvWG63hqWq9H3qHPpYrrajFEpuauJnERY=
+github.com/vmware-tanzu/tanzu-framework v0.22.0 h1:+HYUassarEIhUazAYF+H3zULWGlEmtGpCjc9MpQGZ8U=
+github.com/vmware-tanzu/tanzu-framework v0.22.0/go.mod h1:4um3S6RwbBZy/zbWS/sGcLWwHyVfcvGmR4r77KJKDns=
 github.com/vmware/govmomi v0.20.3/go.mod h1:URlwyTFZX72RmxtxuaFL2Uj3fD1JTvZdx59bHWk6aFU=
 github.com/vmware/govmomi v0.27.1 h1:Rf3o1btFrkJa9be5KtgJ4CyOO8mbFnBxmNtAVHNyFes=
 github.com/vmware/govmomi v0.27.1/go.mod h1:daTuJEcQosNMXYJOeku0qdBJP9SOLLWB3Mqz8THtv6o=
