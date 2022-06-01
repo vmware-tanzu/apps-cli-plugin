@@ -44,10 +44,23 @@ type ClusterSupplyChain struct {
 }
 
 type SupplyChainSpec struct {
-	Resources         []SupplyChainResource `json:"resources"`
-	Selector          map[string]string     `json:"selector"`
-	Params            []DelegatableParam    `json:"params,omitempty"`
-	ServiceAccountRef ServiceAccountRef     `json:"serviceAccountRef,omitempty"`
+	Resources                []SupplyChainResource             `json:"resources"`
+	Params                   []DelegatableParam                `json:"params,omitempty"`
+	ServiceAccountRef        ServiceAccountRef                 `json:"serviceAccountRef,omitempty"`
+	Selector                 map[string]string                 `json:"selector,omitempty"`
+	SelectorMatchExpressions []metav1.LabelSelectorRequirement `json:"selectorMatchExpressions,omitempty"`
+	SelectorMatchFields      []FieldSelectorRequirement        `json:"selectorMatchFields,omitempty"`
+}
+
+type FieldSelectorOperator string
+
+type FieldSelectorRequirement struct {
+	// +kubebuilder:validation:MinLength=1
+	Key string `json:"key"`
+	// +kubebuilder:validation:Enum=In;NotIn;Exists;DoesNotExist
+	Operator FieldSelectorOperator `json:"operator"`
+	// the values array must be empty.
+	Values []string `json:"values,omitempty"`
 }
 
 type SupplyChainResource struct {

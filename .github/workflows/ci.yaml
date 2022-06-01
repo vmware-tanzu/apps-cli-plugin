@@ -165,6 +165,12 @@ jobs:
         echo "##[group]Update workload"
           tanzu apps workload update petclinic --label cli.ci/new-label=true --yes
         echo "##[endgroup]"
+        echo "##[group]Apply clustersupplychain"
+          kubectl apply -f ./.github/samples/clustersupplychain.yaml
+        echo "##[endgroup]"
+         echo "##[group]Get cluster-supply-chain"
+          tanzu apps cluster-supply-chain get ci-test
+        echo "##[endgroup]"
     - name: Collect diagnostics
       run: |
         echo "##[group]Static Pod"

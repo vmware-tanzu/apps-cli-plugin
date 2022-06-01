@@ -140,6 +140,44 @@ spec:
                 additionalProperties:
                   type: string
                 type: object
+              selectorMatchExpressions:
+                items:
+                  properties:
+                    key:
+                      type: string
+                    operator:
+                      type: string
+                    values:
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - key
+                  - operator
+                  type: object
+                type: array
+              selectorMatchFields:
+                items:
+                  properties:
+                    key:
+                      minLength: 1
+                      type: string
+                    operator:
+                      enum:
+                      - In
+                      - NotIn
+                      - Exists
+                      - DoesNotExist
+                      type: string
+                    values:
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - key
+                  - operator
+                  type: object
+                type: array
               serviceAccountRef:
                 properties:
                   name:

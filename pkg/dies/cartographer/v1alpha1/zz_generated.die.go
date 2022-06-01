@@ -255,12 +255,6 @@ func (d *SupplyChainSpecDie) Resources(v ...cartographerv1alpha1.SupplyChainReso
 	})
 }
 
-func (d *SupplyChainSpecDie) Selector(v map[string]string) *SupplyChainSpecDie {
-	return d.DieStamp(func(r *cartographerv1alpha1.SupplyChainSpec) {
-		r.Selector = v
-	})
-}
-
 func (d *SupplyChainSpecDie) Params(v ...cartographerv1alpha1.DelegatableParam) *SupplyChainSpecDie {
 	return d.DieStamp(func(r *cartographerv1alpha1.SupplyChainSpec) {
 		r.Params = v
@@ -270,6 +264,24 @@ func (d *SupplyChainSpecDie) Params(v ...cartographerv1alpha1.DelegatableParam) 
 func (d *SupplyChainSpecDie) ServiceAccountRef(v cartographerv1alpha1.ServiceAccountRef) *SupplyChainSpecDie {
 	return d.DieStamp(func(r *cartographerv1alpha1.SupplyChainSpec) {
 		r.ServiceAccountRef = v
+	})
+}
+
+func (d *SupplyChainSpecDie) Selector(v map[string]string) *SupplyChainSpecDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.SupplyChainSpec) {
+		r.Selector = v
+	})
+}
+
+func (d *SupplyChainSpecDie) SelectorMatchExpressions(v ...metav1.LabelSelectorRequirement) *SupplyChainSpecDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.SupplyChainSpec) {
+		r.SelectorMatchExpressions = v
+	})
+}
+
+func (d *SupplyChainSpecDie) SelectorMatchFields(v ...cartographerv1alpha1.FieldSelectorRequirement) *SupplyChainSpecDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.SupplyChainSpec) {
+		r.SelectorMatchFields = v
 	})
 }
 
