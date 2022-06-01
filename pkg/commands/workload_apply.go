@@ -195,6 +195,7 @@ func (opts *WorkloadApplyOptions) IsDryRun() bool {
 
 func NewWorkloadApplyCommand(ctx context.Context, c *cli.Config) *cobra.Command {
 	opts := &WorkloadApplyOptions{}
+	opts.LoadDefaults(c)
 
 	cmd := &cobra.Command{
 		Use:   "apply",

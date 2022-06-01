@@ -1610,6 +1610,16 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 		shouldError    bool
 		expectedOutput string
 	}{{
+		name:     "local source with excluded files",
+		args:     []string{flags.LocalPathFlagName, "testdata/local-source-exclude-files", flags.YesFlagName},
+		input:    fmt.Sprintf("%s/hello:source", registryHost),
+		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "fedc574423e7aa2ecdd2ffb3381214e3c288db871ab9a3758f77489d6a777a1d"),
+		expectedOutput: `
+The files and/or directories listed in the .tanzuignore file are being excluded from the uploaded source code.
+Publishing source in "testdata/local-source-exclude-files" to "` + registryHost + `/hello:source"...
+Published source
+`,
+	}, {
 		name:     "local source",
 		args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
 		input:    fmt.Sprintf("%s/hello:source", registryHost),
@@ -1667,6 +1677,7 @@ Published source
 			ctx = source.StashGgcrRemoteOptions(ctx, remote.WithTransport(registry.Client().Transport))
 
 			opts := &commands.WorkloadOptions{}
+			opts.LoadDefaults(c)
 			opts.DefineFlags(ctx, c, cmd)
 			cmd.ParseFlags(test.args)
 

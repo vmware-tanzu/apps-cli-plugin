@@ -29,6 +29,8 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 )
 
+const defaultTanzuIgnoreFile = ".tanzuignore"
+
 type Config struct {
 	Name string
 	Client
@@ -36,6 +38,7 @@ type Config struct {
 	ViperConfigFile string
 	KubeConfigFile  string
 	CurrentContext  string
+	TanzuIgnoreFile string
 	Exec            func(ctx context.Context, command string, args ...string) *exec.Cmd
 	Stdin           io.Reader
 	Stdout          io.Writer
@@ -46,13 +49,14 @@ type Config struct {
 func NewDefaultConfig(name string, scheme *runtime.Scheme) *Config {
 	var v int32
 	return &Config{
-		Name:    name,
-		Scheme:  scheme,
-		Exec:    exec.CommandContext,
-		Stdin:   os.Stdin,
-		Stdout:  os.Stdout,
-		Stderr:  os.Stderr,
-		Verbose: &v,
+		Name:            name,
+		Scheme:          scheme,
+		Exec:            exec.CommandContext,
+		Stdin:           os.Stdin,
+		Stdout:          os.Stdout,
+		Stderr:          os.Stderr,
+		Verbose:         &v,
+		TanzuIgnoreFile: defaultTanzuIgnoreFile,
 	}
 }
 

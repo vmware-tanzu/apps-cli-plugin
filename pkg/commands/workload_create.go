@@ -165,6 +165,7 @@ func (opts *WorkloadCreateOptions) IsDryRun() bool {
 
 func NewWorkloadCreateCommand(ctx context.Context, c *cli.Config) *cobra.Command {
 	opts := &WorkloadCreateOptions{}
+	opts.LoadDefaults(c)
 
 	cmd := &cobra.Command{
 		Use:   "create",
