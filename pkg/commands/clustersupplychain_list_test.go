@@ -74,6 +74,9 @@ No cluster supply chains found.
 			ExpectOutput: `
 NAME                READY   AGE
 test-supply-chain   Ready   <unknown>
+
+View supply chain details by running "tanzu apps cluster-supply-chain get <name>"
+
 `,
 		},
 		{
@@ -88,6 +91,9 @@ test-supply-chain   Ready   <unknown>
 			ExpectOutput: `
 NAME                READY       AGE
 test-supply-chain   <unknown>   <unknown>
+
+View supply chain details by running "tanzu apps cluster-supply-chain get <name>"
+
 `,
 		},
 		{
