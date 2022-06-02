@@ -568,7 +568,7 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.Flags().StringVar(&opts.GitTag, cli.StripDash(flags.GitTagFlagName), "", "`tag` within the git repo to checkout")
 	cmd.Flags().StringVarP(&opts.SourceImage, cli.StripDash(flags.SourceImageFlagName), "s", "", "destination `image` repository where source code is staged before being built")
 	cmd.Flags().StringVar(&opts.SubPath, cli.StripDash(flags.SubPathFlagName), "", "relative `path` inside the repo or image to treat as application root (to unset, pass empty string \"\")")
-	cmd.Flags().StringVar(&opts.LocalPath, cli.StripDash(flags.LocalPathFlagName), "", "`path` to a directory, .zip, or .jar file containing workload source code")
+	cmd.Flags().StringVar(&opts.LocalPath, cli.StripDash(flags.LocalPathFlagName), "", "`path` to a directory, .zip, .jar or .war file containing workload source code")
 	cmd.MarkFlagDirname(cli.StripDash(flags.LocalPathFlagName))
 	cmd.Flags().StringVar(&opts.Image, cli.StripDash(flags.ImageFlagName), "", "pre-built `image`, skips the source resolution and build phases of the supply chain")
 	cmd.Flags().StringArrayVar(&opts.Env, cli.StripDash(flags.EnvFlagName), []string{}, "environment variables represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")

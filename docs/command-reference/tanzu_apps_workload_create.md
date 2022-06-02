@@ -44,7 +44,7 @@ tanzu apps workload create --file workload.yaml
       --limit-cpu cores                the maximum amount of cpu allowed, in CPU cores (500m = .5 cores)
       --limit-memory bytes             the maximum amount of memory allowed, in bytes (500Mi = 500MiB = 500 * 1024 * 1024)
       --live-update                    put the workload in live update mode (--live-update=false to disable)
-      --local-path path                path to a directory, .zip, or .jar file containing workload source code
+      --local-path path                path to a directory, .zip, .jar or .war file containing workload source code
   -n, --namespace name                 kubernetes namespace (defaulted from kube config)
       --param "key=value" pair         additional parameters represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --param-yaml "key=value" pair    specify nested parameters using YAML or JSON formatted values represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
