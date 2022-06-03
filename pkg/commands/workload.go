@@ -156,21 +156,6 @@ func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldError
 		errs = errs.Also(validation.CompareQuantity(opts.LimitMemory, opts.RequestMemory, flags.RequestMemoryFlagName))
 	}
 
-	// source options are mutually exclusive
-	source := []string{}
-	if opts.GitBranch != "" || opts.GitCommit != "" || opts.GitRepo != "" || opts.GitTag != "" {
-		source = append(source, flags.GitFlagWildcard)
-	}
-	if opts.SourceImage != "" {
-		source = append(source, flags.SourceImageFlagName)
-	}
-	if opts.Image != "" {
-		source = append(source, flags.ImageFlagName)
-	}
-	if len(source) > 1 {
-		errs = errs.Also(validation.ErrMultipleOneOf(source...))
-	}
-
 	return errs
 }
 
@@ -459,7 +444,9 @@ func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentW
 	}
 	c.Printf("Update workload:\n")
 	c.Printf("%s\n", difference)
-
+	if !workload.IsSourceFound() {
+		c.Printf("NOTICE: no source code or image has been specified for this workload.\n\n")
+	}
 	if !opts.Yes {
 		if opts.FilePath == "-" {
 			c.Errorf("Skipping workload, cannot confirm intent. Run command with %s flag to confirm intent when providing input from stdin\n", flags.YesFlagName)
@@ -505,7 +492,9 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 
 	c.Printf("Create workload:\n")
 	c.Printf("%s\n", diff)
-
+	if !workload.IsSourceFound() {
+		c.Printf("NOTICE: no source code or image has been specified for this workload.\n\n")
+	}
 	if !opts.Yes {
 		if opts.FilePath == "-" {
 			c.Errorf("Skipping workload, cannot confirm intent. Run command with %s flag to confirm intent when providing input from stdin\n", flags.YesFlagName)

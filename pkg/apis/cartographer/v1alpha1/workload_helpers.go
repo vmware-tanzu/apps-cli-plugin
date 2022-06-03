@@ -106,17 +106,30 @@ func (w *Workload) Validate() validation.FieldErrors {
 	return errs
 }
 
+func (w *Workload) IsSourceFound() bool {
+	if w.Spec.Source == nil && w.Spec.Image == "" {
+		return false
+	}
+	if w.Spec.Source != nil {
+		if w.Spec.Source.Git == nil && w.Spec.Source.Image == "" {
+			return false
+		}
+	}
+	return true
+}
+
 func (w *WorkloadSpec) Validate() validation.FieldErrors {
 	errs := validation.FieldErrors{}
-
-	if w.Source == nil && w.Image == "" {
-		errs = errs.Also(validation.ErrMissingOneOf(flags.GitFlagWildcard, flags.SourceImageFlagName, flags.ImageFlagName))
-	}
-	if w.Source != nil && w.Image != "" {
-		errs = errs.Also(validation.ErrMultipleOneOf(flags.GitFlagWildcard, flags.SourceImageFlagName, flags.ImageFlagName))
-	}
 	if w.Source != nil {
+		if w.Image != "" && w.Source.Subpath == "" {
+			errs = errs.Also(validation.ErrMultipleOneOf(flags.GitFlagWildcard, flags.SourceImageFlagName, flags.ImageFlagName))
+		}
+
 		errs = errs.Also(w.Source.Validate())
+
+		if w.Source.Git == nil && w.Source.Image == "" && w.Image == "" && w.Source.Subpath != "" {
+			errs = errs.Also(validation.ErrInvalidValue(w.Source.Subpath, flags.SubPathFlagName))
+		}
 	}
 
 	return errs
@@ -125,9 +138,6 @@ func (w *WorkloadSpec) Validate() validation.FieldErrors {
 func (w *Source) Validate() validation.FieldErrors {
 	errs := validation.FieldErrors{}
 
-	if w.Git == nil && w.Image == "" {
-		errs = errs.Also(validation.ErrMissingOneOf(flags.GitFlagWildcard, flags.SourceImageFlagName))
-	}
 	if w.Git != nil && w.Image != "" {
 		errs = errs.Also(validation.ErrMultipleOneOf(flags.GitFlagWildcard, flags.SourceImageFlagName))
 	}
@@ -267,9 +277,11 @@ func (w *WorkloadSpec) MergeSourceImage(image string) {
 }
 
 func (w *WorkloadSpec) MergeSubPath(subPath string) {
-	if w.Source != nil {
-		w.Source.Subpath = subPath
+	if w.Source == nil {
+		w.Source = &Source{}
 	}
+
+	w.Source.Subpath = subPath
 }
 
 func (w *WorkloadSpec) MergeImage(image string) {

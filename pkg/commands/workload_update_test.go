@@ -131,17 +131,10 @@ Workload is unchanged, skipping update
 `,
 		},
 		{
-			Name: "invalid resource",
+			Name: "no source",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
 				parent,
-			},
-			ShouldError: true,
-			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
-				if expected, actual := false, cmd.SilenceUsage; expected != actual {
-					t.Errorf("expected cmd.SilenceUsage to be %t, actually %t", expected, actual)
-				}
-				return nil
 			},
 		},
 		{
