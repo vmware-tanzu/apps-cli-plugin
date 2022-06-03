@@ -73,7 +73,15 @@ func (opts *ClusterSupplyChainListOptions) Exec(ctx context.Context, c *cli.Conf
 	supplyChain = supplyChain.DeepCopy()
 	printer.SortByNamespaceAndName(supplyChain.Items)
 
-	return tablePrinter.PrintObj(supplyChain, c.Stdout)
+	if err := tablePrinter.PrintObj(supplyChain, c.Stdout); err != nil {
+		return err
+	}
+
+	c.Printf("\n")
+	c.Infof("View supply chain details by running \"tanzu apps cluster-supply-chain get <name>\"\n")
+	c.Printf("\n")
+
+	return nil
 }
 
 func NewClusterSupplyChainListCommand(ctx context.Context, c *cli.Config) *cobra.Command {
