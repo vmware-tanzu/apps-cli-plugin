@@ -19,19 +19,20 @@ package source
 import (
 	"context"
 	"fmt"
-
+	"net/http"
 	"os"
 	"path"
 	"time"
 
 	"github.com/cppforlife/go-cli-ui/ui"
 	regname "github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/plainimage"
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry"
 )
 
 func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, image string) (string, error) {
-	options := RetrieveGgcrRemoteOptions(ctx)
+
 	envFunction := func() []string {
 		envVars := os.Environ()
 		_, present := os.LookupEnv("IMGPKG_ENABLE_IAAS_AUTH")
@@ -40,11 +41,24 @@ func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, image s
 		}
 		return envVars
 	}
-
+	options := RetrieveRegistryOptions(ctx)
+	if options == nil {
+		options = &registry.Opts{
+			VerifyCerts:           true,
+			RetryCount:            8,
+			ResponseHeaderTimeout: 300 * time.Second,
+		}
+	}
 	options.EnvironFunc = envFunction
+	var transport http.RoundTripper
+	t := RetrieveStashContainerRemoteTransport(ctx)
+	if t == nil {
+		transport = remote.DefaultTransport.Clone()
+	} else {
+		transport = *t
+	}
 
-	// TODO: support more registry options using apps plugin configuration
-	reg, err := registry.NewSimpleRegistry(options)
+	reg, err := registry.NewSimpleRegistry(*options, remote.WithTransport(transport))
 	if err != nil {
 		return "", fmt.Errorf("unable to create a registry with provided options: %v", err)
 	}
@@ -65,20 +79,29 @@ func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, image s
 	return fmt.Sprintf("%s@%s", uploadRef.Name(), digestRef.DigestStr()), nil
 }
 
-type ggcrRemoteOptionsStashKey struct{}
+type registryOptionsStashKey struct{}
+type containerRemoteTransportStashKey struct{}
 
-func StashGgcrRemoteOptions(ctx context.Context, options registry.Opts) context.Context {
-	return context.WithValue(ctx, ggcrRemoteOptionsStashKey{}, options)
+func StashRegistryOptions(ctx context.Context, options registry.Opts) context.Context {
+	return context.WithValue(ctx, registryOptionsStashKey{}, options)
 }
 
-func RetrieveGgcrRemoteOptions(ctx context.Context) registry.Opts {
-	options, ok := ctx.Value(ggcrRemoteOptionsStashKey{}).(registry.Opts)
+func RetrieveRegistryOptions(ctx context.Context) *registry.Opts {
+	options, ok := ctx.Value(registryOptionsStashKey{}).(registry.Opts)
 	if !ok {
-		return registry.Opts{
-			VerifyCerts:           true,
-			RetryCount:            8,
-			ResponseHeaderTimeout: 300 * time.Second,
-		}
+		return nil
 	}
-	return options
+	return &options
+}
+
+func StashContainerRemoteTransport(ctx context.Context, rTripper http.RoundTripper) context.Context {
+	return context.WithValue(ctx, containerRemoteTransportStashKey{}, rTripper)
+}
+
+func RetrieveStashContainerRemoteTransport(ctx context.Context) *http.RoundTripper {
+	transport, ok := ctx.Value(containerRemoteTransportStashKey{}).(http.RoundTripper)
+	if !ok {
+		return nil
+	}
+	return &transport
 }

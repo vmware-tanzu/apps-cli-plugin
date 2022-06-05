@@ -21,16 +21,15 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-containerregistry/pkg/v1/types"
+	ggcrregistry "github.com/google/go-containerregistry/pkg/registry"
 	"github.com/spf13/cobra"
+	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
@@ -48,6 +47,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
 )
 
 func TestWorkloadCommand(t *testing.T) {
@@ -1595,23 +1595,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 }
 
 func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
-	createServer := func(handler func(w http.ResponseWriter, r *http.Request)) *httptest.Server {
-		response := []byte("response")
-		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/v2/" {
-				w.WriteHeader(http.StatusOK)
-				return
-			}
-			w.Header().Set("Content-Type", string(types.DockerManifestSchema2))
-			handler(w, r)
-			w.Write(response)
-		}))
-	}
-	reg := createServer(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			w.Header().Set("Docker-Content-Digest", "sha")
-		}
-	})
+	reg, err := ggcrregistry.TLS("localhost")
+	utilruntime.Must(err)
 	defer reg.Close()
 	u, err := url.Parse(reg.URL)
 	utilruntime.Must(err)
@@ -1689,6 +1674,12 @@ Published source
 
 			cmd := &cobra.Command{}
 			ctx := cli.WithCommand(context.Background(), cmd)
+			ctx = source.StashContainerRemoteTransport(ctx, reg.Client().Transport)
+			ctx = source.StashRegistryOptions(ctx, registry.Opts{
+				VerifyCerts:           true,
+				RetryCount:            2,
+				ResponseHeaderTimeout: 30 * time.Second,
+			})
 
 			opts := &commands.WorkloadOptions{}
 			opts.LoadDefaults(c)
