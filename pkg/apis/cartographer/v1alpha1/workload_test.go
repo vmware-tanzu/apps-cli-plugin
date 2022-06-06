@@ -183,7 +183,7 @@ func TestWorkload_MergeServiceAccountName(t *testing.T) {
 			got := test.seed.DeepCopy()
 			got.Spec.MergeServiceAccountName(test.update)
 			if diff := cmp.Diff(test.want, got); diff != "" {
-				t.Errorf("Merge() (-want, +got) = %v", diff)
+				t.Errorf("MergeServiceAccountName() (-want, +got) = %v", diff)
 			}
 		})
 	}
@@ -200,7 +200,6 @@ func TestWorkload_Validate(t *testing.T) {
 		want: validation.FieldErrors{}.Also(
 			validation.ErrInvalidValue("", cli.NameArgumentName),
 			validation.ErrInvalidValue("", flags.NamespaceFlagName),
-			validation.ErrMissingOneOf(flags.GitFlagWildcard, flags.SourceImageFlagName, flags.ImageFlagName),
 		),
 	}, {
 		name: "valid git using --git-branch",
@@ -230,6 +229,26 @@ func TestWorkload_Validate(t *testing.T) {
 			},
 			Spec: WorkloadSpec{
 				Source: &Source{
+					Git: &GitSource{
+						URL: "git@github.com/example/repo.git",
+						Ref: GitRef{
+							Tag: "1.0.1",
+						},
+					},
+				},
+			},
+		},
+		want: validation.FieldErrors{},
+	}, {
+		name: "valid git using --git-tag with subPath",
+		workload: Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+			},
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Subpath: "test-path",
 					Git: &GitSource{
 						URL: "git@github.com/example/repo.git",
 						Ref: GitRef{
@@ -272,6 +291,21 @@ func TestWorkload_Validate(t *testing.T) {
 		},
 		want: validation.FieldErrors{},
 	}, {
+		name: "valid source image with subpath",
+		workload: Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+			},
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Image:   "registry.example/image:tag",
+					Subpath: "test-path",
+				},
+			},
+		},
+		want: validation.FieldErrors{},
+	}, {
 		name: "duplicate source",
 		workload: Workload{
 			ObjectMeta: metav1.ObjectMeta{
@@ -304,6 +338,21 @@ func TestWorkload_Validate(t *testing.T) {
 		},
 		want: validation.FieldErrors{},
 	}, {
+		name: "valid image with subpath",
+		workload: Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+			},
+			Spec: WorkloadSpec{
+				Image: "ubuntu:bionic",
+				Source: &Source{
+					Subpath: "test-paths",
+				},
+			},
+		},
+		want: validation.FieldErrors{},
+	}, {
 		name: "source and image",
 		workload: Workload{
 			ObjectMeta: metav1.ObjectMeta{
@@ -323,6 +372,20 @@ func TestWorkload_Validate(t *testing.T) {
 			},
 		},
 		want: validation.ErrMultipleOneOf(flags.GitFlagWildcard, flags.SourceImageFlagName, flags.ImageFlagName),
+	}, {
+		name: "subPath with no source",
+		workload: Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+			},
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Subpath: "test-paths",
+				},
+			},
+		},
+		want: validation.ErrInvalidValue("test-paths", flags.SubPathFlagName),
 	}}
 
 	for _, test := range tests {
@@ -496,6 +559,25 @@ func TestWorkload_Merge(t *testing.T) {
 			Spec: WorkloadSpec{
 				Source: &Source{
 					Image: "registry.example/repo:tag",
+				},
+			},
+		},
+	}, {
+		name: "subPath with no source",
+		seed: &Workload{
+			Spec: WorkloadSpec{},
+		},
+		update: &Workload{
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Subpath: "test-path",
+				},
+			},
+		},
+		want: &Workload{
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Subpath: "test-path",
 				},
 			},
 		},
@@ -1061,7 +1143,9 @@ func TestWorkloadSpec_MergeSubpath(t *testing.T) {
 		name:    "empty source",
 		seed:    &WorkloadSpec{},
 		subPath: "",
-		want:    &WorkloadSpec{},
+		want: &WorkloadSpec{
+			Source: &Source{},
+		},
 	}}
 
 	for _, test := range tests {
@@ -1885,6 +1969,67 @@ func TestDeprecationWarnings(t *testing.T) {
 			gotWarningMsg := test.seed.DeprecationWarnings()
 			if !cmp.Equal(test.want, gotWarningMsg) {
 				t.Errorf("DeprecationWarnings() (-want %v, +got %v)", test.want, gotWarningMsg)
+			}
+		})
+	}
+}
+
+func TestIsSourceFound(t *testing.T) {
+	tests := []struct {
+		name string
+		seed *Workload
+		want bool
+	}{{
+		name: "git source",
+		seed: &Workload{
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Git: &GitSource{
+						URL: "git@github.com/example/repo.git",
+						Ref: GitRef{
+							Branch: "main",
+						},
+					},
+				},
+			},
+		},
+		want: true,
+	}, {
+		name: "source image",
+		seed: &Workload{
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Image: "app:source",
+				},
+			},
+		},
+		want: true,
+	}, {
+		name: "nil source",
+		seed: &Workload{
+			Spec: WorkloadSpec{
+				Source: &Source{},
+			},
+		},
+		want: false,
+	}, {
+		name: "image",
+		seed: &Workload{
+			Spec: WorkloadSpec{
+				Image: "app:source",
+			},
+		},
+		want: true,
+	}, {
+		name: "empty",
+		seed: &Workload{},
+		want: false,
+	}}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.seed.IsSourceFound()
+			if !cmp.Equal(test.want, got) {
+				t.Errorf("IsSourceFound() (-want %v, +got %v)", test.want, got)
 			}
 		})
 	}

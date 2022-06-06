@@ -107,15 +107,8 @@ func TestWorkloadCreateCommand(t *testing.T) {
 			ShouldError: true,
 		},
 		{
-			Name:        "missing source",
-			Args:        []string{workloadName},
-			ShouldError: true,
-			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
-				if expected, actual := false, cmd.SilenceUsage; expected != actual {
-					t.Errorf("expected cmd.SilenceUsage to be %t, actually %t", expected, actual)
-				}
-				return nil
-			},
+			Name: "no source",
+			Args: []string{workloadName},
 		},
 		{
 			Name: "dry run",

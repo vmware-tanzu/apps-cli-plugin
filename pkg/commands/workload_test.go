@@ -419,10 +419,7 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 				SourceImage: "repo.example/image:tag",
 				Image:       "repo.example/image:tag",
 			},
-			ShouldValidate: false,
-			ExpectFieldErrors: validation.FieldErrors{}.Also(
-				validation.ErrMultipleOneOf(flags.GitFlagWildcard, flags.SourceImageFlagName, flags.ImageFlagName),
-			),
+			ShouldValidate: true,
 		},
 		{
 			Name: "wait",
@@ -1750,6 +1747,29 @@ Create workload:
 Created workload "my-workload"`,
 		},
 		{
+			name: "Create workload without source succesfully",
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+			},
+			shouldError: false,
+			expectedOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec: {}
+
+NOTICE: no source code or image has been specified for this workload.
+
+Created workload "my-workload"`,
+		},
+		{
 			name: "Create workload error",
 			withReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("create", "Workload"),
@@ -1837,6 +1857,38 @@ func TestWorkloadOptionsUpdate(t *testing.T) {
 						"FOO": "bar",
 					},
 				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Image: "ubuntu",
+				},
+			},
+			shouldError: false,
+			expectedOutput: `
+Update workload:
+...
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  labels:
+  6,  6   |    FOO: bar
+      7 + |    NEW: value
+  7,  8   |  name: my-workload
+  8,  9   |  namespace: default
+  9, 10   |spec:
+ 10, 11   |  image: ubuntu
+
+Updated workload "my-workload"
+`,
+		},
+		{
+			name: "Update workload without source successfully",
+			args: []string{flags.LabelFlagName, "NEW=value", flags.YesFlagName},
+			givenWorkload: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+					Labels: map[string]string{
+						"FOO": "bar",
+					},
+				},
 			},
 			shouldError: false,
 			expectedOutput: `
@@ -1850,6 +1902,8 @@ Update workload:
   7,  8   |  name: my-workload
   8,  9   |  namespace: default
   9, 10   |spec: {}
+
+NOTICE: no source code or image has been specified for this workload.
 
 Updated workload "my-workload"
 `,
