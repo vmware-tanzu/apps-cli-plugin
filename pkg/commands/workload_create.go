@@ -119,8 +119,14 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		return err
 	}
 
+	if okToCreate {
+		c.Printf("\n")
+		DisplayCommandNextSteps(c, workload)
+		c.Printf("\n")
+	}
+
 	anyTail := opts.Tail || opts.TailTimestamps
-	if (opts.Yes || okToCreate) && (opts.Wait || anyTail) {
+	if okToCreate && (opts.Wait || anyTail) {
 		c.Infof("Waiting for workload %q to become ready...\n", opts.Name)
 
 		workers := []wait.Worker{

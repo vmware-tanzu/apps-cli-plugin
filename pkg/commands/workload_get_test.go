@@ -187,6 +187,34 @@ Issues
 No issues reported.
 
 No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
+`,
+		}, {
+			Name: "no supply chain info in different namespace",
+			Args: []string{workloadName, flags.NamespaceFlagName, "my-custom-namespace"},
+			GivenObjects: []client.Object{diecartov1alpha1.WorkloadBlank.
+				MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+					d.Name(workloadName)
+					d.Namespace("my-custom-namespace")
+				}),
+			},
+			ExpectOutput: `
+---
+# my-workload: <unknown>
+---
+Supply Chain reference not found.
+
+Supply Chain resources not found.
+
+Issues
+No issues reported.
+
+No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload --namespace my-custom-namespace"
+
 `,
 		}, {
 			Name: "no supply chain ref but conditions in status",
@@ -217,6 +245,9 @@ reason:    OopsieDoodle
 message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "supply chain ref but no condition in status",
@@ -247,6 +278,9 @@ Issues
 No issues reported.
 
 No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "show status and service ref",
@@ -296,6 +330,9 @@ CLAIM      NAME         KIND         API VERSION
 database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
 
 No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "no issues reported",
@@ -330,6 +367,9 @@ Issues
 No issues reported.
 
 No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "show issues with unknown status",
@@ -366,6 +406,9 @@ reason:    OopsieDoodle
 message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "show status with false condition",
@@ -401,6 +444,9 @@ reason:    OopsieDoodle
 message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "show source info - git",
@@ -455,6 +501,9 @@ reason:    OopsieDoodle
 message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "show source info - local path",
@@ -501,6 +550,9 @@ reason:    OopsieDoodle
 message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "show source info - image",
@@ -543,6 +595,9 @@ reason:    OopsieDoodle
 message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "show resources",
@@ -626,6 +681,9 @@ reason:    OopsieDoodle
 message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "show pods",
@@ -677,6 +735,9 @@ Pods
 NAME   STATUS    RESTARTS   AGE
 pod1   Running   0          <unknown>
 pod2   Failed    0          <unknown>
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "show knative services",
@@ -734,6 +795,9 @@ Knative Services
 NAME    READY       URL
 ksvc1   Ready       https://example.com
 ksvc2   not-Ready   <empty>
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "show pods and knative services",
@@ -787,6 +851,9 @@ Knative Services
 NAME    READY       URL
 ksvc1   Ready       https://example.com
 ksvc2   not-Ready   <empty>
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "not found",
@@ -866,6 +933,9 @@ No issues reported.
 
 Failed to list pods:
   inducing failure for list PodList
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "get error for listing knative services",
@@ -888,6 +958,9 @@ Issues
 No issues reported.
 
 No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		}, {
 			Name: "get workload exported data",

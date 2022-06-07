@@ -159,6 +159,16 @@ func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldError
 	return errs
 }
 
+func DisplayCommandNextSteps(c *cli.Config, workload *cartov1alpha1.Workload) {
+	if workload.Namespace != c.Client.DefaultNamespace() {
+		c.Infof("To see logs:   \"tanzu apps workload tail %s %s %s\"\n", workload.Name, flags.NamespaceFlagName, workload.Namespace)
+		c.Infof("To get status: \"tanzu apps workload get %s %s %s\"\n", workload.Name, flags.NamespaceFlagName, workload.Namespace)
+	} else {
+		c.Infof("To see logs:   \"tanzu apps workload tail %s\"\n", workload.Name)
+		c.Infof("To get status: \"tanzu apps workload get %s\"\n", workload.Name)
+	}
+}
+
 func (opts *WorkloadOptions) LoadDefaults(c *cli.Config) {
 	opts.ExcludePathFile = c.TanzuIgnoreFile
 }
@@ -461,6 +471,8 @@ func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentW
 				return okToUpdate, nil
 			}
 		}
+	} else {
+		okToUpdate = opts.Yes
 	}
 
 	if err := c.Update(ctx, workload); err != nil {
@@ -509,13 +521,15 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 				return okToCreate, nil
 			}
 		}
+	} else {
+		okToCreate = opts.Yes
 	}
 
 	if err := c.Create(ctx, workload); err != nil {
 		return okToCreate, err
 	}
-	c.Successf("Created workload %q\n", workload.Name)
 
+	c.Successf("Created workload %q\n", workload.Name)
 	return okToCreate, nil
 }
 
