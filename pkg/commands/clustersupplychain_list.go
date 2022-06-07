@@ -78,7 +78,7 @@ func (opts *ClusterSupplyChainListOptions) Exec(ctx context.Context, c *cli.Conf
 	}
 
 	c.Printf("\n")
-	c.Infof("View supply chain details by running \"tanzu apps cluster-supply-chain get <name>\"\n")
+	c.Infof("To view details: \"tanzu apps cluster-supply-chain get <name>\"\n")
 	c.Printf("\n")
 
 	return nil
