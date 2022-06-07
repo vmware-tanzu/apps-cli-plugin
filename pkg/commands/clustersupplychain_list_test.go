@@ -75,7 +75,7 @@ No cluster supply chains found.
 NAME                READY   AGE
 test-supply-chain   Ready   <unknown>
 
-View supply chain details by running "tanzu apps cluster-supply-chain get <name>"
+To view details: "tanzu apps cluster-supply-chain get <name>"
 
 `,
 		},
@@ -92,7 +92,7 @@ View supply chain details by running "tanzu apps cluster-supply-chain get <name>
 NAME                READY       AGE
 test-supply-chain   <unknown>   <unknown>
 
-View supply chain details by running "tanzu apps cluster-supply-chain get <name>"
+To view details: "tanzu apps cluster-supply-chain get <name>"
 
 `,
 		},
