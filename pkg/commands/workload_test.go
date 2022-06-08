@@ -28,7 +28,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	ggcrregistry "github.com/google/go-containerregistry/pkg/registry"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -1592,10 +1591,10 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 }
 
 func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
-	registry, err := ggcrregistry.TLS("localhost")
+	reg, err := ggcrregistry.TLS("localhost")
 	utilruntime.Must(err)
-	defer registry.Close()
-	u, err := url.Parse(registry.URL)
+	defer reg.Close()
+	u, err := url.Parse(reg.URL)
 	utilruntime.Must(err)
 	registryHost := u.Host
 
@@ -1671,8 +1670,7 @@ Published source
 
 			cmd := &cobra.Command{}
 			ctx := cli.WithCommand(context.Background(), cmd)
-			ctx = source.StashGgcrRemoteOptions(ctx, remote.WithTransport(registry.Client().Transport))
-
+			ctx = source.StashContainerRemoteTransport(ctx, reg.Client().Transport)
 			opts := &commands.WorkloadOptions{}
 			opts.LoadDefaults(c)
 			opts.DefineFlags(ctx, c, cmd)

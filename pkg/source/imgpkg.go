@@ -19,19 +19,26 @@ package source
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"path"
+	"time"
 
 	"github.com/cppforlife/go-cli-ui/ui"
 	regname "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/k14s/imgpkg/pkg/imgpkg/plainimage"
-	"github.com/k14s/imgpkg/pkg/imgpkg/registry"
+	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/plainimage"
+	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry"
 )
 
 func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, image string) (string, error) {
-	options := RetrieveGgcrRemoteOptions(ctx)
-	// TODO support more registry options
-	reg, err := registry.NewRegistry(registry.Opts{VerifyCerts: true}, options...)
+
+	options := registry.Opts{
+		VerifyCerts:           true,
+		RetryCount:            5,
+		ResponseHeaderTimeout: 30 * time.Second,
+	}
+	transport := RetrieveStashContainerRemoteTransport(ctx)
+	reg, err := registry.NewSimpleRegistryWithTransport(options, transport)
 	if err != nil {
 		return "", fmt.Errorf("unable to create a registry with provided options: %v", err)
 	}
@@ -52,16 +59,17 @@ func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, image s
 	return fmt.Sprintf("%s@%s", uploadRef.Name(), digestRef.DigestStr()), nil
 }
 
-type ggcrRemoteOptionsStashKey struct{}
+type registryOptionsStashKey struct{}
+type containerRemoteTransportStashKey struct{}
 
-func StashGgcrRemoteOptions(ctx context.Context, options ...remote.Option) context.Context {
-	return context.WithValue(ctx, ggcrRemoteOptionsStashKey{}, options)
+func StashContainerRemoteTransport(ctx context.Context, rTripper http.RoundTripper) context.Context {
+	return context.WithValue(ctx, containerRemoteTransportStashKey{}, rTripper)
 }
 
-func RetrieveGgcrRemoteOptions(ctx context.Context) []remote.Option {
-	options, ok := ctx.Value(ggcrRemoteOptionsStashKey{}).([]remote.Option)
+func RetrieveStashContainerRemoteTransport(ctx context.Context) http.RoundTripper {
+	transport, ok := ctx.Value(containerRemoteTransportStashKey{}).(http.RoundTripper)
 	if !ok {
-		return []remote.Option{}
+		return remote.DefaultTransport
 	}
-	return options
+	return transport
 }
