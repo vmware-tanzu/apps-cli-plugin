@@ -172,6 +172,10 @@ Create workload:
      13 + |    subPath: ./app
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 `,
 		},
 		{
@@ -219,6 +223,10 @@ Update workload:
      13 + |    subPath: ./app
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 `,
 		},
 		{
@@ -260,6 +268,10 @@ Create workload:
      13 + |    subPath: ./app
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 `,
 		},
 		{
@@ -327,6 +339,10 @@ Create workload:
      12 + |      url: https://example.com/repo.git
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 Error: timeout after 1ns waiting for "my-workload" to become ready
 To view status run: tanzu apps workload get my-workload --namespace default
@@ -391,6 +407,10 @@ Create workload:
      12 + |      url: https://example.com/repo.git
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 Workload "my-workload" is ready
 `,
@@ -465,6 +485,10 @@ Create workload:
      12 + |      url: https://example.com/repo.git
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 ...tail output...
 Workload "my-workload" is ready
@@ -588,6 +612,10 @@ Create workload:
      12 + |      url: https://example.com/repo.git
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 Error: Failed to become ready: a hopefully informative message about what went wrong
 `,
@@ -662,6 +690,10 @@ Create workload:
      25 + |      url: https://github.com/spring-projects/spring-petclinic.git
 
 Created workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -759,6 +791,10 @@ Create workload:
      25 + |      url: https://github.com/spring-projects/spring-petclinic.git
 
 Created workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -882,6 +918,10 @@ Update workload:
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
 
 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -1005,6 +1045,10 @@ Create workload:
      29 + |      url: https://github.com/spring-projects/spring-petclinic.git
 
 Created workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -1218,6 +1262,10 @@ Update workload:
      14 + |      name: my-prod-db
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 Error: timeout after 1ns waiting for "my-workload" to become ready
 To view status run: tanzu apps workload get my-workload --namespace default
@@ -1293,6 +1341,10 @@ Update workload:
      14 + |      name: my-prod-db
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 Error: Failed to become ready: a hopefully informative message about what went wrong
 `,
@@ -1363,6 +1415,10 @@ Update workload:
      14 + |      name: my-prod-db
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 Workload "my-workload" is ready
 `,
@@ -1444,6 +1500,10 @@ Update workload:
      14 + |      name: my-prod-db
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 ...tail output...
 Workload "my-workload" is ready
@@ -1546,6 +1606,10 @@ Update workload:
      29 + |    subPath: ./cmd
 
 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -1643,6 +1707,10 @@ Update workload:
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --namespace test-namespace"
+To get status: "tanzu apps workload get my-workload --namespace test-namespace"
+
 `,
 		},
 		{
@@ -1716,6 +1784,10 @@ Update workload:
      16 + |      name: my-prod-db
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 `,
 		},
 		{
@@ -1772,6 +1844,10 @@ Create workload:
      20 + |      url: https://example.com/repo.git
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 `,
 		},
 		{
@@ -1830,6 +1906,10 @@ Update workload:
      17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -1889,6 +1969,10 @@ Update workload:
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -1949,6 +2033,10 @@ Update workload:
      17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -2007,6 +2095,10 @@ Update workload:
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -2059,6 +2151,10 @@ Update workload:
  13, 14   |      url: https://github.com/sample-accelerators/spring-petclinic
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 `,
 		},
 		{
@@ -2115,6 +2211,10 @@ Update workload:
 ...
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 `,
 		},
 		{
@@ -2170,6 +2270,10 @@ Update workload:
 ...
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 `,
 		},
 		{
@@ -2218,6 +2322,10 @@ Create workload:
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 Created workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -2260,6 +2368,10 @@ Create workload:
      13 + |      url: https://example.com/repo.git
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 `,
 		},
 		{
@@ -2308,6 +2420,10 @@ Create workload:
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 Created workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -2365,6 +2481,10 @@ Create workload:
      21 + |        port: 1026
 
 Created workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -2448,6 +2568,10 @@ Create workload:
      33 + |      url: https://github.com/spring-projects/spring-petclinic.git
 
 Created workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 	}

@@ -459,6 +459,10 @@ Update workload:
      14 + |      name: my-prod-db
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 Error: timeout after 1ns waiting for "my-workload" to become ready
 To view status run: tanzu apps workload get my-workload --namespace default
@@ -533,6 +537,10 @@ Update workload:
      14 + |      name: my-prod-db
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 Error: Failed to become ready: a hopefully informative message about what went wrong
 `,
@@ -603,6 +611,10 @@ Update workload:
      14 + |      name: my-prod-db
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 Workload "my-workload" is ready
 `,
@@ -684,6 +696,10 @@ Update workload:
      14 + |      name: my-prod-db
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 ...tail output...
 Workload "my-workload" is ready
@@ -767,6 +783,10 @@ Update workload:
      14 + |      name: my-prod-db
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 ...tail output...
 Workload "my-workload" is ready
@@ -864,6 +884,10 @@ Update workload:
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
 
 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -983,6 +1007,10 @@ Update workload:
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
 
 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -1134,6 +1162,10 @@ Update workload:
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --namespace test-namespace"
+To get status: "tanzu apps workload get my-workload --namespace test-namespace"
+
 `,
 		},
 		{

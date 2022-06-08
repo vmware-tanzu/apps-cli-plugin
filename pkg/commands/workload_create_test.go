@@ -193,6 +193,10 @@ Create workload:
      12 + |      url: https://example.com/repo.git
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 Error: Failed to become ready: a hopefully informative message about what went wrong
 `,
@@ -257,13 +261,17 @@ Create workload:
      12 + |      url: https://example.com/repo.git
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 Error: timeout after 1ns waiting for "my-workload" to become ready
 To view status run: tanzu apps workload get my-workload --namespace default
 `,
 		},
 		{
-			Name: "successfull wait for ready cond",
+			Name: "successful wait for ready cond",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -321,6 +329,10 @@ Create workload:
      12 + |      url: https://example.com/repo.git
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 Workload "my-workload" is ready
 `,
@@ -395,6 +407,10 @@ Create workload:
      12 + |      url: https://example.com/repo.git
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 ...tail output...
 Workload "my-workload" is ready
@@ -470,6 +486,10 @@ Create workload:
      12 + |      url: https://example.com/repo.git
 
 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
 Waiting for workload "my-workload" to become ready...
 ...tail output...
 Workload "my-workload" is ready
@@ -640,6 +660,10 @@ Create workload:
      25 + |      url: https://github.com/spring-projects/spring-petclinic.git
 
 Created workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -789,6 +813,10 @@ Create workload:
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 Created workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -846,6 +874,10 @@ Create workload:
      21 + |        port: 1026
 
 Created workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 		{
@@ -929,6 +961,10 @@ Create workload:
      33 + |      url: https://github.com/spring-projects/spring-petclinic.git
 
 Created workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic"
+To get status: "tanzu apps workload get spring-petclinic"
+
 `,
 		},
 	}

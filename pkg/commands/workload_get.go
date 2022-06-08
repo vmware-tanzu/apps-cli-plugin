@@ -213,6 +213,15 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 			return err
 		}
 	}
+
+	c.Printf("\n")
+	if workload.Namespace != c.Client.DefaultNamespace() {
+		c.Infof("To see logs: \"tanzu apps workload tail %s %s %s\"\n", workload.Name, flags.NamespaceFlagName, workload.Namespace)
+	} else {
+		c.Infof("To see logs: \"tanzu apps workload tail %s\"\n", workload.Name)
+	}
+	c.Printf("\n")
+
 	return nil
 }
 
