@@ -51,14 +51,6 @@ build-local: prepare test
 .PHONY: build
 build: prepare test $(BUILD_JOBS)
 
-.PHONY: patch
-patch:
-# related to https://github.com/vmware-tanzu/carvel-imgpkg/pull/255
-# there doesn't appear to be a simple way to disable the defaultDockerConfigProvider
-# Having defaultDockerConfigProvider enabled by default results in the imgpkg auth ordering not working correctly
-# Specifically, the docker config.json is loaded before cli flags (and maybe even IaaS metadata services)
-	git apply --ignore-space-change --ignore-whitespace ./hack/patch-k8s-pkg-credentialprovider.patch
-
 .PHONY: build-%
 build-%:
 	$(eval ARCH = $(word 2,$(subst -, ,$*)))

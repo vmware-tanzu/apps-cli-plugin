@@ -32,23 +32,13 @@ import (
 
 func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, image string) (string, error) {
 
-	options := RetrieveRegistryOptions(ctx)
-	if options == nil {
-		options = &registry.Opts{
-			VerifyCerts:           true,
-			RetryCount:            5,
-			ResponseHeaderTimeout: 30 * time.Second,
-		}
+	options := registry.Opts{
+		VerifyCerts:           true,
+		RetryCount:            5,
+		ResponseHeaderTimeout: 30 * time.Second,
 	}
-	var transport http.RoundTripper
-	t := RetrieveStashContainerRemoteTransport(ctx)
-	if t == nil {
-		transport = remote.DefaultTransport.Clone()
-	} else {
-		transport = *t
-	}
-
-	reg, err := registry.NewSimpleRegistryWithTransport(*options, transport)
+	transport := RetrieveStashContainerRemoteTransport(ctx)
+	reg, err := registry.NewSimpleRegistryWithTransport(options, transport)
 	if err != nil {
 		return "", fmt.Errorf("unable to create a registry with provided options: %v", err)
 	}
@@ -72,26 +62,14 @@ func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, image s
 type registryOptionsStashKey struct{}
 type containerRemoteTransportStashKey struct{}
 
-func StashRegistryOptions(ctx context.Context, options registry.Opts) context.Context {
-	return context.WithValue(ctx, registryOptionsStashKey{}, options)
-}
-
-func RetrieveRegistryOptions(ctx context.Context) *registry.Opts {
-	options, ok := ctx.Value(registryOptionsStashKey{}).(registry.Opts)
-	if !ok {
-		return nil
-	}
-	return &options
-}
-
 func StashContainerRemoteTransport(ctx context.Context, rTripper http.RoundTripper) context.Context {
 	return context.WithValue(ctx, containerRemoteTransportStashKey{}, rTripper)
 }
 
-func RetrieveStashContainerRemoteTransport(ctx context.Context) *http.RoundTripper {
+func RetrieveStashContainerRemoteTransport(ctx context.Context) http.RoundTripper {
 	transport, ok := ctx.Value(containerRemoteTransportStashKey{}).(http.RoundTripper)
 	if !ok {
-		return nil
+		return remote.DefaultTransport
 	}
-	return &transport
+	return transport
 }
