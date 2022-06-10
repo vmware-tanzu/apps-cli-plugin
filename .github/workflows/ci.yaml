@@ -27,7 +27,7 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
         echo "##[endgroup]"
         echo "##[group]Scan source ."
-          grype dir:. --exclude ./hack,./vendor --exclude './pkg/**/*.jar' --exclude './pkg/**/*.zip'
+          grype dir:. --exclude ./hack,./vendor --exclude '**/testdata/**'
         echo "##[endgroup]"
     - name: Install tanzu cli
       run: |
