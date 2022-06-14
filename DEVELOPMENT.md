@@ -1,33 +1,77 @@
-- [Local builds](#local-builds)
-- [Command documentation](#command-documentation)
-- [Unit testing](#unit-testing)
-- [Acceptance testing](#acceptance-testing)
-  - [Installing Cartographer](#installing-cartographer)
-- [Debug Code Completion](#debug-code-completion)
+# Development
 
----
+This doc explains how to set up a development environment so you can get started
+[contributing](CONTRIBUTING.md) to `Tanzu apps plugin`. Also
+take a look at:
 
-## Local builds
+- [How to add and run tests](#testing)
+- [Iterating](#iterating)
 
-Building the CLI plugin locally requires both go 1.18 and the [Tanzu CLI](https://github.com/vmware-tanzu/tanzu-framework/tree/main/cmd/cli#installation) with the builder plugin installed.
+## Prerequisites
 
-Install the Tanzu builder and test plugins:
+Follow the instructions below to set up your development environment. Once you
+meet these requirements, you can make changes and
+[deploy your own version of apps plugin](#starting-apps-plugin)!
 
-```sh
-tanzu init
+Before submitting a PR, see also [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+### Install requirements
+
+You must install these tools:
+
+- [`go`]: for compiling the plugin as well as other dependencies - 1.16+
+- [`tanzu`]: for adding the plugin
+- [`git`](https://help.github.com/articles/set-up-git/): for source control
+- [`tanzu builder plugin`] for compiling and publishing plugins
+
+
+[`go`]: https://golang.org/doc/install
+[`tanzu`]: https://github.com/vmware-tanzu/tanzu-framework/blob/main/docs/cli/getting-started.md#install-the-latest-release-of-tanzu-cli
+
+### Check out your fork
+
+To check out this repository:
+
+1. Create your own
+   [fork of this repo](https://help.github.com/articles/fork-a-repo/)
+1. Clone it to your machine:
+
+```shell
+git clone git@github.com:${YOUR_GITHUB_USERNAME}/apps-cli-plugin.git
+cd apps-cli-plugin
+git remote add upstream https://github.com/vmware-tanzu/apps-cli-plugin.git
+git remote set-url --push upstream no_push
 ```
 
-```sh
-tanzu plugin repo add -b tanzu-cli-admin-plugins -n admin -p artifacts-admin
-```
+_Adding the `upstream` remote sets you up nicely for regularly
+[syncing your fork](https://help.github.com/articles/syncing-a-fork/)._
+
+Once you reach this point you are ready to do a full build and install as
+described below.
+
+## Building
+
+Once you've [set up your development environment](#prerequisites), let's build
+`apps plugin`.
+
+**Dependencies:**
+
+[go mod](https://github.com/golang/go/wiki/Modules#quick-start) is used and
+required for dependencies.
+#### Install builder plugin
+
+Install the Tanzu builder and test plugins. Set variable `OS` to `linux`, `darwin` or `windows` depending on your OS:
 
 ```sh
-tanzu plugin install builder
+TANZU_VERSION=$(cat TANZU_VERSION)
+TANZU_HOME=$HOME/tanzu
+curl -Lo admin-plugins.tar.gz https://github.com/vmware-tanzu/tanzu-framework/releases/download/${TANZU_VERSION}/tanzu-framework-plugins-admin-${OS}-amd64.tar.gz
+tar -xzf admin-plugins.tar.gz -C ${TANZU_HOME}
+tanzu plugin install builder --local ${TANZU_HOME}/admin-plugins
+tanzu plugin install test --local ${TANZU_HOME}/admin-plugins
 ```
 
-```sh
-tanzu plugin install test
-```
+**Building:**
 
 To build and install the apps plugin, run: (repeat this step any time you pull new source code to get the latest)
 
@@ -35,43 +79,60 @@ To build and install the apps plugin, run: (repeat this step any time you pull n
 make install
 ```
 
-## Command documentation
+## Testing
 
-Command argument and flag documentation is available in the [docs](./docs/tanzu_apps.md) directory. CI will fail if this content is not kept up to date.
+### Unit testing
 
-To regenerate the docs, run:
-
-```sh
-make docs
-```
-
-## Unit testing
-
-All unit tests can be run on any machine with go 1.16+ installed.
+All unit tests can be run on any machine with go 1.17+ installed.
 
 ```sh
 make test
 ```
 
-## Acceptance testing
+### Acceptance testing
 
-In order to use the CLI, the runtime dependencies need to be installed into the target cluster.
+In order to use the CLI, the runtime dependencies need to be installed into the target Kubernetes cluster.
 
-Dependencies:
-- Cartographer
+### Prerequisites
+- Create a Kubernetes cluster
+- Deploy [Cartographer](https://github.com/vmware-tanzu/cartographer#installation)
 
-### Installing Cartographer
+## Iterating
 
-See Cartographer install documentation [here](https://github.com/vmware-tanzu/cartographer#installation) 
+As you make changes to the code-base, there are several special cases to be aware
+of:
 
-## Debug Code Completion
+- **If you change/add Cartographer APIs**, then you must run
+  [`make prepare`] to update generated code. You might also require creating fakes via [dies](https://pkg.go.dev/dies.dev/diegen) for easier testing.
 
-To enable code completion follow the instructions in `tanzu help completion`.
+- **If you change/add dependencies** (including adding an external dependency),
+  then you must run `make prepare` command. In some cases, if newer dependencies are required, you need to run "go get" manually.
 
-To ease testing add the prefix `__complete` to your command e.g.
-```sh
-tanzu __complete apps workload tail spring-petclinic --component=
+- **If you change/add any help text for flags on any command**, then you must run `make docs` command. This will generate command documentation. CI will fail if this content is not kept up to date.
+
+- **If you change/add code completion**, then follow the steps to ease testing of this feature. Add the prefix `__complete` to your command e.g.
+
+  ```sh
+  tanzu __complete apps workload tail spring-petclinic --component=
+  ```
+  
+  This will output the completion suggestions and the ShellCompDirective
+  Add logs using `cobra.CompDebugln(msg string, printToStdErr bool)` and set `BASH_COMP_DEBUG_FILE` env variable to a local file path to see logs without adding new entries to the suggestions. Make sure to remove any logs before sending a PR
+
+Once the codegen, dependency is correct, reinstalling the
+plugin is simply:
+
+```shell
+make install
 ```
-This will output the completion suggestions and the ShellCompDirective
-Add logs using `cobra.CompDebugln(msg string, printToStdErr bool)` and set `BASH_COMP_DEBUG_FILE` env variable to a local file path to see logs without adding new entries to the suggestions
-Make sure to remove any logs before sending a PR
+
+Or you can [clean it up completely](./DEVELOPMENT.md#clean-up) and
+[completely redeploy `apps plugin`](./DEVELOPMENT.md#starting-apps-plugin).
+
+## Clean up
+
+You can delete tanzu apps plugin with:
+
+```sh
+tanzu plugin delete apps
+```
