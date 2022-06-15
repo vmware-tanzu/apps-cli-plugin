@@ -84,6 +84,10 @@ test: generate fmt vet ## Run tests
 .PHONY: prepare
 prepare: generate fmt vet
 
+.PHONY: patch
+patch:
+	git apply hack/patch-k8s-pkg-credentialprovider.patch
+
 # Run go fmt against code
 .PHONY: fmt
 fmt:
