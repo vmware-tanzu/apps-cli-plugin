@@ -3,7 +3,7 @@ module github.com/vmware-tanzu/apps-cli-plugin
 go 1.18
 
 require (
-	dies.dev v0.4.0
+	dies.dev v0.5.0
 	github.com/AlecAivazis/survey/v2 v2.3.5
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/cppforlife/go-cli-ui v0.0.0-20220425131040-94f26b16bc14
@@ -20,7 +20,7 @@ require (
 	github.com/vmware-tanzu/tanzu-framework v0.22.0
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	k8s.io/api v0.24.1
-	k8s.io/apiextensions-apiserver v0.24.0
+	k8s.io/apiextensions-apiserver v0.24.1
 	k8s.io/apimachinery v0.24.1
 	k8s.io/client-go v0.24.1
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
