@@ -17,7 +17,7 @@ require (
 	github.com/vmware-labs/reconciler-runtime v0.6.0
 	github.com/vmware-tanzu/carvel-imgpkg v0.29.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
-	github.com/vmware-tanzu/tanzu-framework v0.22.0
+	github.com/vmware-tanzu/tanzu-framework v0.23.0
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	k8s.io/api v0.24.1
 	k8s.io/apiextensions-apiserver v0.24.1
@@ -33,9 +33,9 @@ require (
 	cloud.google.com/go/storage v1.18.2 // indirect
 	github.com/Azure/azure-sdk-for-go v58.1.0+incompatible // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
-	github.com/Azure/go-autorest/autorest v0.11.21 // indirect
-	github.com/Azure/go-autorest/autorest/adal v0.9.16 // indirect
-	github.com/Azure/go-autorest/autorest/azure/auth v0.5.8 // indirect
+	github.com/Azure/go-autorest/autorest v0.11.23 // indirect
+	github.com/Azure/go-autorest/autorest/adal v0.9.18 // indirect
+	github.com/Azure/go-autorest/autorest/azure/auth v0.5.10 // indirect
 	github.com/Azure/go-autorest/autorest/azure/cli v0.4.2 // indirect
 	github.com/Azure/go-autorest/autorest/date v0.3.0 // indirect
 	github.com/Azure/go-autorest/autorest/to v0.4.0 // indirect
@@ -70,7 +70,7 @@ require (
 	github.com/containerd/stargz-snapshotter/estargz v0.11.4 // indirect
 	github.com/coredns/caddy v1.1.1 // indirect
 	github.com/coredns/corefile-migration v1.0.14 // indirect
-	github.com/cppforlife/cobrautil v0.0.0-20200514214827-bb86e6965d72 // indirect
+	github.com/cppforlife/cobrautil v0.0.0-20220411122935-c28a9f274a4e // indirect
 	github.com/cppforlife/color v1.9.1-0.20200716202919-6706ac40b835 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -170,7 +170,7 @@ require (
 	github.com/vbatts/tar-split v0.11.2 // indirect
 	github.com/vdemeester/k8s-pkg-credentialprovider v1.22.4 // indirect
 	github.com/vito/go-interact v1.0.1 // indirect
-	github.com/vmware-tanzu/carvel-kapp-controller v0.25.0 // indirect
+	github.com/vmware-tanzu/carvel-kapp-controller v0.35.0 // indirect
 	github.com/vmware-tanzu/carvel-vendir v0.24.0 // indirect
 	github.com/vmware-tanzu/carvel-ytt v0.40.0 // indirect
 	github.com/vmware/govmomi v0.27.1 // indirect
@@ -208,9 +208,9 @@ require (
 	k8s.io/legacy-cloud-providers v0.22.4 // indirect
 	sigs.k8s.io/cluster-api v1.1.3 // indirect
 	sigs.k8s.io/cluster-api-provider-aws v1.1.0 // indirect
-	sigs.k8s.io/cluster-api-provider-azure v1.0.1 // indirect
+	sigs.k8s.io/cluster-api-provider-azure v1.2.1 // indirect
 	sigs.k8s.io/cluster-api-provider-vsphere v1.1.0 // indirect
-	sigs.k8s.io/cluster-api/test v1.1.1 // indirect
+	sigs.k8s.io/cluster-api/test v1.1.2 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )

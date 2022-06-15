@@ -19,17 +19,15 @@ package v1beta1
 import (
 	"encoding/base64"
 
-	"github.com/go-logr/logr"
 	"golang.org/x/crypto/ssh"
 	"k8s.io/apimachinery/pkg/util/uuid"
-
 	utilSSH "sigs.k8s.io/cluster-api-provider-azure/util/ssh"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 // SetDefaultSSHPublicKey sets the default SSHPublicKey for an AzureMachine.
 func (s *AzureMachineSpec) SetDefaultSSHPublicKey() error {
-	sshKeyData := s.SSHPublicKey
-	if sshKeyData == "" {
+	if sshKeyData := s.SSHPublicKey; sshKeyData == "" {
 		_, publicRsaKey, err := utilSSH.GenerateSSHKey()
 		if err != nil {
 			return err
@@ -37,7 +35,6 @@ func (s *AzureMachineSpec) SetDefaultSSHPublicKey() error {
 
 		s.SSHPublicKey = base64.StdEncoding.EncodeToString(ssh.MarshalAuthorizedKey(publicRsaKey))
 	}
-
 	return nil
 }
 
@@ -85,10 +82,9 @@ func (s *AzureMachineSpec) SetIdentityDefaults() {
 }
 
 // SetDefaults sets to the defaults for the AzureMachineSpec.
-func (s *AzureMachineSpec) SetDefaults(log logr.Logger) {
-	err := s.SetDefaultSSHPublicKey()
-	if err != nil {
-		log.Error(err, "SetDefaultSshPublicKey failed")
+func (s *AzureMachineSpec) SetDefaults() {
+	if err := s.SetDefaultSSHPublicKey(); err != nil {
+		ctrl.Log.WithName("SetDefault").Error(err, "SetDefaultSshPublicKey failed")
 	}
 	s.SetDefaultCachingType()
 	s.SetDataDisksDefaults()
