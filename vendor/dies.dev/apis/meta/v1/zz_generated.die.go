@@ -22,7 +22,9 @@ limitations under the License.
 package v1
 
 import (
+	"encoding/json"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -63,6 +65,14 @@ func (d *ConditionDie) DieFeedPtr(r *metav1.Condition) *ConditionDie {
 	return d.DieFeed(*r)
 }
 
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *ConditionDie) DieFeedRawExtension(raw runtime.RawExtension) *ConditionDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.Condition{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
 // DieRelease returns the resource managed by the die.
 func (d *ConditionDie) DieRelease() metav1.Condition {
 	if d.mutable {
@@ -75,6 +85,15 @@ func (d *ConditionDie) DieRelease() metav1.Condition {
 func (d *ConditionDie) DieReleasePtr() *metav1.Condition {
 	r := d.DieRelease()
 	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *ConditionDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
 }
 
 // DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
@@ -135,6 +154,612 @@ func (d *ConditionDie) Message(v string) *ConditionDie {
 	})
 }
 
+var GroupResourceBlank = (&GroupResourceDie{}).DieFeed(metav1.GroupResource{})
+
+type GroupResourceDie struct {
+	mutable bool
+	r       metav1.GroupResource
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *GroupResourceDie) DieImmutable(immutable bool) *GroupResourceDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *GroupResourceDie) DieFeed(r metav1.GroupResource) *GroupResourceDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &GroupResourceDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *GroupResourceDie) DieFeedPtr(r *metav1.GroupResource) *GroupResourceDie {
+	if r == nil {
+		r = &metav1.GroupResource{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *GroupResourceDie) DieFeedRawExtension(raw runtime.RawExtension) *GroupResourceDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.GroupResource{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *GroupResourceDie) DieRelease() metav1.GroupResource {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *GroupResourceDie) DieReleasePtr() *metav1.GroupResource {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *GroupResourceDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *GroupResourceDie) DieStamp(fn func(r *metav1.GroupResource)) *GroupResourceDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *GroupResourceDie) DeepCopy() *GroupResourceDie {
+	r := *d.r.DeepCopy()
+	return &GroupResourceDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+func (d *GroupResourceDie) Group(v string) *GroupResourceDie {
+	return d.DieStamp(func(r *metav1.GroupResource) {
+		r.Group = v
+	})
+}
+
+func (d *GroupResourceDie) Resource(v string) *GroupResourceDie {
+	return d.DieStamp(func(r *metav1.GroupResource) {
+		r.Resource = v
+	})
+}
+
+var GroupVersionBlank = (&GroupVersionDie{}).DieFeed(metav1.GroupVersion{})
+
+type GroupVersionDie struct {
+	mutable bool
+	r       metav1.GroupVersion
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *GroupVersionDie) DieImmutable(immutable bool) *GroupVersionDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *GroupVersionDie) DieFeed(r metav1.GroupVersion) *GroupVersionDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &GroupVersionDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *GroupVersionDie) DieFeedPtr(r *metav1.GroupVersion) *GroupVersionDie {
+	if r == nil {
+		r = &metav1.GroupVersion{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *GroupVersionDie) DieFeedRawExtension(raw runtime.RawExtension) *GroupVersionDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.GroupVersion{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *GroupVersionDie) DieRelease() metav1.GroupVersion {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *GroupVersionDie) DieReleasePtr() *metav1.GroupVersion {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *GroupVersionDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *GroupVersionDie) DieStamp(fn func(r *metav1.GroupVersion)) *GroupVersionDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *GroupVersionDie) DeepCopy() *GroupVersionDie {
+	r := *d.r.DeepCopy()
+	return &GroupVersionDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+func (d *GroupVersionDie) Group(v string) *GroupVersionDie {
+	return d.DieStamp(func(r *metav1.GroupVersion) {
+		r.Group = v
+	})
+}
+
+func (d *GroupVersionDie) Version(v string) *GroupVersionDie {
+	return d.DieStamp(func(r *metav1.GroupVersion) {
+		r.Version = v
+	})
+}
+
+var GroupVersionKindBlank = (&GroupVersionKindDie{}).DieFeed(metav1.GroupVersionKind{})
+
+type GroupVersionKindDie struct {
+	mutable bool
+	r       metav1.GroupVersionKind
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *GroupVersionKindDie) DieImmutable(immutable bool) *GroupVersionKindDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *GroupVersionKindDie) DieFeed(r metav1.GroupVersionKind) *GroupVersionKindDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &GroupVersionKindDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *GroupVersionKindDie) DieFeedPtr(r *metav1.GroupVersionKind) *GroupVersionKindDie {
+	if r == nil {
+		r = &metav1.GroupVersionKind{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *GroupVersionKindDie) DieFeedRawExtension(raw runtime.RawExtension) *GroupVersionKindDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.GroupVersionKind{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *GroupVersionKindDie) DieRelease() metav1.GroupVersionKind {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *GroupVersionKindDie) DieReleasePtr() *metav1.GroupVersionKind {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *GroupVersionKindDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *GroupVersionKindDie) DieStamp(fn func(r *metav1.GroupVersionKind)) *GroupVersionKindDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *GroupVersionKindDie) DeepCopy() *GroupVersionKindDie {
+	r := *d.r.DeepCopy()
+	return &GroupVersionKindDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+func (d *GroupVersionKindDie) Group(v string) *GroupVersionKindDie {
+	return d.DieStamp(func(r *metav1.GroupVersionKind) {
+		r.Group = v
+	})
+}
+
+func (d *GroupVersionKindDie) Version(v string) *GroupVersionKindDie {
+	return d.DieStamp(func(r *metav1.GroupVersionKind) {
+		r.Version = v
+	})
+}
+
+func (d *GroupVersionKindDie) Kind(v string) *GroupVersionKindDie {
+	return d.DieStamp(func(r *metav1.GroupVersionKind) {
+		r.Kind = v
+	})
+}
+
+var GroupVersionResourceBlank = (&GroupVersionResourceDie{}).DieFeed(metav1.GroupVersionResource{})
+
+type GroupVersionResourceDie struct {
+	mutable bool
+	r       metav1.GroupVersionResource
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *GroupVersionResourceDie) DieImmutable(immutable bool) *GroupVersionResourceDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *GroupVersionResourceDie) DieFeed(r metav1.GroupVersionResource) *GroupVersionResourceDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &GroupVersionResourceDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *GroupVersionResourceDie) DieFeedPtr(r *metav1.GroupVersionResource) *GroupVersionResourceDie {
+	if r == nil {
+		r = &metav1.GroupVersionResource{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *GroupVersionResourceDie) DieFeedRawExtension(raw runtime.RawExtension) *GroupVersionResourceDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.GroupVersionResource{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *GroupVersionResourceDie) DieRelease() metav1.GroupVersionResource {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *GroupVersionResourceDie) DieReleasePtr() *metav1.GroupVersionResource {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *GroupVersionResourceDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *GroupVersionResourceDie) DieStamp(fn func(r *metav1.GroupVersionResource)) *GroupVersionResourceDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *GroupVersionResourceDie) DeepCopy() *GroupVersionResourceDie {
+	r := *d.r.DeepCopy()
+	return &GroupVersionResourceDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+func (d *GroupVersionResourceDie) Group(v string) *GroupVersionResourceDie {
+	return d.DieStamp(func(r *metav1.GroupVersionResource) {
+		r.Group = v
+	})
+}
+
+func (d *GroupVersionResourceDie) Version(v string) *GroupVersionResourceDie {
+	return d.DieStamp(func(r *metav1.GroupVersionResource) {
+		r.Version = v
+	})
+}
+
+func (d *GroupVersionResourceDie) Resource(v string) *GroupVersionResourceDie {
+	return d.DieStamp(func(r *metav1.GroupVersionResource) {
+		r.Resource = v
+	})
+}
+
+var GroupVersionForDiscoveryBlank = (&GroupVersionForDiscoveryDie{}).DieFeed(metav1.GroupVersionForDiscovery{})
+
+type GroupVersionForDiscoveryDie struct {
+	mutable bool
+	r       metav1.GroupVersionForDiscovery
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *GroupVersionForDiscoveryDie) DieImmutable(immutable bool) *GroupVersionForDiscoveryDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *GroupVersionForDiscoveryDie) DieFeed(r metav1.GroupVersionForDiscovery) *GroupVersionForDiscoveryDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &GroupVersionForDiscoveryDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *GroupVersionForDiscoveryDie) DieFeedPtr(r *metav1.GroupVersionForDiscovery) *GroupVersionForDiscoveryDie {
+	if r == nil {
+		r = &metav1.GroupVersionForDiscovery{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *GroupVersionForDiscoveryDie) DieFeedRawExtension(raw runtime.RawExtension) *GroupVersionForDiscoveryDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.GroupVersionForDiscovery{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *GroupVersionForDiscoveryDie) DieRelease() metav1.GroupVersionForDiscovery {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *GroupVersionForDiscoveryDie) DieReleasePtr() *metav1.GroupVersionForDiscovery {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *GroupVersionForDiscoveryDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *GroupVersionForDiscoveryDie) DieStamp(fn func(r *metav1.GroupVersionForDiscovery)) *GroupVersionForDiscoveryDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *GroupVersionForDiscoveryDie) DeepCopy() *GroupVersionForDiscoveryDie {
+	r := *d.r.DeepCopy()
+	return &GroupVersionForDiscoveryDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// groupVersion specifies the API group and version in the form "group/version"
+func (d *GroupVersionForDiscoveryDie) GroupVersion(v string) *GroupVersionForDiscoveryDie {
+	return d.DieStamp(func(r *metav1.GroupVersionForDiscovery) {
+		r.GroupVersion = v
+	})
+}
+
+// version specifies the version in the form of "version". This is to save the clients the trouble of splitting the GroupVersion.
+func (d *GroupVersionForDiscoveryDie) Version(v string) *GroupVersionForDiscoveryDie {
+	return d.DieStamp(func(r *metav1.GroupVersionForDiscovery) {
+		r.Version = v
+	})
+}
+
+var ListMetaBlank = (&ListMetaDie{}).DieFeed(metav1.ListMeta{})
+
+type ListMetaDie struct {
+	mutable bool
+	r       metav1.ListMeta
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *ListMetaDie) DieImmutable(immutable bool) *ListMetaDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *ListMetaDie) DieFeed(r metav1.ListMeta) *ListMetaDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &ListMetaDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *ListMetaDie) DieFeedPtr(r *metav1.ListMeta) *ListMetaDie {
+	if r == nil {
+		r = &metav1.ListMeta{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *ListMetaDie) DieFeedRawExtension(raw runtime.RawExtension) *ListMetaDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.ListMeta{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *ListMetaDie) DieRelease() metav1.ListMeta {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *ListMetaDie) DieReleasePtr() *metav1.ListMeta {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *ListMetaDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *ListMetaDie) DieStamp(fn func(r *metav1.ListMeta)) *ListMetaDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *ListMetaDie) DeepCopy() *ListMetaDie {
+	r := *d.r.DeepCopy()
+	return &ListMetaDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// Deprecated: selfLink is a legacy read-only field that is no longer populated by the system.
+func (d *ListMetaDie) SelfLink(v string) *ListMetaDie {
+	return d.DieStamp(func(r *metav1.ListMeta) {
+		r.SelfLink = v
+	})
+}
+
+// String that identifies the server's internal version of this object that can be used by clients to determine when objects have changed. Value must be treated as opaque by clients and passed unmodified back to the server. Populated by the system. Read-only. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+func (d *ListMetaDie) ResourceVersion(v string) *ListMetaDie {
+	return d.DieStamp(func(r *metav1.ListMeta) {
+		r.ResourceVersion = v
+	})
+}
+
+// continue may be set if the user set a limit on the number of items returned, and indicates that the server has more data available. The value is opaque and may be used to issue another request to the endpoint that served this list to retrieve the next set of available objects. Continuing a consistent list may not be possible if the server configuration has changed or more than a few minutes have passed. The resourceVersion field returned when using this continue value will be identical to the value in the first response, unless you have received this token from an error message.
+func (d *ListMetaDie) Continue(v string) *ListMetaDie {
+	return d.DieStamp(func(r *metav1.ListMeta) {
+		r.Continue = v
+	})
+}
+
+// remainingItemCount is the number of subsequent items in the list which are not included in this list response. If the list request contained label or field selectors, then the number of remaining items is unknown and the field will be left unset and omitted during serialization. If the list is complete (either because it is not chunking or because this is the last chunk), then there are no more remaining items and this field will be left unset and omitted during serialization. Servers older than v1.15 do not set this field. The intended use of the remainingItemCount is *estimating* the size of a collection. Clients should not rely on the remainingItemCount to be set or to be exact.
+func (d *ListMetaDie) RemainingItemCount(v *int64) *ListMetaDie {
+	return d.DieStamp(func(r *metav1.ListMeta) {
+		r.RemainingItemCount = v
+	})
+}
+
 var ObjectMetaBlank = (&ObjectMetaDie{}).DieFeed(metav1.ObjectMeta{})
 
 type ObjectMetaDie struct {
@@ -172,6 +797,14 @@ func (d *ObjectMetaDie) DieFeedPtr(r *metav1.ObjectMeta) *ObjectMetaDie {
 	return d.DieFeed(*r)
 }
 
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *ObjectMetaDie) DieFeedRawExtension(raw runtime.RawExtension) *ObjectMetaDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.ObjectMeta{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
 // DieRelease returns the resource managed by the die.
 func (d *ObjectMetaDie) DieRelease() metav1.ObjectMeta {
 	if d.mutable {
@@ -184,6 +817,15 @@ func (d *ObjectMetaDie) DieRelease() metav1.ObjectMeta {
 func (d *ObjectMetaDie) DieReleasePtr() *metav1.ObjectMeta {
 	r := d.DieRelease()
 	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *ObjectMetaDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
 }
 
 // DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
@@ -367,6 +1009,14 @@ func (d *ManagedFieldsEntryDie) DieFeedPtr(r *metav1.ManagedFieldsEntry) *Manage
 	return d.DieFeed(*r)
 }
 
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *ManagedFieldsEntryDie) DieFeedRawExtension(raw runtime.RawExtension) *ManagedFieldsEntryDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.ManagedFieldsEntry{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
 // DieRelease returns the resource managed by the die.
 func (d *ManagedFieldsEntryDie) DieRelease() metav1.ManagedFieldsEntry {
 	if d.mutable {
@@ -379,6 +1029,15 @@ func (d *ManagedFieldsEntryDie) DieRelease() metav1.ManagedFieldsEntry {
 func (d *ManagedFieldsEntryDie) DieReleasePtr() *metav1.ManagedFieldsEntry {
 	r := d.DieRelease()
 	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *ManagedFieldsEntryDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
 }
 
 // DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
@@ -483,6 +1142,14 @@ func (d *LabelSelectorDie) DieFeedPtr(r *metav1.LabelSelector) *LabelSelectorDie
 	return d.DieFeed(*r)
 }
 
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *LabelSelectorDie) DieFeedRawExtension(raw runtime.RawExtension) *LabelSelectorDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.LabelSelector{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
 // DieRelease returns the resource managed by the die.
 func (d *LabelSelectorDie) DieRelease() metav1.LabelSelector {
 	if d.mutable {
@@ -495,6 +1162,15 @@ func (d *LabelSelectorDie) DieRelease() metav1.LabelSelector {
 func (d *LabelSelectorDie) DieReleasePtr() *metav1.LabelSelector {
 	r := d.DieRelease()
 	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *LabelSelectorDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
 }
 
 // DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
@@ -524,5 +1200,370 @@ func (d *LabelSelectorDie) MatchLabels(v map[string]string) *LabelSelectorDie {
 func (d *LabelSelectorDie) MatchExpressions(v ...metav1.LabelSelectorRequirement) *LabelSelectorDie {
 	return d.DieStamp(func(r *metav1.LabelSelector) {
 		r.MatchExpressions = v
+	})
+}
+
+var StatusBlank = (&StatusDie{}).DieFeed(metav1.Status{})
+
+type StatusDie struct {
+	mutable bool
+	r       metav1.Status
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *StatusDie) DieImmutable(immutable bool) *StatusDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *StatusDie) DieFeed(r metav1.Status) *StatusDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &StatusDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *StatusDie) DieFeedPtr(r *metav1.Status) *StatusDie {
+	if r == nil {
+		r = &metav1.Status{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *StatusDie) DieFeedRawExtension(raw runtime.RawExtension) *StatusDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.Status{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *StatusDie) DieRelease() metav1.Status {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *StatusDie) DieReleasePtr() *metav1.Status {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *StatusDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *StatusDie) DieStamp(fn func(r *metav1.Status)) *StatusDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *StatusDie) DeepCopy() *StatusDie {
+	r := *d.r.DeepCopy()
+	return &StatusDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+func (d *StatusDie) TypeMeta(v metav1.TypeMeta) *StatusDie {
+	return d.DieStamp(func(r *metav1.Status) {
+		r.TypeMeta = v
+	})
+}
+
+// Standard list metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+func (d *StatusDie) ListMeta(v metav1.ListMeta) *StatusDie {
+	return d.DieStamp(func(r *metav1.Status) {
+		r.ListMeta = v
+	})
+}
+
+// Status of the operation. One of: "Success" or "Failure". More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+func (d *StatusDie) Status(v string) *StatusDie {
+	return d.DieStamp(func(r *metav1.Status) {
+		r.Status = v
+	})
+}
+
+// A human-readable description of the status of this operation.
+func (d *StatusDie) Message(v string) *StatusDie {
+	return d.DieStamp(func(r *metav1.Status) {
+		r.Message = v
+	})
+}
+
+// A machine-readable description of why this operation is in the "Failure" status. If this value is empty there is no information available. A Reason clarifies an HTTP status code but does not override it.
+func (d *StatusDie) Reason(v metav1.StatusReason) *StatusDie {
+	return d.DieStamp(func(r *metav1.Status) {
+		r.Reason = v
+	})
+}
+
+// Extended data associated with the reason.  Each reason may define its own extended details. This field is optional and the data returned is not guaranteed to conform to any schema except that defined by the reason type.
+func (d *StatusDie) Details(v *metav1.StatusDetails) *StatusDie {
+	return d.DieStamp(func(r *metav1.Status) {
+		r.Details = v
+	})
+}
+
+// Suggested HTTP return code for this status, 0 if not set.
+func (d *StatusDie) Code(v int32) *StatusDie {
+	return d.DieStamp(func(r *metav1.Status) {
+		r.Code = v
+	})
+}
+
+var StatusDetailsBlank = (&StatusDetailsDie{}).DieFeed(metav1.StatusDetails{})
+
+type StatusDetailsDie struct {
+	mutable bool
+	r       metav1.StatusDetails
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *StatusDetailsDie) DieImmutable(immutable bool) *StatusDetailsDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *StatusDetailsDie) DieFeed(r metav1.StatusDetails) *StatusDetailsDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &StatusDetailsDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *StatusDetailsDie) DieFeedPtr(r *metav1.StatusDetails) *StatusDetailsDie {
+	if r == nil {
+		r = &metav1.StatusDetails{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *StatusDetailsDie) DieFeedRawExtension(raw runtime.RawExtension) *StatusDetailsDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.StatusDetails{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *StatusDetailsDie) DieRelease() metav1.StatusDetails {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *StatusDetailsDie) DieReleasePtr() *metav1.StatusDetails {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *StatusDetailsDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *StatusDetailsDie) DieStamp(fn func(r *metav1.StatusDetails)) *StatusDetailsDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *StatusDetailsDie) DeepCopy() *StatusDetailsDie {
+	r := *d.r.DeepCopy()
+	return &StatusDetailsDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// The name attribute of the resource associated with the status StatusReason (when there is a single name which can be described).
+func (d *StatusDetailsDie) Name(v string) *StatusDetailsDie {
+	return d.DieStamp(func(r *metav1.StatusDetails) {
+		r.Name = v
+	})
+}
+
+// The group attribute of the resource associated with the status StatusReason.
+func (d *StatusDetailsDie) Group(v string) *StatusDetailsDie {
+	return d.DieStamp(func(r *metav1.StatusDetails) {
+		r.Group = v
+	})
+}
+
+// The kind attribute of the resource associated with the status StatusReason. On some operations may differ from the requested resource Kind. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+func (d *StatusDetailsDie) Kind(v string) *StatusDetailsDie {
+	return d.DieStamp(func(r *metav1.StatusDetails) {
+		r.Kind = v
+	})
+}
+
+// UID of the resource. (when there is a single resource which can be described). More info: http://kubernetes.io/docs/user-guide/identifiers#uids
+func (d *StatusDetailsDie) UID(v types.UID) *StatusDetailsDie {
+	return d.DieStamp(func(r *metav1.StatusDetails) {
+		r.UID = v
+	})
+}
+
+// The Causes array includes more details associated with the StatusReason failure. Not all StatusReasons may provide detailed causes.
+func (d *StatusDetailsDie) Causes(v ...metav1.StatusCause) *StatusDetailsDie {
+	return d.DieStamp(func(r *metav1.StatusDetails) {
+		r.Causes = v
+	})
+}
+
+// If specified, the time in seconds before the operation should be retried. Some errors may indicate the client must take an alternate action - for those errors this field may indicate how long to wait before taking the alternate action.
+func (d *StatusDetailsDie) RetryAfterSeconds(v int32) *StatusDetailsDie {
+	return d.DieStamp(func(r *metav1.StatusDetails) {
+		r.RetryAfterSeconds = v
+	})
+}
+
+var StatusCauseBlank = (&StatusCauseDie{}).DieFeed(metav1.StatusCause{})
+
+type StatusCauseDie struct {
+	mutable bool
+	r       metav1.StatusCause
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *StatusCauseDie) DieImmutable(immutable bool) *StatusCauseDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *StatusCauseDie) DieFeed(r metav1.StatusCause) *StatusCauseDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &StatusCauseDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *StatusCauseDie) DieFeedPtr(r *metav1.StatusCause) *StatusCauseDie {
+	if r == nil {
+		r = &metav1.StatusCause{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *StatusCauseDie) DieFeedRawExtension(raw runtime.RawExtension) *StatusCauseDie {
+	b, _ := json.Marshal(raw)
+	r := metav1.StatusCause{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *StatusCauseDie) DieRelease() metav1.StatusCause {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *StatusCauseDie) DieReleasePtr() *metav1.StatusCause {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *StatusCauseDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *StatusCauseDie) DieStamp(fn func(r *metav1.StatusCause)) *StatusCauseDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *StatusCauseDie) DeepCopy() *StatusCauseDie {
+	r := *d.r.DeepCopy()
+	return &StatusCauseDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// A machine-readable description of the cause of the error. If this value is empty there is no information available.
+func (d *StatusCauseDie) Type(v metav1.CauseType) *StatusCauseDie {
+	return d.DieStamp(func(r *metav1.StatusCause) {
+		r.Type = v
+	})
+}
+
+// A human-readable description of the cause of the error.  This field may be presented as-is to a reader.
+func (d *StatusCauseDie) Message(v string) *StatusCauseDie {
+	return d.DieStamp(func(r *metav1.StatusCause) {
+		r.Message = v
+	})
+}
+
+// The field of the resource that has caused this error, as named by its JSON serialization. May include dot and postfix notation for nested attributes. Arrays are zero-indexed.  Fields may appear more than once in an array of causes due to fields having multiple errors. Optional.
+//
+// Examples: "name" - the field "name" on the current resource "items[0].name" - the field "name" on the first array entry in "items"
+func (d *StatusCauseDie) Field(v string) *StatusCauseDie {
+	return d.DieStamp(func(r *metav1.StatusCause) {
+		r.Field = v
 	})
 }

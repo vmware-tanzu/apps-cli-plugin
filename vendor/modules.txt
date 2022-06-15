@@ -11,7 +11,7 @@ cloud.google.com/go/internal/version
 ## explicit; go 1.11
 cloud.google.com/go/storage
 cloud.google.com/go/storage/internal/apiv2
-# dies.dev v0.4.0
+# dies.dev v0.5.0
 ## explicit; go 1.18
 dies.dev/apis/core/v1
 dies.dev/apis/meta/v1
@@ -1248,7 +1248,7 @@ k8s.io/api/scheduling/v1beta1
 k8s.io/api/storage/v1
 k8s.io/api/storage/v1alpha1
 k8s.io/api/storage/v1beta1
-# k8s.io/apiextensions-apiserver v0.24.0 => k8s.io/apiextensions-apiserver v0.23.4
+# k8s.io/apiextensions-apiserver v0.24.1 => k8s.io/apiextensions-apiserver v0.23.4
 ## explicit; go 1.16
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
