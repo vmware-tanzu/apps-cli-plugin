@@ -21,11 +21,11 @@ Create workload:
     7 + |  name: pet-clinic
     8 + |  namespace: default
     9 + |spec:
-    10 + |  source:
-    11 + |    git:
-    12 + |      ref:
-    13 + |        tag: tap-1.1
-    14 + |      url: https://github.com/sample-accelerators/spring-petclinic
+   10 + |  source:
+   11 + |    git:
+   12 + |      ref:
+   13 + |        tag: tap-1.1
+   14 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload? Yes
 Created workload "pet-clinic"
@@ -56,16 +56,16 @@ Create workload:
     7 + |  name: spring-pet-clinic
     8 + |  namespace: default
     9 + |spec:
-    10 + |  params:
-    11 + |  - name: annotations
-    12 + |    value:
-    13 + |      name: Spring pet clinic
-    14 + |      tag: tap-1.1
-    15 + |  source:
-    16 + |    git:
-    17 + |      ref:
-    18 + |        tag: tap-1.1
-    19 + |      url: https://github.com/sample-accelerators/spring-petclinic
+   10 + |  params:
+   11 + |  - name: annotations
+   12 + |    value:
+   13 + |      name: Spring pet clinic
+   14 + |      tag: tap-1.1
+   15 + |  source:
+   16 + |    git:
+   17 + |      ref:
+   18 + |        tag: tap-1.1
+   19 + |      url: https://github.com/sample-accelerators/spring-petclinic
 ```
 </details>
 
@@ -110,12 +110,12 @@ Create workload:
     7 + |    apps.tanzu.vmware.com/workload-type: web
     8 + |  name: pet-clinic
     9 + |  namespace: default
-    10 + |spec:
-    11 + |  source:
-    12 + |    git:
-    13 + |      ref:
-    14 + |        tag: tap-1.1
-    15 + |      url: https://github.com/sample-accelerators/spring-petclinic
+   10 + |spec:
+   11 + |  source:
+   12 + |    git:
+   13 + |      ref:
+   14 + |        tag: tap-1.1
+   15 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload? Yes
 Created workload "pet-clinic"
@@ -143,15 +143,15 @@ Create workload:
       7 + |  name: spring-pet-clinic
       8 + |  namespace: default
       9 + |spec:
-      10 + |  build:
-      11 + |    env:
-      12 + |    - name: JAVA_VERSION
-      13 + |      value: "1.8"
-      14 + |  source:
-      15 + |    git:
-      16 + |      ref:
-      17 + |        tag: tap-1.1
-      18 + |      url: https://github.com/sample-accelerators/spring-petclinic
+     10 + |  build:
+     11 + |    env:
+     12 + |    - name: JAVA_VERSION
+     13 + |      value: "1.8"
+     14 + |  source:
+     15 + |    git:
+     16 + |      ref:
+     17 + |        tag: tap-1.1
+     18 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload?
 ```
@@ -165,10 +165,10 @@ To delete a build environment variable, use `-` after its name.
 tanzu apps workload apply spring-pet-clinic --build-env JAVA_VERSION-
 Update workload:
 ...
-  6,  6   |    apps.tanzu.vmware.com/workload-type: web
-  7,  7   |  name: spring-pet-clinic
-  8,  8   |  namespace: default
-  9,  9   |spec:
+   6,  6   |    apps.tanzu.vmware.com/workload-type: web
+   7,  7   |  name: spring-pet-clinic
+   8,  8   |  namespace: default
+   9,  9   |spec:
   10     - |  build:
   11     - |    env:
   12     - |    - name: JAVA_VERSION
@@ -240,14 +240,14 @@ Create workload:
       7 + |  name: spring-pet-clinic
       8 + |  namespace: default
       9 + |spec:
-      10 + |  env:
-      11 + |  - name: NAME
-      12 + |    value: Spring Pet Clinic
-      13 + |  source:
-      14 + |    git:
-      15 + |      ref:
-      16 + |        tag: tap-1.1
-      17 + |      url: https://github.com/sample-accelerators/spring-petclinic
+     10 + |  env:
+     11 + |  - name: NAME
+     12 + |    value: Spring Pet Clinic
+     13 + |  source:
+     14 + |    git:
+     15 + |      ref:
+     16 + |        tag: tap-1.1
+     17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload?
 ```
@@ -257,10 +257,10 @@ To unset an environment variable, use `-` after its name.
 tanzu apps workload apply spring-pet-clinic --env NAME-
 Update workload:
 ...
-  6,  6   |    apps.tanzu.vmware.com/workload-type: web
-  7,  7   |  name: spring-pet-clinic
-  8,  8   |  namespace: default
-  9,  9   |spec:
+   6,  6   |    apps.tanzu.vmware.com/workload-type: web
+   7,  7   |  name: spring-pet-clinic
+   8,  8   |  namespace: default
+   9,  9   |spec:
   10     - |  env:
   11     - |  - name: NAME
   12     - |    value: Spring Pet Clinic
@@ -282,15 +282,15 @@ Set a workload specification file to create the workload from, any other workloa
 ```bash
 tanzu apps workload apply spring-pet-clinic -f pet-clinic.yaml --param-yaml server=$'port: 9090\nmanagement-port: 9190'
 Create workload:
-      1 + |---
-      2 + |apiVersion: carto.run/v1alpha1
-      3 + |kind: Workload
-      4 + |metadata:
-      5 + |  labels:
-      6 + |    apps.tanzu.vmware.com/workload-type: web
-      7 + |  name: spring-pet-clinic
-      8 + |  namespace: default
-      9 + |spec:
+       1 + |---
+       2 + |apiVersion: carto.run/v1alpha1
+       3 + |kind: Workload
+       4 + |metadata:
+       5 + |  labels:
+       6 + |    apps.tanzu.vmware.com/workload-type: web
+       7 + |  name: spring-pet-clinic
+       8 + |  namespace: default
+       9 + |spec:
       10 + |  build:
       11 + |    env:
       12 + |    - name: JAVA_VERSION
@@ -330,11 +330,11 @@ Create workload:
     7 + |  name: spring-pet-clinic
     8 + |  namespace: default
     9 + |spec:
-    10 + |  source:
-    11 + |    git:
-    12 + |      ref:
-    13 + |        branch: main
-    14 + |      url: https://github.com/sample-accelerators/spring-petclinic
+   10 + |  source:
+   11 + |    git:
+   12 + |      ref:
+   13 + |        branch: main
+   14 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload?
 ```
@@ -360,12 +360,12 @@ Create workload:
     7 + |  name: spring-pet-clinic
     8 + |  namespace: default
     9 + |spec:
-    10 + |  source:
-    11 + |    git:
-    12 + |      ref:
-    13 + |        commit: 207852f1e8ed239b6ec51a559c6e0f93a5cf54d1
-    14 + |        tag: tap-1.2
-    15 + |      url: https://github.com/sample-accelerators/spring-petclinic
+   10 + |  source:
+   11 + |    git:
+   12 + |      ref:
+   13 + |        commit: 207852f1e8ed239b6ec51a559c6e0f93a5cf54d1
+   14 + |        tag: tap-1.2
+   15 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload?
 ```
@@ -388,7 +388,7 @@ Create workload:
       7 + |  name: spring-pet-clinic
       8 + |  namespace: default
       9 + |spec:
-      10 + |  image: private.repo.domain.com/spring-pet-clinic
+     10 + |  image: private.repo.domain.com/spring-pet-clinic
 
 ? Do you want to create this workload?
 ```
@@ -411,12 +411,12 @@ Create workload:
       7 + |    stage: production
       8 + |  name: spring-pet-clinic
       9 + |  namespace: default
-      10 + |spec:
-      11 + |  source:
-      12 + |    git:
-      13 + |      ref:
-      14 + |        branch: main
-      15 + |      url: https://github.com/sample-accelerators/spring-petclinic
+     10 + |spec:
+     11 + |  source:
+     12 + |    git:
+     13 + |      ref:
+     14 + |        branch: main
+     15 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload? (y/N)
 ```
@@ -430,13 +430,13 @@ Create workload:
 tanzu apps workload apply spring-pet-clinic --label stage-
 Update workload:
 ...
-  3,  3   |kind: Workload
-  4,  4   |metadata:
-  5,  5   |  labels:
-  6,  6   |    apps.tanzu.vmware.com/workload-type: web
-  7     - |    stage: production
-  8,  7   |  name: spring-pet-clinic
-  9,  8   |  namespace: default
+   3,  3   |kind: Workload
+   4,  4   |metadata:
+   5,  5   |  labels:
+   6,  6   |    apps.tanzu.vmware.com/workload-type: web
+   7     - |    stage: production
+   8,  7   |  name: spring-pet-clinic
+   9,  8   |  namespace: default
   10,  9   |spec:
   11, 10   |  source:
 ...
@@ -462,14 +462,14 @@ Create workload:
     7 + |  name: spring-pet-clinic
     8 + |  namespace: default
     9 + |spec:
-    10 + |  resources:
-    11 + |    limits:
-    12 + |      cpu: 200m
-    13 + |  source:
-    14 + |    git:
-    15 + |      ref:
-    16 + |        branch: main
-    17 + |      url: https://github.com/sample-accelerators/spring-petclinic
+   10 + |  resources:
+   11 + |    limits:
+   12 + |      cpu: 200m
+   13 + |  source:
+   14 + |    git:
+   15 + |      ref:
+   16 + |        branch: main
+   17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload? (y/N)
 ```
@@ -492,14 +492,14 @@ Create workload:
     7 + |  name: spring-pet-clinic
     8 + |  namespace: default
     9 + |spec:
-    10 + |  resources:
-    11 + |    limits:
-    12 + |      memory: 200Mi
-    13 + |  source:
-    14 + |    git:
-    15 + |      ref:
-    16 + |        branch: main
-    17 + |      url: https://github.com/sample-accelerators/spring-petclinic
+   10 + |  resources:
+   11 + |    limits:
+   12 + |      memory: 200Mi
+   13 + |  source:
+   14 + |    git:
+   15 + |      ref:
+   16 + |        branch: main
+   17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload? (y/N)
 ```
@@ -533,9 +533,9 @@ Enables to deploy a workload once, save changes to the code and see those change
           7 + |spec:
           8 + |  params:
           9 + |  - name: live-update
-        10 + |    value: "true"
-        11 + |  source:
-        12 + |    image: gcr.io/my-project/tanzu-java-web-app-live-update:latest@sha256:3c9fd738492a23ac532a709301fcf0c9aa2a8761b2b9347bdbab52ce9404264b
+         10 + |    value: "true"
+         11 + |  source:
+         12 + |    image: gcr.io/my-project/tanzu-java-web-app-live-update:latest@sha256:3c9fd738492a23ac532a709301fcf0c9aa2a8761b2b9347bdbab52ce9404264b
 
     Created workload "tanzu-java-web-app"
 
@@ -610,8 +610,8 @@ Create workload:
       7 + |  name: spring-pet-clinic
       8 + |  namespace: default
       9 + |spec:
-      10 + |  source:
-      11 + |    image:gcr.io/spring-community/spring-pet-clinic:latest@sha256:5feb0d9daf3f639755d8683ca7b647027cfddc7012e80c61dcdac27f0d7856a7
+     10 + |  source:
+     11 + |    image:gcr.io/spring-community/spring-pet-clinic:latest@sha256:5feb0d9daf3f639755d8683ca7b647027cfddc7012e80c61dcdac27f0d7856a7
 
 ? Do you want to create this workload? (y/N)
 ```
@@ -634,11 +634,11 @@ Create workload:
     7 + |  name: spring-pet-clinic
     8 + |  namespace: my-namespace
     9 + |spec:
-    10 + |  source:
-    11 + |    git:
-    12 + |      ref:
-    13 + |        branch: main
-    14 + |      url: https://github.com/sample-accelerators/spring-petclinic
+   10 + |  source:
+   11 + |    git:
+   12 + |      ref:
+   13 + |        branch: main
+   14 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload? (y/N)
 ```
@@ -661,16 +661,16 @@ Create workload:
       7 + |  name: spring-pet-clinic
       8 + |  namespace: default
       9 + |spec:
-      10 + |  params:
-      11 + |  - name: port
-      12 + |    value: "9090"
-      13 + |  - name: management-port
-      14 + |    value: "9190"
-      15 + |  source:
-      16 + |    git:
-      17 + |      ref:
-      18 + |        branch: main
-      19 + |      url: https://github.com/sample-accelerators/spring-petclinic
+     10 + |  params:
+     11 + |  - name: port
+     12 + |    value: "9090"
+     13 + |  - name: management-port
+     14 + |    value: "9190"
+     15 + |  source:
+     16 + |    git:
+     17 + |      ref:
+     18 + |        branch: main
+     19 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload? (y/N)
 ```
@@ -684,9 +684,9 @@ To unset parameters, use `-` after their name.
 tanzu apps workload apply spring-pet-clinic --param port-
 Update workload:
 ...
-  7,  7   |  name: spring-pet-clinic
-  8,  8   |  namespace: default
-  9,  9   |spec:
+   7,  7   |  name: spring-pet-clinic
+   8,  8   |  namespace: default
+   9,  9   |spec:
   10, 10   |  params:
   11     - |  - name: port
   12     - |    value: "9090"
@@ -717,16 +717,16 @@ Create workload:
       7 + |  name: spring-pet-clinic
       8 + |  namespace: default
       9 + |spec:
-      10 + |  params:
-      11 + |  - name: server
-      12 + |    value:
-      13 + |      management-port: 9190
-      14 + |      port: 9090
-      15 + |  source:
-      16 + |    git:
-      17 + |      ref:
-      18 + |        branch: main
-      19 + |      url: https://github.com/sample-accelerators/spring-petclinic
+     10 + |  params:
+     11 + |  - name: server
+     12 + |    value:
+     13 + |      management-port: 9190
+     14 + |      port: 9090
+     15 + |  source:
+     16 + |    git:
+     17 + |      ref:
+     18 + |        branch: main
+     19 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload? (y/N)
 ```
@@ -740,10 +740,10 @@ To unset parameters, use `-` after their name.
 tanzu apps workload apply spring-pet-clinic --param-yaml server-
 Update workload:
 ...
-  6,  6   |    apps.tanzu.vmware.com/workload-type: web
-  7,  7   |  name: spring-pet-clinic
-  8,  8   |  namespace: default
-  9,  9   |spec:
+   6,  6   |    apps.tanzu.vmware.com/workload-type: web
+   7,  7   |  name: spring-pet-clinic
+   8,  8   |  namespace: default
+   9,  9   |spec:
   10     - |  params:
   11     - |  - name: server
   12     - |    value:
@@ -776,14 +776,14 @@ Create workload:
     7 + |  name: spring-pet-clinic
     8 + |  namespace: default
     9 + |spec:
-    10 + |  resources:
-    11 + |    requests:
-    12 + |      cpu: 300m
-    13 + |  source:
-    14 + |    git:
-    15 + |      ref:
-    16 + |        branch: main
-    17 + |      url: https://github.com/sample-accelerators/spring-petclinic
+   10 + |  resources:
+   11 + |    requests:
+   12 + |      cpu: 300m
+   13 + |  source:
+   14 + |    git:
+   15 + |      ref:
+   16 + |        branch: main
+   17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload? (y/N)
 ```
@@ -797,15 +797,15 @@ Refers to the minimum memory the workload pods are requesting to use.
 ```bash
 tanzu apps workload apply spring-pet-clinic --git-repo https://github.com/sample-accelerators/spring-petclinic --git-branch main --type web --request-memory 300Mi
 Create workload:
-    1 + |---
-    2 + |apiVersion: carto.run/v1alpha1
-    3 + |kind: Workload
-    4 + |metadata:
-    5 + |  labels:
-    6 + |    apps.tanzu.vmware.com/workload-type: web
-    7 + |  name: spring-pet-clinic
-    8 + |  namespace: default
-    9 + |spec:
+     1 + |---
+     2 + |apiVersion: carto.run/v1alpha1
+     3 + |kind: Workload
+     4 + |metadata:
+     5 + |  labels:
+     6 + |    apps.tanzu.vmware.com/workload-type: web
+     7 + |  name: spring-pet-clinic
+     8 + |  namespace: default
+     9 + |spec:
     10 + |  resources:
     11 + |    requests:
     12 + |      memory: 300Mi
@@ -831,15 +831,15 @@ Binds a service to a workload to provide the info from a service resource to an 
 ```bash
 tanzu apps workload apply rmq-sample-app --git-repo https://github.com/jhvhs/rabbitmq-sample --git-branch main --service-ref "rmq=rabbitmq.com/v1beta1:RabbitmqCluster:example-rabbitmq-cluster-1"
 Create workload:
-    1 + |---
-    2 + |apiVersion: carto.run/v1alpha1
-    3 + |kind: Workload
-    4 + |metadata:
-    5 + |  name: rmq-sample-app
-    6 + |  namespace: default
-    7 + |spec:
-    8 + |  serviceClaims:
-    9 + |  - name: rmq
+     1 + |---
+     2 + |apiVersion: carto.run/v1alpha1
+     3 + |kind: Workload
+     4 + |metadata:
+     5 + |  name: rmq-sample-app
+     6 + |  namespace: default
+     7 + |spec:
+     8 + |  serviceClaims:
+     9 + |  - name: rmq
     10 + |    ref:
     11 + |      apiVersion: rabbitmq.com/v1beta1
     12 + |      kind: RabbitmqCluster
@@ -862,12 +862,12 @@ To delete service binding, use the service name followed by `-`.
 tanzu apps workload apply rmq-sample-app --service-ref rmq-
 Update workload:
 ...
-  4,  4   |metadata:
-  5,  5   |  name: rmq-sample-app
-  6,  6   |  namespace: default
-  7,  7   |spec:
-  8     - |  serviceClaims:
-  9     - |  - name: rmq
+   4,  4   |metadata:
+   5,  5   |  name: rmq-sample-app
+   6,  6   |  namespace: default
+   7,  7   |spec:
+   8     - |  serviceClaims:
+   9     - |  - name: rmq
   10     - |    ref:
   11     - |      apiVersion: rabbitmq.com/v1beta1
   12     - |      kind: RabbitmqCluster
@@ -901,12 +901,12 @@ It's used to define which path is going to be used as root to create/update the 
         7 + |  name: subpathtester
         8 + |  namespace: default
         9 + |spec:
-      10 + |  source:
-      11 + |    git:
-      12 + |      ref:
-      13 + |        branch: main
-      14 + |      url: https://github.com/tfynes-pivotal/subpathtester
-      15 + |    subPath: service1
+       10 + |  source:
+       11 + |    git:
+       12 + |      ref:
+       13 + |        branch: main
+       14 + |      url: https://github.com/tfynes-pivotal/subpathtester
+       15 + |    subPath: service1
 
     ? Do you want to create this workload? (y/N)
     ```
@@ -928,7 +928,7 @@ It's used to define which path is going to be used as root to create/update the 
             7 + |spec:
             8 + |  source:
             9 + |    image: gcr.io/my-registry/my-workload-image:latest@sha256:f28c5fedd0e902800e6df9605ce5e20a8e835df9e87b1a0aa256666ea179fc3f
-          10 + |    subPath: subpath_folder
+           10 + |    subPath: subpath_folder
 
       ? Do you want to create this workload? (y/N)
 
@@ -951,11 +951,11 @@ Create workload:
       7 + |  name: spring-pet-clinic
       8 + |  namespace: default
       9 + |spec:
-    10 + |  source:
-    11 + |    git:
-    12 + |      ref:
-    13 + |        branch: main
-    14 + |      url: https://github.com/sample-accelerators/spring-petclinic
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload? Yes
 Created workload "spring-pet-clinic"
@@ -998,11 +998,11 @@ Create workload:
       7 + |  name: spring-pet-clinic
       8 + |  namespace: default
       9 + |spec:
-    10 + |  source:
-    11 + |    git:
-    12 + |      ref:
-    13 + |        branch: main
-    14 + |      url: https://github.com/sample-accelerators/spring-petclinic
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
 ? Do you want to create this workload? Yes
 Created workload "spring-pet-clinic"
@@ -1045,11 +1045,11 @@ Create workload:
       7 + |  name: spring-pet-clinic
       8 + |  namespace: default
       9 + |spec:
-    10 + |  source:
-    11 + |    git:
-    12 + |      ref:
-    13 + |        branch: main
-    14 + |      url: https://github.com/sample-accelerators/spring-petclinic
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://github.com/sample-accelerators/spring-petclinic
 ```
 </details>
 
@@ -1128,8 +1128,8 @@ Create workload:
       7 + |  name: spring-pet-clinic
       8 + |  namespace: default
       9 + |spec:
-    10 + |  source:
-    11 + |    image: gcr.io/spring-community/spring-pet-clinic:latest@sha256:5feb0d9daf3f639755d8683ca7b647027cfddc7012e80c61dcdac27f0d7856a7
+     10 + |  source:
+     11 + |    image: gcr.io/spring-community/spring-pet-clinic:latest@sha256:5feb0d9daf3f639755d8683ca7b647027cfddc7012e80c61dcdac27f0d7856a7
 
 Created workload "spring-pet-clinic"
 
