@@ -23,12 +23,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
-
-// log is for logging in this package.
-var clusterlog = logf.Log.WithName("azurecluster-resource")
 
 // SetupWebhookWithManager sets up and registers the webhook with the manager.
 func (c *AzureCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
@@ -45,21 +41,16 @@ var _ webhook.Defaulter = &AzureCluster{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type.
 func (c *AzureCluster) Default() {
-	clusterlog.Info("default", "name", c.Name)
-
 	c.setDefaults()
 }
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
 func (c *AzureCluster) ValidateCreate() error {
-	clusterlog.Info("validate create", "name", c.Name)
-
 	return c.validateCluster(nil)
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (c *AzureCluster) ValidateUpdate(oldRaw runtime.Object) error {
-	clusterlog.Info("validate update", "name", c.Name)
 	var allErrs field.ErrorList
 	old := oldRaw.(*AzureCluster)
 
@@ -81,6 +72,20 @@ func (c *AzureCluster) ValidateUpdate(oldRaw runtime.Object) error {
 		allErrs = append(allErrs,
 			field.Invalid(field.NewPath("spec", "Location"),
 				c.Spec.Location, "field is immutable"),
+		)
+	}
+
+	if old.Spec.ControlPlaneEndpoint.Host != "" && c.Spec.ControlPlaneEndpoint.Host != old.Spec.ControlPlaneEndpoint.Host {
+		allErrs = append(allErrs,
+			field.Invalid(field.NewPath("spec", "ControlPlaneEndpoint", "Host"),
+				c.Spec.ControlPlaneEndpoint.Host, "field is immutable"),
+		)
+	}
+
+	if old.Spec.ControlPlaneEndpoint.Port != 0 && c.Spec.ControlPlaneEndpoint.Port != old.Spec.ControlPlaneEndpoint.Port {
+		allErrs = append(allErrs,
+			field.Invalid(field.NewPath("spec", "ControlPlaneEndpoint", "Port"),
+				c.Spec.ControlPlaneEndpoint.Port, "field is immutable"),
 		)
 	}
 
@@ -132,7 +137,5 @@ func (c *AzureCluster) ValidateUpdate(oldRaw runtime.Object) error {
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type.
 func (c *AzureCluster) ValidateDelete() error {
-	clusterlog.Info("validate delete", "name", c.Name)
-
 	return nil
 }

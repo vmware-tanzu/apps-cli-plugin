@@ -76,12 +76,22 @@ const (
 	ScaleSetModelOutOfDateReason = "ScaleSetModelOutOfDate"
 )
 
+// AzureManagedCluster Conditions and Reasons.
+const (
+	// ManagedClusterRunningCondition means the AKS cluster exists and is in a running state.
+	ManagedClusterRunningCondition clusterv1.ConditionType = "ManagedClusterRunning"
+	// AgentPoolsReadyCondition means the AKS agent pools exist and are ready to be used.
+	AgentPoolsReadyCondition clusterv1.ConditionType = "AgentPoolsReady"
+)
+
 // Azure Services Conditions and Reasons.
 const (
 	// ResourceGroupReadyCondition means the resource group exists and is ready to be used.
 	ResourceGroupReadyCondition clusterv1.ConditionType = "ResourceGroupReady"
 	// VNetReadyCondition means the virtual network exists and is ready to be used.
 	VNetReadyCondition clusterv1.ConditionType = "VNetReady"
+	// VnetPeeringReadyCondition means the virtual network peerings exist and are ready to be used.
+	VnetPeeringReadyCondition clusterv1.ConditionType = "VnetPeeringReady"
 	// SecurityGroupsReadyCondition means the security groups exist and are ready to be used.
 	SecurityGroupsReadyCondition clusterv1.ConditionType = "SecurityGroupsReady"
 	// RouteTablesReadyCondition means the route tables exist and are ready to be used.
@@ -104,6 +114,10 @@ const (
 	AvailabilitySetReadyCondition clusterv1.ConditionType = "AvailabilitySetReady"
 	// RoleAssignmentReadyCondition means the role assignment exists and is ready to be used.
 	RoleAssignmentReadyCondition clusterv1.ConditionType = "RoleAssignmentReady"
+	// DisksReadyCondition means the disks exist and are ready to be used.
+	DisksReadyCondition clusterv1.ConditionType = "DisksReady"
+	// NetworkInterfaceReadyCondition means the network interfaces exist and are ready to be used.
+	NetworkInterfaceReadyCondition clusterv1.ConditionType = "NetworkInterfacesReady"
 
 	// CreatingReason means the resource is being created.
 	CreatingReason = "Creating"

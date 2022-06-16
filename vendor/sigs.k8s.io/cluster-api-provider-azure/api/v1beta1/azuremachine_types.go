@@ -17,7 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -131,7 +131,7 @@ type AzureMachineStatus struct {
 
 	// Addresses contains the Azure instance associated addresses.
 	// +optional
-	Addresses []v1.NodeAddress `json:"addresses,omitempty"`
+	Addresses []corev1.NodeAddress `json:"addresses,omitempty"`
 
 	// VMState is the provisioning state of the Azure virtual machine.
 	// +optional
@@ -186,7 +186,9 @@ type AzureMachineStatus struct {
 }
 
 // +kubebuilder:object:root=true
-// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.ready",description="AzureMachine ready status"
+// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="Reason",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].reason"
+// +kubebuilder:printcolumn:name="Message",type="string",priority=1,JSONPath=".status.conditions[?(@.type=='Ready')].message"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.vmState",description="Azure VM provisioning state"
 // +kubebuilder:printcolumn:name="Cluster",type="string",priority=1,JSONPath=".metadata.labels.cluster\\.x-k8s\\.io/cluster-name",description="Cluster to which this AzureMachine belongs"
 // +kubebuilder:printcolumn:name="Machine",type="string",priority=1,JSONPath=".metadata.ownerReferences[?(@.kind==\"Machine\")].name",description="Machine object to which this AzureMachine belongs"
