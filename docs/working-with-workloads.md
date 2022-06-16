@@ -80,7 +80,6 @@ Respond `Y` to prompts to complete process.
 - `petclinic-image` is the name of the workload.
 - `--image` is an existing image, pulled from a registry, that contains the source that the workload is going to use to create the application.
 
-<!-- -->
 ### <a id="workload-maven"></a> Create a workload from Maven repository artifact
 
 **Note:** This is currently supported only by [Tanzu Application Platform Enterprise](https://docs.vmware.com/en/VMware-Tanzu-Application-Platform/index.html).

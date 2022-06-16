@@ -184,8 +184,34 @@ Update workload:
 </details>
 
 ### `--debug`
-*Under construction*
-<!--TODO Definition and example-->
+Sets the param variable debug to true  in workload.
+
+<details><summary>Example</summary>
+
+```bash
+tanzu apps workload apply spring-pet-clinic --git-repo https://github.com/sample-accelerators/spring-petclinic --git-branch main --type web --debug
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: spring-pet-clinic
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  params:
+     11 + |  - name: debug
+     12 + |    value: "true"
+     13 + |  source:
+     14 + |    git:
+     15 + |      ref:
+     16 + |        branch: main
+     17 + |      url: https://github.com/sample-accelerators/spring-petclinic
+
+? Do you want to create this workload? (y/N)
+```
+</details>
 
 ### `--dry-run`
 Prepares all the steps to submit the workload to the cluster but stops just before sending it, showing as output how the final structure of the workload would be.
@@ -833,8 +859,55 @@ Create workload:
 </details>
 
 ### `--service-account`
-*Under construction*
-<!--TODO Definition and example-->
+Refers to the service account to be associated with the workload. A service account provides an identity for workload object.
+
+<details><summary>Example</summary>
+
+```bash
+tanzu apps workload apply spring-pet-clinic --git-repo https://github.com/sample-accelerators/spring-petclinic --git-branch main --type web --service-account petc-serviceaccount
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: spring-pet-clinic
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  serviceAccountName: petc-serviceaccount
+     11 + |  source:
+     12 + |    git:
+     13 + |      ref:
+     14 + |        branch: main
+     15 + |      url: https://github.com/sample-accelerators/spring-petclinic
+
+? Do you want to create this workload? (y/N)
+```
+</details>
+
+To unset a service account, pass empty string.
+
+<details><summary>Example</summary>
+
+```bash
+tanzu apps workload apply spring-pet-clinic --git-repo https://github.com/sample-accelerators/spring-petclinic --git-branch main --type web --service-account ""
+Update workload:
+...
+  6,  6   |    apps.tanzu.vmware.com/workload-type: web
+  7,  7   |  name: spring-pet-clinic
+  8,  8   |  namespace: default
+  9,  9   |spec:
+ 10     - |  serviceAccountName: petc-serviceaccount
+ 11, 10   |  source:
+ 12, 11   |    git:
+ 13, 12   |      ref:
+ 14, 13   |        branch: main
+...
+
+? Really update the workload "spring-pet-clinic"? (y/N)
+```
+</details>
 
 ### `--service-ref`
 Binds a service to a workload to provide the info from a service resource to an application.<!-- Check [Tanzu Application Platform documentation](https://docs-staging.vmware.com/en/draft/VMware-Tanzu-Application-Platform/1.2/tap/GUID-getting-started-consume-services.html#bind-an-application-workload-to-the-service-instance-6) for more information.-->
