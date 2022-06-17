@@ -84,8 +84,8 @@ func (opts *WorkloadListOptions) Exec(ctx context.Context, c *cli.Config) error 
 
 	if opts.Output != "" {
 		var list []printer.Object
-		for _, w := range workloads.Items {
-			list = append(list, &w)
+		for i := range workloads.Items {
+			list = append(list, &workloads.Items[i])
 		}
 		export, err := printer.OutputResources(list, printer.OutputFormat(opts.Output), c.Scheme)
 		if err != nil {

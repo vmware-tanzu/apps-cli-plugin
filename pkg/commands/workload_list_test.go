@@ -141,11 +141,50 @@ test-workload   <empty>   <unknown>   <unknown>
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 						d.CreationTimestamp(metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC))
-					},
-					),
+					}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("another-workload")
+						d.Namespace(defaultNamespace)
+						d.CreationTimestamp(metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC))
+					}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("my-workload")
+						d.Namespace(defaultNamespace)
+						d.CreationTimestamp(metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC))
+					}),
 			},
 			ExpectOutput: `
 [
+	{
+		"kind": "Workload",
+		"apiVersion": "carto.run/v1alpha1",
+		"metadata": {
+			"name": "another-workload",
+			"namespace": "default",
+			"resourceVersion": "999",
+			"creationTimestamp": "2021-09-10T15:00:00Z"
+		},
+		"spec": {},
+		"status": {
+			"supplyChainRef": {}
+		}
+	},
+	{
+		"kind": "Workload",
+		"apiVersion": "carto.run/v1alpha1",
+		"metadata": {
+			"name": "my-workload",
+			"namespace": "default",
+			"resourceVersion": "999",
+			"creationTimestamp": "2021-09-10T15:00:00Z"
+		},
+		"spec": {},
+		"status": {
+			"supplyChainRef": {}
+		}
+	},
 	{
 		"kind": "Workload",
 		"apiVersion": "carto.run/v1alpha1",
@@ -170,11 +209,42 @@ test-workload   <empty>   <unknown>   <unknown>
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 						d.CreationTimestamp(metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC))
-					},
-					),
+					}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("another-workload")
+						d.Namespace(defaultNamespace)
+						d.CreationTimestamp(metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC))
+					}),
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("my-workload")
+						d.Namespace(defaultNamespace)
+						d.CreationTimestamp(metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC))
+					}),
 			},
 			ExpectOutput: `
 ---
+- apiVersion: carto.run/v1alpha1
+  kind: Workload
+  metadata:
+    creationTimestamp: "2021-09-10T15:00:00Z"
+    name: another-workload
+    namespace: default
+    resourceVersion: "999"
+  spec: {}
+  status:
+    supplyChainRef: {}
+- apiVersion: carto.run/v1alpha1
+  kind: Workload
+  metadata:
+    creationTimestamp: "2021-09-10T15:00:00Z"
+    name: my-workload
+    namespace: default
+    resourceVersion: "999"
+  spec: {}
+  status:
+    supplyChainRef: {}
 - apiVersion: carto.run/v1alpha1
   kind: Workload
   metadata:
