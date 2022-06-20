@@ -13,7 +13,7 @@ require (
 	github.com/google/go-containerregistry v0.9.0
 	github.com/spf13/cobra v1.4.0
 	github.com/stern/stern v1.21.0
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.7.3
 	github.com/vmware-labs/reconciler-runtime v0.6.0
 	github.com/vmware-tanzu/carvel-imgpkg v0.29.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
@@ -164,7 +164,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.10.0 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
+	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/valyala/fastjson v1.6.3 // indirect
 	github.com/vbatts/tar-split v0.11.2 // indirect
