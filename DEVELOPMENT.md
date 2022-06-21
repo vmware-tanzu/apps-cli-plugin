@@ -1,7 +1,7 @@
 # Development
 
 This doc explains how to set up a development environment so you can get started
-[contributing](CONTRIBUTING.md) to `Tanzu apps plugin`. Also
+[contributing](CONTRIBUTING.md) to `tanzu apps plugin`. Also
 take a look at:
 
 - [How to add and run tests](#testing)
@@ -19,22 +19,16 @@ Before submitting a PR, see also [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 You must install these tools:
 
-- [`go`]: for compiling the plugin as well as other dependencies - 1.16+
-- [`tanzu`]: for adding the plugin
+- [`go`](https://golang.org/doc/install): for compiling the plugin as well as other dependencies - 1.18+
+- [`tanzu CLI`](https://github.com/vmware-tanzu/tanzu-framework/blob/main/docs/cli/getting-started.md#install-the-latest-release-of-tanzu-cli): for adding the plugin
 - [`git`](https://help.github.com/articles/set-up-git/): for source control
-- [`tanzu builder plugin`] for compiling and publishing plugins
 
-
-[`go`]: https://golang.org/doc/install
-[`tanzu`]: https://github.com/vmware-tanzu/tanzu-framework/blob/main/docs/cli/getting-started.md#install-the-latest-release-of-tanzu-cli
-
-### Check out your fork
-
+### Setup your development environment
 To check out this repository:
 
 1. Create your own
-   [fork of this repo](https://help.github.com/articles/fork-a-repo/)
-1. Clone it to your machine:
+   [fork of this repo](https://docs.github.com/en/get-started/quickstart/fork-a-repo)
+1. Clone it on your machine:
 
 ```shell
 git clone git@github.com:${YOUR_GITHUB_USERNAME}/apps-cli-plugin.git
@@ -50,17 +44,13 @@ Once you reach this point you are ready to do a full build and install as
 described below.
 
 ## Building
-
-Once you've [set up your development environment](#prerequisites), let's build
-`apps plugin`.
-
-**Dependencies:**
-
-[go mod](https://github.com/golang/go/wiki/Modules#quick-start) is used and
+Once you've [setup your development environment](#prerequisites), let's build
+`apps plugin`. [go mod](https://github.com/golang/go/wiki/Modules#quick-start) is used and
 required for dependencies.
-#### Install builder plugin
 
-Install the Tanzu builder and test plugins. Set variable `OS` to `linux`, `darwin` or `windows` depending on your OS:
+**Install builder plugin**
+
+Install the tanzu builder and test plugins. Set variable `OS` to `linux`, `darwin` or `windows` depending on your OS:
 
 ```sh
 TANZU_VERSION=$(cat TANZU_VERSION)
@@ -71,16 +61,22 @@ tanzu plugin install builder --local ${TANZU_HOME}/admin-plugins
 tanzu plugin install test --local ${TANZU_HOME}/admin-plugins
 ```
 
-**Building:**
+**Building apps plugin**
 
 To build and install the apps plugin, run: (repeat this step any time you pull new source code to get the latest)
 
 ```sh
+make patch
 make install
 ```
 
-## Testing
+Verify installed plugins
 
+```
+tanzu plugin list
+```
+
+## Testing
 ### Unit testing
 
 All unit tests can be run on any machine with go 1.17+ installed.
@@ -90,20 +86,18 @@ make test
 ```
 
 ### Acceptance testing
+In order to use the CLI, the runtime dependencies need to be installed on the target Kubernetes cluster.
 
-In order to use the CLI, the runtime dependencies need to be installed into the target Kubernetes cluster.
-
-### Prerequisites
+### Cluster requirement
 - Create a Kubernetes cluster
 - Deploy [Cartographer](https://github.com/vmware-tanzu/cartographer#installation)
 
 ## Iterating
-
 As you make changes to the code-base, there are several special cases to be aware
 of:
 
 - **If you change/add Cartographer APIs**, then you must run
-  [`make prepare`] to update generated code. You might also require creating fakes via [dies](https://pkg.go.dev/dies.dev/diegen) for easier testing.
+  `make prepare` to update generated code. You might also require creating fakes via [dies](https://pkg.go.dev/dies.dev/diegen) for easier testing.
 
 - **If you change/add dependencies** (including adding an external dependency),
   then you must run `make prepare` command. In some cases, if newer dependencies are required, you need to run "go get" manually.
@@ -126,12 +120,11 @@ plugin is simply:
 make install
 ```
 
-Or you can [clean it up completely](./DEVELOPMENT.md#clean-up) and
+Or you can [uninstall](./DEVELOPMENT.md#Uninstalling) and
 [completely redeploy `apps plugin`](./DEVELOPMENT.md#starting-apps-plugin).
 
-## Clean up
-
-You can delete tanzu apps plugin with:
+## Uninstalling
+You can delete apps plugin with:
 
 ```sh
 tanzu plugin delete apps
