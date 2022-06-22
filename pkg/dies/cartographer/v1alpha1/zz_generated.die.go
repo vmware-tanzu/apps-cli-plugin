@@ -75,6 +75,14 @@ func (d *ClusterSupplyChainDie) DieFeedPtr(r *cartographerv1alpha1.ClusterSupply
 	return d.DieFeed(*r)
 }
 
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *ClusterSupplyChainDie) DieFeedRawExtension(raw runtime.RawExtension) *ClusterSupplyChainDie {
+	b, _ := json.Marshal(raw)
+	r := cartographerv1alpha1.ClusterSupplyChain{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
 // DieRelease returns the resource managed by the die.
 func (d *ClusterSupplyChainDie) DieRelease() cartographerv1alpha1.ClusterSupplyChain {
 	if d.mutable {
@@ -96,6 +104,15 @@ func (d *ClusterSupplyChainDie) DieReleaseUnstructured() runtime.Unstructured {
 	return &unstructured.Unstructured{
 		Object: u,
 	}
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *ClusterSupplyChainDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
 }
 
 // DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
@@ -141,6 +158,20 @@ func (d *ClusterSupplyChainDie) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, r)
 	*d = *d.DieFeed(*r)
 	return err
+}
+
+// APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+func (d *ClusterSupplyChainDie) APIVersion(v string) *ClusterSupplyChainDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.ClusterSupplyChain) {
+		r.APIVersion = v
+	})
+}
+
+// Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+func (d *ClusterSupplyChainDie) Kind(v string) *ClusterSupplyChainDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.ClusterSupplyChain) {
+		r.Kind = v
+	})
 }
 
 // MetadataDie stamps the resource's ObjectMeta field with a mutable die.
@@ -219,6 +250,14 @@ func (d *SupplyChainSpecDie) DieFeedPtr(r *cartographerv1alpha1.SupplyChainSpec)
 	return d.DieFeed(*r)
 }
 
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *SupplyChainSpecDie) DieFeedRawExtension(raw runtime.RawExtension) *SupplyChainSpecDie {
+	b, _ := json.Marshal(raw)
+	r := cartographerv1alpha1.SupplyChainSpec{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
 // DieRelease returns the resource managed by the die.
 func (d *SupplyChainSpecDie) DieRelease() cartographerv1alpha1.SupplyChainSpec {
 	if d.mutable {
@@ -231,6 +270,15 @@ func (d *SupplyChainSpecDie) DieRelease() cartographerv1alpha1.SupplyChainSpec {
 func (d *SupplyChainSpecDie) DieReleasePtr() *cartographerv1alpha1.SupplyChainSpec {
 	r := d.DieRelease()
 	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *SupplyChainSpecDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
 }
 
 // DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
@@ -322,6 +370,14 @@ func (d *SupplyChainStatusDie) DieFeedPtr(r *cartographerv1alpha1.SupplyChainSta
 	return d.DieFeed(*r)
 }
 
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *SupplyChainStatusDie) DieFeedRawExtension(raw runtime.RawExtension) *SupplyChainStatusDie {
+	b, _ := json.Marshal(raw)
+	r := cartographerv1alpha1.SupplyChainStatus{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
 // DieRelease returns the resource managed by the die.
 func (d *SupplyChainStatusDie) DieRelease() cartographerv1alpha1.SupplyChainStatus {
 	if d.mutable {
@@ -334,6 +390,15 @@ func (d *SupplyChainStatusDie) DieRelease() cartographerv1alpha1.SupplyChainStat
 func (d *SupplyChainStatusDie) DieReleasePtr() *cartographerv1alpha1.SupplyChainStatus {
 	r := d.DieRelease()
 	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *SupplyChainStatusDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
 }
 
 // DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
@@ -404,6 +469,14 @@ func (d *WorkloadDie) DieFeedPtr(r *cartographerv1alpha1.Workload) *WorkloadDie 
 	return d.DieFeed(*r)
 }
 
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *WorkloadDie) DieFeedRawExtension(raw runtime.RawExtension) *WorkloadDie {
+	b, _ := json.Marshal(raw)
+	r := cartographerv1alpha1.Workload{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
 // DieRelease returns the resource managed by the die.
 func (d *WorkloadDie) DieRelease() cartographerv1alpha1.Workload {
 	if d.mutable {
@@ -425,6 +498,15 @@ func (d *WorkloadDie) DieReleaseUnstructured() runtime.Unstructured {
 	return &unstructured.Unstructured{
 		Object: u,
 	}
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *WorkloadDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
 }
 
 // DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
@@ -470,6 +552,20 @@ func (d *WorkloadDie) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, r)
 	*d = *d.DieFeed(*r)
 	return err
+}
+
+// APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+func (d *WorkloadDie) APIVersion(v string) *WorkloadDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.Workload) {
+		r.APIVersion = v
+	})
+}
+
+// Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+func (d *WorkloadDie) Kind(v string) *WorkloadDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.Workload) {
+		r.Kind = v
+	})
 }
 
 // MetadataDie stamps the resource's ObjectMeta field with a mutable die.
@@ -548,6 +644,14 @@ func (d *WorkloadSpecDie) DieFeedPtr(r *cartographerv1alpha1.WorkloadSpec) *Work
 	return d.DieFeed(*r)
 }
 
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *WorkloadSpecDie) DieFeedRawExtension(raw runtime.RawExtension) *WorkloadSpecDie {
+	b, _ := json.Marshal(raw)
+	r := cartographerv1alpha1.WorkloadSpec{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
 // DieRelease returns the resource managed by the die.
 func (d *WorkloadSpecDie) DieRelease() cartographerv1alpha1.WorkloadSpec {
 	if d.mutable {
@@ -560,6 +664,15 @@ func (d *WorkloadSpecDie) DieRelease() cartographerv1alpha1.WorkloadSpec {
 func (d *WorkloadSpecDie) DieReleasePtr() *cartographerv1alpha1.WorkloadSpec {
 	r := d.DieRelease()
 	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *WorkloadSpecDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
 }
 
 // DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
@@ -664,6 +777,14 @@ func (d *WorkloadStatusDie) DieFeedPtr(r *cartographerv1alpha1.WorkloadStatus) *
 	return d.DieFeed(*r)
 }
 
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *WorkloadStatusDie) DieFeedRawExtension(raw runtime.RawExtension) *WorkloadStatusDie {
+	b, _ := json.Marshal(raw)
+	r := cartographerv1alpha1.WorkloadStatus{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
 // DieRelease returns the resource managed by the die.
 func (d *WorkloadStatusDie) DieRelease() cartographerv1alpha1.WorkloadStatus {
 	if d.mutable {
@@ -676,6 +797,15 @@ func (d *WorkloadStatusDie) DieRelease() cartographerv1alpha1.WorkloadStatus {
 func (d *WorkloadStatusDie) DieReleasePtr() *cartographerv1alpha1.WorkloadStatus {
 	r := d.DieRelease()
 	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *WorkloadStatusDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
 }
 
 // DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
@@ -759,6 +889,14 @@ func (d *RealizedResourceDie) DieFeedPtr(r *cartographerv1alpha1.RealizedResourc
 	return d.DieFeed(*r)
 }
 
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *RealizedResourceDie) DieFeedRawExtension(raw runtime.RawExtension) *RealizedResourceDie {
+	b, _ := json.Marshal(raw)
+	r := cartographerv1alpha1.RealizedResource{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
 // DieRelease returns the resource managed by the die.
 func (d *RealizedResourceDie) DieRelease() cartographerv1alpha1.RealizedResource {
 	if d.mutable {
@@ -771,6 +909,15 @@ func (d *RealizedResourceDie) DieRelease() cartographerv1alpha1.RealizedResource
 func (d *RealizedResourceDie) DieReleasePtr() *cartographerv1alpha1.RealizedResource {
 	r := d.DieRelease()
 	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *RealizedResourceDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
 }
 
 // DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
