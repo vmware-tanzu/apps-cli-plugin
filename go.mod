@@ -11,7 +11,7 @@ require (
 	github.com/go-logr/logr v1.2.3
 	github.com/google/go-cmp v0.5.8
 	github.com/google/go-containerregistry v0.9.0
-	github.com/spf13/cobra v1.4.0
+	github.com/spf13/cobra v1.5.0
 	github.com/stern/stern v1.21.0
 	github.com/stretchr/testify v1.7.4
 	github.com/vmware-labs/reconciler-runtime v0.6.0
