@@ -83,6 +83,8 @@ Respond `Y` to prompts to complete process.
 <!-- -->
 ### <a id="workload-maven"></a> Create a workload from Maven repository artifact
 
+**Note:** This is currently supported only by [Tanzu Application Platform Enterprise](https://docs.vmware.com/en/VMware-Tanzu-Application-Platform/index.html).
+
 Tanzu Application Platform supports creating a workload from a Maven repository artifact (source controller) by setting some specific properties as yaml parameter in the workload when using the supply chain.
 
 The maven repository url is being set when the supply chain is created.

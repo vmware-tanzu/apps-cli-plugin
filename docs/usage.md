@@ -8,7 +8,7 @@ The Apps CLI plugin uses the default context that is set in the kubeconfig file 
 
 In many cases the lifecycle of workloads can be managed through CLI commands and their flags alone but there might be cases where it is desired to manage a workload using a `yaml` file and the Apps plugin supports this use case.
 
-The plugin has been designed to manage one workload at a time. As such when a workload is being managed via a `yaml` file, that file must contain a single workload definition. In addition plugin commands support only one file per command.
+The plugin has been designed to manage one workload at a time. As such when a workload is being managed via a `yaml` file, that file must contain a single workload definition. In addition plugin commands support only one file per command. Check [cartographer documentation](https://cartographer.sh/docs/development/reference/workload/#workload) for more details. 
 
 For example, a valid file would be like this:
 
