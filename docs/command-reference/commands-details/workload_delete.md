@@ -17,69 +17,82 @@ tanzu apps workload delete spring-pet-clinic --yes
 Deleted workload "spring-pet-clinic"
 ```
 
-<details><summary>Workload Delete flags</summary>
+## Workload Delete flags
 
-- *all*(`--all`): deletes all workloads in a namespace
-    ```bash
-    tanzu apps workload delete --all
-    ? Really delete all workloads in the namespace "default"? (y/N) Y
-    Deleted workloads in namespace "default"
-    ```
+### `--all`
+Deletes all workloads in a namespace
 
-    ```bash
-    tanzu apps workload delete --all -n my-namespace
-    ? Really delete all workloads in the namespace "my-namespace"? Yes
-    Deleted workloads in namespace "my-namespace"
-    ```
+```bash
+tanzu apps workload delete --all
+? Really delete all workloads in the namespace "default"? (y/N) Y
+Deleted workloads in namespace "default"
+```
 
-- *filepath*(`-f`/`--file`): path to a file that contains the specification of the workload to be deleted.
-    ```bash
-    tanzu apps workload delete -f path/to/file/spring-petclinic.yaml
-    ? Really delete the workload "spring-petclinic"? Yes
-    Deleted workload "spring-petclinic"
-    ```
+```bash
+tanzu apps workload delete --all -n my-namespace
+? Really delete all workloads in the namespace "my-namespace"? Yes
+Deleted workloads in namespace "my-namespace"
+```
 
-- *namespace*(`-n`/`--namespace`): specifies the namespace in which the workload is to be deleted.
-    ```bash
-    tanzu apps workload delete spring-petclinic -n spring-petclinic-ns
-    ? Really delete the workload "spring-petclinic"? Yes
-    Deleted workload "spring-petclinic"
-    ```
+### `--file`, `-f`
 
-- *wait*(`wait`): waits until workload is deleted.
-    ```bash
-    tanzu apps workload delete -f path/to/file/spring-petclinic.yaml --wait
-    ? Really delete the workload "spring-petclinic"? Yes
-    Deleted workload "spring-petclinic"
-    Waiting for workload "spring-petclinic" to be deleted...
-    Workload "spring-petclinic" was deleted
-    ```
+Path to a file that contains the specification of the workload to be deleted.
 
-- *wait with timeout*(`--wait-timeout`): sets a timeout to wait for workload to be deleted.
-    ```bash
-    tanzu apps workload delete -f path/to/file/spring-petclinic.yaml --wait --wait-timeout 1m
-    ? Really delete the workload "spring-petclinic"? Yes
-    Deleted workload "spring-petclinic"
-    Waiting for workload "spring-petclinic" to be deleted...
-    Workload "spring-petclinic" was deleted
-    ```
+```bash
+tanzu apps workload delete -f path/to/file/spring-petclinic.yaml
+? Really delete the workload "spring-petclinic"? Yes
+Deleted workload "spring-petclinic"
+```
 
-    ```bash
-    tanzu apps workload delete spring-petclinic -n spring-petclinic-ns --wait --wait-timeout 1m
-    ? Really delete the workload "spring-petclinic"? Yes
-    Deleted workload "spring-petclinic"
-    Waiting for workload "spring-petclinic" to be deleted...
-    Error: timeout after 1m waiting for "spring-petclinic" to be deleted
-    To view status run: tanzu apps workload get spring-petclinic --namespace spring-petclinic-ns
-    Error: exit status 1
+### `--namespace`, `-n`
 
-    ✖  exit status 1
-    ```
+Specifies the namespace in which the workload is to be deleted.
 
-- *yes*(`-y`/`--yes`): assume yes on all the survey prompts
-    ```bash
-    tanzu apps workload delete spring-petclinic --yes
-    Deleted workload "spring-petclinic"
-    ```
+```bash
+tanzu apps workload delete spring-petclinic -n spring-petclinic-ns
+? Really delete the workload "spring-petclinic"? Yes
+Deleted workload "spring-petclinic"
+```
 
-</details>
+### `wait`
+
+Waits until workload is deleted.
+```bash
+tanzu apps workload delete -f path/to/file/spring-petclinic.yaml --wait
+? Really delete the workload "spring-petclinic"? Yes
+Deleted workload "spring-petclinic"
+Waiting for workload "spring-petclinic" to be deleted...
+Workload "spring-petclinic" was deleted
+```
+
+### `--wait-timeout`
+Sets a timeout to wait for workload to be deleted.
+
+```bash
+tanzu apps workload delete -f path/to/file/spring-petclinic.yaml --wait --wait-timeout 1m
+? Really delete the workload "spring-petclinic"? Yes
+Deleted workload "spring-petclinic"
+Waiting for workload "spring-petclinic" to be deleted...
+Workload "spring-petclinic" was deleted
+```
+
+```bash
+tanzu apps workload delete spring-petclinic -n spring-petclinic-ns --wait --wait-timeout 1m
+? Really delete the workload "spring-petclinic"? Yes
+Deleted workload "spring-petclinic"
+Waiting for workload "spring-petclinic" to be deleted...
+Error: timeout after 1m waiting for "spring-petclinic" to be deleted
+To view status run: tanzu apps workload get spring-petclinic --namespace spring-petclinic-ns
+Error: exit status 1
+
+✖  exit status 1
+```
+
+### `--yes`, `-f`
+
+Assume yes on all the survey prompts
+
+```bash
+tanzu apps workload delete spring-petclinic --yes
+Deleted workload "spring-petclinic"
+```

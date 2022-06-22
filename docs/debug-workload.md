@@ -92,13 +92,3 @@ After the workload build process is complete, create a Knative service to run th
 Refer to a more detailed info about the command and its flags usage in [workload get examples](./command-reference/commands-details/workload_get.md)
 
 2. You can now see the running workload. When the workload is created, `tanzu apps workload get` includes the URL for the running workload. Some terminals allow you to `ctrl`+click the URL to view it. You can also copy and paste the URL into your web browser to see the workload.
-
-## <a id="common-workload-errors"></a> Common workload errors
-
-A workload can either be ready, on error or with an unknown status.
-
-There are known errors that will make the workload enter in an error or unknown status. The most common are:
-
-- **ServiceAccountSecretError**: this error means that the secret account specified in workload definition either does not exist or is not accessible.
-- **WorkloadLabelsMissing**: when this error appears, it means that there is not a supply chain in the cluster that can take the workload to make it available. Then it is necessary to run the `tanzu apps cluster-supply-chain get <name>` to verify the supply chain selector and the respective label that workload should match.
-- **MissingValueAtPath**: this error means that the underline supply chain is still waiting for one of the steps in charge of provisioning the source/image to be used in the specification to create the app, so it is necessary to `kubectl describe` or `kubectl logs` on the pending component.

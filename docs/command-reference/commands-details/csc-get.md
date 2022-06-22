@@ -1,6 +1,6 @@
 # Tanzu Apps Cluster Supply Chain Get
 
-The tanzu apps csc get command is used to get a detailed information of the cluster supply chain
+`tanzu apps cluster-supply-chain get` command is used to get a detailed information of the cluster supply chain
 
 ## Default view
 

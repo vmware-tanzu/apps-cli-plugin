@@ -1,6 +1,6 @@
 # tanzu apps workload apply
 
-tanzu apps workload apply is a command used to create/update workloads that will be deployed in a cluster through a supply chain.
+`tanzu apps workload apply` is a command used to create/update workloads that will be deployed in a cluster through a supply chain.
 
 ## Default view
 
@@ -36,7 +36,7 @@ To get status: "tanzu apps workload get pet-clinic"
 ```
 </details>
 
-In the first part, the workload definition is displayed. After that, there is a survey asking user if the workload should be created or updated and finally, if workload is actually to be created or updated, a couple of hints to commands that can be used to do a follow up. Each flag used in this example will be explained in detail in the following section.
+In the first section, the definition of workload is displayed. Its followed by a prompt asking whether the workload should be created or updated. In the last section, if workload is actually to be created or updated, a couple of hints/suggestions are displayed about the next set of commands that can be used for a follow up. Each flag used in this example will be explained in detail in the following section.
 
 ## Workload Apply flags
 
@@ -379,18 +379,31 @@ Sets the OSI image to be used as the workload application source instead of a gi
 ```bash
 tanzu apps workload apply spring-pet-clinic --image private.repo.domain.com/spring-pet-clinic --type web
 Create workload:
-      1 + |---
-      2 + |apiVersion: carto.run/v1alpha1
-      3 + |kind: Workload
-      4 + |metadata:
-      5 + |  labels:
-      6 + |    apps.tanzu.vmware.com/workload-type: web
-      7 + |  name: spring-pet-clinic
-      8 + |  namespace: default
-      9 + |spec:
-     10 + |  image: private.repo.domain.com/spring-pet-clinic
+       1 + |---
+       2 + |apiVersion: carto.run/v1alpha1
+       3 + |kind: Workload
+       4 + |metadata:
+       5 + |  labels:
+       6 + |    apps.tanzu.vmware.com/workload-type: web
+       7 + |  name: spring-pet-clinic
+       8 + |  namespace: default
+       9 + |spec:
+      10 + |  build:
+      11 + |    env:
+      12 + |    - name: JAVA_VERSION
+      13 + |      value: "1.8"
+      14 + |  params:
+      15 + |  - name: server
+      16 + |    value:
+      17 + |      management-port: 9190
+      18 + |      port: 9090
+      19 + |  source:
+      20 + |    git:
+      21 + |      ref:
+      22 + |        tag: tap-1.1
+      23 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload?
+? Do you want to create this workload? (y/N)
 ```
 </details>
 
@@ -584,7 +597,7 @@ Enables to deploy a workload once, save changes to the code and see those change
 ### `--local-path`
 Set the path to a source in the local machine from where the workload will create an image to use as application source. The local path can be a folder, a .jar, .zip or .war file and, so far, Java/Spring Boot compiled binaries are also supported. This flag must be used with `--source-image` flag.
 
-**Note**: If Java/Spring binary is passed, the command will take less time to apply the workload since buildpack will skip the compiling steps and will simply start uploading the image.
+**Note**: If Java/Spring compiled binary is passed instead of source code, the command will take less time to apply the workload since buildpack will skip the compiling steps and will simply start uploading the image.
   
 When working with local source code, you can exclude files from the source code to be uploaded within the image by creating a file `.tanzuignore` at the root of the source code.
 The `.tanzuignore` file should contain a list of filepaths to exclude from the image including the file itself and the folders should not end with the system path separator (`/` or `\`). If the file contains files/folders that are not in the source code, they will be ignored as well as lines starting with `#` character.
@@ -934,6 +947,7 @@ It's used to define which path is going to be used as root to create/update the 
 
       ```
 </details>
+
 ### `--tail`
 Prints the logs of the workload creation in every step.
 

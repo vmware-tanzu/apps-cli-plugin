@@ -83,11 +83,8 @@ Respond `Y` to prompts to complete process.
 <!-- -->
 ### <a id="workload-maven"></a> Create a workload from Maven repository artifact
 
-<<<<<<< HEAD
 **Note:** This is currently supported only by [Tanzu Application Platform Enterprise](https://docs.vmware.com/en/VMware-Tanzu-Application-Platform/index.html).
 
-=======
->>>>>>> de273e6 (docs: Update docs to explain new features and flags usage.)
 Tanzu Application Platform supports creating a workload from a Maven repository artifact (source controller) by setting some specific properties as yaml parameter in the workload when using the supply chain.
 
 The maven repository url is being set when the supply chain is created.
@@ -135,7 +132,9 @@ Multiple services can be configured for each workload. The cluster supply chain 
     Where:
 
     + `pet-clinic` is the name of the workload to be updated
-    + `--service-ref` is the reference to the service using the format {service-ref-name}={apiVersion}:{kind}:{service-binding-name}. For more details, refer to [update command](command-reference/tanzu_apps_workload_update.md#update-options)
+    + `--service-ref` is the reference to the service using the format {service-ref-name}={apiVersion}:{kind}:{service-binding-name}. 
+
+**Note:**: Check [Tanzu Application Platform documentation](https://docs-staging.vmware.com/en/draft/VMware-Tanzu-Application-Platform/1.2/tap/GUID-getting-started-consume-services.html#bind-an-application-workload-to-the-service-instance-6) to get a more detailed explanation on how to bind services to a workload.
 
 ## <a id='next-steps'></a> Next Steps
 
