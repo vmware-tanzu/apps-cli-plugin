@@ -465,7 +465,6 @@ To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
 Error: timeout after 1ns waiting for "my-workload" to become ready
-To view status run: tanzu apps workload get my-workload --namespace default
 `,
 		},
 		{

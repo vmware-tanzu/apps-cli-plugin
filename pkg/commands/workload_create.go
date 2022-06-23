@@ -153,7 +153,6 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		if err := wait.Race(ctx, opts.WaitTimeout, workers); err != nil {
 			if err == context.DeadlineExceeded {
 				c.Printf("%s timeout after %s waiting for %q to become ready\n", printer.Serrorf("Error:"), opts.WaitTimeout, opts.Name)
-				c.Infof("To view status run: tanzu apps workload get %s %s %s\n", opts.Name, flags.NamespaceFlagName, opts.Namespace)
 				return cli.SilenceError(err)
 			}
 			c.Eprintf("%s %s\n", printer.Serrorf("Error:"), err)
