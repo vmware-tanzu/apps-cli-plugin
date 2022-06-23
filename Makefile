@@ -29,7 +29,7 @@ TANZU_PLUGIN_PUBLISH_PATH ?= $(ARTIFACTS_DIR)/published
 
 
 # Add supported OS-ARCHITECTURE combinations here
-ENVS ?= linux-amd64 windows-amd64 darwin-amd64 # linux-arm64 darwin-arm64
+ENVS ?= linux-amd64 windows-amd64 darwin-amd64 linux-arm64 darwin-arm64
 
 BUILD_JOBS := $(addprefix build-,${ENVS})
 PUBLISH_JOBS := $(addprefix publish-,${ENVS})
