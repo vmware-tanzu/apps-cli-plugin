@@ -4,8 +4,11 @@ This doc explains how to set up a development environment so you can get started
 [contributing](CONTRIBUTING.md) to `tanzu apps plugin`. Also
 take a look at:
 
+- [Prerequisites](#Prerequisites)
+- [Building](#building)
 - [How to add and run tests](#testing)
 - [Iterating](#iterating)
+- [Uninstall](#uninstalling)
 
 ## Prerequisites
 
