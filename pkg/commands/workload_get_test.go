@@ -116,6 +116,7 @@ func TestWorkloadGetCommand(t *testing.T) {
 	_ = cartov1alpha1.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
 	_ = knativeservingv1.AddToScheme(scheme)
+	objTimeStamp := metav1.NewTime(time.Now().AddDate(-2, 0, 0))
 
 	parent := diecartov1alpha1.WorkloadBlank.
 		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -128,6 +129,7 @@ func TestWorkloadGetCommand(t *testing.T) {
 			d.Name("pod1")
 			d.Namespace(defaultNamespace)
 			d.AddLabel(cartov1alpha1.WorkloadLabelName, workloadName)
+			d.CreationTimestamp(objTimeStamp)
 		})
 
 	pod2Die := diecorev1.PodBlank.
@@ -135,6 +137,7 @@ func TestWorkloadGetCommand(t *testing.T) {
 			d.Name("pod2")
 			d.Namespace(defaultNamespace)
 			d.AddLabel(cartov1alpha1.WorkloadLabelName, workloadName)
+			d.CreationTimestamp(objTimeStamp)
 		})
 	ksvcDieWithURL := diev1.ServiceBlank.
 		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -733,8 +736,8 @@ message:   a hopefully informative message about what went wrong
 
 Pods
 NAME   STATUS    RESTARTS   AGE
-pod1   Running   0          <unknown>
-pod2   Failed    0          <unknown>
+pod1   Running   0          2y
+pod2   Failed    0          2y
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -844,8 +847,8 @@ No issues reported.
 
 Pods
 NAME   STATUS    RESTARTS   AGE
-pod1   Running   0          <unknown>
-pod2   Failed    0          <unknown>
+pod1   Running   0          2y
+pod2   Failed    0          2y
 
 Knative Services
 NAME    READY       URL
@@ -1022,7 +1025,7 @@ spec: {}
 }
 `,
 		}, {
-			Name: "get workload outputted data in yaml format",
+			Name: "get workload output data in yaml format",
 			Args: []string{workloadName, flags.OutputFlagName, "yaml"},
 			GivenObjects: []client.Object{
 				parent.
@@ -1043,7 +1046,7 @@ spec: {}
 apiVersion: carto.run/v1alpha1
 kind: Workload
 metadata:
-  creationTimestamp: null
+  creationTimestamp: "1970-01-01T00:00:01Z"
   labels:
     app.kubernetes.io/part-of: my-workload
   name: my-workload
@@ -1060,7 +1063,7 @@ status:
   supplyChainRef: {}
 `,
 		}, {
-			Name: "get workload outputted data in json format",
+			Name: "get workload output data in json format",
 			Args: []string{workloadName, flags.OutputFlagName, "json"},
 			GivenObjects: []client.Object{
 				parent.
@@ -1084,7 +1087,7 @@ status:
 		"name": "my-workload",
 		"namespace": "default",
 		"resourceVersion": "999",
-		"creationTimestamp": null,
+		"creationTimestamp": "1970-01-01T00:00:01Z",
 		"labels": {
 			"app.kubernetes.io/part-of": "my-workload"
 		}

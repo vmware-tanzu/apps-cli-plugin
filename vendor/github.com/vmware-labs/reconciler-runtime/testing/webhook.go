@@ -1,5 +1,5 @@
 /*
-Copyright 2019 VMware, Inc.
+Copyright 2022 VMware, Inc.
 SPDX-License-Identifier: Apache-2.0
 */
 
@@ -7,19 +7,21 @@ package testing
 
 import (
 	"context"
+	"net/http"
+	"net/url"
 	"testing"
 
+	"github.com/go-logr/logr"
+	logrtesting "github.com/go-logr/logr/testing"
 	"github.com/google/go-cmp/cmp"
 	"github.com/vmware-labs/reconciler-runtime/reconcilers"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// ReconcilerTestCase holds a single test case of a reconciler test suite.
-type ReconcilerTestCase struct {
+// AdmissionWebhookTestCase holds a single testcase of an admission webhook.
+type AdmissionWebhookTestCase struct {
 	// Name is a descriptive name for this test suitable as a first argument to t.Run()
 	Name string
 	// Focus is true if and only if only this and any other focused tests are to be executed.
@@ -32,10 +34,10 @@ type ReconcilerTestCase struct {
 
 	// inputs
 
-	// Deprecated use Request
-	Key types.NamespacedName
-	// Request identifies the object to be reconciled
-	Request controllerruntime.Request
+	// Request is the admission request passed to the handler
+	Request *admission.Request
+	// HTTPRequest is the http request used to create the admission request object. If not defined, a minimal request is provided.
+	HTTPRequest *http.Request
 	// WithReactors installs each ReactionFunc into each fake clientset. ReactionFuncs intercept
 	// each call to the clientset providing the ability to mutate the resource or inject an error.
 	WithReactors []ReactionFunc
@@ -65,60 +67,50 @@ type ReconcilerTestCase struct {
 	// ExpectStatusPatches builds the ordered list of objects whose status is patched during reconciliation
 	ExpectStatusPatches []PatchRef
 
-	// AdditionalConfigs holds ExceptConfigs that are available to the test case and will have
-	// their expectations checked again the observed config interactions. The key in this map is
-	// set as the ExpectConfig's name.
-	AdditionalConfigs map[string]ExpectConfig
-
 	// outputs
 
-	// ShouldErr is true if and only if reconciliation is expected to return an error
-	ShouldErr bool
-	// ExpectedResult is compared to the result returned from the reconciler if there was no error
-	ExpectedResult controllerruntime.Result
-	// Verify provides the reconciliation Result and error for custom assertions
-	Verify VerifyFunc
+	// ShouldPanic is true if and only if webhook is expected to panic. A panic should only be
+	// used to indicate the webhook is misconfigured.
+	ShouldPanic bool
+	// ExpectedResponse is compared to the response returned from the webhook
+	ExpectedResponse admission.Response
 
 	// lifecycle
 
 	// Prepare is called before the reconciler is executed. It is intended to prepare the broader
 	// environment before the specific test case is executed. For example, setting mock expectations.
-	Prepare func(t *testing.T) error
+	Prepare func(t *testing.T, c reconcilers.Config, wtc *AdmissionWebhookTestCase) error
 	// CleanUp is called after the test case is finished and all defined assertions complete.
 	// It is indended to clean up any state created in the Prepare step or during the test
 	// execution, or to make assertions for mocks.
-	CleanUp func(t *testing.T) error
+	CleanUp func(t *testing.T, wtc *AdmissionWebhookTestCase) error
 }
 
-// VerifyFunc is a verification function
-type VerifyFunc func(t *testing.T, result controllerruntime.Result, err error)
-
-// ReconcilerTests represents a map of reconciler test cases. The map key is the name of each test
-// case. Test cases are executed in random order.
-type ReconcilerTests map[string]ReconcilerTestCase
+// AdmissionWebhookTests represents a map of reconciler test cases. The map key is the name of each
+// test case.  Test cases are executed in random order.
+type AdmissionWebhookTests map[string]AdmissionWebhookTestCase
 
 // Run executes the test cases.
-func (rt ReconcilerTests) Run(t *testing.T, scheme *runtime.Scheme, factory ReconcilerFactory) {
+func (wt AdmissionWebhookTests) Run(t *testing.T, scheme *runtime.Scheme, factory AdmissionWebhookFactory) {
 	t.Helper()
-	rts := ReconcilerTestSuite{}
-	for name, rtc := range rt {
-		rtc.Name = name
-		rts = append(rts, rtc)
+	wts := AdmissionWebhookTestSuite{}
+	for name, wtc := range wt {
+		wtc.Name = name
+		wts = append(wts, wtc)
 	}
-	rts.Run(t, scheme, factory)
+	wts.Run(t, scheme, factory)
 }
 
-// ReconcilerTestSuite represents a list of reconciler test cases. The test cases are executed in order.
-type ReconcilerTestSuite []ReconcilerTestCase
+// AdmissionWebhookTestSuite represents a list of webhook test cases. The test cases are
+// executed in order.
+type AdmissionWebhookTestSuite []AdmissionWebhookTestCase
 
 // Run executes the test case.
-func (tc *ReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, factory ReconcilerFactory) {
+func (tc *AdmissionWebhookTestCase) Run(t *testing.T, scheme *runtime.Scheme, factory AdmissionWebhookFactory) {
 	t.Helper()
 	if tc.Skip {
 		t.SkipNow()
 	}
-
-	ctx := context.Background()
 
 	expectConfig := &ExpectConfig{
 		Name:                    "default",
@@ -137,67 +129,66 @@ func (tc *ReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, factory 
 		ExpectStatusPatches:     tc.ExpectStatusPatches,
 	}
 
-	configs := make(map[string]reconcilers.Config, len(tc.AdditionalConfigs))
-	for k, v := range tc.AdditionalConfigs {
-		v.Name = k
-		configs[k] = v.Config()
-	}
-	ctx = reconcilers.StashAdditionalConfigs(ctx, configs)
-
-	r := factory(t, tc, expectConfig.Config())
+	c := expectConfig.Config()
+	r := factory(t, tc, c)
 
 	if tc.CleanUp != nil {
 		defer func() {
-			if err := tc.CleanUp(t); err != nil {
+			if err := tc.CleanUp(t, tc); err != nil {
 				t.Errorf("error during clean up: %s", err)
 			}
 		}()
 	}
 	if tc.Prepare != nil {
-		if err := tc.Prepare(t); err != nil {
+		if err := tc.Prepare(t, c, tc); err != nil {
 			t.Errorf("error during prepare: %s", err)
 		}
 	}
 
 	// Run the Reconcile we're testing.
-	request := tc.Request
-	if request == (controllerruntime.Request{}) {
-		request.NamespacedName = tc.Key
-	}
-	result, err := r.Reconcile(ctx, request)
-
-	if (err != nil) != tc.ShouldErr {
-		t.Errorf("Reconcile() error = %v, ShouldErr %v", err, tc.ShouldErr)
-	}
-	if err == nil {
-		// result is only significant if there wasn't an error
-		if diff := cmp.Diff(normalizeResult(tc.ExpectedResult), normalizeResult(result)); diff != "" {
-			t.Errorf("Unexpected result (-expected, +actual): %s", diff)
+	response := func() admission.Response {
+		if tc.ShouldPanic {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Error("expected Reconcile() to panic")
+				}
+			}()
 		}
-	}
 
-	if tc.Verify != nil {
-		tc.Verify(t, result, err)
+		httpRequest := tc.HTTPRequest
+		if httpRequest == nil {
+			// provide a minimal default
+			httpRequest = &http.Request{
+				URL: &url.URL{Path: "/"},
+			}
+		}
+		request := tc.Request
+		if request == nil {
+			// TODO parse admission request from http request
+			t.Fatal("Request field is required")
+		}
+
+		ctx := context.Background()
+		ctx = logr.NewContext(ctx, logrtesting.NewTestLogger(t))
+		if r.WithContextFunc != nil {
+			ctx = r.WithContextFunc(ctx, httpRequest)
+		}
+
+		return r.Handle(ctx, *request)
+	}()
+
+	tc.ExpectedResponse.Complete(*tc.Request)
+	if diff := cmp.Diff(tc.ExpectedResponse, response); diff != "" {
+		t.Errorf("Unexpected response (-expected, +actual): %s", diff)
 	}
 
 	expectConfig.AssertExpectations(t)
-	for _, config := range tc.AdditionalConfigs {
-		config.AssertExpectations(t)
-	}
 }
 
-func normalizeResult(result controllerruntime.Result) controllerruntime.Result {
-	// RequeueAfter implies Requeue, no need to set both
-	if result.RequeueAfter != 0 {
-		result.Requeue = false
-	}
-	return result
-}
-
-// Run executes the reconciler test suite.
-func (ts ReconcilerTestSuite) Run(t *testing.T, scheme *runtime.Scheme, factory ReconcilerFactory) {
+// Run executes the webhook test suite.
+func (ts AdmissionWebhookTestSuite) Run(t *testing.T, scheme *runtime.Scheme, factory AdmissionWebhookFactory) {
 	t.Helper()
-	focused := ReconcilerTestSuite{}
+	focused := AdmissionWebhookTestSuite{}
 	for _, test := range ts {
 		if test.Focus {
 			focused = append(focused, test)
@@ -219,7 +210,4 @@ func (ts ReconcilerTestSuite) Run(t *testing.T, scheme *runtime.Scheme, factory 
 	}
 }
 
-// ReconcilerFactory returns a Reconciler.Interface to perform reconciliation of a test case,
-// ActionRecorderList/EventList to capture k8s actions/events produced during reconciliation
-// and FakeStatsReporter to capture stats.
-type ReconcilerFactory func(t *testing.T, rtc *ReconcilerTestCase, c reconcilers.Config) reconcile.Reconciler
+type AdmissionWebhookFactory func(t *testing.T, wtc *AdmissionWebhookTestCase, c reconcilers.Config) *admission.Webhook

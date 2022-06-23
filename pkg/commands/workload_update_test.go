@@ -195,7 +195,7 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 apiVersion: carto.run/v1alpha1
 kind: Workload
 metadata:
-  creationTimestamp: null
+  creationTimestamp: "1970-01-01T00:00:01Z"
   name: my-workload
   namespace: default
   resourceVersion: "999"

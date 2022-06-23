@@ -18,6 +18,7 @@ package commands_test
 
 import (
 	"testing"
+	"time"
 
 	diemetav1 "dies.dev/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,7 +49,12 @@ func TestClusterSupplyChainListCommand(t *testing.T) {
 
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
-
+	objTimeStamp := metav1.NewTime(time.Now().AddDate(-2, 0, 0))
+	parent := diecartov1alpha1.ClusterSupplyChainBlank.
+		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+			d.Name(supplyChainName)
+			d.CreationTimestamp(objTimeStamp)
+		})
 	table := clitesting.CommandTestSuite{
 		{
 			Name: "empty",
@@ -61,10 +67,7 @@ No cluster supply chains found.
 			Name: "lists an item",
 			Args: []string{},
 			GivenObjects: []client.Object{
-				diecartov1alpha1.ClusterSupplyChainBlank.
-					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-						d.Name(supplyChainName)
-					}).
+				parent.
 					StatusDie(func(d *diecartov1alpha1.SupplyChainStatusDie) {
 						d.ConditionsDie(
 							diecartov1alpha1.ClusterSupplyChainConditionReadyBlank.Status(metav1.ConditionTrue),
@@ -73,7 +76,7 @@ No cluster supply chains found.
 			},
 			ExpectOutput: `
 NAME                READY   AGE
-test-supply-chain   Ready   <unknown>
+test-supply-chain   Ready   2y
 
 To view details: "tanzu apps cluster-supply-chain get <name>"
 
@@ -83,14 +86,11 @@ To view details: "tanzu apps cluster-supply-chain get <name>"
 			Name: "lists an item with empty values",
 			Args: []string{},
 			GivenObjects: []client.Object{
-				diecartov1alpha1.ClusterSupplyChainBlank.
-					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-						d.Name(supplyChainName)
-					}),
+				parent,
 			},
 			ExpectOutput: `
 NAME                READY       AGE
-test-supply-chain   <unknown>   <unknown>
+test-supply-chain   <unknown>   2y
 
 To view details: "tanzu apps cluster-supply-chain get <name>"
 
