@@ -21,18 +21,13 @@ import (
 	"context"
 	"os"
 	"os/exec"
-	"path"
-	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/spf13/cobra"
 	rtesting "github.com/vmware-labs/reconciler-runtime/testing"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	clientgotesting "k8s.io/client-go/testing"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
@@ -130,11 +125,11 @@ type CommandTestCase struct {
 	// Unlike Create and Update, Delete does not receive a full resource, so a reference is used
 	// instead. The Group will be blank for 'core' resources. The Resource is not a Kind, but
 	// plural lowercase name of the resource.
-	ExpectDeletes []DeleteRef
+	ExpectDeletes []rtesting.DeleteRef
 	// ExpectDeleteCollections asserts references to the DeleteCollection method of the fake
 	// client in order. DeleteCollections behaves similarly to Deletes. Unlike Delete,
 	// DeleteCollection does not contain a resource Name, but may contain a LabelSelector.
-	ExpectDeleteCollections []DeleteCollectionRef
+	ExpectDeleteCollections []rtesting.DeleteCollectionRef
 
 	// outputs
 
@@ -193,22 +188,24 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 			t.SkipNow()
 		}
 
+		expectConfig := &rtesting.ExpectConfig{
+			Name:                    tc.Name,
+			Scheme:                  scheme,
+			GivenObjects:            tc.GivenObjects,
+			WithReactors:            tc.WithReactors,
+			ExpectCreates:           tc.ExpectCreates,
+			ExpectUpdates:           tc.ExpectUpdates,
+			ExpectDeletes:           tc.ExpectDeletes,
+			ExpectDeleteCollections: tc.ExpectDeleteCollections,
+		}
+
 		ctx := context.Background()
 		c := tc.Config
 		if c == nil {
 			c = cli.NewDefaultConfig("test", scheme)
 		}
 
-		// Record the given objects
-		givenObjects := make([]client.Object, 0, len(tc.GivenObjects))
-		originalGivenObjects := make([]client.Object, 0, len(tc.GivenObjects))
-		for _, object := range tc.GivenObjects {
-			givenObjects = append(givenObjects, object.DeepCopyObject().(client.Object))
-			originalGivenObjects = append(originalGivenObjects, object.DeepCopyObject().(client.Object))
-		}
-
-		client := NewFakeClient(c.Scheme, givenObjects...)
-		c.Client = NewFakeCliClient(client)
+		c.Client = NewFakeCliClient(expectConfig.Config().Client)
 		if tc.ExecHelper != "" {
 			c.Exec = fakeExecCommand(tc.ExecHelper)
 		}
@@ -225,20 +222,6 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 			if ctx, err = tc.Prepare(t, ctx, c, &tc); err != nil {
 				t.Errorf("error during prepare: %s", err)
 			}
-		}
-
-		// Validate all objects that implement Validatable
-		client.PrependReactor("create", "*", func(action clientgotesting.Action) (handled bool, ret runtime.Object, err error) {
-			return ValidateCreates(context.Background(), action)
-		})
-		client.PrependReactor("update", "*", func(action clientgotesting.Action) (handled bool, ret runtime.Object, err error) {
-			return ValidateUpdates(context.Background(), action)
-		})
-
-		for i := range tc.WithReactors {
-			// in reverse order since we prepend
-			reactor := tc.WithReactors[len(tc.WithReactors)-1-i]
-			client.PrependReactor("*", "*", reactor)
 		}
 
 		cmd := cmdFactory(ctx, c)
@@ -269,46 +252,7 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 			}
 		}
 
-		// Previous state is used to diff resource expected state for update requests that were missed.
-		objPrevState := map[string]runtime.Object{}
-		for _, o := range givenObjects {
-			objPrevState[objKey(o)] = o
-		}
-
-		rtesting.CompareActions(t, "create", tc.ExpectCreates, client.CreateActions, rtesting.IgnoreLastTransitionTime, rtesting.SafeDeployDiff, rtesting.IgnoreTypeMeta, rtesting.IgnoreResourceVersion, cmpopts.EquateEmpty())
-		rtesting.CompareActions(t, "update", tc.ExpectUpdates, client.UpdateActions, rtesting.IgnoreLastTransitionTime, rtesting.SafeDeployDiff, rtesting.IgnoreTypeMeta, rtesting.IgnoreResourceVersion, cmpopts.EquateEmpty())
-
-		for i, expected := range tc.ExpectDeletes {
-			if i >= len(client.DeleteActions) {
-				t.Errorf("Missing delete: %#v", expected)
-				continue
-			}
-			actual := NewDeleteRef(client.DeleteActions[i])
-			if diff := cmp.Diff(expected, actual); diff != "" {
-				t.Errorf("Unexpected delete (-expected, +actual): %s", diff)
-			}
-		}
-		if actual, expected := len(client.DeleteActions), len(tc.ExpectDeletes); actual > expected {
-			for _, extra := range client.DeleteActions[expected:] {
-				t.Errorf("Extra delete: %#v", extra)
-			}
-		}
-
-		for i, expected := range tc.ExpectDeleteCollections {
-			if i >= len(client.DeleteCollectionActions) {
-				t.Errorf("Missing delete-collection: %#v", expected)
-				continue
-			}
-			actual := NewDeleteCollectionRef(client.DeleteCollectionActions[i])
-			if diff := cmp.Diff(expected, actual); diff != "" {
-				t.Errorf("Unexpected delete collection (-expected, +actual): %s", diff)
-			}
-		}
-		if actual, expected := len(client.DeleteCollectionActions), len(tc.ExpectDeleteCollections); actual > expected {
-			for _, extra := range client.DeleteCollectionActions[expected:] {
-				t.Errorf("Extra delete-collection: %#v", extra)
-			}
-		}
+		expectConfig.AssertClientExpectations(t)
 
 		outputString := output.String()
 		if tc.ExpectOutput != "" {
@@ -320,51 +264,7 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 		if tc.Verify != nil {
 			tc.Verify(t, outputString, cmdErr)
 		}
-
-		// Validate the given objects are not mutated by reconciliation
-		if diff := cmp.Diff(originalGivenObjects, givenObjects, rtesting.IgnoreResourceVersion); diff != "" {
-			t.Errorf("Given objects mutated by test %q (-expected, +actual): %v", tc.Name, diff)
-		}
 	})
-}
-
-func objKey(o runtime.Object) string {
-	on := o.(metav1.ObjectMetaAccessor)
-	// namespace + name is not unique, and the tests don't populate k8s kind
-	// information, so use GoLang's type name as part of the key.
-	return path.Join(reflect.TypeOf(o).String(), on.GetObjectMeta().GetNamespace(), on.GetObjectMeta().GetName())
-}
-
-type DeleteRef struct {
-	Group     string
-	Resource  string
-	Namespace string
-	Name      string
-}
-
-func NewDeleteRef(action clientgotesting.DeleteAction) DeleteRef {
-	return DeleteRef{
-		Group:     action.GetResource().Group,
-		Resource:  action.GetResource().Resource,
-		Namespace: action.GetNamespace(),
-		Name:      action.GetName(),
-	}
-}
-
-type DeleteCollectionRef struct {
-	Group         string
-	Resource      string
-	Namespace     string
-	LabelSelector string
-}
-
-func NewDeleteCollectionRef(action clientgotesting.DeleteCollectionAction) DeleteCollectionRef {
-	return DeleteCollectionRef{
-		Group:         action.GetResource().Group,
-		Resource:      action.GetResource().Resource,
-		Namespace:     action.GetNamespace(),
-		LabelSelector: action.GetListRestrictions().Labels.String(),
-	}
 }
 
 func fakeExecCommand(helper string) func(context.Context, string, ...string) *exec.Cmd {

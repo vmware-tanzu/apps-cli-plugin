@@ -24,6 +24,9 @@ import (
 	"time"
 
 	diemetav1 "dies.dev/apis/meta/v1"
+	rtesting "github.com/vmware-labs/reconciler-runtime/testing"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -166,10 +169,14 @@ func TestWorkloadDeleteCommand(t *testing.T) {
 			GivenObjects: []client.Object{
 				parent,
 			},
-			ExpectDeleteCollections: []clitesting.DeleteCollectionRef{{
+			ExpectDeleteCollections: []rtesting.DeleteCollectionRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
+				// TOOD: (@shashwathi) Remove the following fields and label fields after the following fix is merged
+				// https://github.com/vmware-labs/reconciler-runtime/pull/263 in reconciler-runtime.
+				Fields: fields.Everything(),
+				Labels: labels.NewSelector(),
 			}},
 			ExpectOutput: `
 Deleted workloads in namespace "default"
@@ -184,9 +191,9 @@ Deleted workloads in namespace "default"
 			GivenObjects: []client.Object{
 				parent,
 			},
-			ExpectDeleteCollections: []clitesting.DeleteCollectionRef{{
+			ExpectDeleteCollections: []rtesting.DeleteCollectionRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
 			}},
 			Verify: func(t *testing.T, output string, err error) {
@@ -223,10 +230,14 @@ Deleted workloads in namespace "default"
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("delete-collection", "Workload"),
 			},
-			ExpectDeleteCollections: []clitesting.DeleteCollectionRef{{
+			ExpectDeleteCollections: []rtesting.DeleteCollectionRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
+				// TOOD: (@shashwathi) Remove the following fields and label fields after the following fix is merged
+				// https://github.com/vmware-labs/reconciler-runtime/pull/263 in reconciler-runtime.
+				Fields: fields.Everything(),
+				Labels: labels.NewSelector(),
 			}},
 			ShouldError: true,
 		},
@@ -236,9 +247,9 @@ Deleted workloads in namespace "default"
 			GivenObjects: []client.Object{
 				parent,
 			},
-			ExpectDeletes: []clitesting.DeleteRef{{
+			ExpectDeletes: []rtesting.DeleteRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
 				Name:      workloadName,
 			}},
@@ -255,9 +266,9 @@ Deleted workload "test-workload"
 			GivenObjects: []client.Object{
 				parent,
 			},
-			ExpectDeletes: []clitesting.DeleteRef{{
+			ExpectDeletes: []rtesting.DeleteRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
 				Name:      workloadName,
 			}},
@@ -297,14 +308,14 @@ Deleted workload "test-workload"
 						d.Namespace(defaultNamespace)
 					}),
 			},
-			ExpectDeletes: []clitesting.DeleteRef{{
+			ExpectDeletes: []rtesting.DeleteRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
 				Name:      workloadName,
 			}, {
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
 				Name:      workloadOtherName,
 			}},
@@ -329,9 +340,9 @@ Workload "test-workload" does not exist
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("delete", "Workload"),
 			},
-			ExpectDeletes: []clitesting.DeleteRef{{
+			ExpectDeletes: []rtesting.DeleteRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
 				Name:      workloadName,
 			}},
@@ -343,9 +354,9 @@ Workload "test-workload" does not exist
 			GivenObjects: []client.Object{
 				parent,
 			},
-			ExpectDeletes: []clitesting.DeleteRef{{
+			ExpectDeletes: []rtesting.DeleteRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
 				Name:      workloadName,
 			}},
@@ -367,9 +378,9 @@ Workload "test-workload" was deleted
 				failingReactionFunc("get", "Workload"),
 			},
 			ShouldError: true,
-			ExpectDeletes: []clitesting.DeleteRef{{
+			ExpectDeletes: []rtesting.DeleteRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
 				Name:      workloadName,
 			}},
@@ -391,9 +402,9 @@ Waiting for workload "test-workload" to be deleted...
 Error: timeout after 1m0s waiting for "test-workload" to be deleted
 To view status run: tanzu apps workload get test-workload --namespace default
 `,
-			ExpectDeletes: []clitesting.DeleteRef{{
+			ExpectDeletes: []rtesting.DeleteRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
 				Name:      workloadName,
 			}},
@@ -434,9 +445,9 @@ spec:
 						d.Namespace(defaultNamespace)
 					}),
 			},
-			ExpectDeletes: []clitesting.DeleteRef{{
+			ExpectDeletes: []rtesting.DeleteRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
 				Name:      "spring-petclinic",
 			}},
@@ -516,9 +527,9 @@ spec:
 						d.Namespace(defaultNamespace)
 					}),
 			},
-			ExpectDeletes: []clitesting.DeleteRef{{
+			ExpectDeletes: []rtesting.DeleteRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: defaultNamespace,
 				Name:      "spring-petclinic",
 			}},
@@ -541,9 +552,9 @@ Deleted workload "spring-petclinic"
 						d.Namespace("test-namespace")
 					}),
 			},
-			ExpectDeletes: []clitesting.DeleteRef{{
+			ExpectDeletes: []rtesting.DeleteRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: "test-namespace",
 				Name:      "spring-petclinic",
 			}},
@@ -561,9 +572,9 @@ Deleted workload "spring-petclinic"
 						d.Namespace("test-namespace")
 					}),
 			},
-			ExpectDeletes: []clitesting.DeleteRef{{
+			ExpectDeletes: []rtesting.DeleteRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: "test-namespace",
 				Name:      "spring-petclinic",
 			}},
@@ -581,9 +592,9 @@ Deleted workload "spring-petclinic"
 						d.Namespace("test")
 					}),
 			},
-			ExpectDeletes: []clitesting.DeleteRef{{
+			ExpectDeletes: []rtesting.DeleteRef{{
 				Group:     "carto.run",
-				Resource:  "Workload",
+				Kind:      "Workload",
 				Namespace: "test",
 				Name:      "spring-petclinic",
 			}},
@@ -604,16 +615,16 @@ Deleted workload "spring-petclinic"
 						d.Namespace(defaultNamespace)
 					}),
 			},
-			ExpectDeletes: []clitesting.DeleteRef{
+			ExpectDeletes: []rtesting.DeleteRef{
 				{
 					Group:     "carto.run",
-					Resource:  "Workload",
+					Kind:      "Workload",
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 				},
 				{
 					Group:     "carto.run",
-					Resource:  "Workload",
+					Kind:      "Workload",
 					Namespace: defaultNamespace,
 					Name:      "spring-petclinic",
 				},

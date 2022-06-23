@@ -96,35 +96,6 @@ func NewTestResourceCreateCommand(ctx context.Context, c *cli.Config) *cobra.Com
 	return cmd
 }
 
-func TestValidatableTestSuite(t *testing.T) {
-	table := clitesting.ValidatableTestSuite{
-		{
-			Name:        "invalid resource",
-			Validatable: &TestResourceCreateOptions{},
-			ExpectFieldErrors: validation.FieldErrors{}.Also(
-				validation.ErrMissingField(cli.NamespaceFlagName),
-				validation.ErrMissingField(cli.NameArgumentName),
-			),
-		},
-		{
-			Name: "valid",
-			Validatable: &TestResourceCreateOptions{
-				Namespace: "default",
-				Name:      "my-resource",
-			},
-			ShouldValidate: true,
-		},
-		{
-			Name:           "skipped test, but would fail if run",
-			Skip:           true,
-			Validatable:    &TestResourceCreateOptions{},
-			ShouldValidate: true,
-		},
-	}
-
-	table.Run(t)
-}
-
 func TestWorkloadCreateCommand(t *testing.T) {
 	scheme := runtime.NewScheme()
 	_ = clitestingresource.AddToScheme(scheme)

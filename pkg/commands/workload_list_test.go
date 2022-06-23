@@ -98,11 +98,13 @@ func TestWorkloadListCommand(t *testing.T) {
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
+	objTimeStamp := metav1.NewTime(time.Now().AddDate(-2, 0, 0))
 
 	parent := diecartov1alpha1.WorkloadBlank.
 		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 			d.Name(workloadName)
 			d.Namespace(defaultNamespace)
+			d.CreationTimestamp(objTimeStamp)
 		})
 
 	otherNamespaceDie := diecorev1.NamespaceBlank.
@@ -131,7 +133,7 @@ No workloads found.
 			},
 			ExpectOutput: `
 NAME            APP       READY       AGE
-test-workload   <empty>   <unknown>   <unknown>
+test-workload   <empty>   <unknown>   2y
 `,
 		},
 		{
@@ -203,7 +205,7 @@ test-workload   <empty>   <unknown>   <unknown>
 					)},
 			ExpectOutput: `
 NAME            APP     READY   AGE
-test-workload   hello   Ready   <unknown>
+test-workload   hello   Ready   2y
 `,
 		},
 		{
@@ -222,7 +224,7 @@ test-workload   hello   Ready   <unknown>
 			},
 			ExpectOutput: `
 NAME            READY       AGE
-test-workload   <unknown>   <unknown>
+test-workload   <unknown>   2y
 `,
 		},
 		{
@@ -266,12 +268,13 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 						d.Name("test-other-workload")
 						d.Namespace(otherNamespace)
+						d.CreationTimestamp(objTimeStamp)
 					}),
 			},
 			ExpectOutput: `
 NAMESPACE         NAME                  APP       READY       AGE
-default           test-workload         <empty>   <unknown>   <unknown>
-other-namespace   test-other-workload   <empty>   <unknown>   <unknown>
+default           test-workload         <empty>   <unknown>   2y
+other-namespace   test-other-workload   <empty>   <unknown>   2y
 `,
 		},
 		{
