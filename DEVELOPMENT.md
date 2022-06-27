@@ -91,6 +91,10 @@ make test
 ### Acceptance testing
 In order to use the CLI, the runtime dependencies need to be installed on the target Kubernetes cluster.
 
+### Add test
+
+Any contribtuions for bug fix or feature requests will require unit and integration tests as part of the PR.
+
 ### Cluster requirement
 - Create a Kubernetes cluster
 - Deploy [Cartographer](https://github.com/vmware-tanzu/cartographer#installation)
