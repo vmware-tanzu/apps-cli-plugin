@@ -22,7 +22,7 @@ We welcome many different types of contributions and not all of them need a Pull
 
 ### Development Environment Setup
 
-Follow the documentation in the development document for the [Prerequisites](./Development.md#Prerequisites) required for the setup, as well [Building](./Development.md#building) the project.
+Follow the documentation in the development document for the [Prerequisites](./DEVELOPMENT.md#Prerequisites) required for the setup, as well [Building](./DEVELOPMENT.md#building) the project.
 
 ### Run test
 
