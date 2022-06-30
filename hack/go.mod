@@ -5,7 +5,7 @@ go 1.18
 require (
 	dies.dev/diegen v0.5.0
 	golang.org/x/tools v0.1.11
-	sigs.k8s.io/controller-tools v0.9.0
+	sigs.k8s.io/controller-tools v0.9.1
 )
 
 require (
