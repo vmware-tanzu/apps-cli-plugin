@@ -71,8 +71,8 @@ To build and install the apps plugin, run: (repeat this step any time you pull n
 ```sh
 make patch
 make install
-machines with processor architecure as arm64 run below
-make install GOHOSTARCH=amd64 
+Machines with processor architecture Arm 64 needs to pass argument GoHostArch=amd64 (make install GOHOSTARCH=amd64)
+
 ```
 
 Verify installed plugins
