@@ -1,0 +1,5 @@
+NAME      READY       AGE
+ci-test   <unknown>   0s
+
+To view details: "tanzu apps cluster-supply-chain get <name>"
+
