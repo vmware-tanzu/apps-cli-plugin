@@ -72,6 +72,7 @@ To build and install the apps plugin, run: (repeat this step any time you pull n
 make patch
 make install
 ```
+Note : For machines with arm64 processor run `make install GOHOSTARCH=amd64`
 
 Verify installed plugins
 
