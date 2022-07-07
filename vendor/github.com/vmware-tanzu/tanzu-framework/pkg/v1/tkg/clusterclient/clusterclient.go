@@ -187,7 +187,7 @@ type Client interface {
 	// GetCurrentClusterName returns the current clusterName based on current context from kubeconfig file
 	// If context parameter is not empty, then return clusterName corresponding to the context
 	GetCurrentClusterName(context string) (string, error)
-	// GetCurrentKubeContext returns the current kube xontext
+	// GetCurrentKubeContext returns the current kube context
 	GetCurrentKubeContext() (string, error)
 	// IsRegionalCluster() checks if the current kube context point to a management cluster
 	IsRegionalCluster() error
@@ -321,6 +321,8 @@ type Client interface {
 	ListCLIPluginResources() ([]cliv1alpha1.CLIPlugin, error)
 	// VerifyCLIPluginCRD returns true if CRD exists else return false
 	VerifyCLIPluginCRD() (bool, error)
+	// IsClusterClassBased check whether cluster is ClusterClass based or not
+	IsClusterClassBased(clusterName, namespace string) (bool, error)
 }
 
 // PollOptions is options for polling
@@ -667,7 +669,7 @@ func verifyKubernetesUpgradeForCPNodes(clusterStatusInfo *ClusterStatusInfo, new
 			conditions.GetReason(clusterObj, capi.ControlPlaneReadyCondition), conditions.GetMessage(clusterObj, capi.ControlPlaneReadyCondition))
 	}
 
-	if clusterStatusInfo.KubernetesVersion != newK8sVersion {
+	if clusterStatusInfo.KubernetesVersion != "" && clusterStatusInfo.KubernetesVersion != newK8sVersion {
 		return errors.Errorf("waiting for kubernetes version update, current kubernetes version %s but expecting %s", clusterStatusInfo.KubernetesVersion, newK8sVersion)
 	}
 
@@ -700,7 +702,7 @@ func verifyKubernetesUpgradeForWorkerNodes(clusterStatusInfo *ClusterStatusInfo,
 
 	unupgradedMachineList := []string{}
 	for i := range clusterStatusInfo.WorkerMachineObjects {
-		if clusterStatusInfo.WorkerMachineObjects[i].Spec.Version == nil || *clusterStatusInfo.WorkerMachineObjects[i].Spec.Version != newK8sVersion {
+		if clusterStatusInfo.WorkerMachineObjects[i].Spec.Version == nil || !strings.HasPrefix(newK8sVersion, *clusterStatusInfo.WorkerMachineObjects[i].Spec.Version) {
 			unupgradedMachineList = append(unupgradedMachineList, clusterStatusInfo.WorkerMachineObjects[i].Name)
 		}
 	}
@@ -1520,8 +1522,12 @@ func (c *client) ListClusters(namespace string) ([]capi.Cluster, error) {
 }
 
 func (c *client) DeleteCluster(clusterName, namespace string) error {
+	isCCBasedCluster, err := c.IsClusterClassBased(clusterName, namespace)
+	if err != nil {
+		return errors.Wrap(err, "unable to determine cluster type")
+	}
 	isPacific, err := c.IsPacificRegionalCluster()
-	if err == nil && isPacific {
+	if err == nil && isPacific && !isCCBasedCluster {
 		tkcObj, err := c.GetPacificClusterObject(clusterName, namespace)
 		if err != nil {
 			errString := fmt.Sprintf("failed to get cluster object for delete: %s", err.Error())
@@ -1529,7 +1535,6 @@ func (c *client) DeleteCluster(clusterName, namespace string) error {
 		}
 		return c.DeleteResource(tkcObj)
 	}
-
 	clusterObject := &capi.Cluster{}
 	clusterObject.Name = clusterName
 	clusterObject.Namespace = namespace
@@ -2339,6 +2344,29 @@ func (c *client) ListCLIPluginResources() ([]cliv1alpha1.CLIPlugin, error) {
 		return nil, err
 	}
 	return cliPlugins.Items, nil
+}
+
+// IsClusterClassBased check whether cluster is ClusterClass based or not
+func (c *client) IsClusterClassBased(clusterName, namespace string) (bool, error) {
+	clusterObj := &capi.Cluster{}
+	if err := c.GetResource(clusterObj, clusterName, namespace, nil, nil); err != nil {
+		return false, err
+	}
+	if clusterObj.Spec.Topology == nil || clusterObj.Spec.Topology.Class == "" {
+		return false, nil
+	}
+
+	// Make sure that Cluster resource doesn't have ownerRef indicating that other
+	// resource is managing this Cluster resource. When cluster is created through
+	// TKC API, the cluster resource will have ownerRef set
+	ownerRefs := clusterObj.GetOwnerReferences()
+	for i := range ownerRefs {
+		if ownerRefs[i].Kind == constants.KindTanzuKubernetesCluster {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 // Options provides way to customize creation of clusterClient
