@@ -4,18 +4,11 @@
 
 The Apps CLI plugin uses the default context that is set in the kubeconfig file to connect to the cluster. To switch clusters use kubectl to set the [default context](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/).
 
-
-## <a id='checking-update-status'></a>Checking Update Status
-
-When the apps plugin is used to create or update a workload, it submits the changes to the platform and the CLI command is completed successfully. This does not necessarily mean that the change has been realized on the platform. The time it takes for the change to be executed on the backend will depend on the nature of the change requested.
-
-Run [`tanzu apps workload get`](command-reference/tanzu_apps_workload_get.md) periodically to check on the status of the change.
-
 ## <a id='yaml-files'></a>Working with YAML Files
 
 In many cases the lifecycle of workloads can be managed through CLI commands and their flags alone but there might be cases where it is desired to manage a workload using a `yaml` file and the Apps plugin supports this use case.
 
-The plugin has been designed to manage one workload at a time. As such when a workload is being managed via a `yaml` file, that file must contain a single workload definition. In addition plugin commands support only one file per command.
+The plugin has been designed to manage one workload at a time. As such when a workload is being managed via a `yaml` file, that file must contain a single workload definition. In addition plugin commands support only one file per command. Check [cartographer documentation](https://cartographer.sh/docs/development/reference/workload/#workload) for more details. 
 
 For example, a valid file would be like this:
 
@@ -35,7 +28,24 @@ spec:
       ref:
         tag: tap-1.1
 ```
-## <a id='autocompletion'></a>Autocompletion
+
+Then, to create a workload from this file, run:
+
+```console
+tanzu apps workload create -f my-workload-file.yaml
+```
+
+Another way to create a workload from `yaml` is passing the definition through `stdin`. For example, run:
+
+```console
+tanzu apps workload create -f - --yes
+```
+
+The console will remain waiting for some input, and the content with a valid `yaml` definition for a workload can be either written or pasted, then press `ctrl`+D three times to start workload creation. This can also be done with `workload update` and `workload apply` commands.
+
+**Note**: to pass workload through `stdin`, `--yes` flag is needed. If not used, command will fail.
+
+## <a id='autocompletion'></a> Autocompletion
 
 To enable command autocompletion, the Tanzu CLI offers the `tanzu completion` command.
 
