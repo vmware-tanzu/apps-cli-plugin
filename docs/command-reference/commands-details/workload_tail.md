@@ -110,7 +110,7 @@ pet-clinic-config-writer-9fbk6-pod[step-main]     app.kubernetes.io/component: r
 pet-clinic-config-writer-9fbk6-pod[step-main]     carto.run/workload-name: pet-clinic
 ```
 
-`--timestamp`, `-t`
+### `--timestamp`, `-t`
 
 Adds the timestamp to the begining of each log message
  

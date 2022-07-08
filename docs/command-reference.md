@@ -1,0 +1,20 @@
+# Command reference
+
+- [Workload](command-reference/tanzu-apps-workload.md)
+    - [Workload apply](command-reference/tanzu_apps_workload_apply.md)
+    - [Workload create](command-reference/tanzu_apps_workload_create.md)
+    - [Workload update](command-reference/tanzu_apps_workload_update.md)
+        - [Workload create/update/apply flags and usage examples](command-reference/commands-details/workload_create_update_apply.md)
+    - [Workload get](command-reference/tanzu_apps_workload_get.md)
+        - [Workload get flags and usage examples](command-reference/commands-details/workload_get.md)
+    - [Workload delete](command-reference/tanzu_apps_workload_delete.md)
+        - [Workload delete flags and usage examples](command-reference/commands-details/workload_delete.md)
+    - [Workloads list](command-reference/tanzu_apps_workload_list.md)
+        - [Workload list flags and usage examples](command-reference/commands-details/workload_list.md)
+    - [Workload tail](command-reference/tanzu-apps_workload_tail.md)
+        - [Workload tail flags and usage examples](command-reference/commands-details/workload_tail.md)
+
+- [Cluster supply chain](command-reference/tanzu-apps-cluster-supply-chain.md)
+    - [Get cluster supply chain](command-reference/tanzu_apps_cluster-supply-chain_get.md)
+        [cluster supply chain get flags and usage examples](command-reference/commands-details/csc_get.md)
+    - [List cluster supply chain](command-reference/tanzu_apps_cluster-supply-chain_list.md)
