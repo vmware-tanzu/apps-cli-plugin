@@ -975,7 +975,7 @@ It's used to define which path is going to be used as root to create/update the 
 
   - Git repo
     ```bash
-    tanzu apps workload apply subpathtester --git-repo https://github.com/tfynes-pivotal/subpathtester --git-branch main --type web --sub-path service1
+    tanzu apps workload apply subpathtester --git-repo https://github.com/path-to-repo/my-repo --git-branch main --type web --sub-path my-subpath
 
     Create workload:
         1 + |---
@@ -991,8 +991,8 @@ It's used to define which path is going to be used as root to create/update the 
        11 + |    git:
        12 + |      ref:
        13 + |        branch: main
-       14 + |      url: https://github.com/tfynes-pivotal/subpathtester
-       15 + |    subPath: service1
+       14 + |      url: https://github.com/path-to-repo/my-repo
+       15 + |    subPath: my-subpath
 
     ? Do you want to create this workload? (y/N)
     ```
