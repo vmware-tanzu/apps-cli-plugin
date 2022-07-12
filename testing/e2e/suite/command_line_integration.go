@@ -85,7 +85,7 @@ type CommandLineIntegrationTestCase struct {
 func (ts CommandLineIntegrationTestSuite) Run(t *testing.T) {
 
 	cleanUp(t, false)
-	preapreEnvironment(t)
+	prepareEnvironment(t)
 	defer cleanUp(t, t.Failed())
 
 	testToRun := ts
@@ -184,7 +184,7 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, conf *ClientConfig) {
 	})
 }
 
-func preapreEnvironment(t *testing.T) {
+func prepareEnvironment(t *testing.T) {
 	// create namespace
 	createNsCmd := NewCommandLine("kubectl", "create", "namespace", TestingNamespace)
 	err := createNsCmd.Exec()
