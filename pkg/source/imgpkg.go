@@ -25,20 +25,36 @@ import (
 
 	"github.com/cppforlife/go-cli-ui/ui"
 	regname "github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/plainimage"
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry"
 )
 
-func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, image string) (string, error) {
+type RegistryOpts struct {
+	CACertPaths      []string
+	RegistryUsername string
+	RegistryPassword string
+	RegistryToken    string
+}
 
+func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, registryOpts *RegistryOpts, image string) (string, error) {
 	options := registry.Opts{
+		CACertPaths:           registryOpts.CACertPaths,
+		Username:              registryOpts.RegistryUsername,
+		Password:              registryOpts.RegistryPassword,
+		Token:                 registryOpts.RegistryToken,
 		VerifyCerts:           true,
 		RetryCount:            5,
 		ResponseHeaderTimeout: 30 * time.Second,
 	}
+
+	var reg registry.Registry
+	var err error
 	transport := RetrieveStashContainerRemoteTransport(ctx)
-	reg, err := registry.NewSimpleRegistryWithTransport(options, transport)
+	if transport == nil {
+		reg, err = registry.NewSimpleRegistry(options)
+	} else {
+		reg, err = registry.NewSimpleRegistryWithTransport(options, *transport)
+	}
 	if err != nil {
 		return "", fmt.Errorf("unable to create a registry with provided options: %v", err)
 	}
@@ -66,10 +82,11 @@ func StashContainerRemoteTransport(ctx context.Context, rTripper http.RoundTripp
 	return context.WithValue(ctx, containerRemoteTransportStashKey{}, rTripper)
 }
 
-func RetrieveStashContainerRemoteTransport(ctx context.Context) http.RoundTripper {
+func RetrieveStashContainerRemoteTransport(ctx context.Context) *http.RoundTripper {
 	transport, ok := ctx.Value(containerRemoteTransportStashKey{}).(http.RoundTripper)
 	if !ok {
-		return remote.DefaultTransport
+		return nil
 	}
-	return transport
+
+	return &transport
 }
