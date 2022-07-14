@@ -25,7 +25,7 @@ Where:
 
 NOTE: The above command will create the workload in the default namespace of your cluster, it is also possible to specify a namespace to use when creating a workload with the `--namespace` flag. For example: `tanzu apps workload create pet-clinic --git-repo https://github.com/sample-accelerators/spring-petclinic --git-tag tap-1.1 --type web --namespace NAME`
 
-You can find the options available for specifying the workload in the command reference for [`workload create`](command-reference/tanzu_apps_workload_create.md) and find some other usage examples in [workload apply details](./command-reference/commands-details/workload_create_update_apply.md).
+You can find the options available for specifying the workload in the command reference for [`workload create`](command-reference/tanzu_apps_workload_create.md) and find some other usage examples in [workload apply details](./commands-details/workload_create_update_apply.md).
 
 ### <a id="workload-local-source"></a> Create a workload from local source code
 
@@ -153,7 +153,7 @@ You can check workload details and status, add environment variables, export def
     tanzu apps workload get pet-clinic --export
     ```
 
-4. Check out the flags available for workload commands. A more detailed explanation of each flag and examples of their usage can be found in [command details folder](./command-reference/commands-details/).
+4. Check out the flags available for workload commands. A more detailed explanation of each flag and examples of their usage can be found in [command details folder](./commands-details/).
 
     ```bash
     tanzu apps workload -h

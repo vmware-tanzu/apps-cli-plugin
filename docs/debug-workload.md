@@ -2,7 +2,7 @@
 
 ## <a id="check-build-logs"></a> Check build logs
 
-Once the workload is created, you can tail the workload to view the build and runtime logs. For more info about `tail` command, refer to [workload tail](command-reference/tanzu-apps-workload-tail.md) in command reference section and to check in more detail flag usage (with examples), go to [workload tail examples](./command-reference/commands-details/workload_tail.md).
+Once the workload is created, you can tail the workload to view the build and runtime logs. For more info about `tail` command, refer to [workload tail](command-reference/tanzu-apps-workload-tail.md) in command reference section and to check in more detail flag usage (with examples), go to [workload tail examples](./commands-details/workload_tail.md).
 
 - Check logs by running:
 
@@ -89,6 +89,6 @@ After the workload build process is complete, create a Knative service to run th
 
     - `pet-clinic` is the name of the workload you want details about.
 
-Refer to a more detailed info about the command and its flags usage in [workload get examples](./command-reference/commands-details/workload_get.md)
+Refer to a more detailed info about the command and its flags usage in [workload get examples](./commands-details/workload_get.md)
 
 2. You can now see the running workload. When the workload is created, `tanzu apps workload get` includes the URL for the running workload. Some terminals allow you to `ctrl`+click the URL to view it. You can also copy and paste the URL into your web browser to see the workload.
