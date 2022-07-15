@@ -17,7 +17,9 @@ limitations under the License.
 package printer
 
 import (
+	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,12 +32,19 @@ import (
 
 func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error {
 	printResourceInfoRow := func(resource *cartov1alpha1.RealizedResource, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
+		var healthy string
+		healthyCond := printer.FindCondition(resource.Conditions, cartov1alpha1.ConditionResourceHealthy)
+		if healthyCond != nil {
+			healthy = string(healthyCond.Status)
+		}
+
 		ready, elapsedTransitionTime := findConditionReady(resource.Conditions, cartov1alpha1.ConditionResourceReady)
 
 		row := metav1beta1.TableRow{
 			Cells: []interface{}{
 				resource.Name,
 				ready,
+				healthy,
 				elapsedTransitionTime,
 			},
 		}
@@ -59,6 +68,7 @@ func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 		columns := []metav1beta1.TableColumnDefinition{
 			{Name: "Resource", Type: "string"},
 			{Name: "Ready", Type: "string"},
+			{Name: "Healthy", Type: "string"},
 			{Name: "Time", Type: "string"},
 		}
 		h.TableHandler(columns, printResourceInfoList)
@@ -114,25 +124,32 @@ func WorkloadSupplyChainInfoPrinter(w io.Writer, workload *cartov1alpha1.Workloa
 
 func WorkloadIssuesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error {
 	readyCondition := printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadReady)
+	healthyCondition := printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadHealthy)
 	if readyCondition == nil {
 		return nil
 	}
 	printIssues := func(workload *cartov1alpha1.Workload, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		reasonRow := metav1beta1.TableRow{
+		readyRow := metav1beta1.TableRow{
 			Cells: []interface{}{
-				"reason:",
-				readyCondition.Reason,
-			},
-		}
-
-		messageRow := metav1beta1.TableRow{
-			Cells: []interface{}{
-				"message:",
+				fmt.Sprintf("%s:", readyCondition.Reason),
 				readyCondition.Message,
 			},
 		}
 
-		rows := []metav1beta1.TableRow{reasonRow, messageRow}
+		rows := []metav1beta1.TableRow{readyRow}
+
+		if healthyCondition != nil {
+			if strings.Compare(healthyCondition.Message, readyCondition.Message) != 0 {
+				healthyRow := metav1beta1.TableRow{
+					Cells: []interface{}{
+						fmt.Sprintf("%s:", healthyCondition.Reason),
+						healthyCondition.Message,
+					},
+				}
+				rows = append(rows, healthyRow)
+			}
+		}
+
 		return rows, nil
 	}
 
