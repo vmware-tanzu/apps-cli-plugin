@@ -56,7 +56,7 @@ See the [development guide](./DEVELOPMENT.md) for instructions to build from sou
 
 ## Documentation
 
-Detailed documentation for commands in Apps Plugin for the Tanzu CLI can be found in the [docs](./docs/command-reference/README.md) folder of this repository. Documentation provides usage guide, information about working with workloads, and the full command reference.
+Detailed documentation for commands in Apps Plugin for the Tanzu CLI can be found in the [docs](./docs/README.md) folder of this repository. Documentation provides usage guide, information about working with workloads, and the full command reference.
 
 ## Community and Support
 
