@@ -132,8 +132,8 @@ No workloads found.
 				parent,
 			},
 			ExpectOutput: `
-NAME            APP       READY       AGE
-test-workload   <empty>   <unknown>   2y
+NAME            TYPE      APP       READY       AGE
+test-workload   <empty>   <empty>   <unknown>   2y
 `,
 		},
 		{
@@ -155,6 +155,7 @@ test-workload   <empty>   <unknown>   2y
 						d.Name("my-workload")
 						d.Namespace(defaultNamespace)
 						d.CreationTimestamp(metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC))
+						d.AddLabel(apis.WorkloadTypeLabelName, "web")
 					}),
 			},
 			ExpectOutput: `
@@ -180,7 +181,10 @@ test-workload   <empty>   <unknown>   2y
 			"name": "my-workload",
 			"namespace": "default",
 			"resourceVersion": "999",
-			"creationTimestamp": "2021-09-10T15:00:00Z"
+			"creationTimestamp": "2021-09-10T15:00:00Z",
+			"labels": {
+				"apps.tanzu.vmware.com/workload-type": "web"
+			}
 		},
 		"spec": {},
 		"status": {
@@ -217,6 +221,7 @@ test-workload   <empty>   <unknown>   2y
 						d.Name("another-workload")
 						d.Namespace(defaultNamespace)
 						d.CreationTimestamp(metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC))
+						d.AddLabel(apis.WorkloadTypeLabelName, "web")
 					}),
 				diecartov1alpha1.WorkloadBlank.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -231,6 +236,8 @@ test-workload   <empty>   <unknown>   2y
   kind: Workload
   metadata:
     creationTimestamp: "2021-09-10T15:00:00Z"
+    labels:
+      apps.tanzu.vmware.com/workload-type: web
     name: another-workload
     namespace: default
     resourceVersion: "999"
@@ -266,6 +273,7 @@ test-workload   <empty>   <unknown>   2y
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 						d.AddLabel(apis.AppPartOfLabelName, "hello")
+						d.AddLabel(apis.WorkloadTypeLabelName, "web")
 					}).
 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
 						d.ConditionsDie(
@@ -274,8 +282,8 @@ test-workload   <empty>   <unknown>   2y
 					},
 					)},
 			ExpectOutput: `
-NAME            APP     READY   AGE
-test-workload   hello   Ready   2y
+NAME            TYPE   APP     READY   AGE
+test-workload   web    hello   Ready   2y
 `,
 		},
 		{
@@ -293,8 +301,8 @@ test-workload   hello   Ready   2y
 					}),
 			},
 			ExpectOutput: `
-NAME            READY       AGE
-test-workload   <unknown>   2y
+NAME            TYPE      READY       AGE
+test-workload   <empty>   <unknown>   2y
 `,
 		},
 		{
@@ -339,12 +347,13 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 						d.Name("test-other-workload")
 						d.Namespace(otherNamespace)
 						d.CreationTimestamp(objTimeStamp)
+						d.AddLabel(apis.WorkloadTypeLabelName, "web")
 					}),
 			},
 			ExpectOutput: `
-NAMESPACE         NAME                  APP       READY       AGE
-default           test-workload         <empty>   <unknown>   2y
-other-namespace   test-other-workload   <empty>   <unknown>   2y
+NAMESPACE         NAME                  TYPE      APP       READY       AGE
+default           test-workload         <empty>   <empty>   <unknown>   2y
+other-namespace   test-other-workload   web       <empty>   <unknown>   2y
 `,
 		},
 		{

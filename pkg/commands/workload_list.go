@@ -42,6 +42,7 @@ import (
 type WorkloadListOptions struct {
 	Namespace     string
 	AllNamespaces bool
+	Type          string
 	App           string
 	Output        string
 }
@@ -140,6 +141,7 @@ List workloads in a namespace or across all namespaces.
 
 	cli.AllNamespacesFlag(ctx, cmd, c, &opts.Namespace, &opts.AllNamespaces)
 	cmd.Flags().StringVar(&opts.App, cli.StripDash(flags.AppFlagName), "", "application `name` the workload is a part of")
+	cmd.Flags().StringVar(&opts.Type, cli.StripDash(flags.TypeFlagName), "", "distinguish workload `type`")
 	cmd.Flags().StringVarP(&opts.Output, cli.StripDash(flags.OutputFlagName), "o", "", "output the Workloads formatted. Supported formats: \"json\", \"yaml\", \"yml\"")
 
 	return cmd
@@ -168,7 +170,8 @@ func (opts *WorkloadListOptions) print(workload *cartov1alpha1.Workload, _ table
 		labels = map[string]string{}
 	}
 
-	row.Cells = append(row.Cells, workload.Name)
+	row.Cells = append(row.Cells, workload.Name,
+		printer.EmptyString(labels[apis.WorkloadTypeLabelName]))
 	if opts.App == "" {
 		row.Cells = append(row.Cells, printer.EmptyString(labels[apis.AppPartOfLabelName]))
 	}
@@ -182,7 +185,8 @@ func (opts *WorkloadListOptions) print(workload *cartov1alpha1.Workload, _ table
 func (opts *WorkloadListOptions) printColumns() []metav1beta1.TableColumnDefinition {
 	cols := []metav1beta1.TableColumnDefinition{}
 
-	cols = append(cols, metav1beta1.TableColumnDefinition{Name: "Name", Type: "string"})
+	cols = append(cols, metav1beta1.TableColumnDefinition{Name: "Name", Type: "string"},
+		metav1beta1.TableColumnDefinition{Name: "Type", Type: "string"})
 	if opts.App == "" {
 		cols = append(cols, metav1beta1.TableColumnDefinition{Name: "App", Type: "string"})
 	}
