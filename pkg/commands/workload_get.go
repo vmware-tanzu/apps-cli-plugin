@@ -115,7 +115,12 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 	workloadStatusReadyCond := printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadConditionReady)
 	c.Printf(printer.ResourceStatus(workload.Name, workloadStatusReadyCond))
-
+	//print workload details
+	c.Boldf("Overview\n")
+	if err := printer.WorkloadOverviewPrinter(c.Stdout, workload); err != nil {
+		return err
+	}
+	c.Printf("\n")
 	// Print workload source
 	if workload.Spec.Image != "" || workload.Spec.Source != nil {
 		c.Boldf("Source\n")
