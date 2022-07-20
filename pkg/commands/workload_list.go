@@ -168,7 +168,8 @@ func (opts *WorkloadListOptions) print(workload *cartov1alpha1.Workload, _ table
 		labels = map[string]string{}
 	}
 
-	row.Cells = append(row.Cells, workload.Name)
+	row.Cells = append(row.Cells, workload.Name,
+		printer.EmptyString(labels[apis.WorkloadTypeLabelName]))
 	if opts.App == "" {
 		row.Cells = append(row.Cells, printer.EmptyString(labels[apis.AppPartOfLabelName]))
 	}
@@ -182,7 +183,8 @@ func (opts *WorkloadListOptions) print(workload *cartov1alpha1.Workload, _ table
 func (opts *WorkloadListOptions) printColumns() []metav1beta1.TableColumnDefinition {
 	cols := []metav1beta1.TableColumnDefinition{}
 
-	cols = append(cols, metav1beta1.TableColumnDefinition{Name: "Name", Type: "string"})
+	cols = append(cols, metav1beta1.TableColumnDefinition{Name: "Name", Type: "string"},
+		metav1beta1.TableColumnDefinition{Name: "Type", Type: "string"})
 	if opts.App == "" {
 		cols = append(cols, metav1beta1.TableColumnDefinition{Name: "App", Type: "string"})
 	}
