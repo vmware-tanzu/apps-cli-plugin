@@ -127,6 +127,8 @@ func TestWorkloadUpdateCommand(t *testing.T) {
 				),
 			},
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 Workload is unchanged, skipping update
 `,
 		},
@@ -157,6 +159,8 @@ Workload is unchanged, skipping update
 			},
 			ShouldError: true,
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 Workload "default/my-workload" not found
 `,
 		},
@@ -170,6 +174,8 @@ Workload "default/my-workload" not found
 			},
 			ShouldError: true,
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 Error: namespace "foo" not found, it may not exist or user does not have permissions to read it.
 `,
 		},
@@ -191,6 +197,8 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 					}),
 			},
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 ---
 apiVersion: carto.run/v1alpha1
 kind: Workload
@@ -379,6 +387,8 @@ status:
 			},
 			ShouldError: true,
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 Update workload:
 ...
   5,  5   |  name: my-workload
@@ -445,6 +455,8 @@ Error: conflict updating workload, the object was modified by another user; plea
 			},
 			ShouldError: true,
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 Update workload:
 ...
   5,  5   |  name: my-workload
@@ -522,6 +534,8 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 			},
 			ShouldError: true,
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 Update workload:
 ...
   5,  5   |  name: my-workload
@@ -596,6 +610,8 @@ Error: Failed to become ready: a hopefully informative message about what went w
 				},
 			},
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 Update workload:
 ...
   5,  5   |  name: my-workload
@@ -681,6 +697,8 @@ Workload "my-workload" is ready
 				},
 			},
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 Update workload:
 ...
   5,  5   |  name: my-workload
@@ -768,6 +786,8 @@ Workload "my-workload" is ready
 				},
 			},
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 Update workload:
 ...
   5,  5   |  name: my-workload
@@ -851,6 +871,8 @@ Workload "my-workload" is ready
 				},
 			},
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -974,6 +996,8 @@ spec:
 				},
 			},
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -1129,6 +1153,8 @@ spec:
 				},
 			},
 			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
