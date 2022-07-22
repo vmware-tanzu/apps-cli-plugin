@@ -15,7 +15,7 @@ require (
 	github.com/stern/stern v1.21.0
 	github.com/stretchr/testify v1.8.0
 	github.com/vmware-labs/reconciler-runtime v0.7.1
-	github.com/vmware-tanzu/carvel-imgpkg v0.29.0
+	github.com/vmware-tanzu/carvel-imgpkg v0.30.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-framework v0.24.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
@@ -64,7 +64,7 @@ require (
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cheggaaa/pb v1.0.29 // indirect
-	github.com/cheggaaa/pb/v3 v3.0.8 // indirect
+	github.com/cheggaaa/pb/v3 v3.1.0 // indirect
 	github.com/cncf/udpa/go v0.0.0-20210930031921-04548b0d99d4 // indirect
 	github.com/cncf/xds/go v0.0.0-20211130200136-a8f946100490 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.12.0 // indirect
@@ -204,7 +204,7 @@ require (
 	k8s.io/cloud-provider v0.22.4 // indirect
 	k8s.io/cluster-bootstrap v0.23.4 // indirect
 	k8s.io/component-base v0.24.2 // indirect
-	k8s.io/klog/v2 v2.60.1 // indirect
+	k8s.io/klog/v2 v2.70.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220328201542-3ee0da9b0b42 // indirect
 	k8s.io/kubectl v0.23.4 // indirect
 	k8s.io/legacy-cloud-providers v0.22.4 // indirect
