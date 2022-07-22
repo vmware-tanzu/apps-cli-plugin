@@ -108,7 +108,7 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	}
 
 	// If user answers yes to survey prompt about publishing source, continue with workload creation
-	if okToPush, err := opts.PublishLocalSource(ctx, c, workload); err != nil {
+	if okToPush, err := opts.PublishLocalSource(ctx, c, nil, workload); err != nil {
 		return err
 	} else if !okToPush {
 		return nil

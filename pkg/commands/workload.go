@@ -339,7 +339,7 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 // PublishLocalSource packages the specified source code in the --local-path flag and creates an image
 // that will be eventually published to the registry specified in the --source-image flag.
 // Returns a boolean that indicates if user does actually want to publish the image and an error in case of failure
-func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Config, workload *cartov1alpha1.Workload) (bool, error) {
+func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Config, currentWorkload, workload *cartov1alpha1.Workload) (bool, error) {
 	if opts.LocalPath == "" {
 		return true, nil
 	}
@@ -381,8 +381,13 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 		return okToPush, err
 	}
 	workload.Spec.Source.Image = digestedImage
-	c.Successf("Published source\n")
 
+	if currentWorkload != nil && currentWorkload.Spec.Source.Image == workload.Spec.Source.Image {
+		c.Infof("No source code is changed\n")
+		return okToPush, nil
+	}
+
+	c.Successf("Published source\n")
 	return okToPush, nil
 }
 

@@ -1599,12 +1599,13 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 	registryHost := u.Host
 
 	tests := []struct {
-		name           string
-		args           []string
-		input          string
-		expected       string
-		shouldError    bool
-		expectedOutput string
+		name             string
+		args             []string
+		input            string
+		expected         string
+		shouldError      bool
+		expectedOutput   string
+		existingWorkload *cartov1alpha1.Workload
 	}{{
 		name:     "local source with excluded files",
 		args:     []string{flags.LocalPathFlagName, "testdata/local-source-exclude-files", flags.YesFlagName},
@@ -1648,6 +1649,22 @@ Publishing source in "testdata/local-source" to "` + registryHost + `/hello:sour
 Published source
 `,
 	}, {
+		name:     "when workload already has resolved image with digest",
+		args:     []string{flags.LocalPathFlagName, "testdata/hello.go.jar", flags.YesFlagName},
+		input:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
+		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		existingWorkload: &cartov1alpha1.Workload{
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+				},
+			},
+		},
+		expectedOutput: `
+Publishing source in "testdata/hello.go.jar" to "` + registryHost + `/hello:source"...
+No source code is changed
+`,
+	}, {
 		name:           "no local path",
 		args:           []string{},
 		input:          fmt.Sprintf("%s/hello:source", registryHost),
@@ -1684,7 +1701,7 @@ Published source
 				},
 			}
 
-			_, err := opts.PublishLocalSource(ctx, c, workload)
+			_, err := opts.PublishLocalSource(ctx, c, test.existingWorkload, workload)
 			if err != nil && !test.shouldError {
 				t.Errorf("PublishLocalSource() errored %v", err)
 			}
