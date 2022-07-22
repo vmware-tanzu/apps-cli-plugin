@@ -152,36 +152,10 @@ jobs:
         set -o nounset
         set -o pipefail
 
-        echo "##[group]Create workload"
-          tanzu apps workload create petclinic --git-repo example.com --git-branch main --annotation serving.knative.dev/maxScale=10 --yes
+        echo "##[group]Integration Test"
+          make integration-test
         echo "##[endgroup]"
-        echo "##[group]List workload"
-          tanzu apps workload list
-        echo "##[endgroup]"
-        echo "##[group]List workload with output json"
-          tanzu apps workload list --output json | jq '.[] | select(.metadata.name=="petclinic")'
-        echo "##[endgroup]"
-        echo "##[group]Get workload"
-          tanzu apps workload get petclinic
-        echo "##[endgroup]"
-        echo "##[group]Update workload"
-          tanzu apps workload update petclinic --label cli.ci/new-label=true --yes
-        echo "##[endgroup]"
-        echo "##[group]Apply clustersupplychain"
-          kubectl apply -f ./.github/samples/clustersupplychain.yaml
-        echo "##[endgroup]"
-         echo "##[group]Get cluster-supply-chain"
-          tanzu apps cluster-supply-chain get ci-test
-        echo "##[endgroup]"
-    - name: Collect diagnostics
-      run: |
-        echo "##[group]Static Pod"
-          kubectl describe pod static-web
-        echo "##[endgroup]"
-        echo "##[group]Workload"
-          kubectl describe workload petclinic 
-        echo "##[endgroup]"
-      continue-on-error: true
+      continue-on-error: false
     - name: Delete Gracefully
       run: |
         set -o errexit
