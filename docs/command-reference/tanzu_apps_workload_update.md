@@ -50,6 +50,10 @@ tanzu apps workload update --file workload.yaml
   -n, --namespace name                 kubernetes namespace (defaulted from kube config)
       --param "key=value" pair         additional parameters represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --param-yaml "key=value" pair    specify nested parameters using YAML or JSON formatted values represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
+      --registry-ca-cert stringArray   file path to CA certificate used to authenticate with registry, flag can be used multiple times
+      --registry-password string       username for authenticating with registry
+      --registry-token string          token for authenticating with registry
+      --registry-username string       password for authenticating with registry
       --request-cpu cores              the minimum amount of cpu required, in CPU cores (500m = .5 cores)
       --request-memory bytes           the minimum amount of memory required, in bytes (500Mi = 500MiB = 500 * 1024 * 1024)
       --service-account string         name of service account permitted to create resources submitted by the supply chain (to unset, pass empty string "")

@@ -116,6 +116,11 @@ type WorkloadOptions struct {
 	TailTimestamps bool
 	DryRun         bool
 	Yes            bool
+
+	CACertPaths      []string
+	RegistryUsername string
+	RegistryPassword string
+	RegistryToken    string
 }
 
 var _ validation.Validatable = (*WorkloadUpdateOptions)(nil)
@@ -154,6 +159,15 @@ func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldError
 	}
 	if opts.LimitMemory != "" && opts.RequestMemory != "" {
 		errs = errs.Also(validation.CompareQuantity(opts.LimitMemory, opts.RequestMemory, flags.RequestMemoryFlagName))
+	}
+
+	if opts.RegistryPassword != "" || opts.RegistryUsername != "" || opts.RegistryToken != "" || len(opts.CACertPaths) != 0 {
+		if opts.SourceImage == "" {
+			errs = errs.Also(validation.ErrMissingField(flags.SourceImageFlagName))
+		}
+		if opts.LocalPath == "" {
+			errs = errs.Also(validation.ErrMissingField(flags.LocalPathFlagName))
+		}
 	}
 
 	return errs
@@ -376,7 +390,10 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	}
 
 	c.Infof("Publishing source in %q to %q...\n", opts.LocalPath, taggedImage)
-	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, taggedImage)
+
+	currentRegistryOpts := source.RegistryOpts{CACertPaths: opts.CACertPaths, RegistryUsername: opts.RegistryUsername, RegistryPassword: opts.RegistryPassword, RegistryToken: opts.RegistryToken}
+
+	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, &currentRegistryOpts, taggedImage)
 	if err != nil {
 		return okToPush, err
 	}
@@ -580,6 +597,10 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.Flags().StringVar(&opts.ServiceAccountName, cli.StripDash(flags.ServiceAccountFlagName), "", "name of service account permitted to create resources submitted by the supply chain (to unset, pass empty string \"\")")
 	cmd.Flags().StringVar(&opts.LimitCPU, cli.StripDash(flags.LimitCPUFlagName), "", "the maximum amount of cpu allowed, in CPU `cores` (500m = .5 cores)")
 	cmd.Flags().StringVar(&opts.LimitMemory, cli.StripDash(flags.LimitMemoryFlagName), "", "the maximum amount of memory allowed, in `bytes` (500Mi = 500MiB = 500 * 1024 * 1024)")
+	cmd.Flags().StringArrayVar(&opts.CACertPaths, cli.StripDash(flags.RegistryCertFlagName), []string{}, "file path to CA certificate used to authenticate with registry, flag can be used multiple times")
+	cmd.Flags().StringVar(&opts.RegistryPassword, cli.StripDash(flags.RegistryPasswordFlagName), "", "username for authenticating with registry")
+	cmd.Flags().StringVar(&opts.RegistryUsername, cli.StripDash(flags.RegistryUsernameFlagName), "", "password for authenticating with registry")
+	cmd.Flags().StringVar(&opts.RegistryToken, cli.StripDash(flags.RegistryTokenFlagName), "", "token for authenticating with registry")
 	cmd.Flags().StringVar(&opts.RequestCPU, cli.StripDash(flags.RequestCPUFlagName), "", "the minimum amount of cpu required, in CPU `cores` (500m = .5 cores)")
 	cmd.Flags().StringVar(&opts.RequestMemory, cli.StripDash(flags.RequestMemoryFlagName), "", "the minimum amount of memory required, in `bytes` (500Mi = 500MiB = 500 * 1024 * 1024)")
 	cmd.Flags().BoolVar(&opts.Wait, cli.StripDash(flags.WaitFlagName), false, "waits for workload to become ready")
