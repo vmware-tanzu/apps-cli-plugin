@@ -55,10 +55,6 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 							Type:   cartov1alpha1.ConditionResourceSubmitted,
 							Status: metav1.ConditionTrue,
 						},
-						{
-							Type:   cartov1alpha1.ConditionResourceHealthy,
-							Status: metav1.ConditionTrue,
-						},
 					},
 				}, {
 					Name: "deliverable",
@@ -69,10 +65,6 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 						},
 						{
 							Type:   cartov1alpha1.ConditionResourceSubmitted,
-							Status: metav1.ConditionUnknown,
-						},
-						{
-							Type:   cartov1alpha1.ConditionResourceHealthy,
 							Status: metav1.ConditionUnknown,
 						},
 					},
@@ -87,19 +79,15 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 							Type:   cartov1alpha1.ConditionResourceSubmitted,
 							Status: metav1.ConditionFalse,
 						},
-						{
-							Type:   cartov1alpha1.ConditionResourceHealthy,
-							Status: metav1.ConditionFalse,
-						},
 					},
 				}},
 			},
 		},
 		expectedOutput: `
-RESOURCE          READY     HEALTHY   TIME
-source-provider   True      True      <unknown>
-deliverable       Unknown   Unknown   <unknown>
-image-builder     False     False     <unknown>
+RESOURCE          READY     TIME
+source-provider   True      <unknown>
+deliverable       Unknown   <unknown>
+image-builder     False     <unknown>
 `,
 	}, {
 		name: "no resources",
@@ -110,7 +98,7 @@ image-builder     False     False     <unknown>
 			},
 		},
 		expectedOutput: `
-RESOURCE   READY   HEALTHY   TIME
+RESOURCE   READY   TIME
 `,
 	}, {
 		name: "no ready condition inside resource",
@@ -127,20 +115,12 @@ RESOURCE   READY   HEALTHY   TIME
 							Type:   cartov1alpha1.ConditionResourceSubmitted,
 							Status: metav1.ConditionTrue,
 						},
-						{
-							Type:   cartov1alpha1.ConditionResourceHealthy,
-							Status: metav1.ConditionTrue,
-						},
 					},
 				}, {
 					Name: "deliverable",
 					Conditions: []metav1.Condition{
 						{
 							Type:   cartov1alpha1.ConditionResourceSubmitted,
-							Status: metav1.ConditionUnknown,
-						},
-						{
-							Type:   cartov1alpha1.ConditionResourceHealthy,
 							Status: metav1.ConditionUnknown,
 						},
 					},
@@ -155,76 +135,15 @@ RESOURCE   READY   HEALTHY   TIME
 							Type:   cartov1alpha1.ConditionResourceSubmitted,
 							Status: metav1.ConditionFalse,
 						},
-						{
-							Type:   cartov1alpha1.ConditionResourceHealthy,
-							Status: metav1.ConditionFalse,
-						},
 					},
 				}},
 			},
 		},
 		expectedOutput: `
-RESOURCE          READY   HEALTHY   TIME
-source-provider           True      
-deliverable               Unknown   
-image-builder     False   False     <unknown>
-`,
-	}, {
-		name: "no healthy condition inside resource",
-		testWorkload: &cartov1alpha1.Workload{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
-				Namespace: defaultNamespace,
-			},
-			Status: cartov1alpha1.WorkloadStatus{
-				Resources: []cartov1alpha1.RealizedResource{{
-					Name: "source-provider",
-					Conditions: []metav1.Condition{
-						{
-							Type:   cartov1alpha1.ConditionResourceSubmitted,
-							Status: metav1.ConditionTrue,
-						},
-						{
-							Type:   cartov1alpha1.ConditionResourceReady,
-							Status: metav1.ConditionTrue,
-						},
-					},
-				}, {
-					Name: "deliverable",
-					Conditions: []metav1.Condition{
-						{
-							Type:   cartov1alpha1.ConditionResourceSubmitted,
-							Status: metav1.ConditionUnknown,
-						},
-						{
-							Type:   cartov1alpha1.ConditionResourceReady,
-							Status: metav1.ConditionUnknown,
-						},
-					},
-				}, {
-					Name: "image-builder",
-					Conditions: []metav1.Condition{
-						{
-							Type:   cartov1alpha1.ConditionResourceReady,
-							Status: metav1.ConditionFalse,
-						},
-						{
-							Type:   cartov1alpha1.ConditionResourceSubmitted,
-							Status: metav1.ConditionFalse,
-						},
-						{
-							Type:   cartov1alpha1.ConditionResourceHealthy,
-							Status: metav1.ConditionFalse,
-						},
-					},
-				}},
-			},
-		},
-		expectedOutput: `
-RESOURCE          READY     HEALTHY   TIME
-source-provider   True                <unknown>
-deliverable       Unknown             <unknown>
-image-builder     False     False     <unknown>
+RESOURCE          READY   TIME
+source-provider           
+deliverable               
+image-builder     False   <unknown>
 `,
 	}, {
 		name: "resource without conditions",
@@ -242,9 +161,9 @@ image-builder     False     False     <unknown>
 			},
 		},
 		expectedOutput: `
-RESOURCE          READY   HEALTHY   TIME
-source-provider                     
-deliverable                         
+RESOURCE          READY   TIME
+source-provider           
+deliverable               
 `,
 	}}
 
@@ -413,68 +332,8 @@ func TestWorkloadIssuesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-OopsieDoodle:   a hopefully informative message
-`,
-	}, {
-		name: "ready and healthy with same info",
-		testWorkload: &cartov1alpha1.Workload{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
-				Namespace: defaultNamespace,
-			},
-			Status: cartov1alpha1.WorkloadStatus{
-				Conditions: []metav1.Condition{{
-					Type:   cartov1alpha1.WorkloadSupplyChainReady,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:   cartov1alpha1.WorkloadResourceSubmitted,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:    cartov1alpha1.WorkloadReady,
-					Status:  metav1.ConditionFalse,
-					Message: "a hopefully informative message",
-					Reason:  "OopsieDoodle",
-				}, {
-					Type:    cartov1alpha1.WorkloadHealthy,
-					Status:  metav1.ConditionFalse,
-					Message: "a hopefully informative message",
-					Reason:  "OopsieDoodle",
-				}},
-			},
-		},
-		expectedOutput: `
-OopsieDoodle:   a hopefully informative message
-`,
-	}, {
-		name: "ready and healthy with different info",
-		testWorkload: &cartov1alpha1.Workload{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
-				Namespace: defaultNamespace,
-			},
-			Status: cartov1alpha1.WorkloadStatus{
-				Conditions: []metav1.Condition{{
-					Type:   cartov1alpha1.WorkloadSupplyChainReady,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:   cartov1alpha1.WorkloadResourceSubmitted,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:    cartov1alpha1.WorkloadReady,
-					Status:  metav1.ConditionFalse,
-					Message: "a hopefully informative message",
-					Reason:  "OopsieDoodle",
-				}, {
-					Type:    cartov1alpha1.WorkloadHealthy,
-					Status:  metav1.ConditionFalse,
-					Message: "a hopefully informative message for non-healthy workload",
-					Reason:  "AnotherOopsieDoodle",
-				}},
-			},
-		},
-		expectedOutput: `
-OopsieDoodle:          a hopefully informative message
-AnotherOopsieDoodle:   a hopefully informative message for non-healthy workload
+reason:    OopsieDoodle
+message:   a hopefully informative message
 `,
 	}, {
 		name: "condition ready with no info",
@@ -493,12 +352,12 @@ AnotherOopsieDoodle:   a hopefully informative message for non-healthy workload
 				}, {
 					Type:   cartov1alpha1.WorkloadReady,
 					Status: metav1.ConditionFalse,
-					Reason: "OopsieDoodle",
 				}},
 			},
 		},
 		expectedOutput: `
-OopsieDoodle:   
+reason:    
+message:   
 `,
 	}, {
 		name: "no status",
