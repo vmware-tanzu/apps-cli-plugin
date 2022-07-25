@@ -24,7 +24,6 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -77,8 +76,6 @@ type CommandLineIntegrationTestCase struct {
 	ExpectedRemoteObject      client.Object
 	IsList                    bool
 	ExpectedRemoteList        client.ObjectList
-	SleepMillisBefore         int
-	SleepMillisAfter          int
 	CheckCommandOutput        bool
 }
 
@@ -124,7 +121,6 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, conf *ClientConfig) {
 		if cl.Skip {
 			t.SkipNow()
 		}
-		time.Sleep(time.Duration(cl.SleepMillisBefore) * time.Millisecond)
 		err := cl.Command.Exec()
 		// t.Logf("Command output:\n%s\n\n%v\n", cl.Command.String(), cl.Command.GetOutput())
 		if err != nil && !cl.ExpectedCommandLineError {
@@ -180,7 +176,6 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, conf *ClientConfig) {
 
 			}
 		}
-		time.Sleep(time.Duration(cl.SleepMillisAfter) * time.Millisecond)
 	})
 }
 
@@ -192,7 +187,7 @@ func prepareEnvironment(t *testing.T) {
 		t.Errorf("unexpected error: %v\n%s\n%s", err, createNsCmd.GetOutput(), createNsCmd.GetError())
 		t.FailNow()
 	}
-	time.Sleep(100 * time.Millisecond)
+
 	// create cluster supply chain
 	createClusterCmd := NewCommandLine("kubectl", "apply", "-f", "testdata/prereq/cluster-supply-chain.yaml")
 	err = createClusterCmd.Exec()
@@ -201,7 +196,6 @@ func prepareEnvironment(t *testing.T) {
 		cleanUp(t, true)
 		t.FailNow()
 	}
-	time.Sleep(100 * time.Millisecond)
 }
 func cleanUp(t *testing.T, fail bool) {
 	deleteNsCmd := NewCommandLine("kubectl", "delete", "namespace", TestingNamespace)
