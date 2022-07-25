@@ -27,7 +27,6 @@ const (
 	WorkloadReady             = "Ready"
 	WorkloadSupplyChainReady  = "SupplyChainReady"
 	WorkloadResourceSubmitted = "ResourcesSubmitted"
-	WorkloadHealthy           = "ResourcesHealthy"
 )
 
 const (
@@ -42,7 +41,6 @@ const (
 const (
 	ConditionResourceReady     = "Ready"
 	ConditionResourceSubmitted = "ResourceSubmitted"
-	ConditionResourceHealthy   = "Healthy"
 )
 
 // +kubebuilder:object:root=true

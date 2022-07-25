@@ -253,7 +253,8 @@ ready:         False
 Supply Chain resources not found.
 
 Issues
-OopsieDoodle:   a hopefully informative message about what went wrong
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -397,7 +398,8 @@ ready:         False
 Supply Chain resources not found.
 
 Issues
-OopsieDoodle:   a hopefully informative message about what went wrong
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 Services
 CLAIM      NAME         KIND         API VERSION
@@ -570,7 +572,8 @@ ready:         Unknown
 Supply Chain resources not found.
 
 Issues
-OopsieDoodle:   a hopefully informative message about what went wrong
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -613,7 +616,8 @@ ready:         False
 Supply Chain resources not found.
 
 Issues
-OopsieDoodle:   a hopefully informative message about what went wrong
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -735,7 +739,8 @@ ready:         False
 Supply Chain resources not found.
 
 Issues
-OopsieDoodle:   a hopefully informative message about what went wrong
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -789,7 +794,8 @@ ready:         False
 Supply Chain resources not found.
 
 Issues
-OopsieDoodle:   a hopefully informative message about what went wrong
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -836,7 +842,8 @@ ready:         False
 Supply Chain resources not found.
 
 Issues
-OopsieDoodle:   a hopefully informative message about what went wrong
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -879,8 +886,6 @@ To see logs: "tanzu apps workload tail my-workload"
 										Status(metav1.ConditionTrue),
 									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
 										Status(metav1.ConditionTrue),
-									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
-										Status(metav1.ConditionTrue),
 								).DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
@@ -889,8 +894,6 @@ To see logs: "tanzu apps workload tail my-workload"
 										Status(metav1.ConditionUnknown),
 									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
 										Status(metav1.ConditionUnknown),
-									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
-										Status(metav1.ConditionUnknown),
 								).DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("image-builder").
@@ -898,8 +901,6 @@ To see logs: "tanzu apps workload tail my-workload"
 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
 										Status(metav1.ConditionFalse),
 									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
-										Status(metav1.ConditionFalse),
-									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
 										Status(metav1.ConditionFalse),
 								).DieRelease(),
 						)
@@ -1016,102 +1017,16 @@ name:          my-supply-chain
 last update:   <unknown>
 ready:         False
 
-RESOURCE          READY     HEALTHY   TIME
-source-provider   True      True      <unknown>
-deliverable       Unknown   Unknown   <unknown>
-image-builder     False     False     <unknown>
+RESOURCE          READY     TIME
+source-provider   True      <unknown>
+deliverable       Unknown   <unknown>
+image-builder     False     <unknown>
 
 Issues
-OopsieDoodle:   a hopefully informative message about what went wrong
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
-
-To see logs: "tanzu apps workload tail my-workload"
-
-`,
-		}, {
-			Name: "show healthy rule condition issue",
-			Args: []string{workloadName},
-			GivenObjects: []client.Object{
-				parent.
-					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-						d.ConditionsDie(
-							diecartov1alpha1.WorkloadConditionReadyBlank.
-								Status(metav1.ConditionUnknown).
-								Reason("OopsieDoodle").
-								Message("a hopefully informative message about what went wrong"),
-							diecartov1alpha1.WorkloadConditionHealthyBlank.
-								Status(metav1.ConditionUnknown).
-								Reason("AnotherOopsieDoodle").
-								Message("a hopefully informative message about what is not healthy"),
-						)
-					}),
-				pod1Die.
-					StatusDie(func(d *diecorev1.PodStatusDie) {
-						d.Phase(corev1.PodRunning)
-					}),
-			},
-			ExpectOutput: `
----
-# my-workload: Unknown
----
-Supply Chain
-name:          <none>
-last update:   <unknown>
-ready:         Unknown
-
-Supply Chain resources not found.
-
-Issues
-OopsieDoodle:          a hopefully informative message about what went wrong
-AnotherOopsieDoodle:   a hopefully informative message about what is not healthy
-
-Pods
-NAME   STATUS    RESTARTS   AGE
-pod1   Running   0          2y
-
-To see logs: "tanzu apps workload tail my-workload"
-
-`,
-		}, {
-			Name: "show only ready condition issue",
-			Args: []string{workloadName},
-			GivenObjects: []client.Object{
-				parent.
-					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-						d.ConditionsDie(
-							diecartov1alpha1.WorkloadConditionReadyBlank.
-								Status(metav1.ConditionUnknown).
-								Reason("OopsieDoodle").
-								Message("a hopefully informative message about what went wrong"),
-							diecartov1alpha1.WorkloadConditionHealthyBlank.
-								Status(metav1.ConditionUnknown).
-								Reason("OopsieDoodle").
-								Message("a hopefully informative message about what went wrong"),
-						)
-					}),
-				pod1Die.
-					StatusDie(func(d *diecorev1.PodStatusDie) {
-						d.Phase(corev1.PodRunning)
-					}),
-			},
-			ExpectOutput: `
----
-# my-workload: Unknown
----
-Supply Chain
-name:          <none>
-last update:   <unknown>
-ready:         Unknown
-
-Supply Chain resources not found.
-
-Issues
-OopsieDoodle:   a hopefully informative message about what went wrong
-
-Pods
-NAME   STATUS    RESTARTS   AGE
-pod1   Running   0          2y
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1162,7 +1077,8 @@ ready:         Unknown
 Supply Chain resources not found.
 
 Issues
-OopsieDoodle:   a hopefully informative message about what went wrong
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 Pods
 NAME   STATUS    RESTARTS   AGE
@@ -1222,7 +1138,8 @@ ready:         Unknown
 Supply Chain resources not found.
 
 Issues
-OopsieDoodle:   a hopefully informative message about what went wrong
+reason:    OopsieDoodle
+message:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
