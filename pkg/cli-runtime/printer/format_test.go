@@ -138,6 +138,45 @@ func TestConditionStatus(t *testing.T) {
 	}
 }
 
+func TestColorConditionStatus(t *testing.T) {
+	noColor := color.NoColor
+	color.NoColor = true
+	defer func() { color.NoColor = noColor }()
+
+	tests := []struct {
+		name   string
+		input  string
+		output string
+	}{{
+		name:   "empty",
+		output: "",
+	}, {
+		name:   "status true",
+		input:  "True",
+		output: printer.Ssuccessf("True"),
+	}, {
+		name:   "status false",
+		input:  "False",
+		output: printer.Serrorf("False"),
+	}, {
+		name:   "status unknown",
+		input:  "Unknown",
+		output: printer.Sinfof("Unknown"),
+	}, {
+		name:   "status unknown",
+		input:  "SomeOtherStatus",
+		output: printer.Sinfof("SomeOtherStatus"),
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if expected, actual := test.output, printer.ColorConditionStatus(test.input); expected != actual {
+				t.Errorf("Expected formated string to be %q, actually %q", expected, actual)
+			}
+		})
+	}
+}
+
 func TestLabels(t *testing.T) {
 	noColor := color.NoColor
 	color.NoColor = true
