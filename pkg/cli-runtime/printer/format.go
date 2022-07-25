@@ -57,6 +57,17 @@ func ConditionStatus(cond *metav1.Condition) string {
 	}
 }
 
+func ColorConditionStatus(condStatus string) string {
+	switch condStatus {
+	case "True", "true":
+		return Ssuccessf(condStatus)
+	case "False", "false":
+		return Serrorf(condStatus)
+	default:
+		return Sinfof(condStatus)
+	}
+}
+
 func Labels(labelMap map[string]string) string {
 	return EmptyString(labels.Set(labelMap).String())
 }

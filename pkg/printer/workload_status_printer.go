@@ -35,7 +35,7 @@ func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 		var healthy string
 		healthyCond := printer.FindCondition(resource.Conditions, cartov1alpha1.ConditionResourceHealthy)
 		if healthyCond != nil {
-			healthy = string(healthyCond.Status)
+			healthy = printer.ColorConditionStatus(string(healthyCond.Status))
 		}
 
 		ready, elapsedTransitionTime := findConditionReady(resource.Conditions, cartov1alpha1.ConditionResourceReady)

@@ -29,7 +29,6 @@ import (
 
 func WorkloadOverviewPrinter(w io.Writer, workload *cartov1alpha1.Workload) error {
 	printLocalSourceInfo := func(workload *cartov1alpha1.Workload, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
-
 		labels := workload.Labels
 		if labels == nil {
 			labels = map[string]string{}
