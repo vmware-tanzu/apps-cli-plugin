@@ -19,9 +19,11 @@ package commands_test
 import (
 	"bytes"
 	"context"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -465,6 +467,163 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 				ParamsYaml: []string{"ports_nesting_yaml=- deployment:\n    name: smtp\n    port: 1026", "ports_json={\"name\": \"smtp\", \"port\": 1026"},
 			},
 			ExpectFieldErrors: validation.ErrInvalidValue("ports_json={\"name\": \"smtp\", \"port\": 1026", flags.ParamYamlFlagName+"[1]"),
+		},
+		{
+			Name: "registry username and pass",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:        "default",
+				Name:             "my-resource",
+				RegistryUsername: "username",
+				RegistryPassword: "password",
+				SourceImage:      "repo.example/image:tag",
+				LocalPath:        "/path/to/local/repo",
+			},
+			ShouldValidate: true,
+		},
+		{
+			Name: "all registry opts",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:        "default",
+				Name:             "my-resource",
+				RegistryUsername: "username",
+				RegistryPassword: "password",
+				CACertPaths:      []string{"/path/to/ca.crt"},
+				SourceImage:      "repo.example/image:tag",
+				LocalPath:        "/path/to/local/repo",
+			},
+			ShouldValidate: true,
+		},
+		{
+			Name: "ca cert",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:   "default",
+				Name:        "my-resource",
+				CACertPaths: []string{"/path/to/ca.crt"},
+				SourceImage: "repo.example/image:tag",
+				LocalPath:   "/path/to/local/repo",
+			},
+			ShouldValidate: true,
+		},
+		{
+			Name: "various ca certs",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:   "default",
+				Name:        "my-resource",
+				CACertPaths: []string{"/path/to/ca.crt", "/path/2/to/ca.crt", "/path/3/to/ca.crt"},
+				SourceImage: "repo.example/image:tag",
+				LocalPath:   "/path/to/local/repo",
+			},
+			ShouldValidate: true,
+		},
+		{
+			Name: "ca cert with no local path",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:   "default",
+				Name:        "my-resource",
+				CACertPaths: []string{"/path/to/ca.crt"},
+				SourceImage: "repo.example/image:tag",
+			},
+			ExpectFieldErrors: validation.ErrMissingField(flags.LocalPathFlagName),
+		},
+		{
+			Name: "ca cert with no source image",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:   "default",
+				Name:        "my-resource",
+				LocalPath:   "/path/to/local/repo",
+				CACertPaths: []string{"/path/to/ca.crt"},
+			},
+			ExpectFieldErrors: validation.ErrMissingField(flags.SourceImageFlagName),
+		},
+		{
+			Name: "ca cert with no local path and no source image",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:   "default",
+				Name:        "my-resource",
+				CACertPaths: []string{"/path/to/ca.crt"},
+			},
+			ExpectFieldErrors: validation.FieldErrors{}.Also(
+				validation.ErrMissingField(flags.SourceImageFlagName),
+				validation.ErrMissingField(flags.LocalPathFlagName),
+			),
+		},
+		{
+			Name: "registry username and pass with no source image",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:        "default",
+				Name:             "my-resource",
+				LocalPath:        "/path/to/local/repo",
+				RegistryUsername: "username",
+				RegistryPassword: "password",
+			},
+			ExpectFieldErrors: validation.ErrMissingField(flags.SourceImageFlagName),
+		},
+		{
+			Name: "registry username and pass with no local path",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:        "default",
+				Name:             "my-resource",
+				RegistryUsername: "username",
+				RegistryPassword: "password",
+				SourceImage:      "repo.example/image:tag",
+			},
+			ExpectFieldErrors: validation.ErrMissingField(flags.LocalPathFlagName),
+		},
+		{
+			Name: "registry username and pass with no local path and no source image",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:        "default",
+				Name:             "my-resource",
+				RegistryUsername: "username",
+				RegistryPassword: "password",
+			},
+			ExpectFieldErrors: validation.FieldErrors{}.Also(
+				validation.ErrMissingField(flags.SourceImageFlagName),
+				validation.ErrMissingField(flags.LocalPathFlagName),
+			),
+		},
+		{
+			Name: "registry token with no source image",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:     "default",
+				Name:          "my-resource",
+				RegistryToken: "my-token",
+				LocalPath:     "/path/to/local/repo",
+			},
+			ExpectFieldErrors: validation.ErrMissingField(flags.SourceImageFlagName),
+		},
+		{
+			Name: "registry token with no local path",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:     "default",
+				Name:          "my-resource",
+				RegistryToken: "my-token",
+				SourceImage:   "repo.example/image:tag",
+			},
+			ExpectFieldErrors: validation.ErrMissingField(flags.LocalPathFlagName),
+		},
+		{
+			Name: "registry token with no source image and no local path",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:     "default",
+				Name:          "my-resource",
+				RegistryToken: "my-token",
+			},
+			ExpectFieldErrors: validation.FieldErrors{}.Also(
+				validation.ErrMissingField(flags.SourceImageFlagName),
+				validation.ErrMissingField(flags.LocalPathFlagName),
+			),
+		},
+		{
+			Name: "registry token",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:     "default",
+				Name:          "my-resource",
+				RegistryToken: "my-token",
+				SourceImage:   "repo.example/image:tag",
+				LocalPath:     "/path/to/local/repo",
+			},
+			ShouldValidate: true,
 		},
 	}
 
@@ -1585,6 +1744,107 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			if diff := cmp.Diff(test.expected, actual); diff != "" {
 				t.Errorf("ApplyOptionsToWorkload() (-want, +got) = %s", diff)
+			}
+		})
+	}
+}
+
+func TestWorkloadOptionsPublishLocalSourcePrivateRegistry(t *testing.T) {
+	reg, err := ggcrregistry.TLS("localhost")
+	utilruntime.Must(err)
+	defer reg.Close()
+	u, err := url.Parse(reg.URL)
+	utilruntime.Must(err)
+	registryHost := u.Host
+
+	cert, err := os.CreateTemp("", "customCA")
+	if err != nil {
+		t.Fatalf("Unable to create temp dir %v", err)
+	}
+	defer os.RemoveAll(cert.Name())
+
+	if err := pem.Encode(cert, &pem.Block{Type: "CERTIFICATE", Bytes: reg.Certificate().Raw}); err != nil {
+		t.Fatalf("Unable to parse certificate %v", err)
+	}
+
+	tests := []struct {
+		name           string
+		args           []string
+		input          string
+		expected       string
+		shouldError    bool
+		expectedOutput string
+	}{{
+		name:     "local source to private registry",
+		args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.RegistryCertFlagName, cert.Name(), flags.YesFlagName},
+		input:    fmt.Sprintf("%s/hello:source", registryHost),
+		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expectedOutput: `
+Publishing source in "testdata/local-source" to "` + registryHost + `/hello:source"...
+Published source
+`,
+	}, {
+		name:     "local source to private registry with username and pass",
+		args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.RegistryCertFlagName, cert.Name(), flags.RegistryUsernameFlagName, "admin", flags.RegistryPasswordFlagName, "password", flags.YesFlagName},
+		input:    fmt.Sprintf("%s/hello:source", registryHost),
+		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expectedOutput: `
+Publishing source in "testdata/local-source" to "` + registryHost + `/hello:source"...
+Published source
+`,
+	}, {
+		name:     "local source to private registry with token",
+		args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.RegistryCertFlagName, cert.Name(), flags.RegistryTokenFlagName, "myToken123", flags.YesFlagName},
+		input:    fmt.Sprintf("%s/hello:source", registryHost),
+		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expectedOutput: `
+Publishing source in "testdata/local-source" to "` + registryHost + `/hello:source"...
+Published source
+`,
+	}}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			scheme := runtime.NewScheme()
+			c := cli.NewDefaultConfig("test", scheme)
+			output := &bytes.Buffer{}
+			c.Stdout = output
+			c.Stderr = output
+			c.Client = clitesting.NewFakeCliClient(clitesting.NewFakeClient(scheme))
+
+			cmd := &cobra.Command{}
+			ctx := cli.WithCommand(context.Background(), cmd)
+			opts := &commands.WorkloadOptions{}
+			opts.LoadDefaults(c)
+			opts.DefineFlags(ctx, c, cmd)
+			cmd.ParseFlags(test.args)
+
+			workload := &cartov1alpha1.Workload{
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image: test.input,
+					},
+				},
+			}
+
+			_, err := opts.PublishLocalSource(ctx, c, workload)
+			if err != nil && !test.shouldError {
+				t.Errorf("PublishLocalSource() errored %v", err)
+			}
+
+			if err == nil && test.shouldError {
+				t.Errorf("PublishLocalSource() expected error")
+			}
+
+			if test.shouldError {
+				return
+			}
+
+			if test.expected != workload.Spec.Source.Image {
+				t.Errorf("PublishLocalSource() wanted %q, got %q", test.expected, workload.Spec.Source.Image)
+			}
+
+			if diff := cmp.Diff(strings.TrimSpace(test.expectedOutput), strings.TrimSpace(output.String())); diff != "" {
+				t.Errorf("PublishLocalSource() (-want, +got) = %s", diff)
 			}
 		})
 	}
