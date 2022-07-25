@@ -1826,7 +1826,7 @@ Published source
 				},
 			}
 
-			_, err := opts.PublishLocalSource(ctx, c, workload)
+			_, err := opts.PublishLocalSource(ctx, c, nil, workload)
 			if err != nil && !test.shouldError {
 				t.Errorf("PublishLocalSource() errored %v", err)
 			}
