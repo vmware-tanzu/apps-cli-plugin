@@ -169,9 +169,9 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 	// Print workload issues
 	c.Printf("\n")
-	c.Boldf("Issues\n")
+	c.Boldf("Messages\n")
 	if workloadStatusReadyCond == nil || (workloadStatusReadyCond.Status == metav1.ConditionTrue || workloadStatusReadyCond.Message == "") {
-		c.Infof("No issues reported.\n")
+		c.Infof("No messages found.\n")
 	} else {
 		if err := printer.WorkloadIssuesPrinter(c.Stdout, workload); err != nil {
 			return err
