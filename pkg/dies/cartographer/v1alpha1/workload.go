@@ -46,8 +46,10 @@ func (d *WorkloadStatusDie) ConditionsDie(conditions ...*diemetav1.ConditionDie)
 
 var (
 	WorkloadConditionReadyBlank             = diemetav1.ConditionBlank.Type(cartov1alpha1.WorkloadConditionReady)
+	WorkloadConditionHealthyBlank           = diemetav1.ConditionBlank.Type(cartov1alpha1.WorkloadHealthy)
 	WorkloadConditionResourceSubmittedBlank = diemetav1.ConditionBlank.Type(cartov1alpha1.ConditionResourceSubmitted)
 	WorkloadConditionResourceReadyBlank     = diemetav1.ConditionBlank.Type(cartov1alpha1.ConditionResourceReady)
+	WorkloadConditionResourceHealthyBlank   = diemetav1.ConditionBlank.Type(cartov1alpha1.ConditionResourceHealthy)
 )
 
 // +die
