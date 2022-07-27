@@ -42,8 +42,8 @@ const (
 	WaitingForClusterInfrastructureReason = "WaitingForClusterInfrastructure"
 	// WaitingForBootstrapDataReason used when machine is waiting for bootstrap data to be ready before proceeding.
 	WaitingForBootstrapDataReason = "WaitingForBootstrapData"
-	// BootstrapSucceededCondition reports the result of the execution of the boostrap data on the machine.
-	BootstrapSucceededCondition = "BoostrapSucceeded"
+	// BootstrapSucceededCondition reports the result of the execution of the bootstrap data on the machine.
+	BootstrapSucceededCondition clusterv1.ConditionType = "BootstrapSucceeded"
 	// BootstrapInProgressReason is used to indicate the bootstrap data has not finished executing.
 	BootstrapInProgressReason = "BootstrapInProgress"
 	// BootstrapFailedReason is used to indicate the bootstrap process ran into an error.
@@ -104,8 +104,12 @@ const (
 	SubnetsReadyCondition clusterv1.ConditionType = "SubnetsReady"
 	// LoadBalancersReadyCondition means the load balancers exist and are ready to be used.
 	LoadBalancersReadyCondition clusterv1.ConditionType = "LoadBalancersReady"
-	// PrivateDNSReadyCondition means the private DNS exists and is ready to be used.
-	PrivateDNSReadyCondition clusterv1.ConditionType = "PrivateDNSReady"
+	// PrivateDNSZoneReadyCondition means the private DNS zone exists and is ready to be used.
+	PrivateDNSZoneReadyCondition clusterv1.ConditionType = "PrivateDNSZoneReady"
+	// PrivateDNSLinkReadyCondition means the private DNS links exist and are ready to be used.
+	PrivateDNSLinkReadyCondition clusterv1.ConditionType = "PrivateDNSLinkReady"
+	// PrivateDNSRecordReadyCondition means the private DNS records exist and are ready to be used.
+	PrivateDNSRecordReadyCondition clusterv1.ConditionType = "PrivateDNSRecordReady"
 	// BastionHostReadyCondition means the bastion host exists and is ready to be used.
 	BastionHostReadyCondition clusterv1.ConditionType = "BastionHostReady"
 	// InboundNATRulesReadyCondition means the inbound NAT rules exist and are ready to be used.

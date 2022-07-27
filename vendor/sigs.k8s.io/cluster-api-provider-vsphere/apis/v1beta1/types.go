@@ -147,9 +147,13 @@ type VirtualMachineCloneSpec struct {
 	// Defaults to empty map
 	// +optional
 	CustomVMXKeys map[string]string `json:"customVMXKeys,omitempty"`
-	// TagIDs is an optional set of tags to add to an instance.
+	// TagIDs is an optional set of tags to add to an instance. Specified tagIDs
+	// must use URN-notation instead of display names.
 	// +optional
 	TagIDs []string `json:"tagIDs,omitempty"`
+	// PciDevices is the list of pci devices used by the virtual machine.
+	// +optional
+	PciDevices []PCIDeviceSpec `json:"pciDevices,omitempty"`
 }
 
 // VSphereMachineTemplateResource describes the data needed to create a VSphereMachine from a template
@@ -191,6 +195,20 @@ func (v APIEndpoint) IsZero() bool {
 // String returns a formatted version HOST:PORT of this APIEndpoint.
 func (v APIEndpoint) String() string {
 	return fmt.Sprintf("%s:%d", v.Host, v.Port)
+}
+
+// PCIDeviceSpec defines virtual machine's PCI configuration
+type PCIDeviceSpec struct {
+	// DeviceID is the device ID of a virtual machine's PCI, in integer.
+	// Defaults to the eponymous property value in the template from which the
+	// virtual machine is cloned.
+	// +kubebuilder:validation:Required
+	DeviceID *int32 `json:"deviceId,omitempty"`
+	// VendorId is the vendor ID of a virtual machine's PCI, in integer.
+	// Defaults to the eponymous property value in the template from which the
+	// virtual machine is cloned.
+	// +kubebuilder:validation:Required
+	VendorID *int32 `json:"vendorId,omitempty"`
 }
 
 // NetworkSpec defines the virtual machine's network configuration.

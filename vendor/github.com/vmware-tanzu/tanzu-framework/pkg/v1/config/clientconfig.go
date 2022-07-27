@@ -22,6 +22,27 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+func init() {
+	// Acquire tanzu config lock
+	AcquireTanzuConfigLock()
+	defer ReleaseTanzuConfigLock()
+
+	c, err := GetClientConfig()
+	if err != nil {
+		log.Warningf("unable to get client config: %v", err)
+	}
+
+	addedDefaultDiscovery := populateDefaultStandaloneDiscovery(c)
+	addedFeatureFlags := addDefaultFeatureFlagsIfMissing(c, DefaultCliFeatureFlags)
+	addedEdition := addDefaultEditionIfMissing(c)
+	addedBomRepo := addBomRepoIfMissing(c)
+	addedCompatabilityFile := addCompatibilityFileIfMissing(c)
+
+	if addedFeatureFlags || addedDefaultDiscovery || addedEdition || addedCompatabilityFile || addedBomRepo {
+		_ = StoreClientConfig(c)
+	}
+}
+
 // This block is for global feature constants, to allow them to be used more broadly
 const (
 	// FeatureContextAwareCLIForPlugins determines whether to use legacy way of discovering plugins or
@@ -41,11 +62,6 @@ const (
 	// when creating a cluster.
 	FeatureFlagManagementClusterCustomNameservers = "features.management-cluster.custom-nameservers"
 	FeatureFlagClusterCustomNameservers           = "features.cluster.custom-nameservers"
-	// Network Separation feature flags determine whether it is permitted to
-	// provide the AVI_MANAGEMENT_CLUSTER_SERVICE_ENGINE_GROUP, AVI_CONTROL_PLANE_NETWORK, AVI_CONTROL_PLANE_NETWORK_CIDR,
-	// AVI_MANAGEMENT_CLUSTER_CONTROL_PLANE_VIP_NETWORK_NAME and AVI_MANAGEMENT_CLUSTER_CONTROL_PLANE_VIP_NETWORK_CIDR
-	// when creating a cluster.
-	FeatureFlagManagementClusterNetworkSeparation = "features.management-cluster.network-separation-beta"
 	// AWS Instance Types Exclude ARM feature flags determine whether instance types with processor architecture
 	// support of ARM should be included when discovering available AWS instance types. Setting feature flag to true
 	// filters out ARM supporting instance types; false allows ARM instance types to be included in results.
@@ -94,7 +110,6 @@ var (
 		FeatureFlagClusterDualStackIPv6Primary:                false,
 		FeatureFlagManagementClusterCustomNameservers:         false,
 		FeatureFlagClusterCustomNameservers:                   false,
-		FeatureFlagManagementClusterNetworkSeparation:         false,
 		FeatureFlagAwsInstanceTypesExcludeArm:                 true,
 		FeatureFlagTKRVersionV1Alpha3:                         false,
 		FeatureFlagPackagePluginKctrlCommandTree:              false,
@@ -183,6 +198,14 @@ func NewClientConfig() (*configv1alpha1.ClientConfig, error) {
 
 	_ = populateDefaultStandaloneDiscovery(c)
 
+	// Check if the lock is acquired by the current process or not
+	// If not try to acquire the lock before Storing the client config
+	// and release the lock after updating the config
+	if !IsTanzuConfigLockAcquired() {
+		AcquireTanzuConfigLock()
+		defer ReleaseTanzuConfigLock()
+	}
+
 	err := StoreClientConfig(c)
 	if err != nil {
 		return nil, err
@@ -249,21 +272,6 @@ func addBomRepo(c *configv1alpha1.ClientConfig, repo string) {
 	c.ClientOptions.CLI.BOMRepo = repo
 }
 
-// ClientConfigNotExistError is thrown when a tanzu config cannot be found.
-type ClientConfigNotExistError struct {
-	s string
-}
-
-// Error is the error message.
-func (c *ClientConfigNotExistError) Error() string {
-	return c.s
-}
-
-// NewConfigNotExistError returns a new ClientConfigNotExistError.
-func NewConfigNotExistError(err error) *ClientConfigNotExistError {
-	return &ClientConfigNotExistError{errors.Wrap(err, "failed to read config file").Error()}
-}
-
 // CopyLegacyConfigDir copies configuration files from legacy config dir to the new location. This is a no-op if the legacy dir
 // does not exist or if the new config dir already exists.
 func CopyLegacyConfigDir() error {
@@ -299,6 +307,7 @@ func GetClientConfig() (cfg *configv1alpha1.ClientConfig, err error) {
 	if err != nil {
 		return nil, err
 	}
+
 	b, err := os.ReadFile(cfgPath)
 	if err != nil {
 		cfg, err = NewClientConfig()
@@ -307,6 +316,7 @@ func GetClientConfig() (cfg *configv1alpha1.ClientConfig, err error) {
 		}
 		return cfg, nil
 	}
+
 	scheme, err := configv1alpha1.SchemeBuilder.Build()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create scheme")
@@ -317,16 +327,6 @@ func GetClientConfig() (cfg *configv1alpha1.ClientConfig, err error) {
 	_, _, err = s.Decode(b, nil, &c)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not decode config file")
-	}
-
-	addedDefaultDiscovery := populateDefaultStandaloneDiscovery(&c)
-	addedFeatureFlags := addDefaultFeatureFlagsIfMissing(&c, DefaultCliFeatureFlags)
-	addedEdition := addDefaultEditionIfMissing(&c)
-	addedBomRepo := addBomRepoIfMissing(&c)
-	addedCompatabilityFile := addCompatibilityFileIfMissing(&c)
-
-	if addedFeatureFlags || addedDefaultDiscovery || addedEdition || addedCompatabilityFile || addedBomRepo {
-		_ = StoreClientConfig(&c)
 	}
 
 	return &c, nil
@@ -414,11 +414,14 @@ func storeConfigToLegacyDir(data []byte) {
 }
 
 // StoreClientConfig stores the config in the local directory.
+// Make sure to Acquire and Release tanzu lock when reading/writing to the
+// tanzu client configuration
 func StoreClientConfig(cfg *configv1alpha1.ClientConfig) error {
 	cfgPath, err := ClientConfigPath()
 	if err != nil {
 		return errors.Wrap(err, "could not find config path")
 	}
+
 	cfgPathExists, err := fileExists(cfgPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to check config path existence")
@@ -446,10 +449,15 @@ func StoreClientConfig(cfg *configv1alpha1.ClientConfig) error {
 	if err := s.Encode(cfg, buf); err != nil {
 		return errors.Wrap(err, "failed to encode config file")
 	}
-	// TODO (pbarker): need to consider races.
+
+	if !IsTanzuConfigLockAcquired() {
+		return errors.New("error while updating the tanzu config file, lock is not acquired for updating tanzu config file")
+	}
+
 	if err = os.WriteFile(cfgPath, buf.Bytes(), 0644); err != nil {
 		return errors.Wrap(err, "failed to write config file")
 	}
+
 	storeConfigToLegacyDir(buf.Bytes())
 	return nil
 }
@@ -497,6 +505,10 @@ func ServerExists(name string) (bool, error) {
 
 // AddServer adds a server to the config.
 func AddServer(s *configv1alpha1.Server, setCurrent bool) error {
+	// Acquire tanzu config lock
+	AcquireTanzuConfigLock()
+	defer ReleaseTanzuConfigLock()
+
 	cfg, err := GetClientConfig()
 	if err != nil {
 		return err
@@ -515,6 +527,10 @@ func AddServer(s *configv1alpha1.Server, setCurrent bool) error {
 
 // PutServer adds or updates the server.
 func PutServer(s *configv1alpha1.Server, setCurrent bool) error {
+	// Acquire tanzu config lock
+	AcquireTanzuConfigLock()
+	defer ReleaseTanzuConfigLock()
+
 	cfg, err := GetClientConfig()
 	if err != nil {
 		return err
@@ -535,6 +551,10 @@ func PutServer(s *configv1alpha1.Server, setCurrent bool) error {
 
 // RemoveServer adds a server to the config.
 func RemoveServer(name string) error {
+	// Acquire tanzu config lock
+	AcquireTanzuConfigLock()
+	defer ReleaseTanzuConfigLock()
+
 	cfg, err := GetClientConfig()
 	if err != nil {
 		return err
@@ -561,6 +581,10 @@ func RemoveServer(name string) error {
 
 // SetCurrentServer sets the current server.
 func SetCurrentServer(name string) error {
+	// Acquire tanzu config lock
+	AcquireTanzuConfigLock()
+	defer ReleaseTanzuConfigLock()
+
 	cfg, err := GetClientConfig()
 	if err != nil {
 		return err
