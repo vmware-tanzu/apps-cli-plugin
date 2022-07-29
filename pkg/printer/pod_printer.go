@@ -60,7 +60,7 @@ func PodTablePrinter(c *cli.Config, podList *corev1.PodList) error {
 		}
 		return rows, nil
 	}
-	tablePrinter := table.NewTablePrinter(table.PrintOptions{}).With(func(h table.PrintHandler) {
+	tablePrinter := table.NewTablePrinter(table.PrintOptions{PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
 		columns := []metav1beta1.TableColumnDefinition{
 			{Name: "Name", Type: "string"},
 			{Name: "Status", Type: "string"},

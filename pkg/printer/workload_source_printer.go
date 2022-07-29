@@ -45,7 +45,7 @@ func WorkloadSourceImagePrinter(w io.Writer, workload *cartov1alpha1.Workload) e
 		return rows, nil
 	}
 
-	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true}).With(func(h table.PrintHandler) {
+	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true, PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
 		h.TableHandler(nil, printImageInfo)
 	})
 
@@ -83,7 +83,7 @@ func WorkloadLocalSourceImagePrinter(w io.Writer, workload *cartov1alpha1.Worklo
 
 		return rows, nil
 	}
-	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true}).With(func(h table.PrintHandler) {
+	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true, PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
 		h.TableHandler(nil, printLocalSourceInfo)
 	})
 
@@ -151,7 +151,7 @@ func WorkloadSourceGitPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 		return rows, nil
 	}
 
-	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true}).With(func(h table.PrintHandler) {
+	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true, PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
 		h.TableHandler(nil, printGitInfo)
 	})
 

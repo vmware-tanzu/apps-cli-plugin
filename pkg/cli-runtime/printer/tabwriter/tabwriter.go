@@ -114,6 +114,8 @@ type Writer struct {
 	widths  []int    // list of column widths in runes - re-used during formatting
 
 	maxwidths []int // list of max column widths in runes
+
+	paddingStart int
 }
 
 // addLine adds a new line.
@@ -224,7 +226,7 @@ const (
 //			to the tab width in the viewer displaying the result)
 //	flags		formatting control
 //
-func (b *Writer) Init(output io.Writer, minwidth, tabwidth, padding int, padchar byte, flags uint) *Writer {
+func (b *Writer) Init(output io.Writer, minwidth, tabwidth, padding int, padchar byte, paddingStart int, flags uint) *Writer {
 	if minwidth < 0 || tabwidth < 0 || padding < 0 {
 		panic("negative minwidth, tabwidth, or padding")
 	}
@@ -232,6 +234,7 @@ func (b *Writer) Init(output io.Writer, minwidth, tabwidth, padding int, padchar
 	b.minwidth = minwidth
 	b.tabwidth = tabwidth
 	b.padding = padding
+	b.paddingStart = paddingStart
 	for i := range b.padbytes {
 		b.padbytes[i] = padchar
 	}
@@ -318,6 +321,10 @@ func (b *Writer) writeLines(pos0 int, line0, line1 int) (pos int) {
 
 		// if TabIndent is set, use tabs to pad leading empty cells
 		useTabs := b.flags&TabIndent != 0
+
+		if len(line) > 0 {
+			b.writePadding(0, b.paddingStart, false)
+		}
 
 		for j, c := range line {
 			if j > 0 && b.flags&Debug != 0 {
@@ -645,6 +652,6 @@ func (b *Writer) Write(buf []byte) (n int, err error) {
 // NewWriter allocates and initializes a new tabwriter.Writer.
 // The parameters are the same as for the Init function.
 //
-func NewWriter(output io.Writer, minwidth, tabwidth, padding int, padchar byte, flags uint) *Writer {
-	return new(Writer).Init(output, minwidth, tabwidth, padding, padchar, flags)
+func NewWriter(output io.Writer, minwidth, tabwidth, padding int, padchar byte, paddingStart int, flags uint) *Writer {
+	return new(Writer).Init(output, minwidth, tabwidth, padding, padchar, paddingStart, flags)
 }

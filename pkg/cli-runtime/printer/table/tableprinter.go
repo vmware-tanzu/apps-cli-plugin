@@ -74,6 +74,7 @@ func printHeader(columnNames []string, w io.Writer) error {
 func (h *HumanReadablePrinter) PrintObj(obj runtime.Object, output io.Writer) error {
 	w, found := output.(*tabwriter.Writer)
 	if !found {
+		tabwriterPaddingStart = h.options.PaddingStart
 		w = GetNewTabWriter(output)
 		output = w
 		defer w.Flush()

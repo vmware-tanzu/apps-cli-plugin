@@ -52,7 +52,7 @@ func WorkloadServiceClaimPrinter(w io.Writer, workload *Workload) error {
 		return rows, nil
 	}
 
-	tablePrinter := table.NewTablePrinter(table.PrintOptions{}).With(func(h table.PrintHandler) {
+	tablePrinter := table.NewTablePrinter(table.PrintOptions{PaddingStart: 3}).With(func(h table.PrintHandler) {
 		columns := []metav1beta1.TableColumnDefinition{
 			{Name: "Claim", Type: "string"},
 			{Name: "Name", Type: "string"},
