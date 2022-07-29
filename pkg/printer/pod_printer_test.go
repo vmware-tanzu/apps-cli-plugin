@@ -64,8 +64,8 @@ func TestPodTablePrinter(t *testing.T) {
 			}},
 		},
 		expectedOutput: `
-NAME     STATUS    RESTARTS   AGE
-my-pod   Running   0          <unknown>
+   NAME     STATUS    RESTARTS   AGE
+   my-pod   Running   0          <unknown>
 `,
 	}, {
 		name: "failed status",
@@ -89,8 +89,8 @@ my-pod   Running   0          <unknown>
 			}},
 		},
 		expectedOutput: `
-NAME     STATUS   RESTARTS   AGE
-my-pod   Failed   1          <unknown>
+   NAME     STATUS   RESTARTS   AGE
+   my-pod   Failed   1          <unknown>
 `,
 	}, {
 		name: "terminating pod",
@@ -107,8 +107,8 @@ my-pod   Failed   1          <unknown>
 			}},
 		},
 		expectedOutput: `
-NAME     STATUS        RESTARTS   AGE
-my-pod   Terminating   0          <unknown>
+   NAME     STATUS        RESTARTS   AGE
+   my-pod   Terminating   0          <unknown>
 `,
 	}}
 

@@ -50,7 +50,7 @@ func TestWorkloadDetailsPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-type:   <empty>
+   type:   <empty>
 `,
 	}, {
 		name: "type label present",
@@ -65,7 +65,7 @@ type:   <empty>
 			},
 		},
 		expectedOutput: `
-type:   web
+   type:   web
 `,
 	}}
 

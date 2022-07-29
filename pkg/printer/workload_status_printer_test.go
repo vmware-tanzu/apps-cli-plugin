@@ -96,10 +96,10 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-RESOURCE          READY     HEALTHY   TIME
-source-provider   True      True      <unknown>
-deliverable       Unknown   Unknown   <unknown>
-image-builder     False     False     <unknown>
+   RESOURCE          READY     HEALTHY   TIME
+   source-provider   True      True      <unknown>
+   deliverable       Unknown   Unknown   <unknown>
+   image-builder     False     False     <unknown>
 `,
 	}, {
 		name: "no resources",
@@ -110,7 +110,7 @@ image-builder     False     False     <unknown>
 			},
 		},
 		expectedOutput: `
-RESOURCE   READY   HEALTHY   TIME
+   RESOURCE   READY   HEALTHY   TIME
 `,
 	}, {
 		name: "no ready condition inside resource",
@@ -164,10 +164,10 @@ RESOURCE   READY   HEALTHY   TIME
 			},
 		},
 		expectedOutput: `
-RESOURCE          READY   HEALTHY   TIME
-source-provider           True      
-deliverable               Unknown   
-image-builder     False   False     <unknown>
+   RESOURCE          READY   HEALTHY   TIME
+   source-provider           True      
+   deliverable               Unknown   
+   image-builder     False   False     <unknown>
 `,
 	}, {
 		name: "no healthy condition inside resource",
@@ -221,10 +221,10 @@ image-builder     False   False     <unknown>
 			},
 		},
 		expectedOutput: `
-RESOURCE          READY     HEALTHY   TIME
-source-provider   True                <unknown>
-deliverable       Unknown             <unknown>
-image-builder     False     False     <unknown>
+   RESOURCE          READY     HEALTHY   TIME
+   source-provider   True                <unknown>
+   deliverable       Unknown             <unknown>
+   image-builder     False     False     <unknown>
 `,
 	}, {
 		name: "resource without conditions",
@@ -242,9 +242,9 @@ image-builder     False     False     <unknown>
 			},
 		},
 		expectedOutput: `
-RESOURCE          READY   HEALTHY   TIME
-source-provider                     
-deliverable                         
+   RESOURCE          READY   HEALTHY   TIME
+   source-provider                     
+   deliverable                         
 `,
 	}}
 
@@ -294,9 +294,9 @@ func TestWorkloadSupplyChainInfoPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-name:          my-supply-chain
-last update:   <unknown>
-ready:         True
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         True
 `,
 	}, {
 		name: "no conditions",
@@ -312,9 +312,9 @@ ready:         True
 			},
 		},
 		expectedOutput: `
-name:          my-supply-chain
-last update:   
-ready:         
+   name:          my-supply-chain
+   last update:   
+   ready:         
 `,
 	}, {
 		name: "no ready condition in status",
@@ -337,9 +337,9 @@ ready:
 			},
 		},
 		expectedOutput: `
-name:          my-supply-chain
-last update:   
-ready:         
+   name:          my-supply-chain
+   last update:   
+   ready:         
 `,
 	}, {
 		name: "no supply chain info",
@@ -362,9 +362,9 @@ ready:
 			},
 		},
 		expectedOutput: `
-name:          <none>
-last update:   <unknown>
-ready:         False
+   name:          <none>
+   last update:   <unknown>
+   ready:         False
 `,
 	}}
 
@@ -413,7 +413,7 @@ func TestWorkloadIssuesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-OopsieDoodle:   a hopefully informative message
+   OopsieDoodle:   a hopefully informative message
 `,
 	}, {
 		name: "ready and healthy with same info",
@@ -443,7 +443,7 @@ OopsieDoodle:   a hopefully informative message
 			},
 		},
 		expectedOutput: `
-OopsieDoodle:   a hopefully informative message
+   OopsieDoodle:   a hopefully informative message
 `,
 	}, {
 		name: "ready and healthy with different info",
@@ -473,8 +473,8 @@ OopsieDoodle:   a hopefully informative message
 			},
 		},
 		expectedOutput: `
-OopsieDoodle:          a hopefully informative message
-AnotherOopsieDoodle:   a hopefully informative message for non-healthy workload
+   OopsieDoodle:          a hopefully informative message
+   AnotherOopsieDoodle:   a hopefully informative message for non-healthy workload
 `,
 	}, {
 		name: "condition ready with no info",
@@ -498,7 +498,7 @@ AnotherOopsieDoodle:   a hopefully informative message for non-healthy workload
 			},
 		},
 		expectedOutput: `
-OopsieDoodle:   
+   OopsieDoodle:   
 `,
 	}, {
 		name: "no status",

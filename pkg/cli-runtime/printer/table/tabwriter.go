@@ -33,7 +33,11 @@ const (
 	tabwriterFlags    = tabwriter.RememberWidths | tabwriter.IgnoreAnsiCodes
 )
 
+var (
+	tabwriterPaddingStart int
+)
+
 // GetNewTabWriter returns a tabwriter that translates tabbed columns in input into properly aligned text.
 func GetNewTabWriter(output io.Writer) *tabwriter.Writer {
-	return tabwriter.NewWriter(output, tabwriterMinWidth, tabwriterWidth, tabwriterPadding, tabwriterPadChar, tabwriterFlags)
+	return tabwriter.NewWriter(output, tabwriterMinWidth, tabwriterWidth, tabwriterPadding, tabwriterPadChar, tabwriterPaddingStart, tabwriterFlags)
 }

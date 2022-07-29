@@ -105,9 +105,9 @@ No supply chain selectors found
 # test-supply-chain: <unknown>
 ---
 Supply Chain Selectors
-TYPE     KEY                                                 OPERATOR   VALUE
-labels   apps.tanzu.vmware.com/workload-deployment-cluster              test
-labels   apps.tanzu.vmware.com/workload-type                            web
+   TYPE     KEY                                                 OPERATOR   VALUE
+   labels   apps.tanzu.vmware.com/workload-deployment-cluster              test
+   labels   apps.tanzu.vmware.com/workload-type                            web
 `,
 		}, {
 			Name: "all selectors",
@@ -136,10 +136,10 @@ labels   apps.tanzu.vmware.com/workload-type                            web
 # test-supply-chain: <unknown>
 ---
 Supply Chain Selectors
-TYPE          KEY                                   OPERATOR   VALUE
-labels        apps.tanzu.vmware.com/workload-type              web
-fields        spec.image                            Exists
-expressions   foo                                   In         bar
+   TYPE          KEY                                   OPERATOR   VALUE
+   labels        apps.tanzu.vmware.com/workload-type              web
+   fields        spec.image                            Exists
+   expressions   foo                                   In         bar
 `,
 		}, {
 			Name: "not found",

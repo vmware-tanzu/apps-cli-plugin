@@ -183,14 +183,14 @@ func TestWorkloadGetCommand(t *testing.T) {
 # my-workload: <unknown>
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain reference not found.
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-No messages found.
+   Messages
+   No messages found.
 
 No pods found for workload.
 
@@ -211,14 +211,14 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: <unknown>
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain reference not found.
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-No messages found.
+   Messages
+   No messages found.
 
 No pods found for workload.
 
@@ -243,17 +243,17 @@ To see logs: "tanzu apps workload tail my-workload --namespace my-custom-namespa
 # my-workload: OopsieDoodle
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain
-name:          <none>
-last update:   <unknown>
-ready:         False
+   name:          <none>
+   last update:   <unknown>
+   ready:         False
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -279,17 +279,17 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: <unknown>
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain
-name:          my-supply-chain
-last update:   
-ready:         
+   name:          my-supply-chain
+   last update:   
+   ready:         
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-No messages found.
+   Messages
+   No messages found.
 
 No pods found for workload.
 
@@ -329,21 +329,21 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: OopsieDoodle
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         False
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 Services
-CLAIM      NAME         KIND         API VERSION
-database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
+   CLAIM      NAME         KIND         API VERSION
+   database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
 
 No pods found for workload.
 
@@ -386,21 +386,21 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: OopsieDoodle
 ---
 Overview
-type:   web
+   type:   web
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         False
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 Services
-CLAIM      NAME         KIND         API VERSION
-database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
+   CLAIM      NAME         KIND         API VERSION
+   database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
 
 No pods found for workload.
 
@@ -430,17 +430,17 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: Ready
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         True
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         True
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-No messages found.
+   Messages
+   No messages found.
 
 No pods found for workload.
 
@@ -473,17 +473,17 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: Ready
 ---
 Overview
-type:   web
+   type:   web
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         True
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         True
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-No messages found.
+   Messages
+   No messages found.
 
 No pods found for workload.
 
@@ -514,17 +514,17 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: Unknown
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         Unknown
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         Unknown
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -558,17 +558,17 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: Unknown
 ---
 Overview
-type:   web
+   type:   web
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         Unknown
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         Unknown
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -601,17 +601,17 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: OopsieDoodle
 ---
 Overview
-type:   web
+   type:   web
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         False
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -653,24 +653,24 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: OopsieDoodle
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Source
-type:     git
-url:      https://example.com
-branch:   master
-tag:      v1.0.0
-commit:   abcdef
+   type:     git
+   url:      https://example.com
+   branch:   master
+   tag:      v1.0.0
+   commit:   abcdef
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         False
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -715,24 +715,24 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: OopsieDoodle
 ---
 Overview
-type:   web
+   type:   web
 
 Source
-type:     git
-url:      https://example.com
-branch:   master
-tag:      v1.0.0
-commit:   abcdef
+   type:     git
+   url:      https://example.com
+   branch:   master
+   tag:      v1.0.0
+   commit:   abcdef
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         False
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -772,21 +772,21 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: OopsieDoodle
 ---
 Overview
-type:   web
+   type:   web
 
 Source
-type:    source image
-image:   my-registry/my-image:v1.0.0
+   type:    source image
+   image:   my-registry/my-image:v1.0.0
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         False
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -819,21 +819,21 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: OopsieDoodle
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Source
-type:    image
-image:   docker.io/library/nginx:latest
+   type:    image
+   image:   docker.io/library/nginx:latest
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         False
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -907,27 +907,27 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: OopsieDoodle
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Source
-type:     git
-url:      https://example.com
-branch:   master
-tag:      v1.0.0
-commit:   abcdef
+   type:     git
+   url:      https://example.com
+   branch:   master
+   tag:      v1.0.0
+   commit:   abcdef
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         False
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-RESOURCE          READY     HEALTHY   TIME
-source-provider   True      True      <unknown>
-deliverable       Unknown   Unknown   <unknown>
-image-builder     False     False     <unknown>
+   RESOURCE          READY     HEALTHY   TIME
+   source-provider   True      True      <unknown>
+   deliverable       Unknown   Unknown   <unknown>
+   image-builder     False     False     <unknown>
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -1004,27 +1004,27 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: OopsieDoodle
 ---
 Overview
-type:   web
+   type:   web
 
 Source
-type:     git
-url:      https://example.com
-branch:   master
-tag:      v1.0.0
-commit:   abcdef
+   type:     git
+   url:      https://example.com
+   branch:   master
+   tag:      v1.0.0
+   commit:   abcdef
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         False
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-RESOURCE          READY     HEALTHY   TIME
-source-provider   True      True      <unknown>
-deliverable       Unknown   Unknown   <unknown>
-image-builder     False     False     <unknown>
+   RESOURCE          READY     HEALTHY   TIME
+   source-provider   True      True      <unknown>
+   deliverable       Unknown   Unknown   <unknown>
+   image-builder     False     False     <unknown>
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -1058,22 +1058,22 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: Unknown
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain
-name:          <none>
-last update:   <unknown>
-ready:         Unknown
+   name:          <none>
+   last update:   <unknown>
+   ready:         Unknown
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:          a hopefully informative message about what went wrong
-AnotherOopsieDoodle:   a hopefully informative message about what is not healthy
+   Messages
+   OopsieDoodle:          a hopefully informative message about what went wrong
+   AnotherOopsieDoodle:   a hopefully informative message about what is not healthy
 
 Pods
-NAME   STATUS    RESTARTS   AGE
-pod1   Running   0          2y
+   NAME   STATUS    RESTARTS   AGE
+   pod1   Running   0          2y
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1105,21 +1105,21 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: Unknown
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain
-name:          <none>
-last update:   <unknown>
-ready:         Unknown
+   name:          <none>
+   last update:   <unknown>
+   ready:         Unknown
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 Pods
-NAME   STATUS    RESTARTS   AGE
-pod1   Running   0          2y
+   NAME   STATUS    RESTARTS   AGE
+   pod1   Running   0          2y
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1160,22 +1160,22 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: Unknown
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain
-name:          <none>
-last update:   <unknown>
-ready:         Unknown
+   name:          <none>
+   last update:   <unknown>
+   ready:         Unknown
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 Pods
-NAME   STATUS    RESTARTS   AGE
-pod1   Running   0          2y
-pod2   Failed    0          2y
+   NAME   STATUS    RESTARTS   AGE
+   pod1   Running   0          2y
+   pod2   Failed    0          2y
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1220,24 +1220,24 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: Unknown
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         Unknown
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         Unknown
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
 Knative Services
-NAME    READY       URL
-ksvc1   Ready       https://example.com
-ksvc2   not-Ready   <empty>
+   NAME    READY       URL
+   ksvc1   Ready       https://example.com
+   ksvc2   not-Ready   <empty>
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1279,27 +1279,27 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: Ready
 ---
 Overview
-type:   web
+   type:   web
 
 Supply Chain
-name:          my-supply-chain
-last update:   <unknown>
-ready:         True
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         True
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-No messages found.
+   Messages
+   No messages found.
 
 Pods
-NAME   STATUS    RESTARTS   AGE
-pod1   Running   0          2y
-pod2   Failed    0          2y
+   NAME   STATUS    RESTARTS   AGE
+   pod1   Running   0          2y
+   pod2   Failed    0          2y
 
 Knative Services
-NAME    READY       URL
-ksvc1   Ready       https://example.com
-ksvc2   not-Ready   <empty>
+   NAME    READY       URL
+   ksvc1   Ready       https://example.com
+   ksvc2   not-Ready   <empty>
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1374,14 +1374,14 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 # my-workload: <unknown>
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain reference not found.
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-No messages found.
+   Messages
+   No messages found.
 
 Failed to list pods:
   inducing failure for list PodList
@@ -1403,14 +1403,14 @@ To see logs: "tanzu apps workload tail my-workload"
 # my-workload: <unknown>
 ---
 Overview
-type:   <empty>
+   type:   <empty>
 
 Supply Chain reference not found.
 
-Supply Chain resources not found.
+   Supply Chain resources not found.
 
-Messages
-No messages found.
+   Messages
+   No messages found.
 
 No pods found for workload.
 

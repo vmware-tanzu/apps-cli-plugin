@@ -77,10 +77,10 @@ func TestKnativeServiceTablePrinter(t *testing.T) {
 
 	outputString := output.String()
 	expectedOutput := `
-NAME                READY       URL
-my-ksvc             not-Ready   https://example.com
-my-ksvc-no-url      Unknown     <empty>
-my-ksvc-no-status   <unknown>   <empty>
+   NAME                READY       URL
+   my-ksvc             not-Ready   https://example.com
+   my-ksvc-no-url      Unknown     <empty>
+   my-ksvc-no-status   <unknown>   <empty>
 `
 	if diff := cmp.Diff(strings.TrimPrefix(expectedOutput, "\n"), outputString); diff != "" {
 		t.Errorf("Unexpected output (-expected, +actual): %s", diff)

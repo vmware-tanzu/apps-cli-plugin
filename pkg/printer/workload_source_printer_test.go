@@ -48,8 +48,8 @@ func TestWorkloadSourceImagePrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-type:    image
-image:   my-image
+   type:    image
+   image:   my-image
 `,
 	}}
 
@@ -89,8 +89,8 @@ func TestWorkloadLocalSourceImagePrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-type:    source image
-image:   my-image
+   type:    source image
+   image:   my-image
 `,
 	}}
 
@@ -138,12 +138,12 @@ func TestWorkloadSourceGitPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-type:       git
-url:        https://example.com/my-repo
-sub-path:   my-subpath
-branch:     my-branch
-tag:        my-tag
-commit:     my-commit
+   type:       git
+   url:        https://example.com/my-repo
+   sub-path:   my-subpath
+   branch:     my-branch
+   tag:        my-tag
+   commit:     my-commit
 `,
 	}, {
 		name: "built from git some specs",
@@ -164,9 +164,9 @@ commit:     my-commit
 			},
 		},
 		expectedOutput: `
-type:     git
-url:      https://example.com/my-repo
-branch:   my-branch
+   type:     git
+   url:      https://example.com/my-repo
+   branch:   my-branch
 `,
 	}}
 

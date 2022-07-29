@@ -59,9 +59,9 @@ func TestWorkloadServiceClaimPrinterTablePrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-CLAIM      NAME            KIND         API VERSION
-database   my-prod-db      PostgreSQL   services.tanzu.vmware.com/v1alpha1
-cache      my-prod-cache   Gemfire      services.tanzu.vmware.com/v1alpha1
+   CLAIM      NAME            KIND         API VERSION
+   database   my-prod-db      PostgreSQL   services.tanzu.vmware.com/v1alpha1
+   cache      my-prod-cache   Gemfire      services.tanzu.vmware.com/v1alpha1
 `,
 	}, {
 		name: "no service",
@@ -73,7 +73,7 @@ cache      my-prod-cache   Gemfire      services.tanzu.vmware.com/v1alpha1
 			Spec: WorkloadSpec{},
 		},
 		expectedOutput: `
-CLAIM   NAME   KIND   API VERSION
+   CLAIM   NAME   KIND   API VERSION
 `,
 	}}
 

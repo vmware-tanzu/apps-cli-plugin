@@ -44,7 +44,7 @@ func WorkloadOverviewPrinter(w io.Writer, workload *cartov1alpha1.Workload) erro
 
 		return rows, nil
 	}
-	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true}).With(func(h table.PrintHandler) {
+	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true, PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
 		h.TableHandler(nil, printLocalSourceInfo)
 	})
 

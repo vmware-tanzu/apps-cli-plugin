@@ -51,7 +51,7 @@ func KnativeServicePrinter(c *cli.Config, kserviceList *knativeservingv1.Service
 		}
 		return rows, nil
 	}
-	tablePrinter := table.NewTablePrinter(table.PrintOptions{}).With(func(h table.PrintHandler) {
+	tablePrinter := table.NewTablePrinter(table.PrintOptions{PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
 		columns := []metav1beta1.TableColumnDefinition{
 			{Name: "Name", Type: "string"},
 			{Name: "Ready", Type: "string"},

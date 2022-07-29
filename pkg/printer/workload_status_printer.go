@@ -64,7 +64,7 @@ func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 		return rows, nil
 	}
 
-	tablePrinter := table.NewTablePrinter(table.PrintOptions{}).With(func(h table.PrintHandler) {
+	tablePrinter := table.NewTablePrinter(table.PrintOptions{PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
 		columns := []metav1beta1.TableColumnDefinition{
 			{Name: "Resource", Type: "string"},
 			{Name: "Ready", Type: "string"},
@@ -74,6 +74,7 @@ func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 		h.TableHandler(columns, printResourceInfoList)
 		h.TableHandler(columns, printResourceInfoRow)
 	})
+
 	return tablePrinter.PrintObj(workload, w)
 }
 
@@ -115,7 +116,7 @@ func WorkloadSupplyChainInfoPrinter(w io.Writer, workload *cartov1alpha1.Workloa
 		return rows, nil
 	}
 
-	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true}).With(func(h table.PrintHandler) {
+	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true, PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
 		h.TableHandler(nil, printSupplyChainInfo)
 	})
 
@@ -151,7 +152,7 @@ func WorkloadIssuesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error 
 		return rows, nil
 	}
 
-	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true}).With(func(h table.PrintHandler) {
+	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true, PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
 		h.TableHandler(nil, printIssues)
 	})
 

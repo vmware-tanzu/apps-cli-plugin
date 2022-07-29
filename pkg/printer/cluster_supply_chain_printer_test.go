@@ -51,9 +51,9 @@ func TestClusterSupplyChainPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-TYPE     KEY                                                 OPERATOR   VALUE
-labels   apps.tanzu.vmware.com/workload-deployment-cluster              test
-labels   apps.tanzu.vmware.com/workload-type                            web
+   TYPE     KEY                                                 OPERATOR   VALUE
+   labels   apps.tanzu.vmware.com/workload-deployment-cluster              test
+   labels   apps.tanzu.vmware.com/workload-type                            web
 `,
 	}, {
 		name: "expressions",
@@ -73,10 +73,10 @@ labels   apps.tanzu.vmware.com/workload-type                            web
 			},
 		},
 		expectedOutput: `
-TYPE          KEY   OPERATOR   VALUE
-expressions   app   In         web
-expressions   app   In         svc
-expressions   foo   NotIn
+   TYPE          KEY   OPERATOR   VALUE
+   expressions   app   In         web
+   expressions   app   In         svc
+   expressions   foo   NotIn
 `,
 	}, {
 		name: "fields",
@@ -95,9 +95,9 @@ expressions   foo   NotIn
 			},
 		},
 		expectedOutput: `
-TYPE     KEY                  OPERATOR   VALUE
-fields   spec.image           Exists
-fields   resource.cpulimits   Exists
+   TYPE     KEY                  OPERATOR   VALUE
+   fields   spec.image           Exists
+   fields   resource.cpulimits   Exists
 `}, {
 		// this is very unlikey scenario
 		name: "fields with values",
@@ -117,10 +117,10 @@ fields   resource.cpulimits   Exists
 			},
 		},
 		expectedOutput: `
-TYPE     KEY                  OPERATOR   VALUE
-fields   spec.image           Contains   docker.io
-fields   spec.image           Contains   gcr.io
-fields   resource.cpulimits   Exists
+   TYPE     KEY                  OPERATOR   VALUE
+   fields   spec.image           Contains   docker.io
+   fields   spec.image           Contains   gcr.io
+   fields   resource.cpulimits   Exists
 `}, {
 		name: "all label selectors present",
 		supplychain: &cartov1alpha1.ClusterSupplyChain{
@@ -143,11 +143,11 @@ fields   resource.cpulimits   Exists
 			},
 		},
 		expectedOutput: `
-TYPE          KEY                                   OPERATOR   VALUE
-labels        apps.tanzu.vmware.com/workload-type              web
-fields        spec.source.image                     Exists
-expressions   app                                   In         web
-expressions   app                                   In         source-to-image
+   TYPE          KEY                                   OPERATOR   VALUE
+   labels        apps.tanzu.vmware.com/workload-type              web
+   fields        spec.source.image                     Exists
+   expressions   app                                   In         web
+   expressions   app                                   In         source-to-image
 `,
 	}}
 	for _, test := range tests {
