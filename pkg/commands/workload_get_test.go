@@ -921,10 +921,10 @@ Supply Chain
    last update:   <unknown>
    ready:         False
 
-   RESOURCE          READY     HEALTHY   TIME
-   source-provider   True      True      <unknown>
-   deliverable       Unknown   Unknown   <unknown>
-   image-builder     False     False     <unknown>
+   RESOURCE          READY     HEALTHY   TIME        OUTPUT
+   source-provider   True      True      <unknown>   not found
+   deliverable       Unknown   Unknown   <unknown>   not found
+   image-builder     False     False     <unknown>   not found
 
    Messages
    OopsieDoodle:   a hopefully informative message about what went wrong
@@ -995,8 +995,7 @@ To see logs: "tanzu apps workload tail my-workload"
 										Status(metav1.ConditionFalse),
 									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
 										Status(metav1.ConditionFalse),
-								).DieRelease(),
-						)
+								).StampedRef(&corev1.ObjectReference{Kind: "image", Name: "petclinic"}).DieRelease())
 					}),
 			},
 			ExpectOutput: `
@@ -1018,10 +1017,10 @@ Supply Chain
    last update:   <unknown>
    ready:         False
 
-   RESOURCE          READY     HEALTHY   TIME
-   source-provider   True      True      <unknown>
-   deliverable       Unknown   Unknown   <unknown>
-   image-builder     False     False     <unknown>
+   RESOURCE          READY     HEALTHY   TIME        OUTPUT
+   source-provider   True      True      <unknown>   not found
+   deliverable       Unknown   Unknown   <unknown>   not found
+   image-builder     False     False     <unknown>   image/petclinic
 
    Messages
    OopsieDoodle:   a hopefully informative message about what went wrong

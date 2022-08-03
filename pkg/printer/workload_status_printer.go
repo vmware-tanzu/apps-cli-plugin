@@ -39,13 +39,13 @@ func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 		}
 
 		ready, elapsedTransitionTime := findConditionReady(resource.Conditions, cartov1alpha1.ConditionResourceReady)
-
 		row := metav1beta1.TableRow{
 			Cells: []interface{}{
 				resource.Name,
 				ready,
 				healthy,
 				elapsedTransitionTime,
+				getOutputRef(resource),
 			},
 		}
 		return []metav1beta1.TableRow{row}, nil
@@ -70,6 +70,7 @@ func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 			{Name: "Ready", Type: "string"},
 			{Name: "Healthy", Type: "string"},
 			{Name: "Time", Type: "string"},
+			{Name: "Output", Type: "string"},
 		}
 		h.TableHandler(columns, printResourceInfoList)
 		h.TableHandler(columns, printResourceInfoRow)
@@ -171,4 +172,14 @@ func findConditionReady(conditions []metav1.Condition, strReadyCondition string)
 	}
 
 	return ready, elapsedTransitionTime
+}
+
+func getOutputRef(resource *cartov1alpha1.RealizedResource) string {
+	ref := "not found"
+	if resource != nil && resource.StampedRef != nil {
+		if resource.StampedRef.Kind != "" || resource.StampedRef.Name != "" {
+			ref = fmt.Sprintf("%s%s%s", resource.StampedRef.Kind, "/", resource.StampedRef.Name)
+		}
+	}
+	return printer.Sfaintf(ref)
 }
