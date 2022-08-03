@@ -79,7 +79,6 @@ jobs:
         - 1.23.5
     env:
       REGISTRY_NAME: registry.local
-      REGISTRY_PORT: 5000
       TANZU_CLI_NO_INIT: true
       TANZU_HOME: $HOME/tanzu
       OS_ARCH: linux-amd64
@@ -90,6 +89,57 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: tanzu-apps-plugin.tar.gz
+    - name: Generate certs
+      run: |
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+        CERT_DIR=$(mktemp -d -t certs.XXXX)
+        echo "CERT_DIR=$CERT_DIR" >> $GITHUB_ENV
+        echo "##[group]Install cfssl"
+          go install github.com/cloudflare/cfssl/cmd/cfssl@v1.6.1
+          go install github.com/cloudflare/cfssl/cmd/cfssljson@v1.6.1
+        echo "##[endgroup]"
+        echo "##[group]Generate CA"
+          cfssl gencert -initca .github/tls/root-csr.json \
+            | cfssljson -bare ${CERT_DIR}/root-ca
+          cfssl gencert -ca ${CERT_DIR}/root-ca.pem -ca-key ${CERT_DIR}/root-ca-key.pem \
+            -config=".github/tls/config.json" \
+            -profile="intermediate" .github/tls/intermediate-csr.json \
+            | cfssljson -bare ${CERT_DIR}/signing-ca
+          cat ${CERT_DIR}/signing-ca.pem ${CERT_DIR}/root-ca.pem > ${CERT_DIR}/ca.pem
+        echo "##[endgroup]"
+        echo "##[group]Install CA"
+          # https://ubuntu.com/server/docs/security-trust-store
+          sudo apt-get install -y ca-certificates
+          sudo cp ${CERT_DIR}/ca.pem /usr/local/share/ca-certificates/ca.crt
+          sudo update-ca-certificates
+        echo "##[endgroup]"
+        echo "##[group]Generate cert"
+          cfssl gencert -ca ${CERT_DIR}/signing-ca.pem -ca-key ${CERT_DIR}/signing-ca-key.pem \
+            -config=".github/tls/config.json" \
+            -profile="server" \
+            -hostname="${REGISTRY_NAME},local-registry" \
+            .github/tls/server-csr.json \
+            | cfssljson -bare ${CERT_DIR}/server
+        echo "##[endgroup]"
+    - name: Setup local registry
+      run: |
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+        # Run a registry.
+        docker run -d \
+          --restart=always \
+          --name local-registry \
+          -v ${CERT_DIR}:/certs \
+          -e REGISTRY_HTTP_ADDR=0.0.0.0:443 \
+          -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/server.pem \
+          -e REGISTRY_HTTP_TLS_KEY=/certs/server-key.pem \
+          -p "443:443" \
+          registry:2
+        # Make the $REGISTRY_NAME -> local-registry
+        echo "$(hostname -I | cut -d' ' -f1) $REGISTRY_NAME" | sudo tee -a /etc/hosts
     - name: Install tanzu cli
       run: |
         TANZU_VERSION=$(cat TANZU_VERSION)
