@@ -76,6 +76,37 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
+			Name:         "Create workload with valid name from local source code",
+			WorkloadName: "test-create-local-registry",
+			Command: func() it.CommandLine {
+				c := *it.NewTanzuAppsCommandLine(
+					"workload", "create", "test-create-local-registry",
+					"--app=test-local-registry",
+					"--local-path=./testdata/hello.go.jar",
+					"--source-image=registry.local/source/test-create"
+					namespaceFlag,
+					"--type=web",
+					"--yes",
+				)
+				return c
+			}(),
+			ExpectedRemoteObject: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-create-local-registry",
+					Namespace: it.TestingNamespace,
+					Labels: map[string]string{
+						"app.kubernetes.io/part-of":           "test-create-local-registry",
+						"apps.tanzu.vmware.com/workload-type": "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image: "registry.local/source/test-create@sha256:f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be",
+					},
+				},
+			},
+		},
+		{
 			Name:         "Update the created workload",
 			WorkloadName: "test-create-git-annotations-workload",
 			Command: *it.NewTanzuAppsCommandLine(
