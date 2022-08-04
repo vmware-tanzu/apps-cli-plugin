@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -35,8 +36,18 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
-const WorkloadConditionReady = "Ready"
-const WorkloadAnnotationParam = "annotations"
+const (
+	WorkloadConditionReady  = "Ready"
+	WorkloadAnnotationParam = "annotations"
+	WorkloadMavenParam      = "maven"
+)
+
+type MavenSource struct {
+	ArtifactId string  `json:"artifactId"`
+	GroupId    string  `json:"groupId"`
+	Version    string  `json:"version"`
+	Type       *string `json:"type"`
+}
 
 func (w *Workload) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("Workload")
@@ -96,6 +107,12 @@ func (w *Workload) Merge(updates *Workload) {
 	w.Spec.Merge(&updates.Spec)
 }
 
+func (w *WorkloadSpec) GetMavenSource() *MavenSource {
+	currentMaven := &MavenSource{}
+	w.GetParam("maven", currentMaven)
+	return currentMaven
+}
+
 func (w *Workload) Validate() validation.FieldErrors {
 	errs := validation.FieldErrors{}
 
@@ -129,6 +146,28 @@ func (w *WorkloadSpec) Validate() validation.FieldErrors {
 
 		if w.Source.Git == nil && w.Source.Image == "" && w.Image == "" && w.Source.Subpath != "" {
 			errs = errs.Also(validation.ErrInvalidValue(w.Source.Subpath, flags.SubPathFlagName))
+		}
+	}
+
+	errs = errs.Also(w.ValidateMavenSource())
+
+	return errs
+}
+
+func (w *WorkloadSpec) ValidateMavenSource() validation.FieldErrors {
+	errs := validation.FieldErrors{}
+
+	mavenParam := MavenSource{}
+	w.GetParam(WorkloadMavenParam, &mavenParam)
+	if !(MavenSource{} == mavenParam) {
+		if mavenParam.ArtifactId == "" {
+			errs = errs.Also(validation.ErrMissingField(cli.StripDash(flags.MavenArtifactFlagName)))
+		}
+		if mavenParam.GroupId == "" {
+			errs = errs.Also(validation.ErrMissingField(cli.StripDash(flags.MavenGroupFlagName)))
+		}
+		if mavenParam.Version == "" {
+			errs = errs.Also(validation.ErrMissingField(cli.StripDash(flags.MavenVersionFlagName)))
 		}
 	}
 
@@ -244,6 +283,20 @@ func (w *WorkloadSpec) RemoveAnnotationParams(name string) {
 	} else {
 		w.MergeParams(WorkloadAnnotationParam, annotations)
 	}
+}
+
+func (w *WorkloadSpec) MergeMavenSource(updates MavenSource) {
+	currentMaven := w.GetMavenSource()
+	if updates.ArtifactId != "" {
+		currentMaven.ArtifactId = updates.ArtifactId
+	}
+	if updates.GroupId != "" {
+		currentMaven.GroupId = updates.GroupId
+	}
+	if updates.Version != "" {
+		currentMaven.Version = updates.Version
+	}
+	w.MergeParams(WorkloadMavenParam, currentMaven)
 }
 
 func (w *WorkloadSpec) ResetSource() {
@@ -471,4 +524,33 @@ func (w *Workload) DeprecationWarnings() []string {
 		warnings = append(warnings, serviceClaimDeprecationWarningMsg)
 	}
 	return warnings
+}
+
+type workloadNoticeStashKey struct{}
+
+func StashWorkloadNotice(ctx context.Context, notice string) context.Context {
+	res := RetrieveStashNotice(ctx)
+	if res != nil {
+		res = append(res, notice)
+	} else {
+		res = []string{notice}
+	}
+	return context.WithValue(ctx, workloadNoticeStashKey{}, res)
+}
+
+func RetrieveStashNotice(ctx context.Context) []string {
+	noticeSet, ok := ctx.Value(workloadNoticeStashKey{}).([]string)
+	if !ok {
+		return nil
+	}
+	return noticeSet
+}
+
+func (w *Workload) GetNoticeMsgs(ctx context.Context) []string {
+	msgs := []string{}
+	if res := RetrieveStashNotice(ctx); res != nil {
+		msgs = append(msgs, res...)
+	}
+
+	return msgs
 }

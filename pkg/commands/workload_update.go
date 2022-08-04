@@ -109,7 +109,7 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	}
 	workload.Merge(fileWorkload)
 
-	opts.ApplyOptionsToWorkload(ctx, workload)
+	ctx = opts.ApplyOptionsToWorkload(ctx, workload)
 
 	// validate complex flag interactions with existing state
 	errs = workload.Validate()
@@ -137,7 +137,7 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		return nil
 	}
 
-	okToUpdate, err := opts.Update(ctx, c, currentWorkload, workload)
+	ctx, okToUpdate, err := opts.Update(ctx, c, currentWorkload, workload)
 	if err != nil {
 		return err
 	}

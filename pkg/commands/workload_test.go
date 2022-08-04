@@ -766,6 +766,54 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 			},
 		},
 		{
+			name: "add maven with param yaml",
+			args: []string{flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples"}`},
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+			},
+			expected: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Params: []cartov1alpha1.Param{
+						{
+							Name:  "maven",
+							Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0"}`)},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "add maven with flags",
+			args: []string{flags.MavenArtifactFlagName, "spring-petclinic", flags.MavenVersionFlagName, "2.6.0", flags.MavenGroupFlagName, "org.springframework.samples"},
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+			},
+			expected: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Params: []cartov1alpha1.Param{
+						{
+							Name:  "maven",
+							Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0","type":null}`)},
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "update params",
 			args: []string{flags.ParamFlagName, "foo=bar", flags.ParamFlagName, "removeme-"},
 			input: &cartov1alpha1.Workload{
@@ -1997,7 +2045,7 @@ func TestWorkloadOptionsCreate(t *testing.T) {
 		withReactors   []clitesting.ReactionFunc
 	}{
 		{
-			name: "Create workload succesfully",
+			name: "Create workload successfully",
 			input: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
@@ -2022,7 +2070,44 @@ Create workload:
 Created workload "my-workload"`,
 		},
 		{
-			name: "Create workload without source succesfully",
+			name: "Create workload from maven",
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Params: []cartov1alpha1.Param{
+						{
+							Name:  "maven",
+							Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0"}`)},
+						},
+					},
+				},
+			},
+			shouldError: false,
+			expectedOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  params:
+      9 + |  - name: maven
+     10 + |    value:
+     11 + |      artifactId: spring-petclinic
+     12 + |      groupId: org.springframework.samples
+     13 + |      version: 2.6.0
+
+NOTICE: no source code or image has been specified for this workload.
+
+Created workload "my-workload"`,
+		},
+		{
+			name: "Create workload without source successfully",
 			input: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
@@ -2086,7 +2171,7 @@ Created workload "my-workload"`,
 				client.PrependReactor("*", "*", reactor)
 			}
 
-			_, err := opts.Create(ctx, c, test.input)
+			_, _, err := opts.Create(ctx, c, test.input)
 
 			if err != nil && !test.shouldError {
 				t.Errorf("Create() errored %v", err)
@@ -2184,6 +2269,41 @@ Updated workload "my-workload"
 `,
 		},
 		{
+			name: "Update workload to add maven param",
+			args: []string{flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples"}`, flags.YesFlagName},
+			givenWorkload: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Params: []cartov1alpha1.Param{
+						{
+							Name:  "removeme",
+							Value: apiextensionsv1.JSON{Raw: []byte(`"bye"`)},
+						},
+					},
+				},
+			},
+			shouldError: false,
+			expectedOutput: `
+Update workload:
+...
+  7,  7   |spec:
+  8,  8   |  params:
+  9,  9   |  - name: removeme
+ 10, 10   |    value: bye
+     11 + |  - name: maven
+     12 + |    value:
+     13 + |      artifactId: spring-petclinic
+     14 + |      groupId: org.springframework.samples
+     15 + |      version: 2.6.0
+
+NOTICE: no source code or image has been specified for this workload.
+
+Updated workload "my-workload"`,
+		},
+		{
 			name: "Update workload error",
 			args: []string{flags.LabelFlagName, "NEW=value", flags.YesFlagName},
 			withReactors: []clitesting.ReactionFunc{
@@ -2270,7 +2390,7 @@ Updated workload "my-workload"
 
 			workload := currentWorkload.DeepCopy()
 			opts.ApplyOptionsToWorkload(ctx, workload)
-			_, err = opts.Update(ctx, c, currentWorkload, workload)
+			_, _, err = opts.Update(ctx, c, currentWorkload, workload)
 
 			if err != nil && !test.shouldError {
 				t.Errorf("Update() errored %v", err)
