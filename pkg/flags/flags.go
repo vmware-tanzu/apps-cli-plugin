@@ -46,6 +46,10 @@ const (
 	LimitMemoryFlagName      = "--limit-memory"
 	LiveUpdateFlagName       = "--live-update"
 	LocalPathFlagName        = "--local-path"
+	MavenArtifactFlagName    = "--maven-artifact"
+	MavenGroupFlagName       = "--maven-group"
+	MavenTypeFlagName        = "--maven-type"
+	MavenVersionFlagName     = "--maven-version"
 	NamespaceFlagName        = cli.NamespaceFlagName
 	NoColorFlagName          = cli.NoColorFlagName
 	OutputFlagName           = "--output"

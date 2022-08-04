@@ -767,7 +767,7 @@ spec:
 			},
 		},
 		{
-			Name: "create with serviceAccountName specifying other flags from cli ",
+			Name: "create with serviceAccountName specifying other flags from cli",
 			Args: []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.GitTagFlagName, "tap-1.2", flags.TypeFlagName, "whatever", flags.YesFlagName},
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -817,6 +817,12 @@ To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
+		},
+		{
+			Name:         "error missing maven flags",
+			Args:         []string{workloadName, flags.MavenArtifactFlagName, "spring-petclinic", flags.MavenVersionFlagName, "1.2.3", flags.YesFlagName},
+			ShouldError:  true,
+			ExpectOutput: "",
 		},
 		{
 			Name: "create with multiple param-yaml using valid json and yaml",

@@ -959,6 +959,88 @@ func TestWorkloadSpec_RemoveAnnotationParams(t *testing.T) {
 		})
 	}
 }
+
+func TestWorkloadSpec_MergeMavenSource(t *testing.T) {
+	tests := []struct {
+		name  string
+		seed  *WorkloadSpec
+		value MavenSource
+		want  *WorkloadSpec
+	}{{
+		name: "add maven info",
+		seed: &WorkloadSpec{},
+		value: MavenSource{
+			ArtifactId: "foo",
+			GroupId:    "bar",
+			Version:    "0.1.0",
+		},
+		want: &WorkloadSpec{
+			Params: []Param{
+				{
+					Name:  "maven",
+					Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
+				},
+			},
+		},
+	}, {
+		name: "change maven info",
+		seed: &WorkloadSpec{
+			Params: []Param{
+				{
+					Name:  "maven",
+					Value: apiextensionsv1.JSON{Raw: []byte(`{"version":"0.1.0"}`)},
+				},
+			},
+		},
+		value: MavenSource{
+			ArtifactId: "foo",
+			GroupId:    "bar",
+			Version:    "0.1.1",
+		},
+		want: &WorkloadSpec{
+			Params: []Param{
+				{
+					Name:  "maven",
+					Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.1","type":null}`)},
+				},
+			},
+		},
+	}, {
+		name: "no change",
+		seed: &WorkloadSpec{
+			Params: []Param{
+				{
+					Name:  "maven",
+					Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
+				},
+			},
+		},
+		value: MavenSource{
+			ArtifactId: "foo",
+			GroupId:    "bar",
+			Version:    "0.1.0",
+		},
+		want: &WorkloadSpec{
+			Params: []Param{
+				{
+					Name:  "maven",
+					Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
+				},
+			},
+		},
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.seed
+			got.MergeMavenSource(test.value)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("MergeMavenSource() (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 func TestWorkloadSpec_MergeGit(t *testing.T) {
 	tests := []struct {
 		name string

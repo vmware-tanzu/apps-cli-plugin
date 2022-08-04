@@ -109,7 +109,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 
 	workload.Merge(fileWorkload)
 
-	opts.ApplyOptionsToWorkload(ctx, workload)
+	ctx = opts.ApplyOptionsToWorkload(ctx, workload)
 
 	// validate complex flag interactions with existing state
 	errs = workload.Validate()
@@ -139,12 +139,12 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 
 	// If there is no workload, create a new one
 	if currentWorkload == nil {
-		okToCreate, createError = opts.Create(ctx, c, workload)
+		ctx, okToCreate, createError = opts.Create(ctx, c, workload)
 		if createError != nil {
 			return createError
 		}
 	} else {
-		okToUpdate, updateError = opts.Update(ctx, c, currentWorkload, workload)
+		ctx, okToUpdate, updateError = opts.Update(ctx, c, currentWorkload, workload)
 		if updateError != nil {
 			return updateError
 		}
