@@ -177,8 +177,8 @@ jobs:
         set -o nounset
         set -o pipefail
 
-       # KinD configuration.
-       # create a cluster with the local registry enabled in containerd
+        # KinD configuration.
+        # create a cluster with the local registry enabled in containerd
         cat <<EOF | kind create cluster --config=-
         kind: Cluster
         apiVersion: kind.x-k8s.io/v1alpha4
