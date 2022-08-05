@@ -139,7 +139,7 @@ func WorkloadIssuesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error 
 		}
 		rows := []metav1beta1.TableRow{readyRow}
 
-		if healthyCondition != nil {
+		if healthyCondition != nil && healthyCondition.Message != "" {
 			if strings.Compare(healthyCondition.Message, readyCondition.Message) != 0 {
 				healthyRow := metav1beta1.TableRow{
 					Cells: []interface{}{
