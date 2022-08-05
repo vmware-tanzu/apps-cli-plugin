@@ -175,11 +175,11 @@ func findConditionReady(conditions []metav1.Condition, strReadyCondition string)
 }
 
 func getOutputRef(resource *cartov1alpha1.RealizedResource) string {
-	ref := "not found"
+	ref := printer.Sfaintf("not found")
 	if resource != nil && resource.StampedRef != nil {
 		if resource.StampedRef.Kind != "" || resource.StampedRef.Name != "" {
 			ref = fmt.Sprintf("%s%s%s", resource.StampedRef.Kind, "/", resource.StampedRef.Name)
 		}
 	}
-	return printer.Sfaintf(ref)
+	return ref
 }
