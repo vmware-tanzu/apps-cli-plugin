@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -96,10 +97,10 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   RESOURCE          READY     HEALTHY   TIME
-   source-provider   True      True      <unknown>
-   deliverable       Unknown   Unknown   <unknown>
-   image-builder     False     False     <unknown>
+   RESOURCE          READY     HEALTHY   TIME        OUTPUT
+   source-provider   True      True      <unknown>   not found
+   deliverable       Unknown   Unknown   <unknown>   not found
+   image-builder     False     False     <unknown>   not found
 `,
 	}, {
 		name: "no resources",
@@ -110,7 +111,7 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   RESOURCE   READY   HEALTHY   TIME
+   RESOURCE   READY   HEALTHY   TIME   OUTPUT
 `,
 	}, {
 		name: "no ready condition inside resource",
@@ -164,10 +165,10 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   RESOURCE          READY   HEALTHY   TIME
-   source-provider           True      
-   deliverable               Unknown   
-   image-builder     False   False     <unknown>
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider           True                  not found
+   deliverable               Unknown               not found
+   image-builder     False   False     <unknown>   not found
 `,
 	}, {
 		name: "no healthy condition inside resource",
@@ -221,10 +222,106 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   RESOURCE          READY     HEALTHY   TIME
-   source-provider   True                <unknown>
-   deliverable       Unknown             <unknown>
-   image-builder     False     False     <unknown>
+   RESOURCE          READY     HEALTHY   TIME        OUTPUT
+   source-provider   True                <unknown>   not found
+   deliverable       Unknown             <unknown>   not found
+   image-builder     False     False     <unknown>   not found
+`,
+	}, {
+		name: "with output details",
+		testWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      workloadName,
+				Namespace: defaultNamespace,
+			},
+			Status: cartov1alpha1.WorkloadStatus{
+				Resources: []cartov1alpha1.RealizedResource{{
+					Name: "source-provider",
+					Conditions: []metav1.Condition{
+						{
+							Type:   cartov1alpha1.ConditionResourceSubmitted,
+							Status: metav1.ConditionTrue,
+						},
+						{
+							Type:   cartov1alpha1.ConditionResourceReady,
+							Status: metav1.ConditionTrue,
+						},
+					},
+					StampedRef: &corev1.ObjectReference{Kind: "GitRepository", Name: "pet-clinic"},
+				}, {
+					Name: "deliverable",
+					Conditions: []metav1.Condition{
+						{
+							Type:   cartov1alpha1.ConditionResourceSubmitted,
+							Status: metav1.ConditionUnknown,
+						},
+						{
+							Type:   cartov1alpha1.ConditionResourceReady,
+							Status: metav1.ConditionUnknown,
+						},
+					},
+					StampedRef: &corev1.ObjectReference{Kind: "Deliverable", Name: "pet-clinic"},
+				}, {
+					Name: "image-builder",
+					Conditions: []metav1.Condition{
+						{
+							Type:   cartov1alpha1.ConditionResourceReady,
+							Status: metav1.ConditionFalse,
+						},
+						{
+							Type:   cartov1alpha1.ConditionResourceSubmitted,
+							Status: metav1.ConditionFalse,
+						},
+						{
+							Type:   cartov1alpha1.ConditionResourceHealthy,
+							Status: metav1.ConditionFalse,
+						},
+					},
+					StampedRef: &corev1.ObjectReference{},
+				}, {
+					Name: "config-provider",
+					Conditions: []metav1.Condition{
+						{
+							Type:   cartov1alpha1.ConditionResourceReady,
+							Status: metav1.ConditionFalse,
+						},
+						{
+							Type:   cartov1alpha1.ConditionResourceSubmitted,
+							Status: metav1.ConditionFalse,
+						},
+						{
+							Type:   cartov1alpha1.ConditionResourceHealthy,
+							Status: metav1.ConditionFalse,
+						},
+					},
+					StampedRef: &corev1.ObjectReference{Kind: "", Name: "pet-clinic"},
+				}, {
+					Name: "app-config",
+					Conditions: []metav1.Condition{
+						{
+							Type:   cartov1alpha1.ConditionResourceReady,
+							Status: metav1.ConditionFalse,
+						},
+						{
+							Type:   cartov1alpha1.ConditionResourceSubmitted,
+							Status: metav1.ConditionFalse,
+						},
+						{
+							Type:   cartov1alpha1.ConditionResourceHealthy,
+							Status: metav1.ConditionFalse,
+						},
+					},
+					StampedRef: &corev1.ObjectReference{Kind: "ConfigMap", Name: ""},
+				}},
+			},
+		},
+		expectedOutput: `
+   RESOURCE          READY     HEALTHY   TIME        OUTPUT
+   source-provider   True                <unknown>   GitRepository/pet-clinic
+   deliverable       Unknown             <unknown>   Deliverable/pet-clinic
+   image-builder     False     False     <unknown>   not found
+   config-provider   False     False     <unknown>   /pet-clinic
+   app-config        False     False     <unknown>   ConfigMap/
 `,
 	}, {
 		name: "resource without conditions",
@@ -242,9 +339,9 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   RESOURCE          READY   HEALTHY   TIME
-   source-provider                     
-   deliverable                         
+   RESOURCE          READY   HEALTHY   TIME   OUTPUT
+   source-provider                            not found
+   deliverable                                not found
 `,
 	}}
 
