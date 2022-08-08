@@ -84,6 +84,7 @@ jobs:
       OS_ARCH: linux-amd64
     steps:
     - uses: actions/checkout@v3
+    - uses: vmware-tanzu/carvel-setup-action@v1
     - uses: actions/setup-go@v3
       with:
         go-version: 1.18.x
@@ -223,9 +224,6 @@ jobs:
           kubectl create namespace cartographer-system
           kapp deploy -y -a cartographer -n kube-system -f ./acceptance/vendor/cartographer/
         echo "##[endgroup]"
-        echo "##[group]Apply static pod"
-          kubectl apply -f ./.github/samples/pod.yaml
-        echo "##[endgroup]"
     - name: Test CLI commands
       run: |
         set -o errexit
@@ -244,9 +242,6 @@ jobs:
 
         echo "##[group]Delete workload"
           printf 'y' | tanzu apps workload delete petclinic
-        echo "##[endgroup]"
-        echo "##[group]Delete pod"
-          kubectl delete -f ./.github/samples/pod.yaml
         echo "##[endgroup]"
         echo "##[group]Delete cartographer"
           kapp delete -y -a cartographer -n kube-system
