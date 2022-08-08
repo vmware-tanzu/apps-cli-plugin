@@ -598,6 +598,34 @@ func TestWorkloadIssuesPrinter(t *testing.T) {
    OopsieDoodle:   
 `,
 	}, {
+		name: "condition ready and health with no message",
+		testWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      workloadName,
+				Namespace: defaultNamespace,
+			},
+			Status: cartov1alpha1.WorkloadStatus{
+				Conditions: []metav1.Condition{{
+					Type:   cartov1alpha1.WorkloadSupplyChainReady,
+					Status: metav1.ConditionFalse,
+				}, {
+					Type:   cartov1alpha1.WorkloadResourceSubmitted,
+					Status: metav1.ConditionFalse,
+				}, {
+					Type:   cartov1alpha1.WorkloadReady,
+					Status: metav1.ConditionFalse,
+					Reason: "OopsieDoodle",
+				}, {
+					Type:   cartov1alpha1.WorkloadHealthy,
+					Status: metav1.ConditionUnknown,
+					Reason: "AnotherOopsieDoodle",
+				}},
+			},
+		},
+		expectedOutput: `
+   OopsieDoodle:   
+`,
+	}, {
 		name: "no status",
 		testWorkload: &cartov1alpha1.Workload{
 			ObjectMeta: metav1.ObjectMeta{
@@ -623,6 +651,32 @@ func TestWorkloadIssuesPrinter(t *testing.T) {
 					Status:  metav1.ConditionUnknown,
 					Message: "a hopefully informative message",
 					Reason:  "OopsieDoodle",
+				}},
+			},
+		},
+	}, {
+		name: "no ready condition but Health",
+		testWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      workloadName,
+				Namespace: defaultNamespace,
+			},
+			Status: cartov1alpha1.WorkloadStatus{
+				Conditions: []metav1.Condition{{
+					Type:    cartov1alpha1.WorkloadSupplyChainReady,
+					Status:  metav1.ConditionUnknown,
+					Message: "a hopefully informative message",
+					Reason:  "OopsieDoodle",
+				}, {
+					Type:    cartov1alpha1.WorkloadResourceSubmitted,
+					Status:  metav1.ConditionUnknown,
+					Message: "a hopefully informative message",
+					Reason:  "OopsieDoodle",
+				}, {
+					Type:    cartov1alpha1.WorkloadHealthy,
+					Status:  metav1.ConditionFalse,
+					Message: "a hopefully informative message for non-healthy workload",
+					Reason:  "AnotherOopsieDoodle",
 				}},
 			},
 		},
