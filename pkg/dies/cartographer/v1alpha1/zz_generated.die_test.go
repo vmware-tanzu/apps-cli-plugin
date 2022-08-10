@@ -54,6 +54,33 @@ func TestSupplyChainStatusDie_MissingMethods(t *testingx.T) {
 	}
 }
 
+func TestDeliverableDie_MissingMethods(t *testingx.T) {
+	die := DeliverableBlank
+	ignore := []string{"TypeMeta", "ObjectMeta"}
+	diff := testing.DieFieldDiff(die).Delete(ignore...)
+	if diff.Len() != 0 {
+		t.Errorf("found missing fields for DeliverableDie: %s", diff.List())
+	}
+}
+
+func TestDeliverableSpecDie_MissingMethods(t *testingx.T) {
+	die := DeliverableSpecBlank
+	ignore := []string{}
+	diff := testing.DieFieldDiff(die).Delete(ignore...)
+	if diff.Len() != 0 {
+		t.Errorf("found missing fields for DeliverableSpecDie: %s", diff.List())
+	}
+}
+
+func TestDeliverableStatusDie_MissingMethods(t *testingx.T) {
+	die := DeliverableStatusBlank
+	ignore := []string{}
+	diff := testing.DieFieldDiff(die).Delete(ignore...)
+	if diff.Len() != 0 {
+		t.Errorf("found missing fields for DeliverableStatusDie: %s", diff.List())
+	}
+}
+
 func TestWorkloadDie_MissingMethods(t *testingx.T) {
 	die := WorkloadBlank
 	ignore := []string{"TypeMeta", "ObjectMeta"}

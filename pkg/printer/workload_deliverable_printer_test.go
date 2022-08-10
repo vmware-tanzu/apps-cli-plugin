@@ -29,22 +29,22 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/printer"
 )
 
-func TestWorkloadResourcesPrinter(t *testing.T) {
+func TestDeliverableResourcesPrinter(t *testing.T) {
 	defaultNamespace := "default"
-	workloadName := "my-workload"
+	deliverableName := "my-deliverable"
 
 	tests := []struct {
-		name           string
-		testWorkload   *cartov1alpha1.Workload
-		expectedOutput string
+		name            string
+		testDeliverable *cartov1alpha1.Deliverable
+		expectedOutput  string
 	}{{
 		name: "various resources",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
+			Status: cartov1alpha1.DeliverableStatus{
 				Resources: []cartov1alpha1.RealizedResource{{
 					Name: "source-provider",
 					Conditions: []metav1.Condition{
@@ -62,7 +62,7 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 						},
 					},
 				}, {
-					Name: "deliverable",
+					Name: "deployer",
 					Conditions: []metav1.Condition{
 						{
 							Type:   cartov1alpha1.ConditionResourceReady,
@@ -99,14 +99,14 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 		expectedOutput: `
    RESOURCE          READY     HEALTHY   TIME        OUTPUT
    source-provider   True      True      <unknown>   not found
-   deliverable       Unknown   Unknown   <unknown>   not found
+   deployer          Unknown   Unknown   <unknown>   not found
    image-builder     False     False     <unknown>   not found
 `,
 	}, {
 		name: "no resources",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
 		},
@@ -115,12 +115,12 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 `,
 	}, {
 		name: "no ready condition inside resource",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
+			Status: cartov1alpha1.DeliverableStatus{
 				Resources: []cartov1alpha1.RealizedResource{{
 					Name: "source-provider",
 					Conditions: []metav1.Condition{
@@ -134,7 +134,7 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 						},
 					},
 				}, {
-					Name: "deliverable",
+					Name: "deployer",
 					Conditions: []metav1.Condition{
 						{
 							Type:   cartov1alpha1.ConditionResourceSubmitted,
@@ -167,17 +167,17 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 		expectedOutput: `
    RESOURCE          READY   HEALTHY   TIME        OUTPUT
    source-provider           True                  not found
-   deliverable               Unknown               not found
+   deployer                  Unknown               not found
    image-builder     False   False     <unknown>   not found
 `,
 	}, {
 		name: "no healthy condition inside resource",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
+			Status: cartov1alpha1.DeliverableStatus{
 				Resources: []cartov1alpha1.RealizedResource{{
 					Name: "source-provider",
 					Conditions: []metav1.Condition{
@@ -191,7 +191,7 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 						},
 					},
 				}, {
-					Name: "deliverable",
+					Name: "deployer",
 					Conditions: []metav1.Condition{
 						{
 							Type:   cartov1alpha1.ConditionResourceSubmitted,
@@ -224,17 +224,17 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 		expectedOutput: `
    RESOURCE          READY     HEALTHY   TIME        OUTPUT
    source-provider   True                <unknown>   not found
-   deliverable       Unknown             <unknown>   not found
+   deployer          Unknown             <unknown>   not found
    image-builder     False     False     <unknown>   not found
 `,
 	}, {
 		name: "with output details",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
+			Status: cartov1alpha1.DeliverableStatus{
 				Resources: []cartov1alpha1.RealizedResource{{
 					Name: "source-provider",
 					Conditions: []metav1.Condition{
@@ -249,7 +249,7 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 					},
 					StampedRef: &corev1.ObjectReference{Kind: "GitRepository", Name: "pet-clinic"},
 				}, {
-					Name: "deliverable",
+					Name: "deployer",
 					Conditions: []metav1.Condition{
 						{
 							Type:   cartov1alpha1.ConditionResourceSubmitted,
@@ -260,7 +260,7 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 							Status: metav1.ConditionUnknown,
 						},
 					},
-					StampedRef: &corev1.ObjectReference{Kind: "Deliverable", Name: "pet-clinic"},
+					StampedRef: &corev1.ObjectReference{Kind: "App", Name: "pet-clinic"},
 				}, {
 					Name: "image-builder",
 					Conditions: []metav1.Condition{
@@ -318,38 +318,38 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 		expectedOutput: `
    RESOURCE          READY     HEALTHY   TIME        OUTPUT
    source-provider   True                <unknown>   GitRepository/pet-clinic
-   deliverable       Unknown             <unknown>   Deliverable/pet-clinic
+   deployer          Unknown             <unknown>   App/pet-clinic
    image-builder     False     False     <unknown>   not found
    config-provider   False     False     <unknown>   /pet-clinic
    app-config        False     False     <unknown>   ConfigMap/
 `,
 	}, {
 		name: "resource without conditions",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
+			Status: cartov1alpha1.DeliverableStatus{
 				Resources: []cartov1alpha1.RealizedResource{{
 					Name: "source-provider",
 				}, {
-					Name: "deliverable",
+					Name: "deployer",
 				}},
 			},
 		},
 		expectedOutput: `
    RESOURCE          READY   HEALTHY   TIME   OUTPUT
    source-provider                            not found
-   deliverable                                not found
+   deployer                                   not found
 `,
 	}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			output := &bytes.Buffer{}
-			if err := printer.WorkloadResourcesPrinter(output, test.testWorkload); err != nil {
-				t.Errorf("WorkloadSourcePrinter() expected no error, got %v", err)
+			if err := printer.DeliverableResourcesPrinter(output, test.testDeliverable); err != nil {
+				t.Errorf("DeliverableSourcePrinter() expected no error, got %v", err)
 			}
 			outputString := output.String()
 			if diff := cmp.Diff(strings.TrimPrefix(test.expectedOutput, "\n"), outputString); diff != "" {
@@ -359,86 +359,82 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 	}
 }
 
-func TestWorkloadSupplyChainInfoPrinter(t *testing.T) {
+func TestDeliveryInfoPrinter(t *testing.T) {
 	defaultNamespace := "default"
-	workloadName := "my-workload"
+	deliverableName := "my-deliverable"
 
 	tests := []struct {
-		name           string
-		testWorkload   *cartov1alpha1.Workload
-		expectedOutput string
+		name            string
+		testDeliverable *cartov1alpha1.Deliverable
+		expectedOutput  string
 	}{{
 		name: "various conditions",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
-				SupplyChainRef: cartov1alpha1.ObjectReference{
-					Name: "my-supply-chain",
+			Status: cartov1alpha1.DeliverableStatus{
+				DeliveryRef: cartov1alpha1.ObjectReference{
+					Name: "my-delivery",
 				},
-				Conditions: []metav1.Condition{{
-					Type:   cartov1alpha1.SupplyChainReady,
-					Status: metav1.ConditionTrue,
-				}, {
-					Type:   cartov1alpha1.WorkloadResourceSubmitted,
-					Status: metav1.ConditionTrue,
-				}, {
-					Type:   cartov1alpha1.ConditionReady,
-					Status: metav1.ConditionTrue,
-				}},
+				OwnerStatus: cartov1alpha1.OwnerStatus{
+					Conditions: []metav1.Condition{{
+						Type:   cartov1alpha1.SupplyChainReady,
+						Status: metav1.ConditionTrue,
+					}, {
+						Type:   cartov1alpha1.ConditionReady,
+						Status: metav1.ConditionTrue,
+					}},
+				},
 			},
 		},
 		expectedOutput: `
-   name:   my-supply-chain
+   name:   my-delivery
 `,
 	}, {
 		name: "no conditions",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
-				SupplyChainRef: cartov1alpha1.ObjectReference{
-					Name: "my-supply-chain",
+			Status: cartov1alpha1.DeliverableStatus{
+				DeliveryRef: cartov1alpha1.ObjectReference{
+					Name: "my-delivery",
 				},
 			},
 		},
 		expectedOutput: `
-   name:   my-supply-chain
+   name:   my-delivery
 `,
 	}, {
-		name: "no supply chain info",
-		testWorkload: &cartov1alpha1.Workload{
+		name: "no delivery info",
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
-				Conditions: []metav1.Condition{{
-					Type:   cartov1alpha1.WorkloadSupplyChainReady,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:   cartov1alpha1.WorkloadResourceSubmitted,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:   cartov1alpha1.ConditionReady,
-					Status: metav1.ConditionFalse,
-				}},
+			Status: cartov1alpha1.DeliverableStatus{
+				OwnerStatus: cartov1alpha1.OwnerStatus{
+					Conditions: []metav1.Condition{{
+						Type:   cartov1alpha1.ConditionReady,
+						Status: metav1.ConditionFalse,
+					}, {
+						Type:   cartov1alpha1.ConditionReady,
+						Status: metav1.ConditionFalse,
+					}},
+				},
 			},
 		},
-		expectedOutput: `
-   name:   <none>
-`,
+		expectedOutput: ``,
 	}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			output := &bytes.Buffer{}
-			if err := printer.WorkloadSupplyChainInfoPrinter(output, test.testWorkload); err != nil {
-				t.Errorf("WorkloadSourcePrinter() expected no error, got %v", err)
+			if err := printer.DeliveryInfoPrinter(output, test.testDeliverable); err != nil {
+				t.Errorf("DeliveryInfoPrinter() expected no error, got %v", err)
 			}
 			outputString := output.String()
 			if diff := cmp.Diff(strings.TrimPrefix(test.expectedOutput, "\n"), outputString); diff != "" {
@@ -448,214 +444,187 @@ func TestWorkloadSupplyChainInfoPrinter(t *testing.T) {
 	}
 }
 
-func TestWorkloadIssuesPrinter(t *testing.T) {
+func TestDeliverablesIssuesPrinter(t *testing.T) {
 	defaultNamespace := "default"
-	workloadName := "my-workload"
+	deliverableName := "my-deliverable"
 
 	tests := []struct {
-		name           string
-		testWorkload   *cartov1alpha1.Workload
-		expectedOutput string
+		name            string
+		testDeliverable *cartov1alpha1.Deliverable
+		expectedOutput  string
 	}{{
 		name: "condition ready with info",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
-				Conditions: []metav1.Condition{{
-					Type:   cartov1alpha1.WorkloadSupplyChainReady,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:   cartov1alpha1.WorkloadResourceSubmitted,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:    cartov1alpha1.ConditionReady,
-					Status:  metav1.ConditionFalse,
-					Message: "a hopefully informative message",
-					Reason:  "OopsieDoodle",
-				}},
+			Status: cartov1alpha1.DeliverableStatus{
+				OwnerStatus: cartov1alpha1.OwnerStatus{
+					Conditions: []metav1.Condition{{
+						Type:    cartov1alpha1.ConditionReady,
+						Status:  metav1.ConditionFalse,
+						Message: "a hopefully informative message",
+						Reason:  "OopsieDoodle",
+					}},
+				},
 			},
 		},
 		expectedOutput: `
-   Workload [OopsieDoodle]:   a hopefully informative message
+   Deliverable [OopsieDoodle]:   a hopefully informative message
 `,
 	}, {
 		name: "ready and healthy with same info",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
-				Conditions: []metav1.Condition{{
-					Type:   cartov1alpha1.WorkloadSupplyChainReady,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:   cartov1alpha1.WorkloadResourceSubmitted,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:    cartov1alpha1.ConditionReady,
-					Status:  metav1.ConditionFalse,
-					Message: "a hopefully informative message",
-					Reason:  "OopsieDoodle",
-				}, {
-					Type:    cartov1alpha1.ResourcesHealthy,
-					Status:  metav1.ConditionFalse,
-					Message: "a hopefully informative message",
-					Reason:  "OopsieDoodle",
-				}},
+			Status: cartov1alpha1.DeliverableStatus{
+				OwnerStatus: cartov1alpha1.OwnerStatus{
+					Conditions: []metav1.Condition{{
+						Type:    cartov1alpha1.ConditionReady,
+						Status:  metav1.ConditionFalse,
+						Message: "a hopefully informative message",
+						Reason:  "OopsieDoodle",
+					}, {
+						Type:    cartov1alpha1.ResourcesHealthy,
+						Status:  metav1.ConditionFalse,
+						Message: "a hopefully informative message",
+						Reason:  "OopsieDoodle",
+					}},
+				},
 			},
 		},
 		expectedOutput: `
-   Workload [OopsieDoodle]:   a hopefully informative message
+   Deliverable [OopsieDoodle]:   a hopefully informative message
 `,
 	}, {
 		name: "ready and healthy with different info",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
-				Conditions: []metav1.Condition{{
-					Type:   cartov1alpha1.WorkloadSupplyChainReady,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:   cartov1alpha1.WorkloadResourceSubmitted,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:    cartov1alpha1.ConditionReady,
-					Status:  metav1.ConditionFalse,
-					Message: "a hopefully informative message",
-					Reason:  "OopsieDoodle",
-				}, {
-					Type:    cartov1alpha1.ResourcesHealthy,
-					Status:  metav1.ConditionFalse,
-					Message: "a hopefully informative message for non-healthy workload",
-					Reason:  "AnotherOopsieDoodle",
-				}},
+			Status: cartov1alpha1.DeliverableStatus{
+				OwnerStatus: cartov1alpha1.OwnerStatus{
+					Conditions: []metav1.Condition{{
+						Type:    cartov1alpha1.ConditionReady,
+						Status:  metav1.ConditionFalse,
+						Message: "a hopefully informative message",
+						Reason:  "OopsieDoodle",
+					}, {
+						Type:    cartov1alpha1.ResourcesHealthy,
+						Status:  metav1.ConditionFalse,
+						Message: "a hopefully informative message for non-healthy deliverable",
+						Reason:  "AnotherOopsieDoodle",
+					}},
+				},
 			},
 		},
 		expectedOutput: `
-   Workload [OopsieDoodle]:          a hopefully informative message
-   Workload [AnotherOopsieDoodle]:   a hopefully informative message for non-healthy workload
+   Deliverable [OopsieDoodle]:          a hopefully informative message
+   Deliverable [AnotherOopsieDoodle]:   a hopefully informative message for non-healthy deliverable
 `,
 	}, {
 		name: "condition ready with no info",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
-				Conditions: []metav1.Condition{{
-					Type:   cartov1alpha1.WorkloadSupplyChainReady,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:   cartov1alpha1.WorkloadResourceSubmitted,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:   cartov1alpha1.ConditionReady,
-					Status: metav1.ConditionFalse,
-					Reason: "OopsieDoodle",
-				}},
+			Status: cartov1alpha1.DeliverableStatus{
+				OwnerStatus: cartov1alpha1.OwnerStatus{
+					Conditions: []metav1.Condition{{
+						Type:   cartov1alpha1.ConditionReady,
+						Status: metav1.ConditionFalse,
+						Reason: "OopsieDoodle",
+					}},
+				},
 			},
 		},
 		expectedOutput: `
-   Workload [OopsieDoodle]:   
+   Deliverable [OopsieDoodle]:   
 `,
 	}, {
 		name: "condition ready and health with no message",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
-				Conditions: []metav1.Condition{{
-					Type:   cartov1alpha1.WorkloadSupplyChainReady,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:   cartov1alpha1.WorkloadResourceSubmitted,
-					Status: metav1.ConditionFalse,
-				}, {
-					Type:   cartov1alpha1.ConditionReady,
-					Status: metav1.ConditionFalse,
-					Reason: "OopsieDoodle",
-				}, {
-					Type:   cartov1alpha1.ResourcesHealthy,
-					Status: metav1.ConditionUnknown,
-					Reason: "AnotherOopsieDoodle",
-				}},
+			Status: cartov1alpha1.DeliverableStatus{
+				OwnerStatus: cartov1alpha1.OwnerStatus{
+					Conditions: []metav1.Condition{{
+						Type:   cartov1alpha1.ConditionReady,
+						Status: metav1.ConditionFalse,
+						Reason: "OopsieDoodle",
+					}, {
+						Type:   cartov1alpha1.ResourcesHealthy,
+						Status: metav1.ConditionUnknown,
+						Reason: "AnotherOopsieDoodle",
+					}},
+				},
 			},
 		},
 		expectedOutput: `
-   Workload [OopsieDoodle]:   
+   Deliverable [OopsieDoodle]:   
 `,
 	}, {
 		name: "no status",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
 		},
 	}, {
 		name: "no ready condition",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
-				Conditions: []metav1.Condition{{
-					Type:    cartov1alpha1.WorkloadSupplyChainReady,
-					Status:  metav1.ConditionUnknown,
-					Message: "a hopefully informative message",
-					Reason:  "OopsieDoodle",
-				}, {
-					Type:    cartov1alpha1.WorkloadResourceSubmitted,
-					Status:  metav1.ConditionUnknown,
-					Message: "a hopefully informative message",
-					Reason:  "OopsieDoodle",
-				}},
+			Status: cartov1alpha1.DeliverableStatus{
+				OwnerStatus: cartov1alpha1.OwnerStatus{
+					Conditions: []metav1.Condition{},
+				},
 			},
 		},
 	}, {
 		name: "no ready condition but Health",
-		testWorkload: &cartov1alpha1.Workload{
+		testDeliverable: &cartov1alpha1.Deliverable{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      workloadName,
+				Name:      deliverableName,
 				Namespace: defaultNamespace,
 			},
-			Status: cartov1alpha1.WorkloadStatus{
-				Conditions: []metav1.Condition{{
-					Type:    cartov1alpha1.WorkloadSupplyChainReady,
-					Status:  metav1.ConditionUnknown,
-					Message: "a hopefully informative message",
-					Reason:  "OopsieDoodle",
-				}, {
-					Type:    cartov1alpha1.WorkloadResourceSubmitted,
-					Status:  metav1.ConditionUnknown,
-					Message: "a hopefully informative message",
-					Reason:  "OopsieDoodle",
-				}, {
-					Type:    cartov1alpha1.ResourcesHealthy,
-					Status:  metav1.ConditionFalse,
-					Message: "a hopefully informative message for non-healthy workload",
-					Reason:  "AnotherOopsieDoodle",
-				}},
+			Status: cartov1alpha1.DeliverableStatus{
+				OwnerStatus: cartov1alpha1.OwnerStatus{
+					Conditions: []metav1.Condition{{
+						Type:    cartov1alpha1.ConditionReady,
+						Status:  metav1.ConditionUnknown,
+						Message: "a hopefully informative message",
+						Reason:  "OopsieDoodle",
+					}, {
+						Type:    cartov1alpha1.ResourcesHealthy,
+						Status:  metav1.ConditionFalse,
+						Message: "a hopefully informative message for non-healthy deliverable",
+						Reason:  "AnotherOopsieDoodle",
+					}},
+				},
 			},
 		},
+		expectedOutput: `
+   Deliverable [OopsieDoodle]:          a hopefully informative message
+   Deliverable [AnotherOopsieDoodle]:   a hopefully informative message for non-healthy deliverable
+`,
 	}}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			output := &bytes.Buffer{}
-			if err := printer.WorkloadIssuesPrinter(output, test.testWorkload); err != nil {
-				t.Errorf("WorkloadSourcePrinter() expected no error, got %v", err)
+			if err := printer.DeliverableIssuesPrinter(output, test.testDeliverable); err != nil {
+				t.Errorf("DeliverablePrinter() expected no error, got %v", err)
 			}
 			outputString := output.String()
 			if diff := cmp.Diff(strings.TrimPrefix(test.expectedOutput, "\n"), outputString); diff != "" {
