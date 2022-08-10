@@ -92,6 +92,13 @@ make test
 ### Acceptance testing
 In order to use the CLI, the runtime dependencies need to be installed on the target Kubernetes cluster.
 
+```sh
+BUNDLE=${REGISTRY_URL/REPO:tag}
+make integration-test
+```
+
+Note: `BUNDLE` env var is used by e2e tests to push source code bundle. This image is not deleted after the test.
+
 ### Add test
 
 Any contribtuions for bug fix or feature requests will require unit and integration tests as part of the PR.

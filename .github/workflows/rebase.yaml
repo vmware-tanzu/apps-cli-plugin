@@ -10,6 +10,7 @@ jobs:
       (
         contains(github.event.comment.body, '/rebase') || 
       )
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout the latest code
         uses: actions/checkout@v2
