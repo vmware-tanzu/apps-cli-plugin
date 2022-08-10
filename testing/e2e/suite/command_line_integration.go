@@ -70,13 +70,12 @@ type CommandLineIntegrationTestCase struct {
 	Focus                     bool
 	WorkloadName              string
 	Command                   CommandLine
-	ExpectedCommandLineError  bool
+	ShouldError               bool
 	ExpectedCommandLineOutput string
-	SkipClusterValidation     bool
-	ExpectedRemoteObject      client.Object
+	ExpectedObject            client.Object
 	IsList                    bool
 	ExpectedRemoteList        client.ObjectList
-	CheckCommandOutput        bool
+	Verify                    func(t *testing.T, output string, err error)
 }
 
 func (ts CommandLineIntegrationTestSuite) Run(t *testing.T) {
@@ -123,58 +122,67 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, conf *ClientConfig) {
 		}
 		err := cl.Command.Exec()
 		// t.Logf("Command output:\n%s\n\n%v\n", cl.Command.String(), cl.Command.GetOutput())
-		if err != nil && !cl.ExpectedCommandLineError {
+		if err != nil && !cl.ShouldError {
 			t.Errorf("unexpected error: %v: %v, ", err, cl.Command.GetOutput())
 			t.FailNow()
 		}
 
-		if err == nil && cl.ExpectedCommandLineError {
+		if err == nil && cl.ShouldError {
 			t.Errorf("Expected error, got nil")
 			t.FailNow()
 		}
 
-		if cl.CheckCommandOutput {
+		if cl.ExpectedCommandLineOutput != "" {
 			if diff := cmp.Diff(cl.ExpectedCommandLineOutput, cl.Command.GetOutput(), dfOpts...); diff != "" {
 				t.Errorf("%s\n(-expected, +actual)\n%s", cl.Name, diff)
 				t.FailNow()
 			}
 		}
 
-		if !cl.SkipClusterValidation {
-			if cl.IsList {
-				var got client.ObjectList
-				switch cl.ExpectedRemoteList.(type) {
-				case *cartov1alpha1.WorkloadList:
-					got = &cartov1alpha1.WorkloadList{}
-				case *cartov1alpha1.ClusterSupplyChainList:
-					got = &cartov1alpha1.ClusterSupplyChainList{}
-				default:
-					t.Errorf("unexpected type: %v", reflect.TypeOf(cl.ExpectedRemoteObject))
-					t.FailNow()
-				}
-				conf.List(got, client.InNamespace(TestingNamespace), client.MatchingLabels(map[string]string{}))
-				if diff := cmp.Diff(cl.ExpectedRemoteList, got); diff != "" {
-					t.Errorf("%s(List)\n(-expected, +actual)\n%s", cl.Name, diff)
-					t.FailNow()
-				}
-			} else {
-				var got client.Object
-				switch cl.ExpectedRemoteObject.(type) {
-				case *cartov1alpha1.Workload:
-					got = &cartov1alpha1.Workload{}
-				case *cartov1alpha1.ClusterSupplyChain:
-					got = &cartov1alpha1.ClusterSupplyChain{}
-				default:
-					t.Errorf("unexpected type: %v", reflect.TypeOf(cl.ExpectedRemoteObject))
-					t.FailNow()
-				}
-				conf.Get(client.ObjectKey{Namespace: TestingNamespace, Name: cl.WorkloadName}, got)
-				if diff := cmp.Diff(cl.ExpectedRemoteObject, got, objOpts...); diff != "" {
-					t.Errorf("%s(Object)\n(-expected, +actual)\n%s", cl.Name, diff)
-					t.FailNow()
-				}
-
+		if cl.ExpectedRemoteList != nil {
+			var got client.ObjectList
+			switch cl.ExpectedRemoteList.(type) {
+			case *cartov1alpha1.WorkloadList:
+				got = &cartov1alpha1.WorkloadList{}
+			case *cartov1alpha1.ClusterSupplyChainList:
+				got = &cartov1alpha1.ClusterSupplyChainList{}
+			default:
+				t.Errorf("unexpected type: %v", reflect.TypeOf(cl.ExpectedRemoteList))
+				t.FailNow()
 			}
+			if err := conf.List(got, client.InNamespace(TestingNamespace), client.MatchingLabels(map[string]string{})); err != nil {
+				t.Errorf("unexpected error %s: %v", cl.Name, err)
+				t.FailNow()
+			}
+			if diff := cmp.Diff(cl.ExpectedRemoteList, got); diff != "" {
+				t.Errorf("%s(List)\n(-expected, +actual)\n%s", cl.Name, diff)
+				t.FailNow()
+			}
+		}
+
+		if cl.ExpectedObject != nil {
+			var got client.Object
+			switch cl.ExpectedObject.(type) {
+			case *cartov1alpha1.Workload:
+				got = &cartov1alpha1.Workload{}
+			case *cartov1alpha1.ClusterSupplyChain:
+				got = &cartov1alpha1.ClusterSupplyChain{}
+			default:
+				t.Errorf("unexpected type: %v", reflect.TypeOf(cl.ExpectedObject))
+				t.FailNow()
+			}
+			if err := conf.Get(client.ObjectKey{Namespace: TestingNamespace, Name: cl.ExpectedObject.GetName()}, got); err != nil {
+				t.Errorf("unexpected error %s: %v", cl.Name, err)
+				t.FailNow()
+			}
+			if diff := cmp.Diff(cl.ExpectedObject, got, objOpts...); diff != "" {
+				t.Errorf("%s(Object)\n(-expected, +actual)\n%s", cl.Name, diff)
+				t.FailNow()
+			}
+		}
+
+		if cl.Verify != nil {
+			cl.Verify(t, cl.Command.GetOutput(), err)
 		}
 	})
 }

@@ -33,8 +33,6 @@ func TestGetClusterSupplyChain(t *testing.T) {
 			Name:                      "Get the existing supply chain",
 			Command:                   *it.NewTanzuAppsCommandLine("cluster-supply-chain", "get", "ci-test"),
 			ExpectedCommandLineOutput: helpers.GetFileAsString(t, filepath.Join(consoleOutBasePath, "get-csc", "test-get-ci-test-csc.txt")),
-			SkipClusterValidation:     true,
-			CheckCommandOutput:        true,
 		},
 	}
 	testSuite.Run(t)

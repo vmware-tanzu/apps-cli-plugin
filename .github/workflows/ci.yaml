@@ -79,6 +79,7 @@ jobs:
         - 1.23.5
     env:
       REGISTRY_NAME: registry.local
+      BUNDLE: registry.local/integration-test/hellojar:source
       TANZU_CLI_NO_INIT: true
       TANZU_HOME: $HOME/tanzu
       OS_ARCH: linux-amd64
