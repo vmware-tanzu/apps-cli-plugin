@@ -18,6 +18,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	DeliverableKind = "Deliverable"
+)
+
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:path=deliverables,categories=all,shortName=dlv
 // +kubebuilder:subresource:status

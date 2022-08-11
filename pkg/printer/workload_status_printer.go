@@ -55,11 +55,17 @@ func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 		resourcesList := &workload.Status.Resources
 		rows := make([]metav1beta1.TableRow, 0, len(*resourcesList))
 		for _, r := range *resourcesList {
-			row, err := printResourceInfoRow(&r, printOpts)
-			if err != nil {
-				return nil, err
+			var v, ok bool
+			if r.StampedRef != nil {
+				v, ok = supplyChainResourcesKindExcludeList[r.StampedRef.Kind]
 			}
-			rows = append(rows, row...)
+			if !ok || !v {
+				row, err := printResourceInfoRow(&r, printOpts)
+				if err != nil {
+					return nil, err
+				}
+				rows = append(rows, row...)
+			}
 		}
 		return rows, nil
 	}
@@ -82,21 +88,18 @@ func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 func WorkloadSupplyChainInfoPrinter(w io.Writer, workload *cartov1alpha1.Workload) error {
 	printSupplyChainInfo := func(workload *cartov1alpha1.Workload, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		workloadStatus := &workload.Status
-
 		var name string
 		if workloadStatus.SupplyChainRef.Name != "" {
 			name = workloadStatus.SupplyChainRef.Name
 		} else {
 			name = "<none>"
 		}
-
 		nameRow := metav1beta1.TableRow{
 			Cells: []interface{}{
 				"name:",
 				name,
 			},
 		}
-
 		rows := []metav1beta1.TableRow{nameRow}
 		return rows, nil
 	}
@@ -117,7 +120,7 @@ func WorkloadIssuesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error 
 	printIssues := func(workload *cartov1alpha1.Workload, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		readyRow := metav1beta1.TableRow{
 			Cells: []interface{}{
-				fmt.Sprintf("Workload [%s]:", readyCondition.Reason),
+				fmt.Sprintf("%s [%s]:", cartov1alpha1.WorkloadKind, readyCondition.Reason),
 				readyCondition.Message,
 			},
 		}
@@ -127,7 +130,7 @@ func WorkloadIssuesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error 
 			if strings.Compare(healthyCondition.Message, readyCondition.Message) != 0 {
 				healthyRow := metav1beta1.TableRow{
 					Cells: []interface{}{
-						fmt.Sprintf("Workload [%s]:", healthyCondition.Reason),
+						fmt.Sprintf("%s [%s]:", cartov1alpha1.WorkloadKind, healthyCondition.Reason),
 						healthyCondition.Message,
 					},
 				}

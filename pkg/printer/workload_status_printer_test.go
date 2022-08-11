@@ -228,7 +228,7 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
    image-builder     False     False     <unknown>   not found
 `,
 	}, {
-		name: "with output details",
+		name: "with output details and exclude listed resource",
 		testWorkload: &cartov1alpha1.Workload{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      workloadName,
@@ -260,7 +260,7 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 							Status: metav1.ConditionUnknown,
 						},
 					},
-					StampedRef: &corev1.ObjectReference{Kind: "Deliverable", Name: "pet-clinic"},
+					StampedRef: &corev1.ObjectReference{Kind: cartov1alpha1.DeliverableKind, Name: "pet-clinic"},
 				}, {
 					Name: "image-builder",
 					Conditions: []metav1.Condition{
@@ -316,12 +316,11 @@ func TestWorkloadResourcesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   RESOURCE          READY     HEALTHY   TIME        OUTPUT
-   source-provider   True                <unknown>   GitRepository/pet-clinic
-   deliverable       Unknown             <unknown>   Deliverable/pet-clinic
-   image-builder     False     False     <unknown>   not found
-   config-provider   False     False     <unknown>   /pet-clinic
-   app-config        False     False     <unknown>   ConfigMap/
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True              <unknown>   GitRepository/pet-clinic
+   image-builder     False   False     <unknown>   not found
+   config-provider   False   False     <unknown>   /pet-clinic
+   app-config        False   False     <unknown>   ConfigMap/
 `,
 	}, {
 		name: "resource without conditions",
