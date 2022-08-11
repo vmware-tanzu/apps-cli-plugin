@@ -71,19 +71,6 @@ func (opts *WorkloadGetOptions) Validate(ctx context.Context) validation.FieldEr
 
 	return errs
 }
-func (opts *WorkloadGetOptions) transformRequests(req *rest.Request) {
-
-	req.SetHeader("Accept", strings.Join([]string{
-		fmt.Sprintf("application/json;as=Table;v=%s;g=%s", metav1.SchemeGroupVersion.Version, metav1.GroupName),
-		fmt.Sprintf("application/json;as=Table;v=%s;g=%s", metav1beta1.SchemeGroupVersion.Version, metav1beta1.GroupName),
-		"application/json",
-	}, ","))
-
-	// if sorting, ensure we receive the full object in order to introspect its fields via jsonpath
-	if true {
-		req.Param("includeObject", "Object")
-	}
-}
 func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	workload := &cartov1alpha1.Workload{}
 	err := c.Get(ctx, client.ObjectKey{Namespace: opts.Namespace, Name: opts.Name}, workload)

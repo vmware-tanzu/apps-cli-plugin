@@ -92,9 +92,9 @@ func PodTablePrinter(c *cli.Config, podList *corev1.PodList) error {
 }
 func PodTablePrintery(c *cli.Config, info *resource.Info) error {
 	tableResult, podlist, _ := decodeIntoTable(info.Object)
-	printPodRow := func(pod *corev1.Pod, poddtls *podview, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
+	printPodRow := func(poddtls *podview, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		row := metav1beta1.TableRow{
-			Object: runtime.RawExtension{Object: pod},
+			Object: runtime.RawExtension{Object: nil},
 		}
 		row.Cells = append(row.Cells,
 			poddtls.name,
@@ -108,7 +108,7 @@ func PodTablePrintery(c *cli.Config, info *resource.Info) error {
 	printPodList := func(info *resource.Info, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		rows := make([]metav1beta1.TableRow, 0, len(podlist))
 		for i := range podlist {
-			r, err := printPodRow(nil, &podlist[i], printOpts)
+			r, err := printPodRow(&podlist[i], printOpts)
 			if err != nil {
 				return nil, err
 			}
