@@ -139,12 +139,12 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 
 	// If there is no workload, create a new one
 	if currentWorkload == nil {
-		ctx, okToCreate, createError = opts.Create(ctx, c, workload)
+		okToCreate, createError = opts.Create(ctx, c, workload)
 		if createError != nil {
 			return createError
 		}
 	} else {
-		ctx, okToUpdate, updateError = opts.Update(ctx, c, currentWorkload, workload)
+		okToUpdate, updateError = opts.Update(ctx, c, currentWorkload, workload)
 		if updateError != nil {
 			return updateError
 		}

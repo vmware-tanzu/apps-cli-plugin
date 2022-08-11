@@ -82,6 +82,39 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
+			Name:         "Create workload with maven flags",
+			WorkloadName: "test-create-git-annotations-workload",
+			Command: func() it.CommandLine {
+				c := *it.NewTanzuAppsCommandLine(
+					"workload", "create", "test-create-maven-workload",
+					"--maven-artifact=spring-petclinic",
+					"--maven-version=v2.6.0",
+					"--maven-group=org.springframework.samples",
+					namespaceFlag,
+					"--type=web",
+					"--yes",
+				)
+				return c
+			}(),
+			ExpectedObject: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-create-maven-workload",
+					Namespace: it.TestingNamespace,
+					Labels: map[string]string{
+						"apps.tanzu.vmware.com/workload-type": "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Params: []cartov1alpha1.Param{{
+						Name: "maven",
+						Value: v1.JSON{
+							Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","type":null,"version":"v2.6.0"}`),
+						},
+					}},
+				},
+			},
+		},
+		{
 			Name:         "Create workload with valid name from local source code",
 			WorkloadName: "test-create-local-registry",
 			Command: func() it.CommandLine {

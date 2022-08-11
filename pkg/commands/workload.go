@@ -48,7 +48,6 @@ import (
 const (
 	AnnotationReservedKey     = "annotations"
 	MavenOverwrittenNoticeMsg = "Maven configuration flags have overwritten values provided by \"--params-yaml\"."
-	NoSourceNoticeMsg         = "no source code or image has been specified for this workload."
 )
 
 func NewWorkloadCommand(ctx context.Context, c *cli.Config) *cobra.Command {
@@ -116,6 +115,11 @@ type WorkloadOptions struct {
 	MavenVersion  string
 	MavenType     string
 
+	CACertPaths      []string
+	RegistryUsername string
+	RegistryPassword string
+	RegistryToken    string
+
 	RequestCPU    string
 	RequestMemory string
 
@@ -125,11 +129,6 @@ type WorkloadOptions struct {
 	TailTimestamps bool
 	DryRun         bool
 	Yes            bool
-
-	CACertPaths      []string
-	RegistryUsername string
-	RegistryPassword string
-	RegistryToken    string
 }
 
 var _ validation.Validatable = (*WorkloadUpdateOptions)(nil)
@@ -223,7 +222,8 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 		}
 	}
 
-	if opts.MavenArtifact != "" || opts.MavenVersion != "" || opts.MavenGroup != "" {
+	var mavenSourceViaFlags bool
+	if opts.MavenArtifact != "" || opts.MavenVersion != "" || opts.MavenGroup != "" || opts.MavenType != "" {
 		mavenInfo := cartov1alpha1.MavenSource{}
 		if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.MavenArtifactFlagName)) {
 			mavenInfo.ArtifactId = opts.MavenArtifact
@@ -237,7 +237,7 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 		if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.MavenTypeFlagName)) {
 			mavenInfo.Type = &opts.MavenType
 		}
-
+		mavenSourceViaFlags = true
 		workload.Spec.MergeMavenSource(mavenInfo)
 	}
 
@@ -247,8 +247,7 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 			workload.Spec.RemoveParam(kv[0])
 		} else {
 			// if maven artifact was already set via flags, skip using params yaml
-			currentMvnSource := workload.Spec.GetMavenSource()
-			if kv[0] == cartov1alpha1.WorkloadMavenParam && !(cartov1alpha1.MavenSource{} == *currentMvnSource) {
+			if kv[0] == cartov1alpha1.WorkloadMavenParam && mavenSourceViaFlags {
 				ctx = cartov1alpha1.StashWorkloadNotice(ctx, MavenOverwrittenNoticeMsg)
 				continue
 			}
@@ -492,7 +491,7 @@ func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config) []string {
 	return exclude
 }
 
-func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentWorkload *cartov1alpha1.Workload, workload *cartov1alpha1.Workload) (context.Context, bool, error) {
+func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentWorkload *cartov1alpha1.Workload, workload *cartov1alpha1.Workload) (bool, error) {
 	okToUpdate := false
 
 	if msgs := workload.DeprecationWarnings(); len(msgs) != 0 {
@@ -503,21 +502,17 @@ func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentW
 
 	difference, noChange, err := printer.ResourceDiff(currentWorkload, workload, c.Scheme)
 	if err != nil {
-		return ctx, okToUpdate, err
+		return okToUpdate, err
 	}
 
 	if noChange {
 		c.Infof("Workload is unchanged, skipping update\n")
-		return ctx, okToUpdate, nil
+		return okToUpdate, nil
 	}
 	c.Printf("Update workload:\n")
 	c.Printf("%s\n", difference)
 
-	if !workload.IsSourceFound() {
-		ctx = cartov1alpha1.StashWorkloadNotice(ctx, NoSourceNoticeMsg)
-	}
-
-	if noticeMsgs := workload.GetNoticeMsgs(ctx); len(noticeMsgs) != 0 {
+	if noticeMsgs := workload.GetNotices(ctx); len(noticeMsgs) != 0 {
 		for _, msg := range noticeMsgs {
 			c.Infof("NOTICE: %s\n\n", msg)
 		}
@@ -526,7 +521,7 @@ func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentW
 	if !opts.Yes {
 		if opts.FilePath == "-" {
 			c.Errorf("Skipping workload, cannot confirm intent. Run command with %s flag to confirm intent when providing input from stdin\n", flags.YesFlagName)
-			return ctx, okToUpdate, nil
+			return okToUpdate, nil
 		} else {
 			err := survey.AskOne(&survey.Confirm{
 				Message: fmt.Sprintf("Really update the workload %q?", workload.Name),
@@ -534,7 +529,7 @@ func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentW
 
 			if err != nil || !okToUpdate {
 				c.Infof("Skipping workload %q\n", workload.Name)
-				return ctx, okToUpdate, nil
+				return okToUpdate, nil
 			}
 		}
 	} else {
@@ -545,16 +540,16 @@ func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentW
 		okToUpdate = false
 		if apierrs.IsConflict(err) {
 			c.Printf("%s conflict updating workload, the object was modified by another user; please run the update command again\n", printer.Serrorf("Error:"))
-			return ctx, okToUpdate, cli.SilenceError(err)
+			return okToUpdate, cli.SilenceError(err)
 		}
-		return ctx, okToUpdate, err
+		return okToUpdate, err
 	}
 
 	c.Successf("Updated workload %q\n", workload.Name)
-	return ctx, okToUpdate, nil
+	return okToUpdate, nil
 }
 
-func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload *cartov1alpha1.Workload) (context.Context, bool, error) {
+func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload *cartov1alpha1.Workload) (bool, error) {
 	okToCreate := false
 
 	if msgs := workload.DeprecationWarnings(); len(msgs) != 0 {
@@ -565,16 +560,13 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 
 	diff, _, err := printer.ResourceDiff(nil, workload, c.Scheme)
 	if err != nil {
-		return ctx, okToCreate, err
+		return okToCreate, err
 	}
 
 	c.Printf("Create workload:\n")
 	c.Printf("%s\n", diff)
-	if !workload.IsSourceFound() {
-		ctx = cartov1alpha1.StashWorkloadNotice(ctx, NoSourceNoticeMsg)
-	}
 
-	if noticeMsgs := workload.GetNoticeMsgs(ctx); len(noticeMsgs) != 0 {
+	if noticeMsgs := workload.GetNotices(ctx); len(noticeMsgs) != 0 {
 		for _, msg := range noticeMsgs {
 			c.Infof("NOTICE: %s\n\n", msg)
 		}
@@ -582,7 +574,7 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 	if !opts.Yes {
 		if opts.FilePath == "-" {
 			c.Errorf("Skipping workload, cannot confirm intent. Run command with %s flag to confirm intent when providing input from stdin\n", flags.YesFlagName)
-			return ctx, okToCreate, nil
+			return okToCreate, nil
 		} else {
 			err := survey.AskOne(&survey.Confirm{
 				Message: "Do you want to create this workload?",
@@ -590,7 +582,7 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 
 			if err != nil || !okToCreate {
 				c.Infof("Skipping workload %q\n", workload.Name)
-				return ctx, okToCreate, nil
+				return okToCreate, nil
 			}
 		}
 	} else {
@@ -598,11 +590,11 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 	}
 
 	if err := c.Create(ctx, workload); err != nil {
-		return ctx, okToCreate, err
+		return okToCreate, err
 	}
 
 	c.Successf("Created workload %q\n", workload.Name)
-	return ctx, okToCreate, nil
+	return okToCreate, nil
 }
 
 func (opts *WorkloadOptions) LoadInputWorkload(input io.Reader, workload *cartov1alpha1.Workload) error {

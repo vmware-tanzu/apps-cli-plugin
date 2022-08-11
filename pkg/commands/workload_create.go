@@ -114,7 +114,7 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		return nil
 	}
 
-	ctx, okToCreate, err := opts.Create(ctx, c, workload)
+	okToCreate, err := opts.Create(ctx, c, workload)
 	if err != nil {
 		return err
 	}

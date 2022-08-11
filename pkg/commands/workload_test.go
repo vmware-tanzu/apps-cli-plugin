@@ -2102,8 +2102,6 @@ Create workload:
      12 + |      groupId: org.springframework.samples
      13 + |      version: 2.6.0
 
-NOTICE: no source code or image has been specified for this workload.
-
 Created workload "my-workload"`,
 		},
 		{
@@ -2171,7 +2169,7 @@ Created workload "my-workload"`,
 				client.PrependReactor("*", "*", reactor)
 			}
 
-			_, _, err := opts.Create(ctx, c, test.input)
+			_, err := opts.Create(ctx, c, test.input)
 
 			if err != nil && !test.shouldError {
 				t.Errorf("Create() errored %v", err)
@@ -2299,8 +2297,6 @@ Update workload:
      14 + |      groupId: org.springframework.samples
      15 + |      version: 2.6.0
 
-NOTICE: no source code or image has been specified for this workload.
-
 Updated workload "my-workload"`,
 		},
 		{
@@ -2390,7 +2386,7 @@ Updated workload "my-workload"`,
 
 			workload := currentWorkload.DeepCopy()
 			opts.ApplyOptionsToWorkload(ctx, workload)
-			_, _, err = opts.Update(ctx, c, currentWorkload, workload)
+			_, err = opts.Update(ctx, c, currentWorkload, workload)
 
 			if err != nil && !test.shouldError {
 				t.Errorf("Update() errored %v", err)

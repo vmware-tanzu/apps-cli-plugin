@@ -108,8 +108,8 @@ func (w *Workload) Merge(updates *Workload) {
 }
 
 func (w *WorkloadSpec) GetMavenSource() *MavenSource {
-	currentMaven := &MavenSource{}
-	w.GetParam("maven", currentMaven)
+	var currentMaven *MavenSource
+	w.GetParam("maven", &currentMaven)
 	return currentMaven
 }
 
@@ -123,12 +123,12 @@ func (w *Workload) Validate() validation.FieldErrors {
 	return errs
 }
 
-func (w *Workload) IsSourceFound() bool {
-	if w.Spec.Source == nil && w.Spec.Image == "" {
+func (w *WorkloadSpec) IsSourceFound() bool {
+	if w.Source == nil && w.Image == "" && w.GetMavenSource() == nil {
 		return false
 	}
-	if w.Spec.Source != nil {
-		if w.Spec.Source.Git == nil && w.Spec.Source.Image == "" {
+	if w.Source != nil {
+		if w.Source.Git == nil && w.Source.Image == "" {
 			return false
 		}
 	}
@@ -148,7 +148,6 @@ func (w *WorkloadSpec) Validate() validation.FieldErrors {
 			errs = errs.Also(validation.ErrInvalidValue(w.Source.Subpath, flags.SubPathFlagName))
 		}
 	}
-
 	errs = errs.Also(w.ValidateMavenSource())
 
 	return errs
@@ -157,17 +156,16 @@ func (w *WorkloadSpec) Validate() validation.FieldErrors {
 func (w *WorkloadSpec) ValidateMavenSource() validation.FieldErrors {
 	errs := validation.FieldErrors{}
 
-	mavenParam := MavenSource{}
-	w.GetParam(WorkloadMavenParam, &mavenParam)
-	if !(MavenSource{} == mavenParam) {
+	mavenParam := w.GetMavenSource()
+	if mavenParam != nil {
 		if mavenParam.ArtifactId == "" {
-			errs = errs.Also(validation.ErrMissingField(cli.StripDash(flags.MavenArtifactFlagName)))
+			errs = errs.Also(validation.ErrMissingField(flags.MavenArtifactFlagName))
 		}
 		if mavenParam.GroupId == "" {
-			errs = errs.Also(validation.ErrMissingField(cli.StripDash(flags.MavenGroupFlagName)))
+			errs = errs.Also(validation.ErrMissingField(flags.MavenGroupFlagName))
 		}
 		if mavenParam.Version == "" {
-			errs = errs.Also(validation.ErrMissingField(cli.StripDash(flags.MavenVersionFlagName)))
+			errs = errs.Also(validation.ErrMissingField(flags.MavenVersionFlagName))
 		}
 	}
 
@@ -285,16 +283,21 @@ func (w *WorkloadSpec) RemoveAnnotationParams(name string) {
 	}
 }
 
-func (w *WorkloadSpec) MergeMavenSource(updates MavenSource) {
+func (w *WorkloadSpec) MergeMavenSource(source MavenSource) {
 	currentMaven := w.GetMavenSource()
-	if updates.ArtifactId != "" {
-		currentMaven.ArtifactId = updates.ArtifactId
-	}
-	if updates.GroupId != "" {
-		currentMaven.GroupId = updates.GroupId
-	}
-	if updates.Version != "" {
-		currentMaven.Version = updates.Version
+
+	if currentMaven == nil {
+		currentMaven = &source
+	} else {
+		if source.ArtifactId != "" {
+			currentMaven.ArtifactId = source.ArtifactId
+		}
+		if source.GroupId != "" {
+			currentMaven.GroupId = source.GroupId
+		}
+		if source.Version != "" {
+			currentMaven.Version = source.Version
+		}
 	}
 	w.MergeParams(WorkloadMavenParam, currentMaven)
 }
@@ -529,7 +532,7 @@ func (w *Workload) DeprecationWarnings() []string {
 type workloadNoticeStashKey struct{}
 
 func StashWorkloadNotice(ctx context.Context, notice string) context.Context {
-	res := RetrieveStashNotice(ctx)
+	res := RetrieveWorkloadNotices(ctx)
 	if res != nil {
 		res = append(res, notice)
 	} else {
@@ -538,7 +541,7 @@ func StashWorkloadNotice(ctx context.Context, notice string) context.Context {
 	return context.WithValue(ctx, workloadNoticeStashKey{}, res)
 }
 
-func RetrieveStashNotice(ctx context.Context) []string {
+func RetrieveWorkloadNotices(ctx context.Context) []string {
 	noticeSet, ok := ctx.Value(workloadNoticeStashKey{}).([]string)
 	if !ok {
 		return nil
@@ -546,9 +549,14 @@ func RetrieveStashNotice(ctx context.Context) []string {
 	return noticeSet
 }
 
-func (w *Workload) GetNoticeMsgs(ctx context.Context) []string {
+func (w *Workload) GetNotices(ctx context.Context) []string {
 	msgs := []string{}
-	if res := RetrieveStashNotice(ctx); res != nil {
+	noSourceNoticeMsg := "no source code or image has been specified for this workload."
+	if !w.Spec.IsSourceFound() {
+		msgs = append(msgs, noSourceNoticeMsg)
+	}
+
+	if res := RetrieveWorkloadNotices(ctx); res != nil {
 		msgs = append(msgs, res...)
 	}
 

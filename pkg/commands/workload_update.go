@@ -137,7 +137,7 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		return nil
 	}
 
-	ctx, okToUpdate, err := opts.Update(ctx, c, currentWorkload, workload)
+	okToUpdate, err := opts.Update(ctx, c, currentWorkload, workload)
 	if err != nil {
 		return err
 	}
