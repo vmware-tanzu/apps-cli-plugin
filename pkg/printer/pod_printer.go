@@ -185,6 +185,7 @@ func PodTablePrinterf(c *cli.Config, podList *corev1.PodList) error {
 	return tablePrinter.PrintObj(podList, c.Stdout)
 }
 func PodTablePrintery(c *cli.Config, podList *corev1.PodList, info *resource.Info) error {
+	tableResult, podlist, _ := decodeIntoTable(info.Object)
 	printPodRow := func(pod *corev1.Pod, poddtls *podview, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		row := metav1beta1.TableRow{
 			Object: runtime.RawExtension{Object: pod},
@@ -201,7 +202,6 @@ func PodTablePrintery(c *cli.Config, podList *corev1.PodList, info *resource.Inf
 		return []metav1beta1.TableRow{row}, nil
 	}
 	printPodList := func(pods *corev1.PodList, info *resource.Info, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		_, podlist, _ := decodeIntoTable(info.Object)
 		rows := make([]metav1beta1.TableRow, 0, len(podlist))
 		for i := range podlist {
 			r, err := printPodRow(nil, &podlist[i], printOpts)
@@ -223,7 +223,8 @@ func PodTablePrintery(c *cli.Config, podList *corev1.PodList, info *resource.Inf
 		h.TableHandler(columns, printPodList)
 		h.TableHandler(columns, printPodRow)
 	})
-	return tablePrinter.PrintObj(podList, c.Stdout)
+
+	return tablePrinter.PrintObj(tableResult, c.Stdout)
 }
 
 func maxContainerRestarts(status corev1.PodStatus) int {
@@ -233,6 +234,7 @@ func maxContainerRestarts(status corev1.PodStatus) int {
 	}
 	return maxRestarts
 }
+
 func PodTablePrinterx(c *cli.Config, podList *corev1.PodList, info *resource.Info) {
 	var printer printers.ResourcePrinter
 	var mapping *meta.RESTMapping
