@@ -19,7 +19,6 @@ package printer
 import (
 	"fmt"
 	"io"
-	"strconv"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -91,106 +90,12 @@ func PodTablePrinter(c *cli.Config, podList *corev1.PodList) error {
 	})
 	return tablePrinter.PrintObj(podList, c.Stdout)
 }
-func PodTablePrinterf(c *cli.Config, podList *corev1.PodList) error {
-	printPodRow := func(pod *corev1.Pod, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		row := metav1beta1.TableRow{
-			Object: runtime.RawExtension{Object: pod},
-		}
-		now := time.Now()
-		// arg := []string{"Pod"}
-		// arg = append(arg, pod.Name)
-		// bldr := resource.NewBuilderFromConf(c)
-		// r := bldr.Unstructured().
-		// 	NamespaceParam(namespace).DefaultNamespace().AllNamespaces(false).
-		// 	// FilenameParam(false, nil).
-		// 	LabelSelectorParam(fmt.Sprintf("%s%s%s", labelName, "=", name)).
-		// 	FieldSelectorParam("").
-		// 	ResourceTypeOrNameArgs(true, arg...).
-		// 	ContinueOnError().
-		// 	Latest().
-		// 	Flatten().
-		// 	TransformRequests(func(req *rest.Request) {
-		// 		req.SetHeader("Accept", strings.Join([]string{
-		// 			fmt.Sprintf("application/json;as=Table;v=%s;g=%s", metav1.SchemeGroupVersion.Version, metav1.GroupName),
-		// 			fmt.Sprintf("application/json;as=Table;v=%s;g=%s", metav1beta1.SchemeGroupVersion.Version, metav1beta1.GroupName),
-		// 			"application/json",
-		// 		}, ","))
-
-		// 		// if sorting, ensure we receive the full object in order to introspect its fields via jsonpath
-		// 		if false {
-		// 			req.Param("includeObject", "Object")
-		// 		}
-		// 	}).
-		// 	Do()
-		phase := pod.Status.Phase
-		if pod.DeletionTimestamp != nil {
-			phase = TerminatingPhase
-		}
-		var name, ready, status, restarts, age string
-		name = pod.Name
-		status = string(phase)
-		restarts = strconv.Itoa(maxContainerRestarts(pod.Status))
-		age = printer.TimestampSince(pod.CreationTimestamp, now)
-
-		// infos, _ := r.Infos()
-		// // var printer printers.ResourcePrinter
-		// for ix := range infos {
-		// 	// var mapping *meta.RESTMapping
-		// 	var info *resource.Info
-		// 	info = infos[ix]
-
-		// 	// mapping = info.Mapping
-		// 	// printer, _ = opts.toPrinter(mapping, nil, false, false)
-		// 	_, poddtls, _ := decodeIntoTable(info.Object)
-		// 	// printer.PrintObj(info.Object, c.Stdout)
-		// 	name = poddtls.name
-		// 	ready = poddtls.ready
-		// 	age = poddtls.age
-		// 	status = poddtls.status
-		// 	restarts = poddtls.restarts
-
-		// }
-		row.Cells = append(row.Cells,
-			name,
-			ready,
-			status,
-			restarts,
-			age,
-		)
-
-		return []metav1beta1.TableRow{row}, nil
-	}
-	printPodList := func(pods *corev1.PodList, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		rows := make([]metav1beta1.TableRow, 0, len(pods.Items))
-		for i := range pods.Items {
-			r, err := printPodRow(&pods.Items[i], printOpts)
-			if err != nil {
-				return nil, err
-			}
-			rows = append(rows, r...)
-		}
-		return rows, nil
-	}
-	tablePrinter := table.NewTablePrinter(table.PrintOptions{PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
-		columns := []metav1beta1.TableColumnDefinition{
-			{Name: "Name", Type: "string"},
-			{Name: "Ready", Type: "string"},
-			{Name: "Status", Type: "string"},
-			{Name: "Restarts", Type: "string"},
-			{Name: "Age", Type: "string"},
-		}
-		h.TableHandler(columns, printPodList)
-		h.TableHandler(columns, printPodRow)
-	})
-	return tablePrinter.PrintObj(podList, c.Stdout)
-}
-func PodTablePrintery(c *cli.Config, podList *corev1.PodList, info *resource.Info) error {
+func PodTablePrintery(c *cli.Config, info *resource.Info) error {
 	tableResult, podlist, _ := decodeIntoTable(info.Object)
 	printPodRow := func(pod *corev1.Pod, poddtls *podview, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		row := metav1beta1.TableRow{
 			Object: runtime.RawExtension{Object: pod},
 		}
-
 		row.Cells = append(row.Cells,
 			poddtls.name,
 			poddtls.ready,
@@ -198,10 +103,9 @@ func PodTablePrintery(c *cli.Config, podList *corev1.PodList, info *resource.Inf
 			poddtls.restarts,
 			poddtls.age,
 		)
-
 		return []metav1beta1.TableRow{row}, nil
 	}
-	printPodList := func(pods *corev1.PodList, info *resource.Info, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
+	printPodList := func(info *resource.Info, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		rows := make([]metav1beta1.TableRow, 0, len(podlist))
 		for i := range podlist {
 			r, err := printPodRow(nil, &podlist[i], printOpts)
@@ -235,6 +139,7 @@ func maxContainerRestarts(status corev1.PodStatus) int {
 	return maxRestarts
 }
 
+// below print function are not being used and should be removed before final version.
 func PodTablePrinterx(c *cli.Config, podList *corev1.PodList, info *resource.Info) {
 	var printer printers.ResourcePrinter
 	var mapping *meta.RESTMapping
