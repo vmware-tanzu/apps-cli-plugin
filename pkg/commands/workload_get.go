@@ -19,6 +19,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -26,12 +27,16 @@ import (
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	knativeservingv1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/knative/serving/v1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands/resource"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/printer"
@@ -50,6 +55,35 @@ var (
 	_ cli.Executable         = (*WorkloadGetOptions)(nil)
 )
 
+type trackingWriterWrapper struct {
+	Delegate io.Writer
+	Written  int
+}
+
+func (t *trackingWriterWrapper) Write(p []byte) (n int, err error) {
+	t.Written += len(p)
+	return t.Delegate.Write(p)
+}
+
+type separatorWriterWrapper struct {
+	Delegate io.Writer
+	Ready    bool
+}
+
+func (s *separatorWriterWrapper) Write(p []byte) (n int, err error) {
+	// If we're about to write non-empty bytes and `s` is ready,
+	// we prepend an empty line to `p` and reset `s.Read`.
+	if len(p) != 0 && s.Ready {
+		fmt.Fprintln(s.Delegate)
+		s.Ready = false
+	}
+	return s.Delegate.Write(p)
+}
+
+func (s *separatorWriterWrapper) SetReady(state bool) {
+	s.Ready = state
+}
+
 func (opts *WorkloadGetOptions) Validate(ctx context.Context) validation.FieldErrors {
 	errs := validation.FieldErrors{}
 
@@ -67,7 +101,19 @@ func (opts *WorkloadGetOptions) Validate(ctx context.Context) validation.FieldEr
 
 	return errs
 }
+func (opts *WorkloadGetOptions) transformRequests(req *rest.Request) {
 
+	req.SetHeader("Accept", strings.Join([]string{
+		fmt.Sprintf("application/json;as=Table;v=%s;g=%s", metav1.SchemeGroupVersion.Version, metav1.GroupName),
+		fmt.Sprintf("application/json;as=Table;v=%s;g=%s", metav1beta1.SchemeGroupVersion.Version, metav1beta1.GroupName),
+		"application/json",
+	}, ","))
+
+	// if sorting, ensure we receive the full object in order to introspect its fields via jsonpath
+	if true {
+		req.Param("includeObject", "Object")
+	}
+}
 func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	workload := &cartov1alpha1.Workload{}
 	err := c.Get(ctx, client.ObjectKey{Namespace: opts.Namespace, Name: opts.Name}, workload)
@@ -219,25 +265,95 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	}
 
 	pods := &corev1.PodList{}
-	err = c.List(ctx, pods, client.InNamespace(workload.Namespace), client.MatchingLabels{cartov1alpha1.WorkloadLabelName: workload.Name})
-	if err != nil {
-		c.Eprintf("\n")
-		c.Eerrorf("Failed to list pods:\n")
-		c.Eprintf("  %s\n", err)
-	} else {
-		if len(pods.Items) == 0 {
-			c.Printf("\n")
-			c.Infof("No pods found for workload.\n")
-		} else {
-			pods = pods.DeepCopy()
-			printer.SortByNamespaceAndName(pods.Items)
-			c.Printf("\n")
-			c.Boldf("Pods\n")
-			if err := printer.PodTablePrinter(c, pods); err != nil {
-				return err
+	// err = c.List(ctx, pods, client.InNamespace(workload.Namespace), client.MatchingLabels{cartov1alpha1.WorkloadLabelName: workload.Name})
+	// getting POD objectdat from kubectl
+
+	// if len(pods.Items) != 0 {
+	// for i := range pods.Items {
+	// 	arg := []string{"Pod"}
+	// 	arg = append(arg, pods.Items[i].Name)
+	// 	bldr := resource.NewBuilderFromConf(c)
+	// 	r := bldr.Unstructured().
+	// 		NamespaceParam(workload.Namespace).DefaultNamespace().AllNamespaces(false).
+	// 		// FilenameParam(false, nil).
+	// 		LabelSelectorParam("").
+	// 		FieldSelectorParam("").
+	// 		ResourceTypeOrNameArgs(true, arg...).
+	// 		ContinueOnError().
+	// 		Latest().
+	// 		Flatten().
+	// 		TransformRequests(opts.transformRequests).
+	// 		Do()
+
+	// 	infos, _ := r.Infos()
+	// 	var printer printers.ResourcePrinter
+	// 	for ix := range infos {
+	// 		var mapping *meta.RESTMapping
+	// 		var info *resource.Info
+	// 		info = infos[ix]
+	// 		mapping = info.Mapping
+	// 		printer, err = opts.toPrinter(mapping, nil, false, false)
+	// 		c.Printf("\n")
+	// 		printer.PrintObj(info.Object, c.Stdout)
+	// 	}
+
+	// }
+	// }
+
+	arg := []string{"Pod"}
+	// arg = append(arg, pod.Name)
+	bldr := resource.NewBuilderFromConf(c)
+	r := bldr.Unstructured().
+		NamespaceParam(workload.Namespace).DefaultNamespace().AllNamespaces(false).
+		// FilenameParam(false, nil).
+		LabelSelectorParam(fmt.Sprintf("%s%s%s", cartov1alpha1.WorkloadLabelName, "=", workload.Name)).
+		FieldSelectorParam("").
+		ResourceTypeOrNameArgs(true, arg...).
+		ContinueOnError().
+		Latest().
+		Flatten().
+		TransformRequests(func(req *rest.Request) {
+			req.SetHeader("Accept", strings.Join([]string{
+				fmt.Sprintf("application/json;as=Table;v=%s;g=%s", metav1.SchemeGroupVersion.Version, metav1.GroupName),
+				fmt.Sprintf("application/json;as=Table;v=%s;g=%s", metav1beta1.SchemeGroupVersion.Version, metav1beta1.GroupName),
+				"application/json",
+			}, ","))
+
+			// if sorting, ensure we receive the full object in order to introspect its fields via jsonpath
+			if false {
+				req.Param("includeObject", "Object")
 			}
-		}
+		}).
+		Do()
+	infos, _ := r.Infos()
+	var info *resource.Info
+	// var printer printers.ResourcePrinter
+	for ix := range infos {
+		// var mapping *meta.RESTMapping
+		c.Printf("\n")
+		c.Boldf("Pods\n")
+		info = infos[ix]
+		printer.PodTablePrintery(c, pods, info)
 	}
+
+	// if err != nil {
+	// 	c.Eprintf("\n")
+	// 	c.Eerrorf("Failed to list pods:\n")
+	// 	c.Eprintf("  %s\n", err)
+	// } else {
+	// 	if len(pods.Items) == 0 {
+	// 		c.Printf("\n")
+	// 		c.Infof("No pods found for workload.\n")
+	// 	} else {
+	// 		pods = pods.DeepCopy()
+	// 		printer.SortByNamespaceAndName(pods.Items)
+	// 		c.Printf("\n")
+	// 		c.Boldf("Pods\n")
+	// 		if err := printer.PodTablePrinter(c, pods); err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// }
 
 	ksvcs := &knativeservingv1.ServiceList{}
 	_ = c.List(ctx, ksvcs, client.InNamespace(workload.Namespace), client.MatchingLabels{cartov1alpha1.WorkloadLabelName: workload.Name})

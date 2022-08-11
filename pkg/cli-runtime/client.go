@@ -49,6 +49,9 @@ type Client interface {
 	Discovery() discovery.DiscoveryInterface
 	SetLogger(logger logr.Logger)
 	crclient.Client
+	//NEW TO DELETE
+	// ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error)
+	// cachedDiscovery() discovery.CachedDiscoveryInterface
 }
 
 func (c *client) DefaultNamespace() string {
@@ -150,6 +153,7 @@ func NewClient(kubeConfigFile string, currentContext string, scheme *runtime.Sch
 		currentContext: currentContext,
 		scheme:         scheme,
 		log:            logr.Discard(),
+		// cachedDiscovery: nil,
 	}
 }
 
@@ -163,6 +167,11 @@ type client struct {
 	kubeClientset    *kubernetes.Clientset
 	client           crclient.Client
 	log              logr.Logger
+	// NewBuilder returns an object that assists in loading objects from both disk and the server
+	// and which implements the common patterns for CLI interactions with generic resources.
+	// NewBuilder *resource.Builder
+	// ToDiscoveryClient (discovery.CachedDiscoveryInterface, error)
+	// cachedDiscovery
 }
 
 func (c *client) lazyLoadKubeConfig() clientcmd.ClientConfig {
