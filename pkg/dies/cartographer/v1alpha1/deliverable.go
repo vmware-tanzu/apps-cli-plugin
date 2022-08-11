@@ -25,9 +25,13 @@ func (d *DeliverableStatusDie) ConditionsDie(conditions ...*diemetav1.ConditionD
 	})
 }
 
-var (
-	DeliverableConditionReadyBlank           = diemetav1.ConditionBlank.Type(cartov1alpha1.ConditionReady)
-	DeliverableConditionHealthyBlank         = diemetav1.ConditionBlank.Type(cartov1alpha1.ResourcesHealthy)
-	DeliverableConditionResourceReadyBlank   = diemetav1.ConditionBlank.Type(cartov1alpha1.ConditionResourceReady)
-	DeliverableConditionResourceHealthyBlank = diemetav1.ConditionBlank.Type(cartov1alpha1.ConditionResourceHealthy)
-)
+func (d *DeliverableDie) ConditionsHealthyReadyTrueDie() *DeliverableDie {
+	d.StatusDie(func(d *DeliverableStatusDie) {
+		d.ConditionsDie(CreateConditionReadyTrue("", ""), CreateConditionHealthyTrue("", ""))
+	})
+	return d
+}
+
+func (d *DeliverableStatusDie) ConditionsResourceReadyHealthyTrueDie() *DeliverableStatusDie {
+	return d.Resources(RealizedResourceBlank.ConditionsResourceHealthyReadyTrueDie().DieRelease())
+}

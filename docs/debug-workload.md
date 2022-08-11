@@ -51,35 +51,45 @@ After the workload build process is complete, create a Knative service to run th
     ---
     # pet-clinic: Ready
     ---
+    Overview
+       type:   web
+
     Source
-    type:   git
-    url:    https://github.com/sample-accelerators/spring-petclinic
-    tag:    tap-1.2
+       type:   git
+       url:    https://github.com/sample-accelerators/spring-petclinic
+       tag:    tap-1.2
 
     Supply Chain
-    name:          source-to-url
-    last update:   10d
-    ready:         True
+       name:          source-to-url
 
-    RESOURCE          READY   TIME
-    source-provider
-    deliverable
-    image-builder
-    config-provider
-    app-config
-    config-writer
 
-    Issues
-    No issues reported.
+        RESOURCE          READY   HEALTHY   TIME   OUTPUT
+        source-provider
+        deliverable
+        image-builder
+        config-provider
+        app-config
+        config-writer
+
+    Delivery
+       name:   delivery-basic
+
+       RESOURCE          READY   HEALTHY   TIME   OUTPUT
+       source-provider   True    True      6d     ImageRepository/pet-clinic-delivery
+       deployer          True    True      21h    App/pet-clinic
+
+    Messages
+       No messages found.
 
     Pods
-    NAME                                           STATUS      RESTARTS   AGE
-    pet-clinic-00001-deployment-6445565f7b-ts8l5   Running     0          102s
-    pet-clinic-build-1-build-pod                   Succeeded   0          102s
-    pet-clinic-config-writer-8c9zv-pod             Succeeded   0          2m7s
+       NAME                                           STATUS      RESTARTS   AGE
+       pet-clinic-00001-deployment-6445565f7b-ts8l5   Running     0          102s
+       pet-clinic-build-1-build-pod                   Succeeded   0          102s
+       pet-clinic-config-writer-8c9zv-pod             Succeeded   0          2m7s
+
     Knative Services
-    NAME         READY   URL
-    pet-clinic   Ready   http://pet-clinic.default.apps.34.133.168.14.nip.io
+       NAME         READY   URL
+       pet-clinic   Ready   http://pet-clinic.default.apps.34.133.168.14.nip.io
 
     To see logs: "tanzu apps workload tail pet-clinic"
 

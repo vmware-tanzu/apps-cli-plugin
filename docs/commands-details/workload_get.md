@@ -22,40 +22,48 @@ tanzu apps workload get rmq-sample-app
 ---
 # rmq-sample-app: Ready
 ---
+Overview
+    type:   web
+
 Source
-type:     git
-url:      https://github.com/jhvhs/rabbitmq-sample
-branch:   main
+   type:     git
+   url:      https://github.com/jhvhs/rabbitmq-sample
+   branch:   main
 
 Supply Chain
-name:          source-to-url
-last update:   94s
-ready:         True
+   name:          source-to-url
 
-RESOURCE          READY   TIME
-source-provider   True    3m51s
-deliverable       True    3m55s
-image-builder     True    101s
-config-provider   True    94s
-app-config        True    94s
-config-writer     True    94s
+   RESOURCE          READY   HEALTHY   TIME    OUTPUT
+   source-provider   True    True      3m51s   ImageRepository/rmq-sample-app
+   deliverable       True    True      3m55s   Deliverable/rmq-sample-app
+   image-builder     True    True      101s    Image/rmq-sample-app
+   config-provider   True    True      94s     PodIntent/rmq-sample-app
+   app-config        True    True      94s     ConfigMap/rmq-sample-app
+   config-writer     True    True      94s     Runnable/rmq-sample-app-config-writer
 
-Issues
-No issues reported.
+Delivery
+   name:   delivery-basic
+
+   RESOURCE          READY   HEALTHY   TIME   OUTPUT
+   source-provider   True    True      6d     ImageRepository/rmq-sample-app-delivery
+   deployer          True    True      21h    App/rmq-sample-app
+
+Messages
+   No messages found.
 
 Services
-CLAIM   NAME                         KIND              API VERSION
-rmq     example-rabbitmq-cluster-1   RabbitmqCluster   rabbitmq.com/v1beta1
+   CLAIM   NAME                         KIND              API VERSION
+   rmq     example-rabbitmq-cluster-1   RabbitmqCluster   rabbitmq.com/v1beta1
 
 Pods
-NAME                                               STATUS      RESTARTS   AGE
-rmq-sample-app-00001-deployment-78fc86b47c-r5jws   Running     0          45s
-rmq-sample-app-build-1-build-pod                   Succeeded   0          3m50s
-rmq-sample-app-config-writer-pbshl-pod             Succeeded   0          94s
+   NAME                                               STATUS      RESTARTS   AGE
+   rmq-sample-app-00001-deployment-78fc86b47c-r5jws   Running     0          45s
+   rmq-sample-app-build-1-build-pod                   Succeeded   0          3m50s
+   rmq-sample-app-config-writer-pbshl-pod             Succeeded   0          94s
 
 Knative Services
-NAME             READY   URL
-rmq-sample-app   Ready   http://rmq-sample-app.default.example.com
+   NAME             READY   URL
+   rmq-sample-app   Ready   http://rmq-sample-app.default.example.com
 
 To see logs: "tanzu apps workload tail rmq-sample-app"
 ```
@@ -217,35 +225,44 @@ tanzu apps workload get pet-clinic -n development
 ---
 # pet-clinic: Ready
 ---
+Overview
+    type:   web
+
 Source
-type:   git
-url:    https://github.com/sample-accelerators/spring-petclinic
-tag:    tap-1.2
+   type:   git
+   url:    https://github.com/sample-accelerators/spring-petclinic
+   tag:    tap-1.2
 
 Supply Chain
-name:          source-to-url
-last update:   10d
-ready:         True
+   name:          source-to-url
 
-RESOURCE          READY   TIME
-source-provider
-deliverable
-image-builder
-config-provider
-app-config
-config-writer
+   RESOURCE          READY   HEALTHY   TIME    OUTPUT
+   source-provider   True    True      3m51s   ImageRepository/pet-clinic
+   deliverable       True    True      3m55s   Deliverable/pet-clinic
+   image-builder     True    True      101s    Image/pet-clinic
+   config-provider   True    True      94s     PodIntent/pet-clinic
+   app-config        True    True      94s     ConfigMap/pet-clinic
+   config-writer     True    True      94s     Runnable/pet-clinic-config-writer
 
-Issues
-No issues reported.
+Delivery
+   name:   delivery-basic
+
+   RESOURCE          READY   HEALTHY   TIME   OUTPUT
+   source-provider   True    True      6d     ImageRepository/pet-clinic-delivery
+   deployer          True    True      21h    App/pet-clinic
+
+Messages
+   No messages found.
 
 Pods
-NAME                                           STATUS      RESTARTS   AGE
-pet-clinic-00001-deployment-6445565f7b-ts8l5   Running     0          102s
-pet-clinic-build-1-build-pod                   Succeeded   0          102s
-pet-clinic-config-writer-8c9zv-pod             Succeeded   0          2m7s
+   NAME                                           STATUS      RESTARTS   AGE
+   pet-clinic-00001-deployment-6445565f7b-ts8l5   Running     0          102s
+   pet-clinic-build-1-build-pod                   Succeeded   0          102s
+   pet-clinic-config-writer-8c9zv-pod             Succeeded   0          2m7s
+
 Knative Services
-NAME         READY   URL
-pet-clinic   Ready   http://pet-clinic.default.apps.34.133.168.14.nip.io
+   NAME         READY   URL
+   pet-clinic   Ready   http://pet-clinic.default.apps.34.133.168.14.nip.io
 
 To see logs: "tanzu apps workload tail pet-clinic"
 ```

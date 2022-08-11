@@ -175,23 +175,25 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	var deliverableStatusReadyCond *metav1.Condition
 	notFoundMsg := printer.AddPaddingStart("Delivery resources not found.\n")
 	deliverable := &cartov1alpha1.Deliverable{}
-	if wldDeliverable == nil || wldDeliverable.StampedRef == nil {
-		c.Infof(notFoundMsg)
-	} else {
+	if wldDeliverable != nil {
 		if err := c.Get(ctx, client.ObjectKey{Namespace: wldDeliverable.StampedRef.Namespace, Name: wldDeliverable.StampedRef.Name}, deliverable); err != nil {
 			c.Printf("\n")
 			c.Infof(notFoundMsg)
 		}
-		deliverableStatusReadyCond = printer.FindCondition(deliverable.Status.Conditions, cartov1alpha1.ConditionReady)
-		if err := printer.DeliveryInfoPrinter(c.Stdout, deliverable); err != nil {
-			return err
+		if deliverable != nil {
+			deliverableStatusReadyCond = printer.FindCondition(deliverable.Status.Conditions, cartov1alpha1.ConditionReady)
+			if err := printer.DeliveryInfoPrinter(c.Stdout, deliverable); err != nil {
+				return err
+			}
+			c.Printf("\n")
+			if len(deliverable.Status.Resources) == 0 {
+				c.Infof(notFoundMsg)
+			} else if err := printer.DeliverableResourcesPrinter(c.Stdout, deliverable); err != nil {
+				return err
+			}
 		}
-		c.Printf("\n")
-		if len(deliverable.Status.Resources) == 0 {
-			c.Infof(notFoundMsg)
-		} else if err := printer.DeliverableResourcesPrinter(c.Stdout, deliverable); err != nil {
-			return err
-		}
+	} else {
+		c.Infof(notFoundMsg)
 	}
 
 	// Print workload issues
