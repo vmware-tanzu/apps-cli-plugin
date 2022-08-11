@@ -160,20 +160,52 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	// Print workload resources
 	c.Printf("\n")
 	if len(workload.Status.Resources) == 0 {
-		c.Infof("   Supply Chain resources not found.\n")
+		c.Infof(printer.AddPaddingStart("Supply Chain resources not found.\n"))
 	} else {
 		if err := printer.WorkloadResourcesPrinter(c.Stdout, workload); err != nil {
 			return err
 		}
 	}
 
+	// Deliverable
+	c.Printf("\n")
+	c.Boldf("Delivery\n")
+	// Print workload deliverable resources
+	wldDeliverable := getWorkloadResourceByKind(workload, cartov1alpha1.WorkloadDeliverableResourceKind)
+	var deliverableStatusReadyCond *metav1.Condition
+	notFoundMsg := printer.AddPaddingStart("Delivery resources not found.\n")
+	deliverable := &cartov1alpha1.Deliverable{}
+	if wldDeliverable != nil {
+		if err := c.Get(ctx, client.ObjectKey{Namespace: wldDeliverable.StampedRef.Namespace, Name: wldDeliverable.StampedRef.Name}, deliverable); err != nil {
+			c.Printf("\n")
+			c.Infof(notFoundMsg)
+		}
+		if deliverable != nil {
+			deliverableStatusReadyCond = printer.FindCondition(deliverable.Status.Conditions, cartov1alpha1.ConditionReady)
+			if err := printer.DeliveryInfoPrinter(c.Stdout, deliverable); err != nil {
+				return err
+			}
+			c.Printf("\n")
+			if len(deliverable.Status.Resources) == 0 {
+				c.Infof(notFoundMsg)
+			} else if err := printer.DeliverableResourcesPrinter(c.Stdout, deliverable); err != nil {
+				return err
+			}
+		}
+	} else {
+		c.Infof(notFoundMsg)
+	}
+
 	// Print workload issues
 	c.Printf("\n")
-	c.Boldf("   Messages\n")
-	if workloadStatusReadyCond == nil || (workloadStatusReadyCond.Status == metav1.ConditionTrue || workloadStatusReadyCond.Message == "") {
-		c.Infof("   No messages found.\n")
+	c.Boldf("Messages\n")
+	if areAllResourcesReady(workloadStatusReadyCond, deliverableStatusReadyCond) {
+		c.Infof(printer.AddPaddingStart("No messages found.\n"))
 	} else {
 		if err := printer.WorkloadIssuesPrinter(c.Stdout, workload); err != nil {
+			return err
+		}
+		if err := printer.DeliverableIssuesPrinter(c.Stdout, deliverable); err != nil {
 			return err
 		}
 	}
@@ -254,4 +286,22 @@ func NewWorkloadGetCommand(ctx context.Context, c *cli.Config) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.Output, cli.StripDash(flags.OutputFlagName), "o", "", "output the Workload formatted. Supported formats: \"json\", \"yaml\", \"yml\"")
 
 	return cmd
+}
+
+func getWorkloadResourceByKind(workload *cartov1alpha1.Workload, kind string) *cartov1alpha1.RealizedResource {
+	for _, resource := range workload.Status.Resources {
+		if resource.StampedRef != nil && resource.StampedRef.Kind == kind {
+			return &resource
+		}
+	}
+	return nil
+}
+
+func areAllResourcesReady(resourcesConditions ...*metav1.Condition) bool {
+	for _, condition := range resourcesConditions {
+		if ready := condition == nil || (condition.Status == metav1.ConditionTrue || condition.Message == ""); !ready {
+			return false
+		}
+	}
+	return true
 }

@@ -429,6 +429,399 @@ func (d *SupplyChainStatusDie) ObservedGeneration(v int64) *SupplyChainStatusDie
 	})
 }
 
+var DeliverableBlank = (&DeliverableDie{}).DieFeed(cartographerv1alpha1.Deliverable{})
+
+type DeliverableDie struct {
+	v1.FrozenObjectMeta
+	mutable bool
+	r       cartographerv1alpha1.Deliverable
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *DeliverableDie) DieImmutable(immutable bool) *DeliverableDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *DeliverableDie) DieFeed(r cartographerv1alpha1.Deliverable) *DeliverableDie {
+	if d.mutable {
+		d.FrozenObjectMeta = v1.FreezeObjectMeta(r.ObjectMeta)
+		d.r = r
+		return d
+	}
+	return &DeliverableDie{
+		FrozenObjectMeta: v1.FreezeObjectMeta(r.ObjectMeta),
+		mutable:          d.mutable,
+		r:                r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *DeliverableDie) DieFeedPtr(r *cartographerv1alpha1.Deliverable) *DeliverableDie {
+	if r == nil {
+		r = &cartographerv1alpha1.Deliverable{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *DeliverableDie) DieFeedRawExtension(raw runtime.RawExtension) *DeliverableDie {
+	b, _ := json.Marshal(raw)
+	r := cartographerv1alpha1.Deliverable{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *DeliverableDie) DieRelease() cartographerv1alpha1.Deliverable {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *DeliverableDie) DieReleasePtr() *cartographerv1alpha1.Deliverable {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
+func (d *DeliverableDie) DieReleaseUnstructured() runtime.Unstructured {
+	r := d.DieReleasePtr()
+	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
+	return &unstructured.Unstructured{
+		Object: u,
+	}
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *DeliverableDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *DeliverableDie) DieStamp(fn func(r *cartographerv1alpha1.Deliverable)) *DeliverableDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *DeliverableDie) DeepCopy() *DeliverableDie {
+	r := *d.r.DeepCopy()
+	return &DeliverableDie{
+		FrozenObjectMeta: v1.FreezeObjectMeta(r.ObjectMeta),
+		mutable:          d.mutable,
+		r:                r,
+	}
+}
+
+var _ runtime.Object = (*DeliverableDie)(nil)
+
+func (d *DeliverableDie) DeepCopyObject() runtime.Object {
+	return d.r.DeepCopy()
+}
+
+func (d *DeliverableDie) GetObjectKind() schema.ObjectKind {
+	r := d.DieRelease()
+	return r.GetObjectKind()
+}
+
+func (d *DeliverableDie) MarshalJSON() ([]byte, error) {
+	return json.Marshal(d.r)
+}
+
+func (d *DeliverableDie) UnmarshalJSON(b []byte) error {
+	if d == DeliverableBlank {
+		return fmtx.Errorf("cannot unmarshal into the blank die, create a copy first")
+	}
+	if !d.mutable {
+		return fmtx.Errorf("cannot unmarshal into immutable dies, create a mutable version first")
+	}
+	r := &cartographerv1alpha1.Deliverable{}
+	err := json.Unmarshal(b, r)
+	*d = *d.DieFeed(*r)
+	return err
+}
+
+// APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+func (d *DeliverableDie) APIVersion(v string) *DeliverableDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.Deliverable) {
+		r.APIVersion = v
+	})
+}
+
+// Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+func (d *DeliverableDie) Kind(v string) *DeliverableDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.Deliverable) {
+		r.Kind = v
+	})
+}
+
+// MetadataDie stamps the resource's ObjectMeta field with a mutable die.
+func (d *DeliverableDie) MetadataDie(fn func(d *v1.ObjectMetaDie)) *DeliverableDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.Deliverable) {
+		d := v1.ObjectMetaBlank.DieImmutable(false).DieFeed(r.ObjectMeta)
+		fn(d)
+		r.ObjectMeta = d.DieRelease()
+	})
+}
+
+// SpecDie stamps the resource's spec field with a mutable die.
+func (d *DeliverableDie) SpecDie(fn func(d *DeliverableSpecDie)) *DeliverableDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.Deliverable) {
+		d := DeliverableSpecBlank.DieImmutable(false).DieFeed(r.Spec)
+		fn(d)
+		r.Spec = d.DieRelease()
+	})
+}
+
+// StatusDie stamps the resource's status field with a mutable die.
+func (d *DeliverableDie) StatusDie(fn func(d *DeliverableStatusDie)) *DeliverableDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.Deliverable) {
+		d := DeliverableStatusBlank.DieImmutable(false).DieFeed(r.Status)
+		fn(d)
+		r.Status = d.DieRelease()
+	})
+}
+
+// Spec describes the deliverable. More info: https://cartographer.sh/docs/latest/reference/workload/#deliverable
+func (d *DeliverableDie) Spec(v cartographerv1alpha1.DeliverableSpec) *DeliverableDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.Deliverable) {
+		r.Spec = v
+	})
+}
+
+// Status conforms to the Kubernetes conventions: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+func (d *DeliverableDie) Status(v cartographerv1alpha1.DeliverableStatus) *DeliverableDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.Deliverable) {
+		r.Status = v
+	})
+}
+
+var DeliverableSpecBlank = (&DeliverableSpecDie{}).DieFeed(cartographerv1alpha1.DeliverableSpec{})
+
+type DeliverableSpecDie struct {
+	mutable bool
+	r       cartographerv1alpha1.DeliverableSpec
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *DeliverableSpecDie) DieImmutable(immutable bool) *DeliverableSpecDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *DeliverableSpecDie) DieFeed(r cartographerv1alpha1.DeliverableSpec) *DeliverableSpecDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &DeliverableSpecDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *DeliverableSpecDie) DieFeedPtr(r *cartographerv1alpha1.DeliverableSpec) *DeliverableSpecDie {
+	if r == nil {
+		r = &cartographerv1alpha1.DeliverableSpec{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *DeliverableSpecDie) DieFeedRawExtension(raw runtime.RawExtension) *DeliverableSpecDie {
+	b, _ := json.Marshal(raw)
+	r := cartographerv1alpha1.DeliverableSpec{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *DeliverableSpecDie) DieRelease() cartographerv1alpha1.DeliverableSpec {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *DeliverableSpecDie) DieReleasePtr() *cartographerv1alpha1.DeliverableSpec {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *DeliverableSpecDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *DeliverableSpecDie) DieStamp(fn func(r *cartographerv1alpha1.DeliverableSpec)) *DeliverableSpecDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *DeliverableSpecDie) DeepCopy() *DeliverableSpecDie {
+	r := *d.r.DeepCopy()
+	return &DeliverableSpecDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// Additional parameters. See: https://cartographer.sh/docs/latest/architecture/#parameter-hierarchy
+func (d *DeliverableSpecDie) Params(v ...cartographerv1alpha1.Param) *DeliverableSpecDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.DeliverableSpec) {
+		r.Params = v
+	})
+}
+
+// The location of the source code for the workload. Specify one of `spec.source` or `spec.image`
+func (d *DeliverableSpecDie) Source(v *cartographerv1alpha1.Source) *DeliverableSpecDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.DeliverableSpec) {
+		r.Source = v
+	})
+}
+
+// ServiceAccountName refers to the Service account with permissions to create resources submitted by the supply chain.
+//
+// If not set, Cartographer will use serviceAccountName from delivery.
+//
+// If that is also not set, Cartographer will use the default service account in the deliverable's namespace.
+func (d *DeliverableSpecDie) ServiceAccountName(v string) *DeliverableSpecDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.DeliverableSpec) {
+		r.ServiceAccountName = v
+	})
+}
+
+var DeliverableStatusBlank = (&DeliverableStatusDie{}).DieFeed(cartographerv1alpha1.DeliverableStatus{})
+
+type DeliverableStatusDie struct {
+	mutable bool
+	r       cartographerv1alpha1.DeliverableStatus
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *DeliverableStatusDie) DieImmutable(immutable bool) *DeliverableStatusDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *DeliverableStatusDie) DieFeed(r cartographerv1alpha1.DeliverableStatus) *DeliverableStatusDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &DeliverableStatusDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *DeliverableStatusDie) DieFeedPtr(r *cartographerv1alpha1.DeliverableStatus) *DeliverableStatusDie {
+	if r == nil {
+		r = &cartographerv1alpha1.DeliverableStatus{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *DeliverableStatusDie) DieFeedRawExtension(raw runtime.RawExtension) *DeliverableStatusDie {
+	b, _ := json.Marshal(raw)
+	r := cartographerv1alpha1.DeliverableStatus{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *DeliverableStatusDie) DieRelease() cartographerv1alpha1.DeliverableStatus {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *DeliverableStatusDie) DieReleasePtr() *cartographerv1alpha1.DeliverableStatus {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *DeliverableStatusDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *DeliverableStatusDie) DieStamp(fn func(r *cartographerv1alpha1.DeliverableStatus)) *DeliverableStatusDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *DeliverableStatusDie) DeepCopy() *DeliverableStatusDie {
+	r := *d.r.DeepCopy()
+	return &DeliverableStatusDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+func (d *DeliverableStatusDie) OwnerStatus(v cartographerv1alpha1.OwnerStatus) *DeliverableStatusDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.DeliverableStatus) {
+		r.OwnerStatus = v
+	})
+}
+
+// DeliveryRef is the Delivery resource that was used when this status was set.
+func (d *DeliverableStatusDie) DeliveryRef(v cartographerv1alpha1.ObjectReference) *DeliverableStatusDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.DeliverableStatus) {
+		r.DeliveryRef = v
+	})
+}
+
+// Resources contain references to the objects created by the Delivery and the templates used to create them. It also contains Inputs and Outputs that were passed between the templates as the Delivery was processed.
+func (d *DeliverableStatusDie) Resources(v ...cartographerv1alpha1.RealizedResource) *DeliverableStatusDie {
+	return d.DieStamp(func(r *cartographerv1alpha1.DeliverableStatus) {
+		r.Resources = v
+	})
+}
+
 var WorkloadBlank = (&WorkloadDie{}).DieFeed(cartographerv1alpha1.Workload{})
 
 type WorkloadDie struct {

@@ -16,6 +16,12 @@ limitations under the License.
 
 package printer
 
+import "strings"
+
 const (
 	paddingStart = 3
 )
+
+func AddPaddingStart(text string) string {
+	return strings.Repeat(" ", paddingStart) + text
+}

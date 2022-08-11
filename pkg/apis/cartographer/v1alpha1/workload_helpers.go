@@ -35,8 +35,10 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 )
 
-const WorkloadConditionReady = "Ready"
-const WorkloadAnnotationParam = "annotations"
+const (
+	WorkloadConditionReady  = "Ready"
+	WorkloadAnnotationParam = "annotations"
+)
 
 func (w *Workload) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("Workload")

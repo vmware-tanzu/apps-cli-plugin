@@ -20,9 +20,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -30,7 +28,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer/table"
 )
 
-func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error {
+func DeliverableResourcesPrinter(w io.Writer, deliverable *cartov1alpha1.Deliverable) error {
 	printResourceInfoRow := func(resource *cartov1alpha1.RealizedResource, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		var healthy string
 		healthyCond := printer.FindCondition(resource.Conditions, cartov1alpha1.ConditionResourceHealthy)
@@ -51,8 +49,8 @@ func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 		return []metav1beta1.TableRow{row}, nil
 	}
 
-	printResourceInfoList := func(workload *cartov1alpha1.Workload, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		resourcesList := &workload.Status.Resources
+	printResourceInfoList := func(deliverable *cartov1alpha1.Deliverable, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
+		resourcesList := &deliverable.Status.Resources
 		rows := make([]metav1beta1.TableRow, 0, len(*resourcesList))
 		for _, r := range *resourcesList {
 			row, err := printResourceInfoRow(&r, printOpts)
@@ -76,48 +74,41 @@ func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 		h.TableHandler(columns, printResourceInfoRow)
 	})
 
-	return tablePrinter.PrintObj(workload, w)
+	return tablePrinter.PrintObj(deliverable, w)
 }
 
-func WorkloadSupplyChainInfoPrinter(w io.Writer, workload *cartov1alpha1.Workload) error {
-	printSupplyChainInfo := func(workload *cartov1alpha1.Workload, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		workloadStatus := &workload.Status
+func DeliveryInfoPrinter(w io.Writer, deliverable *cartov1alpha1.Deliverable) error {
+	printSupplyDeliveryInfo := func(deliverable *cartov1alpha1.Deliverable, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
+		deliveryRef := &deliverable.Status.DeliveryRef
+		rows := []metav1beta1.TableRow{}
 
-		var name string
-		if workloadStatus.SupplyChainRef.Name != "" {
-			name = workloadStatus.SupplyChainRef.Name
-		} else {
-			name = "<none>"
+		if deliveryRef.Name != "" {
+			nameRow := metav1beta1.TableRow{
+				Cells: []interface{}{"name:", deliveryRef.Name},
+			}
+			rows = append(rows, nameRow)
 		}
-
-		nameRow := metav1beta1.TableRow{
-			Cells: []interface{}{
-				"name:",
-				name,
-			},
-		}
-
-		rows := []metav1beta1.TableRow{nameRow}
 		return rows, nil
+
 	}
 
 	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true, PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
-		h.TableHandler(nil, printSupplyChainInfo)
+		h.TableHandler(nil, printSupplyDeliveryInfo)
 	})
 
-	return tablePrinter.PrintObj(workload, w)
+	return tablePrinter.PrintObj(deliverable, w)
 }
 
-func WorkloadIssuesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error {
-	readyCondition := printer.FindCondition(workload.Status.Conditions, cartov1alpha1.ConditionReady)
-	healthyCondition := printer.FindCondition(workload.Status.Conditions, cartov1alpha1.ResourcesHealthy)
+func DeliverableIssuesPrinter(w io.Writer, deliverable *cartov1alpha1.Deliverable) error {
+	readyCondition := printer.FindCondition(deliverable.Status.Conditions, cartov1alpha1.ConditionReady)
+	healthyCondition := printer.FindCondition(deliverable.Status.Conditions, cartov1alpha1.ResourcesHealthy)
 	if readyCondition == nil {
 		return nil
 	}
-	printIssues := func(workload *cartov1alpha1.Workload, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
+	printIssues := func(deliverable *cartov1alpha1.Deliverable, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		readyRow := metav1beta1.TableRow{
 			Cells: []interface{}{
-				fmt.Sprintf("Workload [%s]:", readyCondition.Reason),
+				fmt.Sprintf("Deliverable [%s]:", readyCondition.Reason),
 				readyCondition.Message,
 			},
 		}
@@ -127,7 +118,7 @@ func WorkloadIssuesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error 
 			if strings.Compare(healthyCondition.Message, readyCondition.Message) != 0 {
 				healthyRow := metav1beta1.TableRow{
 					Cells: []interface{}{
-						fmt.Sprintf("Workload [%s]:", healthyCondition.Reason),
+						fmt.Sprintf("Deliverable [%s]:", healthyCondition.Reason),
 						healthyCondition.Message,
 					},
 				}
@@ -141,29 +132,5 @@ func WorkloadIssuesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error 
 		h.TableHandler(nil, printIssues)
 	})
 
-	return tablePrinter.PrintObj(workload, w)
-}
-
-func findConditionReady(conditions []metav1.Condition, strReadyCondition string) (string, string) {
-	var ready string
-	var elapsedTransitionTime string
-
-	conditionReady := printer.FindCondition(conditions, strReadyCondition)
-
-	if conditionReady != nil {
-		ready = string(conditionReady.Status)
-		elapsedTransitionTime = printer.TimestampSince(conditionReady.LastTransitionTime, time.Now())
-	}
-
-	return ready, elapsedTransitionTime
-}
-
-func getOutputRef(resource *cartov1alpha1.RealizedResource) string {
-	ref := printer.Sfaintf("not found")
-	if resource != nil && resource.StampedRef != nil {
-		if resource.StampedRef.Kind != "" || resource.StampedRef.Name != "" {
-			ref = fmt.Sprintf("%s%s%s", resource.StampedRef.Kind, "/", resource.StampedRef.Name)
-		}
-	}
-	return ref
+	return tablePrinter.PrintObj(deliverable, w)
 }
