@@ -224,7 +224,6 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	bldr := resource.NewBuilderFromConf(c)
 	r := bldr.Unstructured().
 		NamespaceParam(workload.Namespace).DefaultNamespace().AllNamespaces(false).
-		// FilenameParam(false, nil).
 		LabelSelectorParam(fmt.Sprintf("%s%s%s", cartov1alpha1.WorkloadLabelName, "=", workload.Name)).
 		FieldSelectorParam("").
 		ResourceTypeOrNameArgs(true, arg...).
@@ -245,14 +244,17 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		}).
 		Do()
 	infos, _ := r.Infos()
-	var info *resource.Info
-	// var printer printers.ResourcePrinter
-	for ix := range infos {
-		// var mapping *meta.RESTMapping
+	if len(infos) == 0 {
 		c.Printf("\n")
-		c.Boldf("Pods\n")
-		info = infos[ix]
-		printer.PodTablePrintery(c, info)
+		c.Infof("No pods found for workload.\n")
+	} else {
+		// var printer printers.ResourcePrinter
+		for ix := range infos {
+			// var mapping *meta.RESTMapping
+			c.Printf("\n")
+			c.Boldf("Pods\n")
+			printer.PodTablePrintery(c, infos[ix])
+		}
 	}
 
 	ksvcs := &knativeservingv1.ServiceList{}
