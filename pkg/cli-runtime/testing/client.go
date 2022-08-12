@@ -36,7 +36,7 @@ func (c *fakeclient) KubeRestConfig() *rest.Config {
 }
 
 func (c *fakeclient) Discovery() discovery.DiscoveryInterface {
-	panic(fmt.Errorf("not implemented"))
+	return discovery.NewDiscoveryClientForConfigOrDie(&rest.Config{})
 }
 
 func (c *fakeclient) SetLogger(logger logr.Logger) {
