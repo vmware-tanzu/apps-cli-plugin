@@ -1,4 +1,4 @@
-package resource
+package cli
 
 import (
 	"errors"
@@ -10,7 +10,6 @@ import (
 	"strings"
 	"sync"
 
-	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -170,11 +169,6 @@ func newBuilder(clientConfigFn ClientConfigFunc, restMapper RESTMapperFunc, cate
 	}
 }
 
-// NewBuilder returns a new resource builder for structured api objects.
-func NewBuilderFromConf(c *cli.Config) *Builder {
-	return NewBuilderFromClient(c.Client, nil)
-}
-
 // noopClientGetter implements RESTClientGetter returning only errors.
 // used as a dummy getter in a local-only builder.
 type noopClientGetter struct{}
@@ -209,7 +203,7 @@ func NewBuilder(restClientGetter RESTClientGetter) *Builder {
 		(&cachingCategoryExpanderFunc{delegate: categoryExpanderFn}).ToCategoryExpander,
 	)
 }
-func NewBuilderFromClient(cd cli.Client, mapper meta.RESTMapper) *Builder {
+func NewBuilderFromClient(cd Client, mapper meta.RESTMapper) *Builder {
 	categoryExpanderFn := func() (restmapper.CategoryExpander, error) {
 		return restmapper.NewDiscoveryCategoryExpander(cd.Discovery()), nil
 	}

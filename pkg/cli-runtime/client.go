@@ -52,6 +52,7 @@ type Client interface {
 	//NEW TO DELETE
 	// ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error)
 	// cachedDiscovery() discovery.CachedDiscoveryInterface
+	NewBuilderFromConf() *Builder
 }
 
 func (c *client) DefaultNamespace() string {
@@ -172,6 +173,11 @@ type client struct {
 	// NewBuilder *resource.Builder
 	// ToDiscoveryClient (discovery.CachedDiscoveryInterface, error)
 	// cachedDiscovery
+}
+
+// NewBuilder returns a new resource builder for structured api objects.
+func (c *client) NewBuilderFromConf() *Builder {
+	return NewBuilderFromClient(c, nil)
 }
 
 func (c *client) lazyLoadKubeConfig() clientcmd.ClientConfig {

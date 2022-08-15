@@ -18,17 +18,38 @@ package testing
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/go-logr/logr"
+	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/meta/testrestmapper"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/rest/fake"
+	"k8s.io/client-go/restmapper"
+	"k8s.io/kubectl/pkg/scheme"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
-
-	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 )
 
 func (c *fakeclient) DefaultNamespace() string {
 	return "default"
+}
+
+// RESTClient returns a REST client from TestFactory
+func (c *fakeclient) RESTClient() (*rest.RESTClient, error) {
+	// Swap out the HTTP client out of the client with the fake's version.
+	fakeClient := c.Clients.(*fake.RESTClient)
+	restClient, err := rest.RESTClientFor(c.ClientConfigVal)
+	if err != nil {
+		panic(err)
+	}
+	restClient.Client = fakeClient.Client
+	return restClient, nil
 }
 
 func (c *fakeclient) KubeRestConfig() *rest.Config {
@@ -43,6 +64,9 @@ func (c *fakeclient) SetLogger(logger logr.Logger) {
 	panic(fmt.Errorf("not implemented"))
 }
 
+func (c *fakeclient) RESTMapper() meta.RESTMapper {
+	return testRESTMapper()
+}
 func NewFakeCliClient(c crclient.Client) cli.Client {
 	return &fakeclient{
 		defaultNamespace: "default",
@@ -50,7 +74,256 @@ func NewFakeCliClient(c crclient.Client) cli.Client {
 	}
 }
 
+func NewFakeCachedDiscoveryClient() *FakeCachedDiscoveryClient {
+	return &FakeCachedDiscoveryClient{
+		Groups:             []*metav1.APIGroup{},
+		Resources:          []*metav1.APIResourceList{},
+		PreferredResources: []*metav1.APIResourceList{},
+		Invalidations:      0,
+	}
+}
+func (d *FakeCachedDiscoveryClient) ServerGroupsAndResources() ([]*metav1.APIGroup, []*metav1.APIResourceList, error) {
+	return d.Groups, d.Resources, nil
+}
+
+// NewBuilder returns a new resource builder for structured api objects.
+func (c *fakeclient) NewBuilderFromConf() *cli.Builder {
+	return cli.NewFakeBuilder(
+		func(version schema.GroupVersion) (cli.RESTClient, error) {
+			if c.UnstructuredClientForMappingFunc != nil {
+				return c.UnstructuredClientForMappingFunc(version)
+			}
+			if c.UnstructuredClient != nil {
+				return c.UnstructuredClient, nil
+			}
+			return c.Clients, nil
+		},
+		c.RESTMapper,
+		func() (restmapper.CategoryExpander, error) {
+			return resource.FakeCategoryExpander, nil
+		},
+	)
+}
+
+type FakeCachedDiscoveryClient struct {
+	discovery.DiscoveryInterface
+	Groups             []*metav1.APIGroup
+	Resources          []*metav1.APIResourceList
+	PreferredResources []*metav1.APIResourceList
+	Invalidations      int
+}
 type fakeclient struct {
 	defaultNamespace string
 	crclient.Client
+	UnstructuredClientForMappingFunc resource.FakeClientFunc
+	UnstructuredClient               RESTClient
+	Clients                          RESTClient
+	ClientConfigVal                  *rest.Config
+}
+
+func testRESTMapper() meta.RESTMapper {
+	groupResources := testDynamicResources()
+	mapper := restmapper.NewDiscoveryRESTMapper(groupResources)
+	// for backwards compatibility with existing tests, allow rest mappings from the scheme to show up
+	// TODO: make this opt-in?
+	mapper = meta.FirstHitRESTMapper{
+		MultiRESTMapper: meta.MultiRESTMapper{
+			mapper,
+			testrestmapper.TestOnlyStaticRESTMapper(scheme.Scheme),
+		},
+	}
+
+	fakeDs := NewFakeCachedDiscoveryClient()
+	expander := restmapper.NewShortcutExpander(mapper, fakeDs)
+	return expander
+}
+
+func testDynamicResources() []*restmapper.APIGroupResources {
+	return []*restmapper.APIGroupResources{
+		{
+			Group: metav1.APIGroup{
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1": {
+					{Name: "pods", Namespaced: true, Kind: "Pod"},
+					{Name: "services", Namespaced: true, Kind: "Service"},
+					{Name: "replicationcontrollers", Namespaced: true, Kind: "ReplicationController"},
+					{Name: "componentstatuses", Namespaced: false, Kind: "ComponentStatus"},
+					{Name: "nodes", Namespaced: false, Kind: "Node"},
+					{Name: "secrets", Namespaced: true, Kind: "Secret"},
+					{Name: "configmaps", Namespaced: true, Kind: "ConfigMap"},
+					{Name: "namespacedtype", Namespaced: true, Kind: "NamespacedType"},
+					{Name: "namespaces", Namespaced: false, Kind: "Namespace"},
+					{Name: "resourcequotas", Namespaced: true, Kind: "ResourceQuota"},
+				},
+			},
+		},
+		{
+			Group: metav1.APIGroup{
+				Name: "extensions",
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1beta1"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1beta1"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1beta1": {
+					{Name: "deployments", Namespaced: true, Kind: "Deployment"},
+					{Name: "replicasets", Namespaced: true, Kind: "ReplicaSet"},
+				},
+			},
+		},
+		{
+			Group: metav1.APIGroup{
+				Name: "apps",
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1beta1"},
+					{Version: "v1beta2"},
+					{Version: "v1"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1beta1": {
+					{Name: "deployments", Namespaced: true, Kind: "Deployment"},
+					{Name: "replicasets", Namespaced: true, Kind: "ReplicaSet"},
+				},
+				"v1beta2": {
+					{Name: "deployments", Namespaced: true, Kind: "Deployment"},
+				},
+				"v1": {
+					{Name: "deployments", Namespaced: true, Kind: "Deployment"},
+					{Name: "replicasets", Namespaced: true, Kind: "ReplicaSet"},
+				},
+			},
+		},
+		{
+			Group: metav1.APIGroup{
+				Name: "batch",
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1beta1"},
+					{Version: "v1"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1beta1": {
+					{Name: "cronjobs", Namespaced: true, Kind: "CronJob"},
+				},
+				"v1": {
+					{Name: "jobs", Namespaced: true, Kind: "Job"},
+				},
+			},
+		},
+		{
+			Group: metav1.APIGroup{
+				Name: "autoscaling",
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1"},
+					{Version: "v2beta1"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v2beta1"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1": {
+					{Name: "horizontalpodautoscalers", Namespaced: true, Kind: "HorizontalPodAutoscaler"},
+				},
+				"v2beta1": {
+					{Name: "horizontalpodautoscalers", Namespaced: true, Kind: "HorizontalPodAutoscaler"},
+				},
+			},
+		},
+		{
+			Group: metav1.APIGroup{
+				Name: "storage.k8s.io",
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1beta1"},
+					{Version: "v0"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1beta1"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1beta1": {
+					{Name: "storageclasses", Namespaced: false, Kind: "StorageClass"},
+				},
+				// bogus version of a known group/version/resource to make sure kubectl falls back to generic object mode
+				"v0": {
+					{Name: "storageclasses", Namespaced: false, Kind: "StorageClass"},
+				},
+			},
+		},
+		{
+			Group: metav1.APIGroup{
+				Name: "rbac.authorization.k8s.io",
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1beta1"},
+					{Version: "v1"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1": {
+					{Name: "clusterroles", Namespaced: false, Kind: "ClusterRole"},
+				},
+				"v1beta1": {
+					{Name: "clusterrolebindings", Namespaced: false, Kind: "ClusterRoleBinding"},
+				},
+			},
+		},
+		{
+			Group: metav1.APIGroup{
+				Name: "company.com",
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1": {
+					{Name: "bars", Namespaced: true, Kind: "Bar"},
+				},
+			},
+		},
+		{
+			Group: metav1.APIGroup{
+				Name: "unit-test.test.com",
+				Versions: []metav1.GroupVersionForDiscovery{
+					{GroupVersion: "unit-test.test.com/v1", Version: "v1"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{
+					GroupVersion: "unit-test.test.com/v1",
+					Version:      "v1"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1": {
+					{Name: "widgets", Namespaced: true, Kind: "Widget"},
+				},
+			},
+		},
+		{
+			Group: metav1.APIGroup{
+				Name: "apitest",
+				Versions: []metav1.GroupVersionForDiscovery{
+					{GroupVersion: "apitest/unlikelyversion", Version: "unlikelyversion"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{
+					GroupVersion: "apitest/unlikelyversion",
+					Version:      "unlikelyversion"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"unlikelyversion": {
+					{Name: "types", SingularName: "type", Namespaced: false, Kind: "Type"},
+				},
+			},
+		},
+	}
+}
+func DefaultHeader() http.Header {
+	header := http.Header{}
+	header.Set("Content-Type", runtime.ContentTypeJSON)
+	return header
 }
