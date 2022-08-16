@@ -105,19 +105,22 @@ func DeliverableIssuesPrinter(w io.Writer, deliverable *cartov1alpha1.Deliverabl
 		return nil
 	}
 	printIssues := func(deliverable *cartov1alpha1.Deliverable, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		readyRow := metav1beta1.TableRow{
-			Cells: []interface{}{
-				fmt.Sprintf("%s [%s]:", cartov1alpha1.DeliverableKind, readyCondition.Reason),
-				readyCondition.Message,
-			},
+		rows := []metav1beta1.TableRow{}
+		if strings.TrimSpace(readyCondition.Message) != "" {
+			readyRow := metav1beta1.TableRow{
+				Cells: []interface{}{
+					fmt.Sprintf("%s %s:", cartov1alpha1.DeliverableKind, printer.Sfaintf("[%s]", readyCondition.Reason)),
+					readyCondition.Message,
+				},
+			}
+			rows = append(rows, readyRow)
 		}
-		rows := []metav1beta1.TableRow{readyRow}
 
-		if healthyCondition != nil && healthyCondition.Message != "" {
+		if healthyCondition != nil && strings.TrimSpace(healthyCondition.Message) != "" {
 			if strings.Compare(healthyCondition.Message, readyCondition.Message) != 0 {
 				healthyRow := metav1beta1.TableRow{
 					Cells: []interface{}{
-						fmt.Sprintf("%s [%s]:", cartov1alpha1.DeliverableKind, healthyCondition.Reason),
+						fmt.Sprintf("%s %s:", cartov1alpha1.DeliverableKind, printer.Sfaintf("[%s]", healthyCondition.Reason)),
 						healthyCondition.Message,
 					},
 				}
