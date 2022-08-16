@@ -18,14 +18,11 @@ package testing
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/go-logr/logr"
-	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/meta/testrestmapper"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/discovery"
@@ -34,6 +31,8 @@ import (
 	"k8s.io/client-go/restmapper"
 	"k8s.io/kubectl/pkg/scheme"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
+
+	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 )
 
 func (c *fakeclient) DefaultNamespace() string {
@@ -67,6 +66,10 @@ func (c *fakeclient) SetLogger(logger logr.Logger) {
 func (c *fakeclient) RESTMapper() meta.RESTMapper {
 	return testRESTMapper()
 }
+func (c *fakeclient) ToRESTMapper() (meta.RESTMapper, error) {
+	return c.RESTMapper(), nil
+}
+
 func NewFakeCliClient(c crclient.Client) cli.Client {
 	return &fakeclient{
 		defaultNamespace: "default",
@@ -87,9 +90,9 @@ func (d *FakeCachedDiscoveryClient) ServerGroupsAndResources() ([]*metav1.APIGro
 }
 
 // NewBuilder returns a new resource builder for structured api objects.
-func (c *fakeclient) NewBuilderFromConf() *cli.Builder {
-	return cli.NewFakeBuilder(
-		func(version schema.GroupVersion) (cli.RESTClient, error) {
+func (c *fakeclient) NewBuilder() *resource.Builder {
+	return resource.NewFakeBuilder(
+		func(version schema.GroupVersion) (resource.RESTClient, error) {
 			if c.UnstructuredClientForMappingFunc != nil {
 				return c.UnstructuredClientForMappingFunc(version)
 			}
@@ -98,7 +101,7 @@ func (c *fakeclient) NewBuilderFromConf() *cli.Builder {
 			}
 			return c.Clients, nil
 		},
-		c.RESTMapper,
+		c.ToRESTMapper,
 		func() (restmapper.CategoryExpander, error) {
 			return resource.FakeCategoryExpander, nil
 		},
@@ -321,9 +324,4 @@ func testDynamicResources() []*restmapper.APIGroupResources {
 			},
 		},
 	}
-}
-func DefaultHeader() http.Header {
-	header := http.Header{}
-	header.Set("Content-Type", runtime.ContentTypeJSON)
-	return header
 }

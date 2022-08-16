@@ -22,16 +22,12 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"sync"
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	// "k8s.io/cli-runtime/pkg/resource"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
-
-	"k8s.io/kubectl/pkg/util/openapi"
 )
 
 const defaultTanzuIgnoreFile = ".tanzuignore"
@@ -49,7 +45,6 @@ type Config struct {
 	Stdout          io.Writer
 	Stderr          io.Writer
 	Verbose         *int32
-	// Builder         *resource.Builder
 }
 
 func NewDefaultConfig(name string, scheme *runtime.Scheme) *Config {
@@ -84,16 +79,6 @@ func (c *Config) Einfof(format string, a ...interface{}) (n int, err error) {
 
 func (c *Config) Successf(format string, a ...interface{}) (n int, err error) {
 	return printer.SuccessColor.Fprintf(c.Stdout, format, a...)
-}
-
-type factoryImpl struct {
-	clientGetter genericclioptions.RESTClientGetter
-
-	// Caches OpenAPI document and parsed resources
-	openAPIParser *openapi.CachedOpenAPIParser
-	openAPIGetter *openapi.CachedOpenAPIGetter
-	parser        sync.Once
-	getter        sync.Once
 }
 
 func (c *Config) Esuccessf(format string, a ...interface{}) (n int, err error) {

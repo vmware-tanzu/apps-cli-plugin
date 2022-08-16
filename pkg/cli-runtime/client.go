@@ -22,16 +22,17 @@ import (
 	"os"
 
 	"github.com/go-logr/logr"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/discovery/cached/disk"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/flowcontrol"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 )
 
 var (
@@ -49,10 +50,7 @@ type Client interface {
 	Discovery() discovery.DiscoveryInterface
 	SetLogger(logger logr.Logger)
 	crclient.Client
-	//NEW TO DELETE
-	// ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error)
-	// cachedDiscovery() discovery.CachedDiscoveryInterface
-	NewBuilderFromConf() *Builder
+	NewBuilder() *resource.Builder
 }
 
 func (c *client) DefaultNamespace() string {
@@ -61,6 +59,16 @@ func (c *client) DefaultNamespace() string {
 
 func (c *client) KubeRestConfig() *rest.Config {
 	return c.lazyLoadRestConfigOrDie()
+}
+func (c *client) ToRESTConfig() (*rest.Config, error) {
+	return c.KubeRestConfig(), nil
+}
+
+func (c *client) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
+	return disk.NewCachedDiscoveryClientForConfig(c.restConfig, "", "", 1000) // need alignment with sash
+}
+func (c *client) ToRawKubeConfigLoader() clientcmd.ClientConfig {
+	return nil
 }
 
 func (c *client) Discovery() discovery.DiscoveryInterface {
@@ -143,7 +151,9 @@ func (c *client) Scheme() *runtime.Scheme {
 func (c *client) RESTMapper() meta.RESTMapper {
 	return c.Client().RESTMapper()
 }
-
+func (c *client) ToRESTMapper() (meta.RESTMapper, error) {
+	return c.RESTMapper(), nil
+}
 func (c *client) SetLogger(logger logr.Logger) {
 	c.log = logger
 }
@@ -154,7 +164,6 @@ func NewClient(kubeConfigFile string, currentContext string, scheme *runtime.Sch
 		currentContext: currentContext,
 		scheme:         scheme,
 		log:            logr.Discard(),
-		// cachedDiscovery: nil,
 	}
 }
 
@@ -168,16 +177,11 @@ type client struct {
 	kubeClientset    *kubernetes.Clientset
 	client           crclient.Client
 	log              logr.Logger
-	// NewBuilder returns an object that assists in loading objects from both disk and the server
-	// and which implements the common patterns for CLI interactions with generic resources.
-	// NewBuilder *resource.Builder
-	// ToDiscoveryClient (discovery.CachedDiscoveryInterface, error)
-	// cachedDiscovery
 }
 
 // NewBuilder returns a new resource builder for structured api objects.
-func (c *client) NewBuilderFromConf() *Builder {
-	return NewBuilderFromClient(c, nil)
+func (c *client) NewBuilder() *resource.Builder {
+	return resource.NewBuilder(c)
 }
 
 func (c *client) lazyLoadKubeConfig() clientcmd.ClientConfig {
