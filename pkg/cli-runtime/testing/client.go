@@ -17,7 +17,10 @@ limitations under the License.
 package testing
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -26,9 +29,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/discovery/cached/disk"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/rest/fake"
 	"k8s.io/client-go/restmapper"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/kubectl/pkg/scheme"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -52,7 +58,18 @@ func (c *fakeclient) RESTClient() (*rest.RESTClient, error) {
 }
 
 func (c *fakeclient) KubeRestConfig() *rest.Config {
-	panic(fmt.Errorf("not implemented"))
+	// panic(fmt.Errorf("not implemented"))
+	tmpFile, _ := ioutil.TempFile(os.TempDir(), "cmdtests_temp")
+	loadingRules := &clientcmd.ClientConfigLoadingRules{
+		Precedence:     []string{tmpFile.Name()},
+		MigrationRules: map[string]string{},
+	}
+
+	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmdapi.Cluster{Server: "http://localhost:8080"}}
+	fallbackReader := bytes.NewBuffer([]byte{})
+	clientConfig := clientcmd.NewInteractiveDeferredLoadingClientConfig(loadingRules, overrides, fallbackReader)
+	restConfig, _ := clientConfig.ClientConfig()
+	return restConfig
 }
 
 func (c *fakeclient) Discovery() discovery.DiscoveryInterface {
@@ -68,6 +85,22 @@ func (c *fakeclient) RESTMapper() meta.RESTMapper {
 }
 func (c *fakeclient) ToRESTMapper() (meta.RESTMapper, error) {
 	return c.RESTMapper(), nil
+}
+func (c *fakeclient) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
+	return disk.NewCachedDiscoveryClientForConfig(&rest.Config{}, "", "", 0) // need alignment with sash
+}
+func (c *fakeclient) ToRESTConfig() (*rest.Config, error) {
+	return c.KubeRestConfig(), nil
+}
+func (c *fakeclient) ToRawKubeConfigLoader() clientcmd.ClientConfig {
+	return nil
+}
+
+func NewFakeClnt(c crclient.Client) *fakeclient {
+	return &fakeclient{
+		defaultNamespace: "default",
+		Client:           c,
+	}
 }
 
 func NewFakeCliClient(c crclient.Client) cli.Client {
