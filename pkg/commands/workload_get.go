@@ -171,7 +171,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	c.Printf("\n")
 	c.Boldf("Delivery\n")
 	// Print workload deliverable resources
-	wldDeliverable := getWorkloadResourceByKind(workload, cartov1alpha1.WorkloadDeliverableResourceKind)
+	wldDeliverable := getWorkloadResourceByKind(workload, cartov1alpha1.DeliverableKind)
 	var deliverableStatusReadyCond *metav1.Condition
 	notFoundMsg := printer.AddPaddingStart("Delivery resources not found.\n")
 	deliverable := &cartov1alpha1.Deliverable{}
@@ -179,8 +179,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		if err := c.Get(ctx, client.ObjectKey{Namespace: wldDeliverable.StampedRef.Namespace, Name: wldDeliverable.StampedRef.Name}, deliverable); err != nil {
 			c.Printf("\n")
 			c.Infof(notFoundMsg)
-		}
-		if deliverable != nil {
+		} else if deliverable != nil {
 			deliverableStatusReadyCond = printer.FindCondition(deliverable.Status.Conditions, cartov1alpha1.ConditionReady)
 			if err := printer.DeliveryInfoPrinter(c.Stdout, deliverable); err != nil {
 				return err
@@ -193,6 +192,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 			}
 		}
 	} else {
+		c.Printf("\n")
 		c.Infof(notFoundMsg)
 	}
 

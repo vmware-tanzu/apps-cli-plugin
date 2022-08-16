@@ -35,7 +35,6 @@ Supply Chain
 
    RESOURCE          READY   HEALTHY   TIME    OUTPUT
    source-provider   True    True      3m51s   ImageRepository/rmq-sample-app
-   deliverable       True    True      3m55s   Deliverable/rmq-sample-app
    image-builder     True    True      101s    Image/rmq-sample-app
    config-provider   True    True      94s     PodIntent/rmq-sample-app
    app-config        True    True      94s     ConfigMap/rmq-sample-app
@@ -238,7 +237,6 @@ Supply Chain
 
    RESOURCE          READY   HEALTHY   TIME    OUTPUT
    source-provider   True    True      3m51s   ImageRepository/pet-clinic
-   deliverable       True    True      3m55s   Deliverable/pet-clinic
    image-builder     True    True      101s    Image/pet-clinic
    config-provider   True    True      94s     PodIntent/pet-clinic
    app-config        True    True      94s     ConfigMap/pet-clinic

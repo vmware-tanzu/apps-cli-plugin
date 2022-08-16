@@ -24,11 +24,11 @@ import (
 )
 
 const (
-	ConditionReady                  = "Ready"
-	WorkloadSupplyChainReady        = "SupplyChainReady"
-	WorkloadResourceSubmitted       = "ResourcesSubmitted"
-	ResourcesHealthy                = "ResourcesHealthy"
-	WorkloadDeliverableResourceKind = "Deliverable"
+	WorkloadKind              = "Workload"
+	ConditionReady            = "Ready"
+	WorkloadSupplyChainReady  = "SupplyChainReady"
+	WorkloadResourceSubmitted = "ResourcesSubmitted"
+	ResourcesHealthy          = "ResourcesHealthy"
 )
 
 const (

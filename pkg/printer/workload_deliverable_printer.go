@@ -81,7 +81,6 @@ func DeliveryInfoPrinter(w io.Writer, deliverable *cartov1alpha1.Deliverable) er
 	printSupplyDeliveryInfo := func(deliverable *cartov1alpha1.Deliverable, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		deliveryRef := &deliverable.Status.DeliveryRef
 		rows := []metav1beta1.TableRow{}
-
 		if deliveryRef.Name != "" {
 			nameRow := metav1beta1.TableRow{
 				Cells: []interface{}{"name:", deliveryRef.Name},
@@ -108,7 +107,7 @@ func DeliverableIssuesPrinter(w io.Writer, deliverable *cartov1alpha1.Deliverabl
 	printIssues := func(deliverable *cartov1alpha1.Deliverable, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		readyRow := metav1beta1.TableRow{
 			Cells: []interface{}{
-				fmt.Sprintf("Deliverable [%s]:", readyCondition.Reason),
+				fmt.Sprintf("%s [%s]:", cartov1alpha1.DeliverableKind, readyCondition.Reason),
 				readyCondition.Message,
 			},
 		}
@@ -118,7 +117,7 @@ func DeliverableIssuesPrinter(w io.Writer, deliverable *cartov1alpha1.Deliverabl
 			if strings.Compare(healthyCondition.Message, readyCondition.Message) != 0 {
 				healthyRow := metav1beta1.TableRow{
 					Cells: []interface{}{
-						fmt.Sprintf("Deliverable [%s]:", healthyCondition.Reason),
+						fmt.Sprintf("%s [%s]:", cartov1alpha1.DeliverableKind, healthyCondition.Reason),
 						healthyCondition.Message,
 					},
 				}

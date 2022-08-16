@@ -16,10 +16,20 @@ limitations under the License.
 
 package printer
 
-import "strings"
+import (
+	"strings"
+
+	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
+)
 
 const (
 	paddingStart = 3
+)
+
+var (
+	supplyChainResourcesKindExcludeList = map[string]bool{
+		cartov1alpha1.DeliverableKind: true,
+	}
 )
 
 func AddPaddingStart(text string) string {

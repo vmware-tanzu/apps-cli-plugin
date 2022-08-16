@@ -194,6 +194,7 @@ Supply Chain reference not found.
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -225,6 +226,7 @@ Supply Chain reference not found.
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -261,6 +263,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -298,6 +301,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -349,6 +353,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -407,6 +412,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -452,6 +458,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -496,6 +503,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -538,6 +546,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -583,6 +592,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -627,6 +637,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -687,6 +698,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -750,6 +762,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -805,6 +818,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -853,6 +867,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -904,6 +919,9 @@ To see logs: "tanzu apps workload tail my-workload"
 								).DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
+								StampedRef(&corev1.ObjectReference{
+									Kind: cartov1alpha1.DeliverableKind,
+								}).
 								ConditionsDie(
 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
 										Status(metav1.ConditionUnknown),
@@ -942,12 +960,12 @@ Source
 Supply Chain
    name:   my-supply-chain
 
-   RESOURCE          READY     HEALTHY   TIME        OUTPUT
-   source-provider   True      True      <unknown>   not found
-   deliverable       Unknown   Unknown   <unknown>   not found
-   image-builder     False     False     <unknown>   not found
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True    True      <unknown>   not found
+   image-builder     False   False     <unknown>   not found
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -1002,6 +1020,9 @@ To see logs: "tanzu apps workload tail my-workload"
 								).DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
+								StampedRef(&corev1.ObjectReference{
+									Kind: cartov1alpha1.DeliverableKind,
+								}).
 								ConditionsDie(
 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
 										Status(metav1.ConditionUnknown),
@@ -1039,12 +1060,12 @@ Source
 Supply Chain
    name:   my-supply-chain
 
-   RESOURCE          READY     HEALTHY   TIME        OUTPUT
-   source-provider   True      True      <unknown>   not found
-   deliverable       Unknown   Unknown   <unknown>   not found
-   image-builder     False     False     <unknown>   image/petclinic
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True    True      <unknown>   not found
+   image-builder     False   False     <unknown>   image/petclinic
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -1090,6 +1111,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -1138,6 +1160,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -1194,6 +1217,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -1255,6 +1279,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -1315,6 +1340,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -1410,6 +1436,7 @@ Supply Chain reference not found.
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -1442,6 +1469,7 @@ Supply Chain reference not found.
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
@@ -1610,10 +1638,20 @@ status:
 						)
 						d.Resources(
 							diecartov1alpha1.RealizedResourceBlank.
+								Name("source-provider").
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      "ImageRepository",
+										Namespace: defaultNamespace,
+										Name:      workloadName,
+									}).
+								ConditionsResourceHealthyReadyTrueDie().
+								DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
 								StampedRef(
 									&corev1.ObjectReference{
-										Kind:      "Deliverable",
+										Kind:      cartov1alpha1.DeliverableKind,
 										Namespace: defaultNamespace,
 										Name:      workloadName,
 									}).ConditionsDie(
@@ -1681,8 +1719,8 @@ Overview
 Supply Chain
    name:   <none>
 
-   RESOURCE      READY   HEALTHY   TIME        OUTPUT
-   deliverable   True    False     <unknown>   Deliverable/my-workload
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True    True      <unknown>   ImageRepository/my-workload
 
 Delivery
    name:   delivery-basic
@@ -1714,10 +1752,20 @@ To see logs: "tanzu apps workload tail my-workload"
 						)
 						d.Resources(
 							diecartov1alpha1.RealizedResourceBlank.
+								Name("source-provider").
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      "ImageRepository",
+										Namespace: defaultNamespace,
+										Name:      workloadName,
+									}).
+								ConditionsResourceHealthyReadyTrueDie().
+								DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
 								StampedRef(
 									&corev1.ObjectReference{
-										Kind:      "Deliverable",
+										Kind:      cartov1alpha1.DeliverableKind,
 										Namespace: defaultNamespace,
 										Name:      workloadName,
 									}).
@@ -1775,8 +1823,8 @@ Overview
 Supply Chain
    name:   <none>
 
-   RESOURCE      READY   HEALTHY   TIME        OUTPUT
-   deliverable   True    True      <unknown>   Deliverable/my-workload
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True    True      <unknown>   ImageRepository/my-workload
 
 Delivery
    name:   delivery-basic
@@ -1811,10 +1859,20 @@ To see logs: "tanzu apps workload tail my-workload"
 						)
 						d.Resources(
 							diecartov1alpha1.RealizedResourceBlank.
+								Name("source-provider").
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      "ImageRepository",
+										Namespace: defaultNamespace,
+										Name:      workloadName,
+									}).
+								ConditionsResourceHealthyReadyTrueDie().
+								DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
 								StampedRef(
 									&corev1.ObjectReference{
-										Kind:      "Deliverable",
+										Kind:      cartov1alpha1.DeliverableKind,
 										Namespace: defaultNamespace,
 										Name:      workloadName,
 									}).
@@ -1850,8 +1908,8 @@ Overview
 Supply Chain
    name:   <none>
 
-   RESOURCE      READY   HEALTHY   TIME        OUTPUT
-   deliverable   True    True      <unknown>   Deliverable/my-workload
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True    True      <unknown>   ImageRepository/my-workload
 
 Delivery
    name:   delivery-basic
@@ -1914,6 +1972,7 @@ Supply Chain
    Supply Chain resources not found.
 
 Delivery
+
    Delivery resources not found.
 
 Messages
