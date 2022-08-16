@@ -543,9 +543,6 @@ func TestDeliverablesIssuesPrinter(t *testing.T) {
 				},
 			},
 		},
-		expectedOutput: `
-   Deliverable [OopsieDoodle]:   
-`,
 	}, {
 		name: "condition ready and health with no message",
 		testDeliverable: &cartov1alpha1.Deliverable{
@@ -567,9 +564,6 @@ func TestDeliverablesIssuesPrinter(t *testing.T) {
 				},
 			},
 		},
-		expectedOutput: `
-   Deliverable [OopsieDoodle]:   
-`,
 	}, {
 		name: "no status",
 		testDeliverable: &cartov1alpha1.Deliverable{

@@ -118,19 +118,22 @@ func WorkloadIssuesPrinter(w io.Writer, workload *cartov1alpha1.Workload) error 
 		return nil
 	}
 	printIssues := func(workload *cartov1alpha1.Workload, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		readyRow := metav1beta1.TableRow{
-			Cells: []interface{}{
-				fmt.Sprintf("%s [%s]:", cartov1alpha1.WorkloadKind, readyCondition.Reason),
-				readyCondition.Message,
-			},
+		rows := []metav1beta1.TableRow{}
+		if strings.TrimSpace(readyCondition.Message) != "" {
+			readyRow := metav1beta1.TableRow{
+				Cells: []interface{}{
+					fmt.Sprintf("%s %s:", cartov1alpha1.WorkloadKind, printer.Sfaintf("[%s]", readyCondition.Reason)),
+					readyCondition.Message,
+				},
+			}
+			rows = append(rows, readyRow)
 		}
-		rows := []metav1beta1.TableRow{readyRow}
 
-		if healthyCondition != nil && healthyCondition.Message != "" {
+		if healthyCondition != nil && strings.TrimSpace(healthyCondition.Message) != "" {
 			if strings.Compare(healthyCondition.Message, readyCondition.Message) != 0 {
 				healthyRow := metav1beta1.TableRow{
 					Cells: []interface{}{
-						fmt.Sprintf("%s [%s]:", cartov1alpha1.WorkloadKind, healthyCondition.Reason),
+						fmt.Sprintf("%s %s:", cartov1alpha1.WorkloadKind, printer.Sfaintf("[%s]", healthyCondition.Reason)),
 						healthyCondition.Message,
 					},
 				}

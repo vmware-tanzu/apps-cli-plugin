@@ -562,9 +562,6 @@ func TestWorkloadIssuesPrinter(t *testing.T) {
 				}},
 			},
 		},
-		expectedOutput: `
-   Workload [OopsieDoodle]:   
-`,
 	}, {
 		name: "condition ready and health with no message",
 		testWorkload: &cartov1alpha1.Workload{
@@ -590,9 +587,6 @@ func TestWorkloadIssuesPrinter(t *testing.T) {
 				}},
 			},
 		},
-		expectedOutput: `
-   Workload [OopsieDoodle]:   
-`,
 	}, {
 		name: "no status",
 		testWorkload: &cartov1alpha1.Workload{
