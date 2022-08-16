@@ -50,7 +50,10 @@ type Client interface {
 	Discovery() discovery.DiscoveryInterface
 	SetLogger(logger logr.Logger)
 	crclient.Client
-	NewBuilder() *resource.Builder
+	ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error)
+	ToRESTConfig() (*rest.Config, error)
+	ToRawKubeConfigLoader() clientcmd.ClientConfig
+	ToRESTMapper() (meta.RESTMapper, error)
 }
 
 func (c *client) DefaultNamespace() string {
@@ -65,7 +68,7 @@ func (c *client) ToRESTConfig() (*rest.Config, error) {
 }
 
 func (c *client) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
-	return disk.NewCachedDiscoveryClientForConfig(c.restConfig, "", "", 1000) // need alignment with sash
+	return disk.NewCachedDiscoveryClientForConfig(c.restConfig, "", "", 0) // need alignment with sash
 }
 func (c *client) ToRawKubeConfigLoader() clientcmd.ClientConfig {
 	return nil

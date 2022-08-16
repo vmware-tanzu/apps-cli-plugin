@@ -186,12 +186,11 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		}
 	}
 	arg := []string{"Pod"}
-	bldr := c.NewBuilder()
-	r := bldr.Unstructured().
+
+	r := c.Builder.Unstructured().
 		NamespaceParam(workload.Namespace).
 		LabelSelectorParam(fmt.Sprintf("%s%s%s", cartov1alpha1.WorkloadLabelName, "=", workload.Name)).
 		ResourceTypeOrNameArgs(true, arg...).
-		// ContinueOnError().
 		Latest().
 		Flatten().
 		TransformRequests(func(req *rest.Request) {

@@ -19,6 +19,10 @@ package testing
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -27,10 +31,15 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/cobra"
 	rtesting "github.com/vmware-labs/reconciler-runtime/testing"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/client-go/rest/fake"
+	"k8s.io/client-go/restmapper"
+	k8sscheme "k8s.io/kubectl/pkg/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // CommandTestSuite provides a declarative model for testing interactions with Kubernetes resources
@@ -82,6 +91,9 @@ type CommandTestCase struct {
 	// GivenObjects represents resources that would already exist within Kubernetes. These
 	// resources are passed directly to the fake client.
 	GivenObjects []client.Object
+	// UnstructuredObjects represents resources that would already exist within Kubernetes. These
+	// resources are passed directly to the fake client.
+	UnstructuredObjects []client.Object
 	// WithReactors installs each ReactionFunc into each fake client. ReactionFuncs intercept
 	// each call to the client providing the ability to mutate the resource or inject an error.
 	WithReactors []ReactionFunc
@@ -206,6 +218,7 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 		}
 
 		c.Client = NewFakeCliClient(expectConfig.Config().Client)
+
 		if tc.ExecHelper != "" {
 			c.Exec = fakeExecCommand(tc.ExecHelper)
 		}
@@ -223,7 +236,30 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 				t.Errorf("error during prepare: %s", err)
 			}
 		}
+		// tc.prapre  and get the context and see
+		c.Builder = resource.NewBuilder(c.Client)
+		if len(tc.GivenObjects) != 0 {
+			for _, obj := range tc.GivenObjects {
+				if strings.ToLower(obj.GetObjectKind().GroupVersionKind().Kind) == "pod" {
+					// pod := corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: obj.GetName()}, TypeMeta: metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"}, Spec: corev1.PodSpec{}}
+					c.Builder = resource.NewFakeBuilder(
+						func(version schema.GroupVersion) (resource.RESTClient, error) {
+							codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
+							UnstructuredClient := &fake.RESTClient{
+								NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
+								Resp:                 &http.Response{StatusCode: http.StatusOK, Header: defaultHeader(), Body: podV1TableObjBody(codec, obj)},
+							}
+							return UnstructuredClient, nil
 
+						},
+						c.ToRESTMapper,
+						func() (restmapper.CategoryExpander, error) {
+							return resource.FakeCategoryExpander, nil
+						},
+					)
+				}
+			}
+		}
 		cmd := cmdFactory(ctx, c)
 		cmd.SilenceErrors = true
 		cmd.SilenceUsage = true
@@ -276,4 +312,46 @@ func fakeExecCommand(helper string) func(context.Context, string, ...string) *ex
 		cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
 		return cmd
 	}
+}
+func defaultHeader() http.Header {
+	header := http.Header{}
+	header.Set("Content-Type", runtime.ContentTypeJSON)
+	return header
+}
+
+// build a meta table response from a pod list
+func podV1TableObjBody(codec runtime.Codec, obj client.Object) io.ReadCloser {
+	var podColumns = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string", Format: "name"},
+		{Name: "Ready", Type: "string", Format: ""},
+		{Name: "Status", Type: "string", Format: ""},
+		{Name: "Restarts", Type: "integer", Format: ""},
+		{Name: "Age", Type: "string", Format: ""},
+		{Name: "IP", Type: "string", Format: "", Priority: 1},
+		{Name: "Node", Type: "string", Format: "", Priority: 1},
+		{Name: "Nominated Node", Type: "string", Format: "", Priority: 1},
+		{Name: "Readiness Gates", Type: "string", Format: "", Priority: 1},
+	}
+	table := &metav1.Table{
+		TypeMeta:          metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"},
+		ColumnDefinitions: podColumns,
+	}
+	b := bytes.NewBuffer(nil)
+	codec.Encode(obj, b)
+	table.Rows = append(table.Rows, metav1.TableRow{
+		Object: runtime.RawExtension{Raw: b.Bytes()},
+		Cells:  []interface{}{obj.GetName(), "0/0", "", int64(0), "<unknown>", "<none>", "<none>", "<none>", "<none>"},
+	})
+
+	data, err := json.Marshal(table)
+	if err != nil {
+		panic(err)
+	}
+	if !strings.Contains(string(data), `"meta.k8s.io/v1"`) {
+		panic("expected v1, got " + string(data))
+	}
+	return ioutil.NopCloser(bytes.NewReader(data))
+}
+func ObjBody(codec runtime.Codec, obj runtime.Object) io.ReadCloser {
+	return ioutil.NopCloser(bytes.NewReader([]byte(runtime.EncodeOrDie(codec, obj))))
 }

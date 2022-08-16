@@ -25,6 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/cli-runtime/pkg/resource"
 
 	// "k8s.io/cli-runtime/pkg/resource"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
@@ -45,6 +46,7 @@ type Config struct {
 	Stdout          io.Writer
 	Stderr          io.Writer
 	Verbose         *int32
+	Builder         *resource.Builder
 }
 
 func NewDefaultConfig(name string, scheme *runtime.Scheme) *Config {
@@ -120,5 +122,8 @@ func Initialize(name string, scheme *runtime.Scheme) *Config {
 func (c *Config) init() {
 	if c.Client == nil {
 		c.Client = NewClient(c.KubeConfigFile, c.CurrentContext, c.Scheme)
+	}
+	if c.Builder == nil {
+		c.Builder = resource.NewBuilder(c.Client)
 	}
 }
