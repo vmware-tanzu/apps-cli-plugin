@@ -183,6 +183,64 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
+			Name:         "Create workload with valid name from local source code values from environment variables",
+			WorkloadName: "test-create-local-registry-venv",
+			Command: func() it.CommandLine {
+				os.Setenv("TANZU_APPS_SOURCE_IMAGE", os.Getenv("BUNDLE"))
+				c := *it.NewTanzuAppsCommandLine(
+					"workload", "test-create-local-registry-venv",
+					"--local-path=./testdata/hello.go.jar",
+					namespaceFlag,
+					"--yes",
+				)
+				return c
+			}(),
+			ExpectedObject: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-create-local-registry-venv",
+					Namespace: it.TestingNamespace,
+					Labels: map[string]string{
+						"apps.tanzu.vmware.com/workload-type": "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image: fmt.Sprintf("%v@sha256:f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be", os.Getenv("BUNDLE")),
+					},
+				},
+			},
+			Verify: func(t *testing.T, output string, err error) {
+				if _, err := exec.LookPath("imgpkg"); err != nil {
+					t.Errorf("expected imgpkg in PATH: %v", err)
+					t.FailNow()
+				}
+				dir, _ := ioutil.TempDir("", "")
+				defer os.RemoveAll(dir)
+
+				if err := it.NewCommandLine("imgpkg", "pull", "-i", os.Getenv("BUNDLE"), "-o", dir).Exec(); err != nil {
+					t.Errorf("unexpected error %v ", err)
+					t.FailNow()
+				}
+				// compare files
+				got, err := os.ReadFile(filepath.Join(dir, "hello.go"))
+				if err != nil {
+					t.Errorf("unexpected error reading file %v ", err)
+					t.FailNow()
+				}
+
+				excepted, err := os.ReadFile("./testdata/hello.go")
+				if err != nil {
+					t.Errorf("unexpected error reading file %v ", err)
+					t.FailNow()
+				}
+
+				if diff := cmp.Diff(string(excepted), string(got)); diff != "" {
+					t.Errorf("(-expected, +actual)\n%s", diff)
+					t.FailNow()
+				}
+			},
+		},
+		{
 			Name:         "Update the created workload",
 			WorkloadName: "test-create-git-annotations-workload",
 			Command: *it.NewTanzuAppsCommandLine(

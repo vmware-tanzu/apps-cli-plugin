@@ -229,5 +229,8 @@ Workload configuration options include:
 	// Define common flags
 	opts.DefineFlags(ctx, c, cmd)
 
+	// Bind flags to environment variables
+	opts.DefineEnvVars(ctx, c, cmd)
+
 	return cmd
 }
