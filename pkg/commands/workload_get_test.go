@@ -17,7 +17,6 @@ limitations under the License.
 package commands_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -33,13 +32,13 @@ import (
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	knativeservingv1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/knative/serving/v1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
 	diecartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 	diev1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/knative/serving/v1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/printer"
 )
 
 func TestWorkloadGetOptionsValidate(t *testing.T) {
@@ -112,8 +111,7 @@ func TestWorkloadGetCommand(t *testing.T) {
 	defaultNamespace := "default"
 	workloadName := "my-workload"
 	url := "https://example.com"
-	type key string
-	var podKey key
+
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
@@ -132,7 +130,7 @@ func TestWorkloadGetCommand(t *testing.T) {
 			d.Namespace(defaultNamespace)
 			d.AddLabel(cartov1alpha1.WorkloadLabelName, workloadName)
 			d.CreationTimestamp(objTimeStamp)
-		}).Kind("Pod")
+		}).Kind("pod")
 
 	pod2Die := diecorev1.PodBlank.
 		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -140,7 +138,7 @@ func TestWorkloadGetCommand(t *testing.T) {
 			d.Namespace(defaultNamespace)
 			d.AddLabel(cartov1alpha1.WorkloadLabelName, workloadName)
 			d.CreationTimestamp(objTimeStamp)
-		}).Kind("Pod")
+		}).Kind("pod")
 	ksvcDieWithURL := diev1.ServiceBlank.
 		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 			d.Name("ksvc1")
@@ -185,17 +183,21 @@ func TestWorkloadGetCommand(t *testing.T) {
 			Args:         []string{workloadName},
 			GivenObjects: []client.Object{parent},
 			ExpectOutput: `
-		---
-		# my-workload: <unknown>
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: <unknown>
+---
+Overview
+   type:   <empty>
 
 Supply Chain reference not found.
 
    Supply Chain resources not found.
 
-   Messages
+Delivery
+
+   Delivery resources not found.
+
+Messages
    No messages found.
 
 No pods found for workload.
@@ -223,7 +225,11 @@ Supply Chain reference not found.
 
    Supply Chain resources not found.
 
-   Messages
+Delivery
+
+   Delivery resources not found.
+
+Messages
    No messages found.
 
 No pods found for workload.
@@ -252,14 +258,16 @@ Overview
    type:   <empty>
 
 Supply Chain
-   name:          <none>
-   last update:   <unknown>
-   ready:         False
+   name:   <none>
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -288,13 +296,15 @@ Overview
    type:   <empty>
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   
-   ready:         
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
+Delivery
+
+   Delivery resources not found.
+
+Messages
    No messages found.
 
 No pods found for workload.
@@ -338,14 +348,16 @@ Overview
    type:   <empty>
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         False
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 Services
    CLAIM      NAME         KIND         API VERSION
@@ -395,14 +407,16 @@ Overview
    type:   web
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         False
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 Services
    CLAIM      NAME         KIND         API VERSION
@@ -439,13 +453,15 @@ Overview
    type:   <empty>
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         True
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
+Delivery
+
+   Delivery resources not found.
+
+Messages
    No messages found.
 
 No pods found for workload.
@@ -482,13 +498,15 @@ Overview
    type:   web
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         True
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
+Delivery
+
+   Delivery resources not found.
+
+Messages
    No messages found.
 
 No pods found for workload.
@@ -523,14 +541,16 @@ Overview
    type:   <empty>
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         Unknown
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -567,14 +587,16 @@ Overview
    type:   web
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         Unknown
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -610,14 +632,16 @@ Overview
    type:   web
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         False
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -669,14 +693,16 @@ Source
    commit:   abcdef
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         False
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -731,14 +757,16 @@ Source
    commit:   abcdef
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         False
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -785,14 +813,16 @@ Source
    image:   my-registry/my-image:v1.0.0
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         False
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -831,21 +861,23 @@ Source
    type:    image
    image:   docker.io/library/nginx:latest
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         False
+Supply Chain
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
 To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show resources",
 			Args: []string{workloadName},
@@ -887,6 +919,9 @@ To see logs: "tanzu apps workload tail my-workload"
 								).DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
+								StampedRef(&corev1.ObjectReference{
+									Kind: cartov1alpha1.DeliverableKind,
+								}).
 								ConditionsDie(
 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
 										Status(metav1.ConditionUnknown),
@@ -909,11 +944,11 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: OopsieDoodle
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   <empty>
 
 Source
    type:     git
@@ -923,17 +958,18 @@ Source
    commit:   abcdef
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         False
+   name:   my-supply-chain
 
-   RESOURCE          READY     HEALTHY   TIME        OUTPUT
-   source-provider   True      True      <unknown>   not found
-   deliverable       Unknown   Unknown   <unknown>   not found
-   image-builder     False     False     <unknown>   not found
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True    True      <unknown>   not found
+   image-builder     False   False     <unknown>   not found
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -984,6 +1020,9 @@ To see logs: "tanzu apps workload tail my-workload"
 								).DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
+								StampedRef(&corev1.ObjectReference{
+									Kind: cartov1alpha1.DeliverableKind,
+								}).
 								ConditionsDie(
 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
 										Status(metav1.ConditionUnknown),
@@ -1010,7 +1049,6 @@ To see logs: "tanzu apps workload tail my-workload"
 ---
 Overview
    type:   web
->>>>>>> 7751b17 (fixed the test cases)
 
 Source
    type:     git
@@ -1020,29 +1058,27 @@ Source
    commit:   abcdef
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         False
+   name:   my-supply-chain
 
-   RESOURCE          READY     HEALTHY   TIME        OUTPUT
-   source-provider   True      True      <unknown>   not found
-   deliverable       Unknown   Unknown   <unknown>   not found
-   image-builder     False     False     <unknown>   image/petclinic
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True    True      <unknown>   not found
+   image-builder     False   False     <unknown>   image/petclinic
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
 To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show healthy rule condition issue",
 			Args: []string{workloadName},
-			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
-				return context.WithValue(ctx, podKey, "Pod"), nil
-			},
 			GivenObjects: []client.Object{
 				parent.
 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
@@ -1092,9 +1128,6 @@ To see logs: "tanzu apps workload tail my-workload"
 		}, {
 			Name: "show only ready condition issue",
 			Args: []string{workloadName},
-			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
-				return context.WithValue(ctx, podKey, "Pod"), nil
-			},
 			GivenObjects: []client.Object{
 				parent.
 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
@@ -1122,14 +1155,16 @@ Overview
    type:   <empty>
 
 Supply Chain
-   name:          <none>
-   last update:   <unknown>
-   ready:         Unknown
+   name:   <none>
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 Pods
    NAME   READY   STATUS   RESTARTS   AGE
@@ -1141,9 +1176,6 @@ To see logs: "tanzu apps workload tail my-workload"
 		}, {
 			Name: "show pods",
 			Args: []string{workloadName},
-			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
-				return context.WithValue(ctx, podKey, "Pod"), nil
-			},
 			GivenObjects: []client.Object{
 				parent.
 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
@@ -1170,7 +1202,7 @@ To see logs: "tanzu apps workload tail my-workload"
 					}).
 					StatusDie(func(d *diecorev1.PodStatusDie) {
 						d.Phase(corev1.PodFailed)
-					}).Kind("pod"),
+					}),
 			},
 			ExpectOutput: `
 ---
@@ -1180,20 +1212,21 @@ Overview
    type:   <empty>
 
 Supply Chain
-   name:          <none>
-   last update:   <unknown>
-   ready:         Unknown
+   name:   <none>
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 Pods
-   NAME                 READY   STATUS   RESTARTS   AGE
-   pod1                 0/0              0          <unknown>
-   pod2                 0/0              0          <unknown>
-   pod-something-else   0/0              0          <unknown>
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
+   pod2   0/0              0          <unknown>
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1241,14 +1274,16 @@ Overview
    type:   <empty>
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         Unknown
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
-   OopsieDoodle:   a hopefully informative message about what went wrong
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
@@ -1300,13 +1335,15 @@ Overview
    type:   web
 
 Supply Chain
-   name:          my-supply-chain
-   last update:   <unknown>
-   ready:         True
+   name:   my-supply-chain
 
    Supply Chain resources not found.
 
-   Messages
+Delivery
+
+   Delivery resources not found.
+
+Messages
    No messages found.
 
 Pods
@@ -1398,7 +1435,11 @@ Supply Chain reference not found.
 
    Supply Chain resources not found.
 
-   Messages
+Delivery
+
+   Delivery resources not found.
+
+Messages
    No messages found.
 
 No pods found for workload.
@@ -1426,7 +1467,11 @@ Supply Chain reference not found.
 
    Supply Chain resources not found.
 
-   Messages
+Delivery
+
+   Delivery resources not found.
+
+Messages
    No messages found.
 
 No pods found for workload.
@@ -1575,6 +1620,370 @@ status:
 		"supplyChainRef": {}
 	}
 }
+`,
+		}, {
+			Name: "show healthy rule condition issue from workload and deliverable",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.CreateConditionReadyUnknown(
+								"OopsieDoodle",
+								"a hopefully informative message about what went wrong"),
+							diecartov1alpha1.CreateConditionHealthyUnknown(
+								"AnotherOopsieDoodle",
+								"a hopefully informative message about what is not healthy"),
+						)
+						d.Resources(
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("source-provider").
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      "ImageRepository",
+										Namespace: defaultNamespace,
+										Name:      workloadName,
+									}).
+								ConditionsResourceHealthyReadyTrueDie().
+								DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("deliverable").
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      cartov1alpha1.DeliverableKind,
+										Namespace: defaultNamespace,
+										Name:      workloadName,
+									}).ConditionsDie(
+								diecartov1alpha1.CreateConditionResourceReadyTrue("", ""),
+								diecartov1alpha1.CreateConditionResourceHealthyFalse(
+									"OopsieDoodle Resource",
+									"a hopefully informative message about what went wrong"),
+							).DieRelease(),
+						)
+					}),
+				deliverableBlank.
+					StatusDie(func(d *diecartov1alpha1.DeliverableStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.CreateConditionReadyUnknown(
+								"OopsieDoodle",
+								"a hopefully informative message about what went wrong"),
+							diecartov1alpha1.CreateConditionHealthyUnknown(
+								"AnotherOopsieDoodle",
+								"a hopefully informative message about what is not healthy"),
+						)
+						d.DeliveryRef(cartov1alpha1.ObjectReference{
+							Kind:      "ClusterDelivery",
+							Name:      "delivery-basic",
+							Namespace: defaultNamespace,
+						})
+						d.Resources(
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("source-provider").
+								ConditionsDie(
+									diecartov1alpha1.CreateConditionResourceReadyTrue("", ""),
+									diecartov1alpha1.CreateConditionResourceHealthyFalse(
+										"OopsieDoodle Resource",
+										"a hopefully informative message about what went wrong"),
+								).
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      "ImageRepository",
+										Namespace: defaultNamespace,
+										Name:      workloadName + "-delivery",
+									}).
+								DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("deployer").
+								ConditionsDie(
+									diecartov1alpha1.CreateConditionResourceReadyTrue("", ""),
+									diecartov1alpha1.CreateConditionResourceHealthyUnknown("", ""),
+								).
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      "App",
+										Namespace: defaultNamespace,
+										Name:      workloadName,
+									}).
+								DieRelease(),
+						)
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: Unknown
+---
+Overview
+   type:   <empty>
+
+Supply Chain
+   name:   <none>
+
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True    True      <unknown>   ImageRepository/my-workload
+
+Delivery
+   name:   delivery-basic
+
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True    False     <unknown>   ImageRepository/my-workload-delivery
+   deployer          True    Unknown   <unknown>   App/my-workload
+
+Messages
+   Workload [OopsieDoodle]:          a hopefully informative message about what went wrong
+   Workload [AnotherOopsieDoodle]:   a hopefully informative message about what is not healthy
+   Deliverable [OopsieDoodle]:          a hopefully informative message about what went wrong
+   Deliverable [AnotherOopsieDoodle]:   a hopefully informative message about what is not healthy
+
+No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
+`,
+		}, {
+			Name: "show delivery section with no issues",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.CreateConditionReadyTrue("", ""),
+							diecartov1alpha1.CreateConditionHealthyTrue("", ""),
+						)
+						d.Resources(
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("source-provider").
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      "ImageRepository",
+										Namespace: defaultNamespace,
+										Name:      workloadName,
+									}).
+								ConditionsResourceHealthyReadyTrueDie().
+								DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("deliverable").
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      cartov1alpha1.DeliverableKind,
+										Namespace: defaultNamespace,
+										Name:      workloadName,
+									}).
+								ConditionsResourceHealthyReadyTrueDie().
+								DieRelease(),
+						)
+					}),
+				pod1Die.
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodRunning)
+					}),
+				pod2Die.
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodRunning)
+					}),
+				deliverableBlank.
+					ConditionsHealthyReadyTrueDie().
+					StatusDie(func(d *diecartov1alpha1.DeliverableStatusDie) {
+						d.DeliveryRef(cartov1alpha1.ObjectReference{
+							Kind:      "ClusterDelivery",
+							Name:      "delivery-basic",
+							Namespace: defaultNamespace,
+						})
+						d.Resources(
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("source-provider").
+								ConditionsResourceHealthyReadyTrueDie().
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      "ImageRepository",
+										Namespace: defaultNamespace,
+										Name:      workloadName + "-delivery",
+									}).
+								DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("deployer").
+								ConditionsResourceHealthyReadyTrueDie().
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      "App",
+										Namespace: defaultNamespace,
+										Name:      workloadName,
+									}).
+								DieRelease(),
+						)
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: Ready
+---
+Overview
+   type:   <empty>
+
+Supply Chain
+   name:   <none>
+
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True    True      <unknown>   ImageRepository/my-workload
+
+Delivery
+   name:   delivery-basic
+
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True    True      <unknown>   ImageRepository/my-workload-delivery
+   deployer          True    True      <unknown>   App/my-workload
+
+Messages
+   No messages found.
+
+Pods
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
+   pod2   0/0              0          <unknown>
+
+To see logs: "tanzu apps workload tail my-workload"
+
+`,
+		}, {
+			Name: "show delivery section with no delivery resources information",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionTrue).
+								Reason(cartov1alpha1.ConditionReady),
+							diecartov1alpha1.WorkloadConditionHealthyBlank.
+								Status(metav1.ConditionTrue),
+						)
+						d.Resources(
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("source-provider").
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      "ImageRepository",
+										Namespace: defaultNamespace,
+										Name:      workloadName,
+									}).
+								ConditionsResourceHealthyReadyTrueDie().
+								DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("deliverable").
+								StampedRef(
+									&corev1.ObjectReference{
+										Kind:      cartov1alpha1.DeliverableKind,
+										Namespace: defaultNamespace,
+										Name:      workloadName,
+									}).
+								ConditionsResourceHealthyReadyTrueDie().
+								DieRelease(),
+						)
+					}),
+				pod1Die.
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodRunning)
+					}),
+				pod2Die.
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodRunning)
+					}),
+				deliverableBlank.
+					ConditionsHealthyReadyTrueDie().
+					StatusDie(func(d *diecartov1alpha1.DeliverableStatusDie) {
+						d.DeliveryRef(cartov1alpha1.ObjectReference{
+							Kind:      "ClusterDelivery",
+							Name:      "delivery-basic",
+							Namespace: defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: Ready
+---
+Overview
+   type:   <empty>
+
+Supply Chain
+   name:   <none>
+
+   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   source-provider   True    True      <unknown>   ImageRepository/my-workload
+
+Delivery
+   name:   delivery-basic
+
+   Delivery resources not found.
+
+Messages
+   No messages found.
+
+Pods
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
+   pod2   0/0              0          <unknown>
+
+To see logs: "tanzu apps workload tail my-workload"
+
+`,
+		}, {
+			Name: "show delivery section with no deliverable information",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionTrue).
+								Reason(cartov1alpha1.ConditionReady),
+							diecartov1alpha1.WorkloadConditionHealthyBlank.
+								Status(metav1.ConditionTrue),
+						)
+					}),
+				pod1Die.
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodRunning)
+					}),
+				pod2Die.
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodRunning)
+					}),
+				deliverableBlank.
+					ConditionsHealthyReadyTrueDie().
+					StatusDie(func(d *diecartov1alpha1.DeliverableStatusDie) {
+						d.DeliveryRef(cartov1alpha1.ObjectReference{
+							Kind:      "ClusterDelivery",
+							Name:      "delivery-basic",
+							Namespace: defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: Ready
+---
+Overview
+   type:   <empty>
+
+Supply Chain
+   name:   <none>
+
+   Supply Chain resources not found.
+
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   No messages found.
+
+Pods
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
+   pod2   0/0              0          <unknown>
+
+To see logs: "tanzu apps workload tail my-workload"
+
 `,
 		},
 	}
