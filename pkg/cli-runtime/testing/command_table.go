@@ -242,39 +242,22 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 					pods = append(pods, obj)
 				}
 			}
-			if len(pods) != 0 {
-				c.Builder = resource.NewFakeBuilder(
-					func(version schema.GroupVersion) (resource.RESTClient, error) {
-						codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
-						UnstructuredClient := &fake.RESTClient{
-							NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
-							Resp:                 &http.Response{StatusCode: http.StatusOK, Header: defaultHeader(), Body: podV1TableObjBody(codec, pods)},
-						}
-						return UnstructuredClient, nil
 
-					},
-					c.ToRESTMapper,
-					func() (restmapper.CategoryExpander, error) {
-						return resource.FakeCategoryExpander, nil
-					},
-				)
-			} else {
-				c.Builder = resource.NewFakeBuilder(
-					func(version schema.GroupVersion) (resource.RESTClient, error) {
-						codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
-						UnstructuredClient := &fake.RESTClient{
-							NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
-							Resp:                 &http.Response{StatusCode: http.StatusOK, Header: defaultHeader(), Body: podV1TableObjBody(codec, pods)},
-						}
-						return UnstructuredClient, nil
+			c.Builder = resource.NewFakeBuilder(
+				func(version schema.GroupVersion) (resource.RESTClient, error) {
+					codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
+					UnstructuredClient := &fake.RESTClient{
+						NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
+						Resp:                 &http.Response{StatusCode: http.StatusOK, Header: defaultHeader(), Body: podV1TableObjBody(codec, pods)},
+					}
+					return UnstructuredClient, nil
 
-					},
-					c.ToRESTMapper,
-					func() (restmapper.CategoryExpander, error) {
-						return resource.FakeCategoryExpander, nil
-					},
-				)
-			}
+				},
+				c.ToRESTMapper,
+				func() (restmapper.CategoryExpander, error) {
+					return resource.FakeCategoryExpander, nil
+				},
+			)
 		}
 
 		cmd := cmdFactory(ctx, c)
