@@ -24,11 +24,9 @@ import (
 	"os/exec"
 
 	"github.com/spf13/cobra"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/resource"
-
-	// "k8s.io/cli-runtime/pkg/resource"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 )
 
 const defaultTanzuIgnoreFile = ".tanzuignore"
