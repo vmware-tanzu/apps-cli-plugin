@@ -26,6 +26,7 @@ import (
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -218,23 +219,40 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		}
 	}
 
-	pods := &corev1.PodList{}
-	err = c.List(ctx, pods, client.InNamespace(workload.Namespace), client.MatchingLabels{cartov1alpha1.WorkloadLabelName: workload.Name})
+	arg := []string{"Pod"}
+	r := c.Builder.Unstructured().
+		NamespaceParam(workload.Namespace).
+		LabelSelectorParam(fmt.Sprintf("%s%s%s", cartov1alpha1.WorkloadLabelName, "=", workload.Name)).
+		ResourceTypeOrNameArgs(true, arg...).
+		Latest().
+		Flatten().
+		TransformRequests(func(req *rest.Request) {
+			req.SetHeader("Accept", strings.Join([]string{
+				fmt.Sprintf("application/json;as=Table;v=%s;g=%s", metav1.SchemeGroupVersion.Version, metav1.GroupName),
+				"application/json",
+			}, ","))
+		}).
+		Do()
+	infos, err := r.Infos()
 	if err != nil {
 		c.Eprintf("\n")
 		c.Eerrorf("Failed to list pods:\n")
 		c.Eprintf("  %s\n", err)
 	} else {
-		if len(pods.Items) == 0 {
+		if len(infos) == 0 {
 			c.Printf("\n")
 			c.Infof("No pods found for workload.\n")
 		} else {
-			pods = pods.DeepCopy()
-			printer.SortByNamespaceAndName(pods.Items)
-			c.Printf("\n")
-			c.Boldf("Pods\n")
-			if err := printer.PodTablePrinter(c, pods); err != nil {
-				return err
+			for ix := range infos {
+				tableResult, podlist, _ := printer.DecodeIntoTable(infos[ix].Object)
+				if len(podlist) == 0 {
+					c.Printf("\n")
+					c.Infof("No pods found for workload.\n")
+				} else {
+					c.Printf("\n")
+					c.Boldf("Pods\n")
+					printer.PodTablePrinterFromObject(c, podlist, tableResult)
+				}
 			}
 		}
 	}

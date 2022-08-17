@@ -17,11 +17,15 @@ limitations under the License.
 package printer
 
 import (
+	"fmt"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/integer"
 
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
@@ -30,6 +34,14 @@ import (
 )
 
 const TerminatingPhase = "Terminating"
+
+type Podview struct {
+	name     string
+	ready    string
+	status   string
+	restarts string
+	age      string
+}
 
 func PodTablePrinter(c *cli.Config, podList *corev1.PodList) error {
 	printPodRow := func(pod *corev1.Pod, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
@@ -79,4 +91,94 @@ func maxContainerRestarts(status corev1.PodStatus) int {
 		maxRestarts = integer.IntMax(maxRestarts, int(c.RestartCount))
 	}
 	return maxRestarts
+}
+func PodTablePrinterFromObject(c *cli.Config, podlist []Podview, tableResult runtime.Object) error {
+
+	printPodRow := func(poddtls *Podview, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
+		row := metav1beta1.TableRow{
+			Object: runtime.RawExtension{Object: nil},
+		}
+		row.Cells = append(row.Cells,
+			poddtls.name,
+			poddtls.ready,
+			poddtls.status,
+			poddtls.restarts,
+			poddtls.age,
+		)
+		return []metav1beta1.TableRow{row}, nil
+	}
+	printPodList := func(podlist []Podview, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
+		rows := make([]metav1beta1.TableRow, 0, len(podlist))
+		for i := range podlist {
+			r, err := printPodRow(&podlist[i], printOpts)
+			if err != nil {
+				return nil, err
+			}
+			rows = append(rows, r...)
+		}
+		return rows, nil
+	}
+	tablePrinter := table.NewTablePrinter(table.PrintOptions{PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
+		columns := []metav1beta1.TableColumnDefinition{
+			{Name: "Name", Type: "string"},
+			{Name: "Ready", Type: "string"},
+			{Name: "Status", Type: "string"},
+			{Name: "Restarts", Type: "string"},
+			{Name: "Age", Type: "string"},
+		}
+		h.TableHandler(columns, printPodList)
+		h.TableHandler(columns, printPodRow)
+	})
+
+	return tablePrinter.PrintObj(tableResult, c.Stdout)
+}
+func DecodeIntoTable(obj runtime.Object) (runtime.Object, []Podview, error) {
+	event, isEvent := obj.(*metav1.WatchEvent)
+	if isEvent {
+		obj = event.Object.Object
+	}
+	var poddtls []Podview
+	if !recognizedTableVersions[obj.GetObjectKind().GroupVersionKind()] {
+		return nil, poddtls, fmt.Errorf("attempt to decode non-Table object")
+	}
+
+	unstr, ok := obj.(*unstructured.Unstructured)
+	if !ok {
+		return nil, poddtls, fmt.Errorf("attempt to decode non-Unstructured object")
+	}
+	table := &metav1.Table{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstr.Object, table); err != nil {
+		return nil, poddtls, err
+	}
+	poddtls = make([]Podview, len(table.Rows))
+	for i := range table.Rows {
+		row := &table.Rows[i]
+		if row.Object.Raw == nil || row.Object.Object != nil {
+			continue
+		}
+		var converted runtime.Object
+		var err error
+		if len(row.Cells) != 0 {
+			poddtls[i].name = fmt.Sprintf("%v", row.Cells[0])
+			poddtls[i].ready = fmt.Sprintf("%v", row.Cells[1])
+			poddtls[i].status = fmt.Sprintf("%v", row.Cells[2])
+			poddtls[i].restarts = fmt.Sprintf("%v", row.Cells[3])
+			poddtls[i].age = fmt.Sprintf("%v", row.Cells[4])
+			converted, err = runtime.Decode(unstructured.UnstructuredJSONScheme, row.Object.Raw)
+			if err != nil {
+				return nil, poddtls, err
+			}
+		}
+		row.Object.Object = converted
+	}
+
+	return table, poddtls, nil
+}
+
+// TablePrinter decodes table objects into typed objects before delegating to another printer.
+// Non-table types are simply passed through
+
+var recognizedTableVersions = map[schema.GroupVersionKind]bool{
+	metav1beta1.SchemeGroupVersion.WithKind("Table"): true,
+	metav1.SchemeGroupVersion.WithKind("Table"):      true,
 }

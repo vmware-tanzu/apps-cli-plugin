@@ -31,6 +31,8 @@ import (
 	"k8s.io/client-go/util/flowcontrol"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
+	"k8s.io/client-go/discovery/cached/disk"
+
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 )
 
@@ -49,6 +51,9 @@ type Client interface {
 	Discovery() discovery.DiscoveryInterface
 	SetLogger(logger logr.Logger)
 	crclient.Client
+	ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error)
+	ToRESTConfig() (*rest.Config, error)
+	ToRESTMapper() (meta.RESTMapper, error)
 }
 
 func (c *client) DefaultNamespace() string {
@@ -65,6 +70,16 @@ func (c *client) Discovery() discovery.DiscoveryInterface {
 
 func (c *client) Client() crclient.Client {
 	return c.lazyLoadClientOrDie()
+}
+func (c *client) ToRESTConfig() (*rest.Config, error) {
+	return c.KubeRestConfig(), nil
+}
+
+func (c *client) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
+	return disk.NewCachedDiscoveryClientForConfig(c.restConfig, "", "", 0) // need alignment with sash
+}
+func (c *client) ToRESTMapper() (meta.RESTMapper, error) {
+	return c.RESTMapper(), nil
 }
 
 func (c *client) Get(ctx context.Context, key crclient.ObjectKey, obj crclient.Object) error {

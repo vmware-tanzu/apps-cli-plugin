@@ -20,8 +20,17 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/meta/testrestmapper"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/discovery/cached/disk"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/rest/fake"
+	"k8s.io/client-go/restmapper"
+	"k8s.io/kubectl/pkg/scheme"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
@@ -36,7 +45,7 @@ func (c *fakeclient) KubeRestConfig() *rest.Config {
 }
 
 func (c *fakeclient) Discovery() discovery.DiscoveryInterface {
-	panic(fmt.Errorf("not implemented"))
+	return discovery.NewDiscoveryClientForConfigOrDie(&rest.Config{})
 }
 
 func (c *fakeclient) SetLogger(logger logr.Logger) {
@@ -50,7 +59,132 @@ func NewFakeCliClient(c crclient.Client) cli.Client {
 	}
 }
 
+// RESTClient returns a REST client from TestFactory
+func (c *fakeclient) RESTClient() (*rest.RESTClient, error) {
+	// Swap out the HTTP client out of the client with the fake's version.
+	fakeClient := c.Clients.(*fake.RESTClient)
+	restClient, err := rest.RESTClientFor(c.ClientConfigVal)
+	if err != nil {
+		panic(err)
+	}
+	restClient.Client = fakeClient.Client
+	return restClient, nil
+}
+func (c *fakeclient) RESTMapper() meta.RESTMapper {
+	return testRESTMapper()
+}
+func (c *fakeclient) ToRESTMapper() (meta.RESTMapper, error) {
+	return c.RESTMapper(), nil
+}
+func (c *fakeclient) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
+	return disk.NewCachedDiscoveryClientForConfig(&rest.Config{}, "", "", 0) // need alignment with sash
+}
+func (c *fakeclient) ToRESTConfig() (*rest.Config, error) {
+	return c.KubeRestConfig(), nil
+}
+func NewFakeCachedDiscoveryClient() *FakeCachedDiscoveryClient {
+	return &FakeCachedDiscoveryClient{
+		Groups:             []*metav1.APIGroup{},
+		Resources:          []*metav1.APIResourceList{},
+		PreferredResources: []*metav1.APIResourceList{},
+		Invalidations:      0,
+	}
+}
+func (d *FakeCachedDiscoveryClient) ServerGroupsAndResources() ([]*metav1.APIGroup, []*metav1.APIResourceList, error) {
+	return d.Groups, d.Resources, nil
+}
+
+// NewBuilder returns a new resource builder for structured api objects.
+func (c *fakeclient) NewBuilder() *resource.Builder {
+	return resource.NewFakeBuilder(
+		func(version schema.GroupVersion) (resource.RESTClient, error) {
+			if c.UnstructuredClientForMappingFunc != nil {
+				return c.UnstructuredClientForMappingFunc(version)
+			}
+			if c.UnstructuredClient != nil {
+				return c.UnstructuredClient, nil
+			}
+			return c.Clients, nil
+		},
+		c.ToRESTMapper,
+		func() (restmapper.CategoryExpander, error) {
+			return resource.FakeCategoryExpander, nil
+		},
+	)
+}
+
+type FakeCachedDiscoveryClient struct {
+	discovery.DiscoveryInterface
+	Groups             []*metav1.APIGroup
+	Resources          []*metav1.APIResourceList
+	PreferredResources []*metav1.APIResourceList
+	Invalidations      int
+}
+
 type fakeclient struct {
 	defaultNamespace string
 	crclient.Client
+	UnstructuredClientForMappingFunc resource.FakeClientFunc
+	UnstructuredClient               RESTClient
+	Clients                          RESTClient
+	ClientConfigVal                  *rest.Config
+}
+
+func testRESTMapper() meta.RESTMapper {
+	groupResources := testDynamicResources()
+	mapper := restmapper.NewDiscoveryRESTMapper(groupResources)
+	// for backwards compatibility with existing tests, allow rest mappings from the scheme to show up
+	// TODO: make this opt-in?
+	mapper = meta.FirstHitRESTMapper{
+		MultiRESTMapper: meta.MultiRESTMapper{
+			mapper,
+			testrestmapper.TestOnlyStaticRESTMapper(scheme.Scheme),
+		},
+	}
+
+	fakeDs := NewFakeCachedDiscoveryClient()
+	expander := restmapper.NewShortcutExpander(mapper, fakeDs)
+	return expander
+}
+
+func testDynamicResources() []*restmapper.APIGroupResources {
+	return []*restmapper.APIGroupResources{
+		{
+			Group: metav1.APIGroup{
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1": {
+					{Name: "pods", Namespaced: true, Kind: "Pod"},
+					{Name: "services", Namespaced: true, Kind: "Service"},
+					{Name: "replicationcontrollers", Namespaced: true, Kind: "ReplicationController"},
+					{Name: "componentstatuses", Namespaced: false, Kind: "ComponentStatus"},
+					{Name: "nodes", Namespaced: false, Kind: "Node"},
+					{Name: "secrets", Namespaced: true, Kind: "Secret"},
+					{Name: "configmaps", Namespaced: true, Kind: "ConfigMap"},
+					{Name: "namespacedtype", Namespaced: true, Kind: "NamespacedType"},
+					{Name: "namespaces", Namespaced: false, Kind: "Namespace"},
+					{Name: "resourcequotas", Namespaced: true, Kind: "ResourceQuota"},
+				},
+			},
+		},
+		{
+			Group: metav1.APIGroup{
+				Name: "extensions",
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1beta1"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1beta1"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1beta1": {
+					{Name: "deployments", Namespaced: true, Kind: "Deployment"},
+					{Name: "replicasets", Namespaced: true, Kind: "ReplicaSet"},
+				},
+			},
+		},
+	}
 }
