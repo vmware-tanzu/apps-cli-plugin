@@ -17,6 +17,7 @@ limitations under the License.
 package commands_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -111,7 +112,8 @@ func TestWorkloadGetCommand(t *testing.T) {
 	defaultNamespace := "default"
 	workloadName := "my-workload"
 	url := "https://example.com"
-
+	type key string
+	var podKey key
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
@@ -138,7 +140,7 @@ func TestWorkloadGetCommand(t *testing.T) {
 			d.Namespace(defaultNamespace)
 			d.AddLabel(cartov1alpha1.WorkloadLabelName, workloadName)
 			d.CreationTimestamp(objTimeStamp)
-		})
+		}).Kind("Pod")
 	ksvcDieWithURL := diev1.ServiceBlank.
 		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 			d.Name("ksvc1")
@@ -179,24 +181,25 @@ func TestWorkloadGetCommand(t *testing.T) {
 			Args:         []string{workloadName},
 			GivenObjects: []client.Object{parent},
 			ExpectOutput: `
-		---
-		# my-workload: <unknown>
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: <unknown>
+---
+Overview
+   type:   <empty>
 
-		Supply Chain reference not found.
+Supply Chain reference not found.
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   No messages found.
+   Messages
+   No messages found.
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`}, {
+`,
+		}, {
 			Name: "no supply chain info in different namespace",
 			Args: []string{workloadName, flags.NamespaceFlagName, "my-custom-namespace"},
 			GivenObjects: []client.Object{diecartov1alpha1.WorkloadBlank.
@@ -206,24 +209,24 @@ func TestWorkloadGetCommand(t *testing.T) {
 				}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: <unknown>
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: <unknown>
+---
+Overview
+   type:   <empty>
 
-		Supply Chain reference not found.
+Supply Chain reference not found.
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   No messages found.
+   Messages
+   No messages found.
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload --namespace my-custom-namespace"
+To see logs: "tanzu apps workload tail my-workload --namespace my-custom-namespace"
 
-		`,
+`,
 		}, {
 			Name: "no supply chain ref but conditions in status",
 			Args: []string{workloadName},
@@ -238,27 +241,27 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: OopsieDoodle
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   <empty>
 
-		Supply Chain
-		   name:          <none>
-		   last update:   <unknown>
-		   ready:         False
+Supply Chain
+   name:          <none>
+   last update:   <unknown>
+   ready:         False
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "supply chain ref but no condition in status",
 			Args: []string{workloadName},
@@ -274,27 +277,27 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: <unknown>
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: <unknown>
+---
+Overview
+   type:   <empty>
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:
-		   ready:
+Supply Chain
+   name:          my-supply-chain
+   last update:   
+   ready:         
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   No messages found.
+   Messages
+   No messages found.
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show status and service ref",
 			Args: []string{workloadName},
@@ -324,31 +327,31 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: OopsieDoodle
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   <empty>
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         False
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		Services
-		   CLAIM      NAME         KIND         API VERSION
-		   database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
+Services
+   CLAIM      NAME         KIND         API VERSION
+   database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show status and service ref with Overview Type",
 			Args: []string{workloadName},
@@ -381,31 +384,31 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: OopsieDoodle
-		---
-		Overview
-		   type:   web
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   web
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         False
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		Services
-		   CLAIM      NAME         KIND         API VERSION
-		   database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
+Services
+   CLAIM      NAME         KIND         API VERSION
+   database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "no issues reported",
 			Args: []string{workloadName},
@@ -425,27 +428,27 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: Ready
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: Ready
+---
+Overview
+   type:   <empty>
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         True
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         True
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   No messages found.
+   Messages
+   No messages found.
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "no issues reported with overview type",
 			Args: []string{workloadName},
@@ -468,27 +471,27 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: Ready
-		---
-		Overview
-		   type:   web
+---
+# my-workload: Ready
+---
+Overview
+   type:   web
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         True
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         True
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   No messages found.
+   Messages
+   No messages found.
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show issues with unknown status",
 			Args: []string{workloadName},
@@ -509,27 +512,27 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: Unknown
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: Unknown
+---
+Overview
+   type:   <empty>
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         Unknown
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         Unknown
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show issues with unknown status overview type",
 			Args: []string{workloadName},
@@ -553,27 +556,27 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: Unknown
-		---
-		Overview
-		   type:   web
+---
+# my-workload: Unknown
+---
+Overview
+   type:   web
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         Unknown
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         Unknown
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show status with false condition",
 			Args: []string{workloadName},
@@ -596,27 +599,27 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: OopsieDoodle
-		---
-		Overview
-		   type:   web
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   web
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         False
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show source info - git",
 			Args: []string{workloadName},
@@ -648,34 +651,34 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: OopsieDoodle
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   <empty>
 
-		Source
-		   type:     git
-		   url:      https://example.com
-		   branch:   master
-		   tag:      v1.0.0
-		   commit:   abcdef
+Source
+   type:     git
+   url:      https://example.com
+   branch:   master
+   tag:      v1.0.0
+   commit:   abcdef
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         False
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show source info - git with overview type",
 			Args: []string{workloadName},
@@ -710,34 +713,34 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: OopsieDoodle
-		---
-		Overview
-		   type:   web
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   web
 
-		Source
-		   type:     git
-		   url:      https://example.com
-		   branch:   master
-		   tag:      v1.0.0
-		   commit:   abcdef
+Source
+   type:     git
+   url:      https://example.com
+   branch:   master
+   tag:      v1.0.0
+   commit:   abcdef
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         False
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show source info - local path",
 			Args: []string{workloadName},
@@ -767,31 +770,31 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: OopsieDoodle
-		---
-		Overview
-		   type:   web
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   web
 
-		Source
-		   type:    source image
-		   image:   my-registry/my-image:v1.0.0
+Source
+   type:    source image
+   image:   my-registry/my-image:v1.0.0
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         False
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show source info - image",
 			Args: []string{workloadName},
@@ -814,31 +817,31 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: OopsieDoodle
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   <empty>
 
-		Source
-		   type:    image
-		   image:   docker.io/library/nginx:latest
+Source
+   type:    image
+   image:   docker.io/library/nginx:latest
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         False
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show resources",
 			Args: []string{workloadName},
@@ -902,37 +905,37 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: OopsieDoodle
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   <empty>
 
-		Source
-		   type:     git
-		   url:      https://example.com
-		   branch:   master
-		   tag:      v1.0.0
-		   commit:   abcdef
+Source
+   type:     git
+   url:      https://example.com
+   branch:   master
+   tag:      v1.0.0
+   commit:   abcdef
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         False
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		   RESOURCE          READY     HEALTHY   TIME        OUTPUT
-		   source-provider   True      True      <unknown>   not found
-		   deliverable       Unknown   Unknown   <unknown>   not found
-		   image-builder     False     False     <unknown>   not found
+   RESOURCE          READY     HEALTHY   TIME        OUTPUT
+   source-provider   True      True      <unknown>   not found
+   deliverable       Unknown   Unknown   <unknown>   not found
+   image-builder     False     False     <unknown>   not found
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show resources with overview type",
 			Args: []string{workloadName},
@@ -998,40 +1001,43 @@ func TestWorkloadGetCommand(t *testing.T) {
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: OopsieDoodle
-		---
-		Overview
-		   type:   web
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   web
 
-		Source
-		   type:     git
-		   url:      https://example.com
-		   branch:   master
-		   tag:      v1.0.0
-		   commit:   abcdef
+Source
+   type:     git
+   url:      https://example.com
+   branch:   master
+   tag:      v1.0.0
+   commit:   abcdef
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         False
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		   RESOURCE          READY     HEALTHY   TIME        OUTPUT
-		   source-provider   True      True      <unknown>   not found
-		   deliverable       Unknown   Unknown   <unknown>   not found
-		   image-builder     False     False     <unknown>   image/petclinic
+   RESOURCE          READY     HEALTHY   TIME        OUTPUT
+   source-provider   True      True      <unknown>   not found
+   deliverable       Unknown   Unknown   <unknown>   not found
+   image-builder     False     False     <unknown>   image/petclinic
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show healthy rule condition issue",
 			Args: []string{workloadName},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				return context.WithValue(ctx, podKey, "Pod"), nil
+			},
 			GivenObjects: []client.Object{
 				parent.
 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
@@ -1079,6 +1085,9 @@ To see logs: "tanzu apps workload tail my-workload"
 		}, {
 			Name: "show only ready condition issue",
 			Args: []string{workloadName},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				return context.WithValue(ctx, podKey, "Pod"), nil
+			},
 			GivenObjects: []client.Object{
 				parent.
 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
@@ -1099,32 +1108,35 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: Unknown
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: Unknown
+---
+Overview
+   type:   <empty>
 
-		Supply Chain
-		   name:          <none>
-		   last update:   <unknown>
-		   ready:         Unknown
+Supply Chain
+   name:          <none>
+   last update:   <unknown>
+   ready:         Unknown
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		Pods
-		   NAME   STATUS    RESTARTS   AGE
-		   pod1   Running   0          2y
+Pods
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show pods",
 			Args: []string{workloadName},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				return context.WithValue(ctx, podKey, "Pod"), nil
+			},
 			GivenObjects: []client.Object{
 				parent.
 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
@@ -1151,33 +1163,34 @@ To see logs: "tanzu apps workload tail my-workload"
 					}).
 					StatusDie(func(d *diecorev1.PodStatusDie) {
 						d.Phase(corev1.PodFailed)
-					}),
+					}).Kind("pod"),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: Unknown
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: Unknown
+---
+Overview
+   type:   <empty>
 
-		Supply Chain
-		   name:          <none>
-		   last update:   <unknown>
-		   ready:         Unknown
+Supply Chain
+   name:          <none>
+   last update:   <unknown>
+   ready:         Unknown
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		Pods
-		   NAME   STATUS    RESTARTS   AGE
-		   pod1   Running   0          2y
-		   pod2   Failed    0          2y
+Pods
+   NAME                 READY   STATUS   RESTARTS   AGE
+   pod1                 0/0              0          <unknown>
+   pod2                 0/0              0          <unknown>
+   pod-something-else   0/0              0          <unknown>
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show knative services",
 			Args: []string{workloadName},
@@ -1214,32 +1227,32 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: Unknown
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: Unknown
+---
+Overview
+   type:   <empty>
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         Unknown
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         Unknown
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		Knative Services
-		   NAME    READY       URL
-		   ksvc1   Ready       https://example.com
-		   ksvc2   not-Ready   <empty>
+Knative Services
+   NAME    READY       URL
+   ksvc1   Ready       https://example.com
+   ksvc2   not-Ready   <empty>
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show pods and knative services",
 			Args: []string{workloadName},
@@ -1273,35 +1286,35 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: Ready
-		---
-		Overview
-		   type:   web
+---
+# my-workload: Ready
+---
+Overview
+   type:   web
 
-		Supply Chain
-		   name:          my-supply-chain
-		   last update:   <unknown>
-		   ready:         True
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         True
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   No messages found.
+   Messages
+   No messages found.
 
-		Pods
-		   NAME   STATUS    RESTARTS   AGE
-		   pod1   Running   0          2y
-		   pod2   Failed    0          2y
+Pods
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
+   pod2   0/0              0          <unknown>
 
-		Knative Services
-		   NAME    READY       URL
-		   ksvc1   Ready       https://example.com
-		   ksvc2   not-Ready   <empty>
+Knative Services
+   NAME    READY       URL
+   ksvc1   Ready       https://example.com
+   ksvc2   not-Ready   <empty>
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "not found",
 			Args: []string{workloadName},
@@ -1322,8 +1335,8 @@ To see logs: "tanzu apps workload tail my-workload"
 				}),
 			},
 			ExpectOutput: `
-		Workload "default/my-workload" not found
-		`,
+Workload "default/my-workload" not found
+`,
 			ShouldError: true,
 		},
 		{
@@ -1336,8 +1349,8 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ShouldError: true,
 			ExpectOutput: `
-		Error: namespace "foo" not found, it may not exist or user does not have permissions to read it.
-		`,
+Error: namespace "foo" not found, it may not exist or user does not have permissions to read it.
+`,
 		}, {
 			Name: "get error",
 			Args: []string{workloadName},
@@ -1368,25 +1381,24 @@ To see logs: "tanzu apps workload tail my-workload"
 				clitesting.InduceFailure("list", "PodList"),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: <unknown>
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: <unknown>
+---
+Overview
+   type:   <empty>
 
-		Supply Chain reference not found.
+Supply Chain reference not found.
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   No messages found.
+   Messages
+   No messages found.
 
-		Failed to list pods:
-		  inducing failure for list PodList
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "get error for listing knative services",
 			Args: []string{workloadName},
@@ -1397,24 +1409,24 @@ To see logs: "tanzu apps workload tail my-workload"
 				clitesting.InduceFailure("list", "KnativeServiceList"),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: <unknown>
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: <unknown>
+---
+Overview
+   type:   <empty>
 
-		Supply Chain reference not found.
+Supply Chain reference not found.
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
-		   Messages
-		   No messages found.
+   Messages
+   No messages found.
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "get workload exported data",
 			Args: []string{workloadName, flags.ExportFlagName},
@@ -1432,16 +1444,16 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-		---
-		apiVersion: carto.run/v1alpha1
-		kind: Workload
-		metadata:
-		  labels:
-		    app.kubernetes.io/part-of: my-workload
-		  name: my-workload
-		  namespace: default
-		spec: {}
-		`,
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  labels:
+    app.kubernetes.io/part-of: my-workload
+  name: my-workload
+  namespace: default
+spec: {}
+`,
 		}, {
 			Name: "get workload exported data in json format",
 			Args: []string{workloadName, flags.ExportFlagName, flags.OutputFlagName, printer.OutputFormatJson},
@@ -1461,19 +1473,19 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-		{
-			"apiVersion": "carto.run/v1alpha1",
-			"kind": "Workload",
-			"metadata": {
-				"labels": {
-					"app.kubernetes.io/part-of": "my-workload"
-				},
-				"name": "my-workload",
-				"namespace": "default"
-			},
-			"spec": {}
-		}
-		`,
+{
+	"apiVersion": "carto.run/v1alpha1",
+	"kind": "Workload",
+	"metadata": {
+		"labels": {
+			"app.kubernetes.io/part-of": "my-workload"
+		},
+		"name": "my-workload",
+		"namespace": "default"
+	},
+	"spec": {}
+}
+`,
 		}, {
 			Name: "get workload output data in yaml format",
 			Args: []string{workloadName, flags.OutputFlagName, "yaml"},
@@ -1492,26 +1504,26 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-		---
-		apiVersion: carto.run/v1alpha1
-		kind: Workload
-		metadata:
-		  creationTimestamp: "1970-01-01T00:00:01Z"
-		  labels:
-		    app.kubernetes.io/part-of: my-workload
-		  name: my-workload
-		  namespace: default
-		  resourceVersion: "999"
-		spec: {}
-		status:
-		  conditions:
-		  - lastTransitionTime: null
-		    message: a hopefully informative message about what went wrong
-		    reason: Workload Reason
-		    status: Unknown
-		    type: Ready
-		  supplyChainRef: {}
-		`,
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  creationTimestamp: "1970-01-01T00:00:01Z"
+  labels:
+    app.kubernetes.io/part-of: my-workload
+  name: my-workload
+  namespace: default
+  resourceVersion: "999"
+spec: {}
+status:
+  conditions:
+  - lastTransitionTime: null
+    message: a hopefully informative message about what went wrong
+    reason: Workload Reason
+    status: Unknown
+    type: Ready
+  supplyChainRef: {}
+`,
 		}, {
 			Name: "get workload output data in json format",
 			Args: []string{workloadName, flags.OutputFlagName, "json"},
@@ -1530,33 +1542,33 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-		{
-			"kind": "Workload",
-			"apiVersion": "carto.run/v1alpha1",
-			"metadata": {
-				"name": "my-workload",
-				"namespace": "default",
-				"resourceVersion": "999",
-				"creationTimestamp": "1970-01-01T00:00:01Z",
-				"labels": {
-					"app.kubernetes.io/part-of": "my-workload"
-				}
-			},
-			"spec": {},
-			"status": {
-				"conditions": [
-					{
-						"type": "Ready",
-						"status": "Unknown",
-						"lastTransitionTime": null,
-						"reason": "Workload Reason",
-						"message": "a hopefully informative message about what went wrong"
-					}
-				],
-				"supplyChainRef": {}
-			}
+{
+	"kind": "Workload",
+	"apiVersion": "carto.run/v1alpha1",
+	"metadata": {
+		"name": "my-workload",
+		"namespace": "default",
+		"resourceVersion": "999",
+		"creationTimestamp": "1970-01-01T00:00:01Z",
+		"labels": {
+			"app.kubernetes.io/part-of": "my-workload"
 		}
-		`,
+	},
+	"spec": {},
+	"status": {
+		"conditions": [
+			{
+				"type": "Ready",
+				"status": "Unknown",
+				"lastTransitionTime": null,
+				"reason": "Workload Reason",
+				"message": "a hopefully informative message about what went wrong"
+			}
+		],
+		"supplyChainRef": {}
+	}
+}
+`,
 		},
 	}
 

@@ -17,10 +17,7 @@ limitations under the License.
 package testing
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
-	"os"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -34,7 +31,6 @@ import (
 	"k8s.io/client-go/rest/fake"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/client-go/tools/clientcmd"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/kubectl/pkg/scheme"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -58,18 +54,20 @@ func (c *fakeclient) RESTClient() (*rest.RESTClient, error) {
 }
 
 func (c *fakeclient) KubeRestConfig() *rest.Config {
-	// panic(fmt.Errorf("not implemented"))
-	tmpFile, _ := ioutil.TempFile(os.TempDir(), "cmdtests_temp")
-	loadingRules := &clientcmd.ClientConfigLoadingRules{
-		Precedence:     []string{tmpFile.Name()},
-		MigrationRules: map[string]string{},
-	}
+	panic(fmt.Errorf("not implemented"))
+	// below wll be removed once confirming after review
 
-	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmdapi.Cluster{Server: "http://localhost:8080"}}
-	fallbackReader := bytes.NewBuffer([]byte{})
-	clientConfig := clientcmd.NewInteractiveDeferredLoadingClientConfig(loadingRules, overrides, fallbackReader)
-	restConfig, _ := clientConfig.ClientConfig()
-	return restConfig
+	// tmpFile, _ := ioutil.TempFile(os.TempDir(), "cmdtests_temp")
+	// loadingRules := &clientcmd.ClientConfigLoadingRules{
+	// 	Precedence:     []string{tmpFile.Name()},
+	// 	MigrationRules: map[string]string{},
+	// }
+
+	// overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmdapi.Cluster{Server: "http://localhost:8080"}}
+	// fallbackReader := bytes.NewBuffer([]byte{})
+	// clientConfig := clientcmd.NewInteractiveDeferredLoadingClientConfig(loadingRules, overrides, fallbackReader)
+	// restConfig, _ := clientConfig.ClientConfig()
+	// return restConfig
 }
 
 func (c *fakeclient) Discovery() discovery.DiscoveryInterface {

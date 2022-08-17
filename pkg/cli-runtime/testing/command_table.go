@@ -237,29 +237,49 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 			}
 		}
 		// tc.prapre  and get the context and see
-		c.Builder = resource.NewBuilder(c.Client)
+
 		if len(tc.GivenObjects) != 0 {
+			var pods []client.Object
 			for _, obj := range tc.GivenObjects {
 				if strings.ToLower(obj.GetObjectKind().GroupVersionKind().Kind) == "pod" {
-					// pod := corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: obj.GetName()}, TypeMeta: metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"}, Spec: corev1.PodSpec{}}
-					c.Builder = resource.NewFakeBuilder(
-						func(version schema.GroupVersion) (resource.RESTClient, error) {
-							codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
-							UnstructuredClient := &fake.RESTClient{
-								NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
-								Resp:                 &http.Response{StatusCode: http.StatusOK, Header: defaultHeader(), Body: podV1TableObjBody(codec, obj)},
-							}
-							return UnstructuredClient, nil
-
-						},
-						c.ToRESTMapper,
-						func() (restmapper.CategoryExpander, error) {
-							return resource.FakeCategoryExpander, nil
-						},
-					)
+					pods = append(pods, obj)
 				}
 			}
+			if len(pods) != 0 {
+				c.Builder = resource.NewFakeBuilder(
+					func(version schema.GroupVersion) (resource.RESTClient, error) {
+						codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
+						UnstructuredClient := &fake.RESTClient{
+							NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
+							Resp:                 &http.Response{StatusCode: http.StatusOK, Header: defaultHeader(), Body: podV1TableObjBody(codec, pods)},
+						}
+						return UnstructuredClient, nil
+
+					},
+					c.ToRESTMapper,
+					func() (restmapper.CategoryExpander, error) {
+						return resource.FakeCategoryExpander, nil
+					},
+				)
+			} else {
+				c.Builder = resource.NewFakeBuilder(
+					func(version schema.GroupVersion) (resource.RESTClient, error) {
+						codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
+						UnstructuredClient := &fake.RESTClient{
+							NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
+							Resp:                 &http.Response{StatusCode: http.StatusOK, Header: defaultHeader(), Body: podV1TableObjBody(codec, pods)},
+						}
+						return UnstructuredClient, nil
+
+					},
+					c.ToRESTMapper,
+					func() (restmapper.CategoryExpander, error) {
+						return resource.FakeCategoryExpander, nil
+					},
+				)
+			}
 		}
+
 		cmd := cmdFactory(ctx, c)
 		cmd.SilenceErrors = true
 		cmd.SilenceUsage = true
@@ -320,7 +340,7 @@ func defaultHeader() http.Header {
 }
 
 // build a meta table response from a pod list
-func podV1TableObjBody(codec runtime.Codec, obj client.Object) io.ReadCloser {
+func podV1TableObjBody(codec runtime.Codec, pods []client.Object) io.ReadCloser {
 	var podColumns = []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string", Format: "name"},
 		{Name: "Ready", Type: "string", Format: ""},
@@ -336,12 +356,14 @@ func podV1TableObjBody(codec runtime.Codec, obj client.Object) io.ReadCloser {
 		TypeMeta:          metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"},
 		ColumnDefinitions: podColumns,
 	}
-	b := bytes.NewBuffer(nil)
-	codec.Encode(obj, b)
-	table.Rows = append(table.Rows, metav1.TableRow{
-		Object: runtime.RawExtension{Raw: b.Bytes()},
-		Cells:  []interface{}{obj.GetName(), "0/0", "", int64(0), "<unknown>", "<none>", "<none>", "<none>", "<none>"},
-	})
+	for _, obj := range pods {
+		b := bytes.NewBuffer(nil)
+		codec.Encode(obj, b)
+		table.Rows = append(table.Rows, metav1.TableRow{
+			Object: runtime.RawExtension{Raw: b.Bytes()},
+			Cells:  []interface{}{obj.GetName(), "0/0", "", int64(0), "<unknown>", "<none>", "<none>", "<none>", "<none>"},
+		})
+	}
 
 	data, err := json.Marshal(table)
 	if err != nil {
@@ -351,7 +373,4 @@ func podV1TableObjBody(codec runtime.Codec, obj client.Object) io.ReadCloser {
 		panic("expected v1, got " + string(data))
 	}
 	return ioutil.NopCloser(bytes.NewReader(data))
-}
-func ObjBody(codec runtime.Codec, obj runtime.Object) io.ReadCloser {
-	return ioutil.NopCloser(bytes.NewReader([]byte(runtime.EncodeOrDie(codec, obj))))
 }

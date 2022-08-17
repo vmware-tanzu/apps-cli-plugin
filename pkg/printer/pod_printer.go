@@ -18,20 +18,15 @@ package printer
 
 import (
 	"fmt"
-	"io"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/cli-runtime/pkg/resource"
-	"k8s.io/klog/v2"
-	"k8s.io/kubectl/pkg/scheme"
 	"k8s.io/utils/integer"
 
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
@@ -41,7 +36,7 @@ import (
 
 const TerminatingPhase = "Terminating"
 
-type podview struct {
+type Podview struct {
 	name     string
 	ready    string
 	status   string
@@ -90,9 +85,9 @@ func PodTablePrinter(c *cli.Config, podList *corev1.PodList) error {
 	})
 	return tablePrinter.PrintObj(podList, c.Stdout)
 }
-func PodTablePrintery(c *cli.Config, info *resource.Info) error {
-	tableResult, podlist, _ := decodeIntoTable(info.Object)
-	printPodRow := func(poddtls *podview, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
+func PodTablePrintery(c *cli.Config, info *resource.Info, podlist []Podview, tableResult runtime.Object) error {
+
+	printPodRow := func(poddtls *Podview, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		row := metav1beta1.TableRow{
 			Object: runtime.RawExtension{Object: nil},
 		}
@@ -139,21 +134,12 @@ func maxContainerRestarts(status corev1.PodStatus) int {
 	return maxRestarts
 }
 
-// below print function are not being used and should be removed before final version.
-func PodTablePrinterx(c *cli.Config, podList *corev1.PodList, info *resource.Info) {
-	var printer printers.ResourcePrinter
-	var mapping *meta.RESTMapping
-	mapping = info.Mapping
-	printer, _ = toPrinter(mapping, nil, false, false)
-	printer.PrintObj(info.Object, c.Stdout)
-}
-
-func decodeIntoTable(obj runtime.Object) (runtime.Object, []podview, error) {
+func DecodeIntoTable(obj runtime.Object) (runtime.Object, []Podview, error) {
 	event, isEvent := obj.(*metav1.WatchEvent)
 	if isEvent {
 		obj = event.Object.Object
 	}
-	var poddtls []podview
+	var poddtls []Podview
 	if !recognizedTableVersions[obj.GetObjectKind().GroupVersionKind()] {
 		return nil, poddtls, fmt.Errorf("attempt to decode non-Table object")
 	}
@@ -166,7 +152,7 @@ func decodeIntoTable(obj runtime.Object) (runtime.Object, []podview, error) {
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstr.Object, table); err != nil {
 		return nil, poddtls, err
 	}
-	poddtls = make([]podview, len(table.Rows))
+	poddtls = make([]Podview, len(table.Rows))
 	for i := range table.Rows {
 		row := &table.Rows[i]
 		if row.Object.Raw == nil || row.Object.Object != nil {
@@ -197,54 +183,4 @@ func decodeIntoTable(obj runtime.Object) (runtime.Object, []podview, error) {
 var recognizedTableVersions = map[schema.GroupVersionKind]bool{
 	metav1beta1.SchemeGroupVersion.WithKind("Table"): true,
 	metav1.SchemeGroupVersion.WithKind("Table"):      true,
-}
-
-type TablePrinter struct {
-	Delegate printers.ResourcePrinter
-}
-
-func (t *TablePrinter) PrintObj(obj runtime.Object, writer io.Writer) error {
-	table, _, err := decodeIntoTable(obj)
-	if err == nil {
-		return t.Delegate.PrintObj(table, writer)
-	}
-	// if we are unable to decode server response into a v1beta1.Table,
-	// fallback to client-side printing with whatever info the server returned.
-	klog.V(2).Infof("Unable to decode server response into a Table. Falling back to hardcoded types: %v", err)
-	return t.Delegate.PrintObj(obj, writer)
-}
-
-func toPrinter(mapping *meta.RESTMapping, outputObjects *bool, withNamespace bool, withKind bool) (printers.ResourcePrinterFunc, error) {
-	// make a new copy of current flags / opts before mutating
-
-	printer, err := ToPrinter()
-	if err != nil {
-		return nil, err
-	}
-	printer, err = printers.NewTypeSetter(scheme.Scheme).WrapToPrinter(printer, nil)
-	if err != nil {
-		return nil, err
-	}
-	if true {
-		printer = &TablePrinter{Delegate: printer}
-	}
-	return printer.PrintObj, nil
-}
-
-// ToPrinter attempts to find a composed set of PrintFlags suitable for
-// returning a printer based on current flag values.
-func ToPrinter() (printers.ResourcePrinter, error) {
-	p := printers.NewTablePrinter(printers.PrintOptions{
-		Kind:          schema.GroupKind{Kind: "Pod"},
-		WithKind:      false,
-		NoHeaders:     false,
-		Wide:          false,
-		WithNamespace: false,
-		ColumnLabels:  []string{},
-		ShowLabels:    false,
-	})
-
-	// TODO(juanvallejo): handle sorting here
-
-	return p, nil
 }
