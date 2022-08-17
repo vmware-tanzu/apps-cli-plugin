@@ -23,16 +23,20 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/vmware-tanzu/apps-cli-plugin/testing/e2e/helpers"
-	it "github.com/vmware-tanzu/apps-cli-plugin/testing/e2e/suite"
+	it "github.com/vmware-tanzu/apps-cli-plugin/testing/suite"
 )
 
-func TestListClusterSupplyChain(t *testing.T) {
+func TestClusterSupplyChain(t *testing.T) {
 	testSuite := it.CommandLineIntegrationTestSuite{
 		{
 			Name:                      "List the existing supply chains",
 			Command:                   *it.NewTanzuAppsCommandLine("cluster-supply-chain", "list"),
-			ExpectedCommandLineOutput: helpers.GetFileAsString(t, filepath.Join(consoleOutBasePath, "list-csc", "test-list-csc.txt")),
+			ExpectedCommandLineOutput: it.GetFileAsString(t, filepath.Join(it.ConsoleOutBasePath, "list-csc", "test-list-csc.txt")),
+		},
+		{
+			Name:                      "Get the existing supply chain",
+			Command:                   *it.NewTanzuAppsCommandLine("cluster-supply-chain", "get", "ci-test"),
+			ExpectedCommandLineOutput: it.GetFileAsString(t, filepath.Join(it.ConsoleOutBasePath, "get-csc", "test-get-ci-test-csc.txt")),
 		},
 	}
 	testSuite.Run(t)

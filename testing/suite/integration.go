@@ -20,6 +20,8 @@ limitations under the License.
 package suite_test
 
 import (
+	"context"
+	"encoding/json"
 	"reflect"
 	"regexp"
 	"strings"
@@ -27,6 +29,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -48,11 +53,9 @@ var (
 			"SelfLink",
 			"UID",
 			"ResourceVersion",
-			"Generation",
 			"CreationTimestamp",
 			"DeletionTimestamp",
 			"DeletionGracePeriodSeconds",
-			"OwnerReferences",
 			"Finalizers",
 			"ZZZ_DeprecatedClusterName",
 			"ManagedFields",
@@ -74,15 +77,26 @@ type CommandLineIntegrationTestCase struct {
 	ExpectedCommandLineOutput string
 	ExpectedObject            client.Object
 	IsList                    bool
-	ExpectedRemoteList        client.ObjectList
+	ExpectedObjectList        client.ObjectList
 	Verify                    func(t *testing.T, output string, err error)
 }
 
 func (ts CommandLineIntegrationTestSuite) Run(t *testing.T) {
+	ctx := context.Background()
+	tearDown(t, t.Failed())
+	setup(t)
+	defer tearDown(t, t.Failed())
 
-	cleanUp(t, false)
-	prepareEnvironment(t)
-	defer cleanUp(t, t.Failed())
+	restConfig, err := getRestConfig()
+	if err != nil {
+		t.Errorf("unexpected error fetching REST config: %v", err)
+		t.FailNow()
+	}
+	dclient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		t.Errorf("unexpected error creating client: %v", err)
+		t.FailNow()
+	}
 
 	testToRun := ts
 	focused := CommandLineIntegrationTestSuite{}
@@ -96,14 +110,10 @@ func (ts CommandLineIntegrationTestSuite) Run(t *testing.T) {
 		testToRun = focused
 	}
 
-	conf, err := NewClientConfig()
-	if err != nil {
-		t.Errorf("Error creating validation config: %v", err)
-		t.FailNow()
-	}
-
+	appsClient := NewDynamicClient(dclient, TestingNamespace)
 	for _, tc := range testToRun {
-		tc.Run(t, conf)
+		tc.Run(t, ctx, appsClient)
+		// TODO: @shashwathi: do not stop running tests if one fails.
 		if t.Failed() {
 			break
 		}
@@ -114,7 +124,7 @@ func (ts CommandLineIntegrationTestSuite) Run(t *testing.T) {
 
 }
 
-func (cl CommandLineIntegrationTestCase) Run(t *testing.T, conf *ClientConfig) {
+func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, appsclient DynamicClient) {
 	t.Run(cl.Name, func(t *testing.T) {
 
 		if cl.Skip {
@@ -123,7 +133,7 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, conf *ClientConfig) {
 		err := cl.Command.Exec()
 		// t.Logf("Command output:\n%s\n\n%v\n", cl.Command.String(), cl.Command.GetOutput())
 		if err != nil && !cl.ShouldError {
-			t.Errorf("unexpected error: %v: %v, ", err, cl.Command.GetOutput())
+			t.Errorf("unexpected error in exec: %v: %v, ", err, cl.Command.GetOutput())
 			t.FailNow()
 		}
 
@@ -139,28 +149,39 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, conf *ClientConfig) {
 			}
 		}
 
-		if cl.ExpectedRemoteList != nil {
+		if cl.ExpectedObjectList != nil {
+			gotData, err := appsclient.ListUsingGVK(ctx, cl.ExpectedObjectList.GetObjectKind().GroupVersionKind())
+			if err != nil {
+				t.Fatalf("Failed to get obj: %v", err)
+			}
+
 			var got client.ObjectList
-			switch cl.ExpectedRemoteList.(type) {
+			switch cl.ExpectedObjectList.(type) {
 			case *cartov1alpha1.WorkloadList:
 				got = &cartov1alpha1.WorkloadList{}
 			case *cartov1alpha1.ClusterSupplyChainList:
 				got = &cartov1alpha1.ClusterSupplyChainList{}
 			default:
-				t.Errorf("unexpected type: %v", reflect.TypeOf(cl.ExpectedRemoteList))
+				t.Errorf("unexpected type: %v", reflect.TypeOf(cl.ExpectedObjectList))
 				t.FailNow()
 			}
-			if err := conf.List(got, client.InNamespace(TestingNamespace), client.MatchingLabels(map[string]string{})); err != nil {
-				t.Errorf("unexpected error %s: %v", cl.Name, err)
-				t.FailNow()
+
+			err = json.Unmarshal(gotData, got)
+			if err != nil {
+				t.Fatalf("Failed to get obj: %v", err)
 			}
-			if diff := cmp.Diff(cl.ExpectedRemoteList, got); diff != "" {
-				t.Errorf("%s(List)\n(-expected, +actual)\n%s", cl.Name, diff)
+			if diff := cmp.Diff(cl.ExpectedObjectList, got, objOpts...); diff != "" {
+				t.Errorf("%s(Object)\n(-expected, +actual)\n%s", cl.Name, diff)
 				t.FailNow()
 			}
 		}
 
 		if cl.ExpectedObject != nil {
+			gotData, err := appsclient.GetUsingGVK(ctx, cl.ExpectedObject.GetObjectKind().GroupVersionKind(), cl.ExpectedObject.GetName())
+			if err != nil {
+				t.Fatalf("Failed to get obj: %v", err)
+			}
+
 			var got client.Object
 			switch cl.ExpectedObject.(type) {
 			case *cartov1alpha1.Workload:
@@ -171,9 +192,10 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, conf *ClientConfig) {
 				t.Errorf("unexpected type: %v", reflect.TypeOf(cl.ExpectedObject))
 				t.FailNow()
 			}
-			if err := conf.Get(client.ObjectKey{Namespace: TestingNamespace, Name: cl.ExpectedObject.GetName()}, got); err != nil {
-				t.Errorf("unexpected error %s: %v", cl.Name, err)
-				t.FailNow()
+
+			err = json.Unmarshal(gotData, got)
+			if err != nil {
+				t.Fatalf("Failed to get obj: %v", err)
 			}
 			if diff := cmp.Diff(cl.ExpectedObject, got, objOpts...); diff != "" {
 				t.Errorf("%s(Object)\n(-expected, +actual)\n%s", cl.Name, diff)
@@ -187,9 +209,9 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, conf *ClientConfig) {
 	})
 }
 
-func prepareEnvironment(t *testing.T) {
+func setup(t *testing.T) {
 	// create namespace
-	createNsCmd := NewCommandLine("kubectl", "create", "namespace", TestingNamespace)
+	createNsCmd := NewKubectlCommandLine("create", "namespace", TestingNamespace)
 	err := createNsCmd.Exec()
 	if err != nil {
 		t.Errorf("unexpected error: %v\n%s\n%s", err, createNsCmd.GetOutput(), createNsCmd.GetError())
@@ -197,21 +219,43 @@ func prepareEnvironment(t *testing.T) {
 	}
 
 	// create cluster supply chain
-	createClusterCmd := NewCommandLine("kubectl", "apply", "-f", "testdata/prereq/cluster-supply-chain.yaml")
+	createClusterCmd := NewKubectlCommandLine("apply", "-f", "testdata/prereq/cluster-supply-chain.yaml")
 	err = createClusterCmd.Exec()
 	if err != nil {
 		t.Errorf("unexpected error: %v\n%s\n%s", err, createClusterCmd.GetOutput(), createClusterCmd.GetError())
-		cleanUp(t, true)
+		tearDown(t, true)
 		t.FailNow()
 	}
 }
-func cleanUp(t *testing.T, fail bool) {
-	deleteNsCmd := NewCommandLine("kubectl", "delete", "namespace", TestingNamespace)
-	deleteNsCmd.Exec()
 
-	deleteCSCCmd := NewCommandLine("kubectl", "delete", "-f", "testdata/prereq/cluster-supply-chain.yaml")
-	deleteCSCCmd.Exec()
+func tearDown(t *testing.T, fail bool) {
+	// delete namespace
+	NewKubectlCommandLine("delete", "namespace", TestingNamespace).Exec()
+
+	// delete cluster supply chain
+	NewKubectlCommandLine("delete", "-f", "testdata/prereq/cluster-supply-chain.yaml").Exec()
 	if fail {
 		t.FailNow()
 	}
 }
+
+// getRestConfig returns REST config, which can be to use to create specific clientset
+func getRestConfig() (*rest.Config, error) {
+	var err error
+
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	configOverrides := &clientcmd.ConfigOverrides{}
+
+	// TODO (@shash) provide a param or flag to override kubeconfig path
+	//loadingRules.ExplicitPath =
+	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides), nil
+	if err != nil {
+		return nil, err
+	}
+
+	return config.ClientConfig()
+}
+
+// TODO (@shash): Add DumpResourceInfo func to get describe on all available resources in test namespace before teardown
+// func DumpResourceInfo(namespace string) {
+// }

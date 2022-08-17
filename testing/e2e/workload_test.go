@@ -29,10 +29,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
-	it "github.com/vmware-tanzu/apps-cli-plugin/testing/e2e/suite"
+	it "github.com/vmware-tanzu/apps-cli-plugin/testing/suite"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+var namespaceFlag = "--namespace=" + it.TestingNamespace
 
 func TestCreateFromGitWithAnnotations(t *testing.T) {
 	testSuite := it.CommandLineIntegrationTestSuite{
@@ -53,6 +55,10 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				return c
 			}(),
 			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       cartov1alpha1.WorkloadKind,
+					APIVersion: cartov1alpha1.SchemeGroupVersion.String(),
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-git-annotations-workload",
 					Namespace: it.TestingNamespace,
@@ -60,6 +66,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 						"app.kubernetes.io/part-of":           "test-create-git-annotations-workload",
 						"apps.tanzu.vmware.com/workload-type": "web",
 					},
+					Generation: 1,
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Params: []cartov1alpha1.Param{
@@ -129,12 +136,17 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				return c
 			}(),
 			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       cartov1alpha1.WorkloadKind,
+					APIVersion: cartov1alpha1.SchemeGroupVersion.String(),
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-local-registry",
 					Namespace: it.TestingNamespace,
 					Labels: map[string]string{
 						"apps.tanzu.vmware.com/workload-type": "web",
 					},
+					Generation: 1,
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
@@ -179,6 +191,10 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Command: *it.NewTanzuAppsCommandLine(
 				"workload", "apply", "test-create-git-annotations-workload", namespaceFlag, "--annotation=min-instances=3", "--annotation=max-instances=5", "-y"),
 			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       cartov1alpha1.WorkloadKind,
+					APIVersion: cartov1alpha1.SchemeGroupVersion.String(),
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-git-annotations-workload",
 					Namespace: it.TestingNamespace,
@@ -186,6 +202,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 						"app.kubernetes.io/part-of":           "test-create-git-annotations-workload",
 						"apps.tanzu.vmware.com/workload-type": "web",
 					},
+					Generation: 2,
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Params: []cartov1alpha1.Param{
