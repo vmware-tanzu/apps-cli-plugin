@@ -69,17 +69,14 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 						"app.kubernetes.io/part-of":           "test-create-git-annotations-workload",
 						"apps.tanzu.vmware.com/workload-type": "web",
 					},
-					Generation: 1,
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
-					Params: []cartov1alpha1.Param{
-						{
-							Name: "annotations",
-							Value: v1.JSON{
-								Raw: []byte(`{"max-instances":"4","min-instances":"2"}`),
-							},
+					Params: []cartov1alpha1.Param{{
+						Name: "annotations",
+						Value: v1.JSON{
+							Raw: []byte(`{"max-instances":"4","min-instances":"2"}`),
 						},
-					},
+					}},
 					Source: &cartov1alpha1.Source{
 						Git: &cartov1alpha1.GitSource{
 							URL: "https://github.com/sample-accelerators/spring-petclinic",
@@ -147,7 +144,6 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					Labels: map[string]string{
 						"apps.tanzu.vmware.com/workload-type": "web",
 					},
-					Generation: 1,
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
@@ -200,17 +196,14 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 						"app.kubernetes.io/part-of":           "test-create-git-annotations-workload",
 						"apps.tanzu.vmware.com/workload-type": "web",
 					},
-					Generation: 2,
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
-					Params: []cartov1alpha1.Param{
-						{
-							Name: "annotations",
-							Value: v1.JSON{
-								Raw: []byte(`{"max-instances":"5","min-instances":"3"}`),
-							},
+					Params: []cartov1alpha1.Param{{
+						Name: "annotations",
+						Value: v1.JSON{
+							Raw: []byte(`{"max-instances":"5","min-instances":"3"}`),
 						},
-					},
+					}},
 					Source: &cartov1alpha1.Source{
 						Git: &cartov1alpha1.GitSource{
 							URL: "https://github.com/sample-accelerators/spring-petclinic",

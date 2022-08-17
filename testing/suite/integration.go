@@ -28,6 +28,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"gotest.tools/v3/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
@@ -99,20 +100,21 @@ type CommandLineIntegrationTestCase struct {
 
 func (ts CommandLineIntegrationTestSuite) Run(t *testing.T) {
 	ctx := context.Background()
-	tearDown(t, t.Failed())
-	setup(t)
-	defer tearDown(t, t.Failed())
+	tearDown(t)
+	defer func() {
+		if t.Failed() {
+			dumpResourceInfo(t, TestingNamespace)
+		}
+		tearDown(t)
+	}()
+	err := setup(t)
+	assert.NilError(t, err)
 
 	restConfig, err := getRestConfig()
-	if err != nil {
-		t.Errorf("unexpected error fetching REST config: %v", err)
-		t.FailNow()
-	}
+	assert.NilError(t, err)
+
 	dclient, err := dynamic.NewForConfig(restConfig)
-	if err != nil {
-		t.Errorf("unexpected error creating client: %v", err)
-		t.FailNow()
-	}
+	assert.NilError(t, err)
 
 	testToRun := ts
 	focused := CommandLineIntegrationTestSuite{}
@@ -129,10 +131,6 @@ func (ts CommandLineIntegrationTestSuite) Run(t *testing.T) {
 	appsClient := NewDynamicClient(dclient, TestingNamespace)
 	for _, tc := range testToRun {
 		tc.Run(t, ctx, appsClient)
-		// TODO: @shashwathi: do not stop running tests if one fails.
-		if t.Failed() {
-			break
-		}
 	}
 	if isFocused {
 		t.Errorf("test run focused on %d record(s), skipped %d record(s)", len(focused), len(ts)-len(focused))
@@ -142,7 +140,6 @@ func (ts CommandLineIntegrationTestSuite) Run(t *testing.T) {
 
 func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, appsclient DynamicClient) {
 	t.Run(cl.Name, func(t *testing.T) {
-
 		if cl.Skip {
 			t.SkipNow()
 		}
@@ -212,13 +209,13 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 	})
 }
 
-func setup(t *testing.T) {
+func setup(t *testing.T) error {
 	// create namespace
 	createNsCmd := NewKubectlCommandLine("create", "namespace", TestingNamespace)
 	err := createNsCmd.Exec()
 	if err != nil {
 		t.Errorf("unexpected error: %v\n%s\n%s", err, createNsCmd.GetOutput(), createNsCmd.GetError())
-		t.FailNow()
+		return err
 	}
 
 	// create cluster supply chain
@@ -226,20 +223,17 @@ func setup(t *testing.T) {
 	err = createClusterCmd.Exec()
 	if err != nil {
 		t.Errorf("unexpected error: %v\n%s\n%s", err, createClusterCmd.GetOutput(), createClusterCmd.GetError())
-		tearDown(t, true)
-		t.FailNow()
+		return err
 	}
+	return nil
 }
 
-func tearDown(t *testing.T, fail bool) {
+func tearDown(t *testing.T) {
 	// delete namespace
 	NewKubectlCommandLine("delete", "namespace", TestingNamespace).Exec()
 
 	// delete cluster supply chain
 	NewKubectlCommandLine("delete", "-f", "testdata/prereq/cluster-supply-chain.yaml").Exec()
-	if fail {
-		t.FailNow()
-	}
 }
 
 // getRestConfig returns REST config, which can be to use to create specific clientset
@@ -249,8 +243,6 @@ func getRestConfig() (*rest.Config, error) {
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	configOverrides := &clientcmd.ConfigOverrides{}
 
-	// TODO (@shash) provide a param or flag to override kubeconfig path
-	//loadingRules.ExplicitPath =
 	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides), nil
 	if err != nil {
 		return nil, err
@@ -259,6 +251,15 @@ func getRestConfig() (*rest.Config, error) {
 	return config.ClientConfig()
 }
 
-// TODO (@shash): Add DumpResourceInfo func to get describe on all available resources in test namespace before teardown
-// func DumpResourceInfo(namespace string) {
-// }
+// dumpResourceInfo func to get describe on relevant resource in namespace and cluster
+func dumpResourceInfo(t *testing.T, namespace string) {
+	t.Log("Dump resources...")
+	// describe workloads namespace
+	descrWorkload := NewKubectlCommandLine("describe", "workloads", "-n", TestingNamespace)
+	descrWorkload.Exec()
+	t.Logf("Describe workloads \n %s", descrWorkload.GetOutput())
+	// describe clustersupplychains
+	descrCSC := NewKubectlCommandLine("describe", "clustersupplychains")
+	descrCSC.Exec()
+	t.Logf("Describe clustersupplychains \n %s", descrCSC.GetOutput())
+}
