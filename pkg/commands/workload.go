@@ -45,7 +45,10 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
 )
 
-const AnnotationReservedKey = "annotations"
+const (
+	AnnotationReservedKey     = "annotations"
+	MavenOverwrittenNoticeMsg = "Maven configuration flags have overwritten values provided by \"--params-yaml\"."
+)
 
 func NewWorkloadCommand(ctx context.Context, c *cli.Config) *cobra.Command {
 	cmd := &cobra.Command{
@@ -107,6 +110,16 @@ type WorkloadOptions struct {
 	LimitCPU    string
 	LimitMemory string
 
+	MavenGroup    string
+	MavenArtifact string
+	MavenVersion  string
+	MavenType     string
+
+	CACertPaths      []string
+	RegistryUsername string
+	RegistryPassword string
+	RegistryToken    string
+
 	RequestCPU    string
 	RequestMemory string
 
@@ -116,11 +129,6 @@ type WorkloadOptions struct {
 	TailTimestamps bool
 	DryRun         bool
 	Yes            bool
-
-	CACertPaths      []string
-	RegistryUsername string
-	RegistryPassword string
-	RegistryToken    string
 }
 
 var _ validation.Validatable = (*WorkloadUpdateOptions)(nil)
@@ -187,7 +195,7 @@ func (opts *WorkloadOptions) LoadDefaults(c *cli.Config) {
 	opts.ExcludePathFile = c.TanzuIgnoreFile
 }
 
-func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workload *cartov1alpha1.Workload) {
+func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workload *cartov1alpha1.Workload) context.Context {
 	for _, label := range opts.Labels {
 		parts := parsers.DeletableKeyValue(label)
 		if len(parts) == 1 {
@@ -214,16 +222,41 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 		}
 	}
 
+	var mavenSourceViaFlags bool
+	if opts.MavenArtifact != "" || opts.MavenVersion != "" || opts.MavenGroup != "" || opts.MavenType != "" {
+		mavenInfo := cartov1alpha1.MavenSource{}
+		if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.MavenArtifactFlagName)) {
+			mavenInfo.ArtifactId = opts.MavenArtifact
+		}
+		if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.MavenVersionFlagName)) {
+			mavenInfo.Version = opts.MavenVersion
+		}
+		if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.MavenGroupFlagName)) {
+			mavenInfo.GroupId = opts.MavenGroup
+		}
+		if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.MavenTypeFlagName)) {
+			mavenInfo.Type = &opts.MavenType
+		}
+		mavenSourceViaFlags = true
+		workload.Spec.MergeMavenSource(mavenInfo)
+	}
+
 	for _, p := range opts.ParamsYaml {
 		kv := parsers.DeletableKeyValue(p)
 		if len(kv) == 1 {
 			workload.Spec.RemoveParam(kv[0])
 		} else {
+			// if maven artifact was already set via flags, skip using params yaml
+			if kv[0] == cartov1alpha1.WorkloadMavenParam && mavenSourceViaFlags {
+				ctx = cartov1alpha1.StashWorkloadNotice(ctx, MavenOverwrittenNoticeMsg)
+				continue
+			}
 			o, err := parsers.JsonYamlToObject(kv[1])
 			if err != nil {
 				// errors should be caught during the validation phase
 				panic(err)
 			}
+
 			workload.Spec.MergeParams(kv[0], o)
 		}
 	}
@@ -348,6 +381,8 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 	if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.ServiceAccountFlagName)) {
 		workload.Spec.MergeServiceAccountName(opts.ServiceAccountName)
 	}
+
+	return ctx
 }
 
 // PublishLocalSource packages the specified source code in the --local-path flag and creates an image
@@ -476,9 +511,13 @@ func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentW
 	}
 	c.Printf("Update workload:\n")
 	c.Printf("%s\n", difference)
-	if !workload.IsSourceFound() {
-		c.Printf("NOTICE: no source code or image has been specified for this workload.\n\n")
+
+	if noticeMsgs := workload.GetNotices(ctx); len(noticeMsgs) != 0 {
+		for _, msg := range noticeMsgs {
+			c.Infof("NOTICE: %s\n\n", msg)
+		}
 	}
+
 	if !opts.Yes {
 		if opts.FilePath == "-" {
 			c.Errorf("Skipping workload, cannot confirm intent. Run command with %s flag to confirm intent when providing input from stdin\n", flags.YesFlagName)
@@ -526,8 +565,11 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 
 	c.Printf("Create workload:\n")
 	c.Printf("%s\n", diff)
-	if !workload.IsSourceFound() {
-		c.Printf("NOTICE: no source code or image has been specified for this workload.\n\n")
+
+	if noticeMsgs := workload.GetNotices(ctx); len(noticeMsgs) != 0 {
+		for _, msg := range noticeMsgs {
+			c.Infof("NOTICE: %s\n\n", msg)
+		}
 	}
 	if !opts.Yes {
 		if opts.FilePath == "-" {
@@ -602,6 +644,10 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.Flags().StringVar(&opts.ServiceAccountName, cli.StripDash(flags.ServiceAccountFlagName), "", "name of service account permitted to create resources submitted by the supply chain (to unset, pass empty string \"\")")
 	cmd.Flags().StringVar(&opts.LimitCPU, cli.StripDash(flags.LimitCPUFlagName), "", "the maximum amount of cpu allowed, in CPU `cores` (500m = .5 cores)")
 	cmd.Flags().StringVar(&opts.LimitMemory, cli.StripDash(flags.LimitMemoryFlagName), "", "the maximum amount of memory allowed, in `bytes` (500Mi = 500MiB = 500 * 1024 * 1024)")
+	cmd.Flags().StringVar(&opts.MavenArtifact, cli.StripDash(flags.MavenArtifactFlagName), "", "name of maven artifact")
+	cmd.Flags().StringVar(&opts.MavenGroup, cli.StripDash(flags.MavenGroupFlagName), "", "maven project to pull artifact from")
+	cmd.Flags().StringVar(&opts.MavenVersion, cli.StripDash(flags.MavenVersionFlagName), "", "version number of maven artifact")
+	cmd.Flags().StringVar(&opts.MavenType, cli.StripDash(flags.MavenTypeFlagName), "", "maven packaging type, defaults to jar")
 	cmd.Flags().StringArrayVar(&opts.CACertPaths, cli.StripDash(flags.RegistryCertFlagName), []string{}, "file path to CA certificate used to authenticate with registry, flag can be used multiple times")
 	cmd.Flags().StringVar(&opts.RegistryPassword, cli.StripDash(flags.RegistryPasswordFlagName), "", "username for authenticating with registry")
 	cmd.Flags().StringVar(&opts.RegistryUsername, cli.StripDash(flags.RegistryUsernameFlagName), "", "password for authenticating with registry")

@@ -1338,6 +1338,55 @@ To get status: "tanzu apps workload get my-workload --namespace test-namespace"
 				},
 			},
 		},
+		{
+			Name: "update workload to add maven param",
+			Args: []string{workloadName, flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples"}`, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Params: []cartov1alpha1.Param{
+							{
+								Name:  "maven",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0"}`)},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
+Update workload:
+...
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  name: my-workload
+  6,  6   |  namespace: default
+  7     - |spec: {}
+      7 + |spec:
+      8 + |  params:
+      9 + |  - name: maven
+     10 + |    value:
+     11 + |      artifactId: spring-petclinic
+     12 + |      groupId: org.springframework.samples
+     13 + |      version: 2.6.0
+
+Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
 	}
 
 	table.Run(t, scheme, func(ctx context.Context, c *cli.Config) *cobra.Command {

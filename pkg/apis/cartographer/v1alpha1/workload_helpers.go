@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -38,7 +39,15 @@ import (
 const (
 	WorkloadConditionReady  = "Ready"
 	WorkloadAnnotationParam = "annotations"
+	WorkloadMavenParam      = "maven"
 )
+
+type MavenSource struct {
+	ArtifactId string  `json:"artifactId"`
+	GroupId    string  `json:"groupId"`
+	Version    string  `json:"version"`
+	Type       *string `json:"type"`
+}
 
 func (w *Workload) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("Workload")
@@ -98,6 +107,12 @@ func (w *Workload) Merge(updates *Workload) {
 	w.Spec.Merge(&updates.Spec)
 }
 
+func (w *WorkloadSpec) GetMavenSource() *MavenSource {
+	var currentMaven *MavenSource
+	w.GetParam("maven", &currentMaven)
+	return currentMaven
+}
+
 func (w *Workload) Validate() validation.FieldErrors {
 	errs := validation.FieldErrors{}
 
@@ -108,12 +123,12 @@ func (w *Workload) Validate() validation.FieldErrors {
 	return errs
 }
 
-func (w *Workload) IsSourceFound() bool {
-	if w.Spec.Source == nil && w.Spec.Image == "" {
+func (w *WorkloadSpec) IsSourceFound() bool {
+	if w.Source == nil && w.Image == "" && w.GetMavenSource() == nil {
 		return false
 	}
-	if w.Spec.Source != nil {
-		if w.Spec.Source.Git == nil && w.Spec.Source.Image == "" {
+	if w.Source != nil {
+		if w.Source.Git == nil && w.Source.Image == "" {
 			return false
 		}
 	}
@@ -131,6 +146,26 @@ func (w *WorkloadSpec) Validate() validation.FieldErrors {
 
 		if w.Source.Git == nil && w.Source.Image == "" && w.Image == "" && w.Source.Subpath != "" {
 			errs = errs.Also(validation.ErrInvalidValue(w.Source.Subpath, flags.SubPathFlagName))
+		}
+	}
+	errs = errs.Also(w.ValidateMavenSource())
+
+	return errs
+}
+
+func (w *WorkloadSpec) ValidateMavenSource() validation.FieldErrors {
+	errs := validation.FieldErrors{}
+
+	mavenParam := w.GetMavenSource()
+	if mavenParam != nil {
+		if mavenParam.ArtifactId == "" {
+			errs = errs.Also(validation.ErrMissingField(flags.MavenArtifactFlagName))
+		}
+		if mavenParam.GroupId == "" {
+			errs = errs.Also(validation.ErrMissingField(flags.MavenGroupFlagName))
+		}
+		if mavenParam.Version == "" {
+			errs = errs.Also(validation.ErrMissingField(flags.MavenVersionFlagName))
 		}
 	}
 
@@ -246,6 +281,25 @@ func (w *WorkloadSpec) RemoveAnnotationParams(name string) {
 	} else {
 		w.MergeParams(WorkloadAnnotationParam, annotations)
 	}
+}
+
+func (w *WorkloadSpec) MergeMavenSource(source MavenSource) {
+	currentMaven := w.GetMavenSource()
+
+	if currentMaven == nil {
+		currentMaven = &source
+	} else {
+		if source.ArtifactId != "" {
+			currentMaven.ArtifactId = source.ArtifactId
+		}
+		if source.GroupId != "" {
+			currentMaven.GroupId = source.GroupId
+		}
+		if source.Version != "" {
+			currentMaven.Version = source.Version
+		}
+	}
+	w.MergeParams(WorkloadMavenParam, currentMaven)
 }
 
 func (w *WorkloadSpec) ResetSource() {
@@ -473,4 +527,38 @@ func (w *Workload) DeprecationWarnings() []string {
 		warnings = append(warnings, serviceClaimDeprecationWarningMsg)
 	}
 	return warnings
+}
+
+type workloadNoticeStashKey struct{}
+
+func StashWorkloadNotice(ctx context.Context, notice string) context.Context {
+	res := RetrieveWorkloadNotices(ctx)
+	if res != nil {
+		res = append(res, notice)
+	} else {
+		res = []string{notice}
+	}
+	return context.WithValue(ctx, workloadNoticeStashKey{}, res)
+}
+
+func RetrieveWorkloadNotices(ctx context.Context) []string {
+	noticeSet, ok := ctx.Value(workloadNoticeStashKey{}).([]string)
+	if !ok {
+		return nil
+	}
+	return noticeSet
+}
+
+func (w *Workload) GetNotices(ctx context.Context) []string {
+	msgs := []string{}
+	noSourceNoticeMsg := "no source code or image has been specified for this workload."
+	if !w.Spec.IsSourceFound() {
+		msgs = append(msgs, noSourceNoticeMsg)
+	}
+
+	if res := RetrieveWorkloadNotices(ctx); res != nil {
+		msgs = append(msgs, res...)
+	}
+
+	return msgs
 }

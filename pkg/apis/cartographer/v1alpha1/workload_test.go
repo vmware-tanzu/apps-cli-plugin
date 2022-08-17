@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -386,6 +387,66 @@ func TestWorkload_Validate(t *testing.T) {
 			},
 		},
 		want: validation.ErrInvalidValue("test-paths", flags.SubPathFlagName),
+	}, {
+		name: "valid mavensource",
+		workload: Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+			},
+			Spec: WorkloadSpec{
+				Params: []Param{{
+					Name:  WorkloadMavenParam,
+					Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.1"}`)},
+				}},
+			},
+		},
+		want: validation.FieldErrors{},
+	}, {
+		name: "maven with no artifactID",
+		workload: Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+			},
+			Spec: WorkloadSpec{
+				Params: []Param{{
+					Name:  WorkloadMavenParam,
+					Value: apiextensionsv1.JSON{Raw: []byte(`{"groupId":"bar","version":"0.1.1"}`)},
+				}},
+			},
+		},
+		want: validation.ErrMissingField(flags.MavenArtifactFlagName),
+	}, {
+		name: "maven with no groupID",
+		workload: Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+			},
+			Spec: WorkloadSpec{
+				Params: []Param{{
+					Name:  WorkloadMavenParam,
+					Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","version":"0.1.1"}`)},
+				}},
+			},
+		},
+		want: validation.ErrMissingField(flags.MavenGroupFlagName),
+	}, {
+		name: "maven with no version",
+		workload: Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+			},
+			Spec: WorkloadSpec{
+				Params: []Param{{
+					Name:  WorkloadMavenParam,
+					Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar"}`)},
+				}},
+			},
+		},
+		want: validation.ErrMissingField(flags.MavenVersionFlagName),
 	}}
 
 	for _, test := range tests {
@@ -959,6 +1020,91 @@ func TestWorkloadSpec_RemoveAnnotationParams(t *testing.T) {
 		})
 	}
 }
+
+func TestWorkloadSpec_MergeMavenSource(t *testing.T) {
+	tests := []struct {
+		name  string
+		seed  *WorkloadSpec
+		value MavenSource
+		want  *WorkloadSpec
+	}{{
+		name: "add maven info",
+		seed: &WorkloadSpec{},
+		value: MavenSource{
+			ArtifactId: "foo",
+			GroupId:    "bar",
+			Version:    "0.1.0",
+		},
+		want: &WorkloadSpec{
+			Params: []Param{{
+				Name:  "maven",
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
+			}},
+		},
+	}, {
+		name: "change maven info",
+		seed: &WorkloadSpec{
+			Params: []Param{{
+				Name:  "maven",
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"version":"0.1.0"}`)},
+			}},
+		},
+		value: MavenSource{
+			ArtifactId: "foo",
+			GroupId:    "bar",
+			Version:    "0.1.1",
+		},
+		want: &WorkloadSpec{
+			Params: []Param{{
+				Name:  "maven",
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.1","type":null}`)},
+			}},
+		},
+	}, {
+		name: "no change",
+		seed: &WorkloadSpec{
+			Params: []Param{{
+				Name:  "maven",
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
+			}},
+		},
+		value: MavenSource{
+			ArtifactId: "foo",
+			GroupId:    "bar",
+			Version:    "0.1.0",
+		},
+		want: &WorkloadSpec{
+			Params: []Param{{
+				Name:  "maven",
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
+			}},
+		},
+	}, {
+		name: "empty source",
+		seed: &WorkloadSpec{
+			Params: []Param{{
+				Name:  "maven",
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
+			}},
+		},
+		value: MavenSource{},
+		want: &WorkloadSpec{
+			Params: []Param{{
+				Name:  "maven",
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
+			}},
+		},
+	}}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.seed.MergeMavenSource(test.value)
+			if diff := cmp.Diff(test.want, test.seed); diff != "" {
+				t.Errorf("MergeMavenSource() (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 func TestWorkloadSpec_MergeGit(t *testing.T) {
 	tests := []struct {
 		name string
@@ -1977,18 +2123,16 @@ func TestDeprecationWarnings(t *testing.T) {
 func TestIsSourceFound(t *testing.T) {
 	tests := []struct {
 		name string
-		seed *Workload
+		seed WorkloadSpec
 		want bool
 	}{{
 		name: "git source",
-		seed: &Workload{
-			Spec: WorkloadSpec{
-				Source: &Source{
-					Git: &GitSource{
-						URL: "git@github.com/example/repo.git",
-						Ref: GitRef{
-							Branch: "main",
-						},
+		seed: WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com/example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
 					},
 				},
 			},
@@ -1996,33 +2140,36 @@ func TestIsSourceFound(t *testing.T) {
 		want: true,
 	}, {
 		name: "source image",
-		seed: &Workload{
-			Spec: WorkloadSpec{
-				Source: &Source{
-					Image: "app:source",
-				},
-			},
-		},
-		want: true,
-	}, {
-		name: "nil source",
-		seed: &Workload{
-			Spec: WorkloadSpec{
-				Source: &Source{},
-			},
-		},
-		want: false,
-	}, {
-		name: "image",
-		seed: &Workload{
-			Spec: WorkloadSpec{
+		seed: WorkloadSpec{
+			Source: &Source{
 				Image: "app:source",
 			},
 		},
 		want: true,
 	}, {
+		name: "nil source",
+		seed: WorkloadSpec{
+			Source: &Source{},
+		},
+		want: false,
+	}, {
+		name: "image",
+		seed: WorkloadSpec{
+			Image: "app:source",
+		},
+		want: true,
+	}, {
+		name: "maven source",
+		seed: WorkloadSpec{
+			Params: []Param{{
+				Name:  WorkloadMavenParam,
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.1"}`)},
+			}},
+		},
+		want: true,
+	}, {
 		name: "empty",
-		seed: &Workload{},
+		seed: WorkloadSpec{},
 		want: false,
 	}}
 	for _, test := range tests {
@@ -2030,6 +2177,71 @@ func TestIsSourceFound(t *testing.T) {
 			got := test.seed.IsSourceFound()
 			if !cmp.Equal(test.want, got) {
 				t.Errorf("IsSourceFound() (-want %v, +got %v)", test.want, got)
+			}
+		})
+	}
+}
+
+func TestGetMavenSource(t *testing.T) {
+	tests := []struct {
+		name string
+		seed *WorkloadSpec
+		want *MavenSource
+	}{{
+		name: "maven source",
+		seed: &WorkloadSpec{
+			Params: []Param{{
+				Name:  WorkloadMavenParam,
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.1"}`)},
+			}},
+		},
+		want: &MavenSource{
+			ArtifactId: "foo",
+			GroupId:    "bar",
+			Version:    "0.1.1",
+		},
+	}, {
+		name: "empty",
+		seed: &WorkloadSpec{},
+		want: nil,
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.seed.GetMavenSource()
+			if !cmp.Equal(test.want, got) {
+				t.Errorf("GetMavenSource() (-want %v, +got %v)", test.want, got)
+			}
+		})
+	}
+}
+
+func TestGetNotices(t *testing.T) {
+	tests := []struct {
+		name         string
+		seed         *Workload
+		givenNotices []string
+		want         []string
+	}{{
+		name: "empty notice",
+		seed: &Workload{},
+		want: []string{"no source code or image has been specified for this workload."},
+	}, {
+		name:         "some notice",
+		seed:         &Workload{},
+		givenNotices: []string{"test notice", "another msg"},
+		want:         []string{"no source code or image has been specified for this workload.", "test notice", "another msg"},
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := context.Background()
+			for i := range test.givenNotices {
+				ctx = StashWorkloadNotice(ctx, test.givenNotices[i])
+			}
+			got := test.seed.GetNotices(ctx)
+			if !cmp.Equal(test.want, got) {
+				t.Errorf("GetNotices() (-want %v, +got %v)", test.want, got)
 			}
 		})
 	}

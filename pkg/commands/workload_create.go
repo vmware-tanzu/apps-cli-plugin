@@ -86,7 +86,7 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		}
 	}
 
-	opts.ApplyOptionsToWorkload(ctx, workload)
+	ctx = opts.ApplyOptionsToWorkload(ctx, workload)
 
 	// validate complex flag interactions with existing state
 	errs := workload.Validate()

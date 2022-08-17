@@ -43,6 +43,10 @@ tanzu apps workload apply --file workload.yaml
       --limit-memory bytes             the maximum amount of memory allowed, in bytes (500Mi = 500MiB = 500 * 1024 * 1024)
       --live-update                    put the workload in live update mode (--live-update=false to disable)
       --local-path path                path to a directory, .zip, .jar or .war file containing workload source code
+      --maven-artifact string          name of maven artifact
+      --maven-group string             maven project to pull artifact from
+      --maven-type string              maven packaging type, defaults to jar
+      --maven-version string           version number of maven artifact
   -n, --namespace name                 kubernetes namespace (defaulted from kube config)
       --param "key=value" pair         additional parameters represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --param-yaml "key=value" pair    specify nested parameters using YAML or JSON formatted values represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
