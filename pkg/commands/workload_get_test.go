@@ -17,6 +17,7 @@ limitations under the License.
 package commands_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -111,7 +112,8 @@ func TestWorkloadGetCommand(t *testing.T) {
 	defaultNamespace := "default"
 	workloadName := "my-workload"
 	url := "https://example.com"
-
+	type key string
+	var podKey key
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
@@ -138,7 +140,7 @@ func TestWorkloadGetCommand(t *testing.T) {
 			d.Namespace(defaultNamespace)
 			d.AddLabel(cartov1alpha1.WorkloadLabelName, workloadName)
 			d.CreationTimestamp(objTimeStamp)
-		})
+		}).Kind("Pod")
 	ksvcDieWithURL := diev1.ServiceBlank.
 		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 			d.Name("ksvc1")
@@ -178,824 +180,869 @@ func TestWorkloadGetCommand(t *testing.T) {
 			Name:        "invalid args",
 			Args:        []string{},
 			ShouldError: true,
-		},
-		//  {
-		// 			Name:         "no supply chain info",
-		// 			Args:         []string{workloadName},
-		// 			GivenObjects: []client.Object{parent},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: <unknown>
-		// ---
-		// Overview
-		//    type:   <empty>
+		}, {
+			Name:         "no supply chain info",
+			Args:         []string{workloadName},
+			GivenObjects: []client.Object{parent},
+			ExpectOutput: `
+		---
+		# my-workload: <unknown>
+		---
+		Overview
+		   type:   <empty>
 
 Supply Chain reference not found.
 
    Supply Chain resources not found.
 
-Delivery
+   Messages
+   No messages found.
 
-   Delivery resources not found.
+No pods found for workload.
 
-Messages
+To see logs: "tanzu apps workload tail my-workload"
+
+`,
+		}, {
+			Name: "no supply chain info in different namespace",
+			Args: []string{workloadName, flags.NamespaceFlagName, "my-custom-namespace"},
+			GivenObjects: []client.Object{diecartov1alpha1.WorkloadBlank.
+				MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+					d.Name(workloadName)
+					d.Namespace("my-custom-namespace")
+				}),
+			},
+			ExpectOutput: `
+---
+# my-workload: <unknown>
+---
+Overview
+   type:   <empty>
+
+Supply Chain reference not found.
+
+   Supply Chain resources not found.
+
+   Messages
    No messages found.
 
 No pods found for workload.
 
 To see logs: "tanzu apps workload tail my-workload --namespace my-custom-namespace"
 
-		//    Supply Chain resources not found.
-
-		//    Messages
-		//    No messages found.
-
-		// No pods found for workload.
-
-		// To see logs: "tanzu apps workload tail my-workload --namespace my-custom-namespace"
-
-		// `,
-		// 		}, {
-		// 			Name: "no supply chain ref but conditions in status",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-		// 								Message("a hopefully informative message about what went wrong"),
-		// 						)
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: OopsieDoodle
-		// ---
-		// Overview
-		//    type:   <empty>
-
-		// Supply Chain
-		//    name:          <none>
-		//    last update:   <unknown>
-		//    ready:         False
-
-		//    Supply Chain resources not found.
-
-		//    Messages
-		//    OopsieDoodle:   a hopefully informative message about what went wrong
-
-		// No pods found for workload.
-
-		// To see logs: "tanzu apps workload tail my-workload"
-
-		// `,
-		// 		}, {
-		// 			Name: "supply chain ref but no condition in status",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: <unknown>
-		// ---
-		// Overview
-		//    type:   <empty>
-
-		// Supply Chain
-		//    name:          my-supply-chain
-		//    last update:
-		//    ready:
-
-		//    Supply Chain resources not found.
-
-		//    Messages
-		//    No messages found.
-
-		// No pods found for workload.
-
-		// To see logs: "tanzu apps workload tail my-workload"
-
-		// `,
-		// 		}, {
-		// 			Name: "show status and service ref",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-		// 						d.ServiceClaims(cartov1alpha1.WorkloadServiceClaim{
-		// 							Name: "database",
-		// 							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
-		// 								APIVersion: "services.tanzu.vmware.com/v1alpha1",
-		// 								Kind:       "PostgreSQL",
-		// 								Name:       "my-prod-db",
-		// 							},
-		// 						})
-		// 					}).
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-		// 								Message("a hopefully informative message about what went wrong"),
-		// 						).SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: OopsieDoodle
-		// ---
-		// Overview
-		//    type:   <empty>
-
-		// Supply Chain
-		//    name:          my-supply-chain
-		//    last update:   <unknown>
-		//    ready:         False
-
-		//    Supply Chain resources not found.
-
-		//    Messages
-		//    OopsieDoodle:   a hopefully informative message about what went wrong
-
-		// Services
-		//    CLAIM      NAME         KIND         API VERSION
-		//    database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
-
-		// No pods found for workload.
-
-		// To see logs: "tanzu apps workload tail my-workload"
-
-		// `,
-		// 		}, {
-		// 			Name: "show status and service ref with Overview Type",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-		// 						d.AddLabel(apis.WorkloadTypeLabelName, "web")
-		// 					}).
-		// 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-		// 						d.ServiceClaims(cartov1alpha1.WorkloadServiceClaim{
-		// 							Name: "database",
-		// 							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
-		// 								APIVersion: "services.tanzu.vmware.com/v1alpha1",
-		// 								Kind:       "PostgreSQL",
-		// 								Name:       "my-prod-db",
-		// 							},
-		// 						})
-		// 					}).
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-		// 								Message("a hopefully informative message about what went wrong"),
-		// 						).SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: OopsieDoodle
-		// ---
-		// Overview
-		//    type:   web
-
-		// Supply Chain
-		//    name:          my-supply-chain
-		//    last update:   <unknown>
-		//    ready:         False
-
-		//    Supply Chain resources not found.
-
-		//    Messages
-		//    OopsieDoodle:   a hopefully informative message about what went wrong
-
-		// Services
-		//    CLAIM      NAME         KIND         API VERSION
-		//    database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
-
-		// No pods found for workload.
-
-		// To see logs: "tanzu apps workload tail my-workload"
-
-		// `,
-		// 		}, {
-		// 			Name: "no issues reported",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionTrue).Reason("Ready").
-		// 								Message(""),
-		// 						).SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: Ready
-		// ---
-		// Overview
-		//    type:   <empty>
-
-		// Supply Chain
-		//    name:          my-supply-chain
-		//    last update:   <unknown>
-		//    ready:         True
-
-		//    Supply Chain resources not found.
-
-		//    Messages
-		//    No messages found.
-
-		// No pods found for workload.
+`,
+		}, {
+			Name: "no supply chain ref but conditions in status",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						)
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   <empty>
 
 Supply Chain
-   name:   my-supply-chain
+   name:          <none>
+   last update:   <unknown>
+   ready:         False
 
    Supply Chain resources not found.
 
-Delivery
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-   Delivery resources not found.
+No pods found for workload.
 
-		//    Messages
-		//    No messages found.
+To see logs: "tanzu apps workload tail my-workload"
 
-		// No pods found for workload.
+`,
+		}, {
+			Name: "supply chain ref but no condition in status",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: <unknown>
+---
+Overview
+   type:   <empty>
 
-		// To see logs: "tanzu apps workload tail my-workload"
+Supply Chain
+   name:          my-supply-chain
+   last update:   
+   ready:         
 
-		// `,
-		// 		}, {
-		// 			Name: "show issues with unknown status",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionUnknown).
-		// 								Reason("OopsieDoodle").
-		// 								Message("a hopefully informative message about what went wrong"),
-		// 						).SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: Unknown
-		// ---
-		// Overview
-		//    type:   <empty>
+   Supply Chain resources not found.
 
-		// Supply Chain
-		//    name:          my-supply-chain
-		//    last update:   <unknown>
-		//    ready:         Unknown
+   Messages
+   No messages found.
 
-		//    Supply Chain resources not found.
+No pods found for workload.
 
-		//    Messages
-		//    OopsieDoodle:   a hopefully informative message about what went wrong
+To see logs: "tanzu apps workload tail my-workload"
 
-		// No pods found for workload.
+`,
+		}, {
+			Name: "show status and service ref",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.ServiceClaims(cartov1alpha1.WorkloadServiceClaim{
+							Name: "database",
+							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+								APIVersion: "services.tanzu.vmware.com/v1alpha1",
+								Kind:       "PostgreSQL",
+								Name:       "my-prod-db",
+							},
+						})
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   <empty>
 
-		// To see logs: "tanzu apps workload tail my-workload"
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		// `,
-		// 		}, {
-		// 			Name: "show issues with unknown status overview type",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-		// 						d.AddLabel(apis.WorkloadTypeLabelName, "web")
-		// 					}).
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionUnknown).
-		// 								Reason("OopsieDoodle").
-		// 								Message("a hopefully informative message about what went wrong"),
-		// 						).SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: Unknown
-		// ---
-		// Overview
-		//    type:   web
+   Supply Chain resources not found.
 
-		// Supply Chain
-		//    name:          my-supply-chain
-		//    last update:   <unknown>
-		//    ready:         Unknown
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		   Supply Chain resources not found.
+Services
+   CLAIM      NAME         KIND         API VERSION
+   database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+No pods found for workload.
 
-		No pods found for workload.
+To see logs: "tanzu apps workload tail my-workload"
 
-		To see logs: "tanzu apps workload tail my-workload"
+`,
+		}, {
+			Name: "show status and service ref with Overview Type",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel(apis.WorkloadTypeLabelName, "web")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.ServiceClaims(cartov1alpha1.WorkloadServiceClaim{
+							Name: "database",
+							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+								APIVersion: "services.tanzu.vmware.com/v1alpha1",
+								Kind:       "PostgreSQL",
+								Name:       "my-prod-db",
+							},
+						})
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   web
 
-		// `,
-		// 		}, {
-		// 			Name: "show status with false condition",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-		// 						d.AddLabel(apis.WorkloadTypeLabelName, "web")
-		// 					}).
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-		// 								Message("a hopefully informative message about what went wrong"),
-		// 						).SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: OopsieDoodle
-		// ---
-		// Overview
-		//    type:   web
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		// Supply Chain
-		//    name:          my-supply-chain
-		//    last update:   <unknown>
-		//    ready:         False
+   Supply Chain resources not found.
 
-		//    Supply Chain resources not found.
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		//    Messages
-		//    OopsieDoodle:   a hopefully informative message about what went wrong
+Services
+   CLAIM      NAME         KIND         API VERSION
+   database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
 
-		// No pods found for workload.
+No pods found for workload.
 
-		// To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		// `,
-		// 		}, {
-		// 			Name: "show source info - git",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-		// 						d.Source(&cartov1alpha1.Source{
-		// 							Git: &cartov1alpha1.GitSource{
-		// 								URL: url,
-		// 								Ref: cartov1alpha1.GitRef{
-		// 									Branch: "master",
-		// 									Tag:    "v1.0.0",
-		// 									Commit: "abcdef",
-		// 								},
-		// 							},
-		// 						})
-		// 					}).
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-		// 								Message("a hopefully informative message about what went wrong"),
-		// 						).SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: OopsieDoodle
-		// ---
-		// Overview
-		//    type:   <empty>
+`,
+		}, {
+			Name: "no issues reported",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionTrue).Reason("Ready").
+								Message(""),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: Ready
+---
+Overview
+   type:   <empty>
 
-		// Source
-		//    type:     git
-		//    url:      https://example.com
-		//    branch:   master
-		//    tag:      v1.0.0
-		//    commit:   abcdef
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         True
 
-		// Supply Chain
-		//    name:          my-supply-chain
-		//    last update:   <unknown>
-		//    ready:         False
+   Supply Chain resources not found.
 
-		//    Supply Chain resources not found.
+   Messages
+   No messages found.
 
-		//    Messages
-		//    OopsieDoodle:   a hopefully informative message about what went wrong
+No pods found for workload.
 
-		// No pods found for workload.
+To see logs: "tanzu apps workload tail my-workload"
 
-		// To see logs: "tanzu apps workload tail my-workload"
+`,
+		}, {
+			Name: "no issues reported with overview type",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel(apis.WorkloadTypeLabelName, "web")
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionTrue).Reason("Ready").
+								Message(""),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: Ready
+---
+Overview
+   type:   web
 
-		// `,
-		// 		}, {
-		// 			Name: "show source info - git with overview type",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-		// 						d.AddLabel(apis.WorkloadTypeLabelName, "web")
-		// 					}).
-		// 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-		// 						d.Source(&cartov1alpha1.Source{
-		// 							Git: &cartov1alpha1.GitSource{
-		// 								URL: url,
-		// 								Ref: cartov1alpha1.GitRef{
-		// 									Branch: "master",
-		// 									Tag:    "v1.0.0",
-		// 									Commit: "abcdef",
-		// 								},
-		// 							},
-		// 						})
-		// 					}).
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-		// 								Message("a hopefully informative message about what went wrong"),
-		// 						).SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: OopsieDoodle
-		// ---
-		// Overview
-		//    type:   web
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         True
 
-		// Source
-		//    type:     git
-		//    url:      https://example.com
-		//    branch:   master
-		//    tag:      v1.0.0
-		//    commit:   abcdef
+   Supply Chain resources not found.
 
-		// Supply Chain
-		//    name:          my-supply-chain
-		//    last update:   <unknown>
-		//    ready:         False
+   Messages
+   No messages found.
 
-		//    Supply Chain resources not found.
+No pods found for workload.
 
-		//    Messages
-		//    OopsieDoodle:   a hopefully informative message about what went wrong
+To see logs: "tanzu apps workload tail my-workload"
 
-		// No pods found for workload.
+`,
+		}, {
+			Name: "show issues with unknown status",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionUnknown).
+								Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: Unknown
+---
+Overview
+   type:   <empty>
 
-		// To see logs: "tanzu apps workload tail my-workload"
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         Unknown
 
-		// `,
-		// 		}, {
-		// 			Name: "show source info - local path",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-		// 						d.AddLabel(apis.WorkloadTypeLabelName, "web")
-		// 					}).
-		// 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-		// 						d.Source(
-		// 							&cartov1alpha1.Source{
-		// 								Image: "my-registry/my-image:v1.0.0",
-		// 							},
-		// 						)
-		// 					}).
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-		// 								Message("a hopefully informative message about what went wrong"),
-		// 						).SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: OopsieDoodle
-		// ---
-		// Overview
-		//    type:   web
+   Supply Chain resources not found.
 
-		// Source
-		//    type:    source image
-		//    image:   my-registry/my-image:v1.0.0
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		// Supply Chain
-		//    name:          my-supply-chain
-		//    last update:   <unknown>
-		//    ready:         False
+No pods found for workload.
 
-		//    Supply Chain resources not found.
+To see logs: "tanzu apps workload tail my-workload"
 
-		//    Messages
-		//    OopsieDoodle:   a hopefully informative message about what went wrong
+`,
+		}, {
+			Name: "show issues with unknown status overview type",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel(apis.WorkloadTypeLabelName, "web")
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionUnknown).
+								Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: Unknown
+---
+Overview
+   type:   web
 
-		// No pods found for workload.
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         Unknown
 
-		// To see logs: "tanzu apps workload tail my-workload"
+   Supply Chain resources not found.
 
-		// `,
-		// 		}, {
-		// 			Name: "show source info - image",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-		// 						d.Image("docker.io/library/nginx:latest")
-		// 					}).
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-		// 								Message("a hopefully informative message about what went wrong"),
-		// 						).SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: OopsieDoodle
-		// ---
-		// Overview
-		//    type:   <empty>
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		// Source
-		//    type:    image
-		//    image:   docker.io/library/nginx:latest
+No pods found for workload.
 
-		// Supply Chain
-		//    name:          my-supply-chain
-		//    last update:   <unknown>
-		//    ready:         False
+To see logs: "tanzu apps workload tail my-workload"
 
-		//    Supply Chain resources not found.
+`,
+		}, {
+			Name: "show status with false condition",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel(apis.WorkloadTypeLabelName, "web")
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   web
 
-		//    Messages
-		//    OopsieDoodle:   a hopefully informative message about what went wrong
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		// No pods found for workload.
+   Supply Chain resources not found.
 
-		// To see logs: "tanzu apps workload tail my-workload"
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		// `,
-		// 		}, {
-		// 			Name: "show resources",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-		// 						d.Source(&cartov1alpha1.Source{
-		// 							Git: &cartov1alpha1.GitSource{
-		// 								URL: url,
-		// 								Ref: cartov1alpha1.GitRef{
-		// 									Branch: "master",
-		// 									Tag:    "v1.0.0",
-		// 									Commit: "abcdef",
-		// 								},
-		// 							},
-		// 						})
-		// 					}).
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-		// 								Message("a hopefully informative message about what went wrong"),
-		// 						).SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 						d.Resources(
-		// 							diecartov1alpha1.RealizedResourceBlank.
-		// 								Name("source-provider").
-		// 								ConditionsDie(
-		// 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
-		// 										Status(metav1.ConditionTrue),
-		// 									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
-		// 										Status(metav1.ConditionTrue),
-		// 									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
-		// 										Status(metav1.ConditionTrue),
-		// 								).DieRelease(),
-		// 							diecartov1alpha1.RealizedResourceBlank.
-		// 								Name("deliverable").
-		// 								ConditionsDie(
-		// 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
-		// 										Status(metav1.ConditionUnknown),
-		// 									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
-		// 										Status(metav1.ConditionUnknown),
-		// 									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
-		// 										Status(metav1.ConditionUnknown),
-		// 								).DieRelease(),
-		// 							diecartov1alpha1.RealizedResourceBlank.
-		// 								Name("image-builder").
-		// 								ConditionsDie(
-		// 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
-		// 										Status(metav1.ConditionFalse),
-		// 									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
-		// 										Status(metav1.ConditionFalse),
-		// 									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
-		// 										Status(metav1.ConditionFalse),
-		// 								).DieRelease(),
-		// 						)
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: OopsieDoodle
-		// ---
-		// Overview
-		//    type:   <empty>
+No pods found for workload.
 
-		// Source
-		//    type:     git
-		//    url:      https://example.com
-		//    branch:   master
-		//    tag:      v1.0.0
-		//    commit:   abcdef
+To see logs: "tanzu apps workload tail my-workload"
 
-		// Supply Chain
-		//    name:          my-supply-chain
-		//    last update:   <unknown>
-		//    ready:         False
+`,
+		}, {
+			Name: "show source info - git",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: url,
+								Ref: cartov1alpha1.GitRef{
+									Branch: "master",
+									Tag:    "v1.0.0",
+									Commit: "abcdef",
+								},
+							},
+						})
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   <empty>
 
-		//    RESOURCE          READY     HEALTHY   TIME        OUTPUT
-		//    source-provider   True      True      <unknown>   not found
-		//    deliverable       Unknown   Unknown   <unknown>   not found
-		//    image-builder     False     False     <unknown>   not found
+Source
+   type:     git
+   url:      https://example.com
+   branch:   master
+   tag:      v1.0.0
+   commit:   abcdef
 
-		//    Messages
-		//    OopsieDoodle:   a hopefully informative message about what went wrong
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
 
-		// No pods found for workload.
+   Supply Chain resources not found.
 
-		// To see logs: "tanzu apps workload tail my-workload"
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		// `,
-		// 		}, {
-		// 			Name: "show resources with overview type",
-		// 			Args: []string{workloadName},
-		// 			GivenObjects: []client.Object{
-		// 				parent.
-		// 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-		// 						d.AddLabel(apis.WorkloadTypeLabelName, "web")
-		// 					}).
-		// 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-		// 						d.Source(&cartov1alpha1.Source{
-		// 							Git: &cartov1alpha1.GitSource{
-		// 								URL: url,
-		// 								Ref: cartov1alpha1.GitRef{
-		// 									Branch: "master",
-		// 									Tag:    "v1.0.0",
-		// 									Commit: "abcdef",
-		// 								},
-		// 							},
-		// 						})
-		// 					}).
-		// 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
-		// 						d.ConditionsDie(
-		// 							diecartov1alpha1.WorkloadConditionReadyBlank.
-		// 								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
-		// 								Message("a hopefully informative message about what went wrong"),
-		// 						).SupplyChainRef(cartov1alpha1.ObjectReference{
-		// 							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
-		// 							Kind:       "SupplyChain",
-		// 							Name:       "my-supply-chain",
-		// 							Namespace:  defaultNamespace,
-		// 						})
-		// 						d.Resources(
-		// 							diecartov1alpha1.RealizedResourceBlank.
-		// 								Name("source-provider").
-		// 								ConditionsDie(
-		// 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
-		// 										Status(metav1.ConditionTrue),
-		// 									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
-		// 										Status(metav1.ConditionTrue),
-		// 									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
-		// 										Status(metav1.ConditionTrue),
-		// 								).DieRelease(),
-		// 							diecartov1alpha1.RealizedResourceBlank.
-		// 								Name("deliverable").
-		// 								ConditionsDie(
-		// 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
-		// 										Status(metav1.ConditionUnknown),
-		// 									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
-		// 										Status(metav1.ConditionUnknown),
-		// 									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
-		// 										Status(metav1.ConditionUnknown),
-		// 								).DieRelease(),
-		// 							diecartov1alpha1.RealizedResourceBlank.
-		// 								Name("image-builder").
-		// 								ConditionsDie(
-		// 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
-		// 										Status(metav1.ConditionFalse),
-		// 									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
-		// 										Status(metav1.ConditionFalse),
-		// 									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
-		// 										Status(metav1.ConditionFalse),
-		// 								).StampedRef(&corev1.ObjectReference{Kind: "image", Name: "petclinic"}).DieRelease())
-		// 					}),
-		// 			},
-		// 			ExpectOutput: `
-		// ---
-		// # my-workload: OopsieDoodle
-		// ---
-		// Overview
-		//    type:   web
+No pods found for workload.
 
-		Source
-		   type:     git
-		   url:      https://example.com
-		   branch:   master
-		   tag:      v1.0.0
-		   commit:   abcdef
+To see logs: "tanzu apps workload tail my-workload"
+
+`,
+		}, {
+			Name: "show source info - git with overview type",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel(apis.WorkloadTypeLabelName, "web")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: url,
+								Ref: cartov1alpha1.GitRef{
+									Branch: "master",
+									Tag:    "v1.0.0",
+									Commit: "abcdef",
+								},
+							},
+						})
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   web
+
+Source
+   type:     git
+   url:      https://example.com
+   branch:   master
+   tag:      v1.0.0
+   commit:   abcdef
+
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
+
+   Supply Chain resources not found.
+
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
+
+No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
+`,
+		}, {
+			Name: "show source info - local path",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel(apis.WorkloadTypeLabelName, "web")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(
+							&cartov1alpha1.Source{
+								Image: "my-registry/my-image:v1.0.0",
+							},
+						)
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   web
+
+Source
+   type:    source image
+   image:   my-registry/my-image:v1.0.0
+
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
+
+   Supply Chain resources not found.
+
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
+
+No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
+`,
+		}, {
+			Name: "show source info - image",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("docker.io/library/nginx:latest")
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   <empty>
+
+Source
+   type:    image
+   image:   docker.io/library/nginx:latest
 
 		Supply Chain
 		   name:          my-supply-chain
 		   last update:   <unknown>
 		   ready:         False
 
-		   RESOURCE          READY     HEALTHY   TIME        OUTPUT
-		   source-provider   True      True      <unknown>   not found
-		   deliverable       Unknown   Unknown   <unknown>   not found
-		   image-builder     False     False     <unknown>   image/petclinic
+   Supply Chain resources not found.
 
-		   Messages
-		   OopsieDoodle:   a hopefully informative message about what went wrong
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		// `,
-		//
-		//	},
-		{
+		`,
+		}, {
+			Name: "show resources",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: url,
+								Ref: cartov1alpha1.GitRef{
+									Branch: "master",
+									Tag:    "v1.0.0",
+									Commit: "abcdef",
+								},
+							},
+						})
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+						d.Resources(
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("source-provider").
+								ConditionsDie(
+									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
+										Status(metav1.ConditionTrue),
+									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
+										Status(metav1.ConditionTrue),
+									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
+										Status(metav1.ConditionTrue),
+								).DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("deliverable").
+								ConditionsDie(
+									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
+										Status(metav1.ConditionUnknown),
+									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
+										Status(metav1.ConditionUnknown),
+									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
+										Status(metav1.ConditionUnknown),
+								).DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("image-builder").
+								ConditionsDie(
+									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
+										Status(metav1.ConditionFalse),
+									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
+										Status(metav1.ConditionFalse),
+									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
+										Status(metav1.ConditionFalse),
+								).DieRelease(),
+						)
+					}),
+			},
+			ExpectOutput: `
+		---
+		# my-workload: OopsieDoodle
+		---
+		Overview
+		   type:   <empty>
+
+Source
+   type:     git
+   url:      https://example.com
+   branch:   master
+   tag:      v1.0.0
+   commit:   abcdef
+
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
+
+   RESOURCE          READY     HEALTHY   TIME        OUTPUT
+   source-provider   True      True      <unknown>   not found
+   deliverable       Unknown   Unknown   <unknown>   not found
+   image-builder     False     False     <unknown>   not found
+
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
+
+No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
+`,
+		}, {
+			Name: "show resources with overview type",
+			Args: []string{workloadName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel(apis.WorkloadTypeLabelName, "web")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: url,
+								Ref: cartov1alpha1.GitRef{
+									Branch: "master",
+									Tag:    "v1.0.0",
+									Commit: "abcdef",
+								},
+							},
+						})
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionFalse).Reason("OopsieDoodle").
+								Message("a hopefully informative message about what went wrong"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+						d.Resources(
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("source-provider").
+								ConditionsDie(
+									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
+										Status(metav1.ConditionTrue),
+									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
+										Status(metav1.ConditionTrue),
+									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
+										Status(metav1.ConditionTrue),
+								).DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("deliverable").
+								ConditionsDie(
+									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
+										Status(metav1.ConditionUnknown),
+									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
+										Status(metav1.ConditionUnknown),
+									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
+										Status(metav1.ConditionUnknown),
+								).DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("image-builder").
+								ConditionsDie(
+									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
+										Status(metav1.ConditionFalse),
+									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
+										Status(metav1.ConditionFalse),
+									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
+										Status(metav1.ConditionFalse),
+								).StampedRef(&corev1.ObjectReference{Kind: "image", Name: "petclinic"}).DieRelease())
+					}),
+			},
+			ExpectOutput: `
+---
+# my-workload: OopsieDoodle
+---
+Overview
+   type:   web
+>>>>>>> 7751b17 (fixed the test cases)
+
+Source
+   type:     git
+   url:      https://example.com
+   branch:   master
+   tag:      v1.0.0
+   commit:   abcdef
+
+Supply Chain
+   name:          my-supply-chain
+   last update:   <unknown>
+   ready:         False
+
+   RESOURCE          READY     HEALTHY   TIME        OUTPUT
+   source-provider   True      True      <unknown>   not found
+   deliverable       Unknown   Unknown   <unknown>   not found
+   image-builder     False     False     <unknown>   image/petclinic
+
+   Messages
+   OopsieDoodle:   a hopefully informative message about what went wrong
+
+No pods found for workload.
+
+To see logs: "tanzu apps workload tail my-workload"
+
+		`,
+		}, {
 			Name: "show healthy rule condition issue",
 			Args: []string{workloadName},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				return context.WithValue(ctx, podKey, "Pod"), nil
+			},
 			GivenObjects: []client.Object{
 				parent.
 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
@@ -1045,6 +1092,9 @@ To see logs: "tanzu apps workload tail my-workload"
 		}, {
 			Name: "show only ready condition issue",
 			Args: []string{workloadName},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				return context.WithValue(ctx, podKey, "Pod"), nil
+			},
 			GivenObjects: []client.Object{
 				parent.
 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
@@ -1065,32 +1115,35 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: Unknown
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: Unknown
+---
+Overview
+   type:   <empty>
 
 Supply Chain
    name:          <none>
    last update:   <unknown>
    ready:         Unknown
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
    Messages
    OopsieDoodle:   a hopefully informative message about what went wrong
 
-		Pods
-		   NAME   STATUS    RESTARTS   AGE
-		   pod1   Running   0          2y
+Pods
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show pods",
 			Args: []string{workloadName},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				return context.WithValue(ctx, podKey, "Pod"), nil
+			},
 			GivenObjects: []client.Object{
 				parent.
 					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
@@ -1117,33 +1170,34 @@ Supply Chain
 					}).
 					StatusDie(func(d *diecorev1.PodStatusDie) {
 						d.Phase(corev1.PodFailed)
-					}),
+					}).Kind("pod"),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: Unknown
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: Unknown
+---
+Overview
+   type:   <empty>
 
 Supply Chain
    name:          <none>
    last update:   <unknown>
    ready:         Unknown
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
    Messages
    OopsieDoodle:   a hopefully informative message about what went wrong
 
-		Pods
-		   NAME   STATUS    RESTARTS   AGE
-		   pod1   Running   0          2y
-		   pod2   Failed    0          2y
+Pods
+   NAME                 READY   STATUS   RESTARTS   AGE
+   pod1                 0/0              0          <unknown>
+   pod2                 0/0              0          <unknown>
+   pod-something-else   0/0              0          <unknown>
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show knative services",
 			Args: []string{workloadName},
@@ -1180,32 +1234,32 @@ Supply Chain
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: Unknown
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: Unknown
+---
+Overview
+   type:   <empty>
 
 Supply Chain
    name:          my-supply-chain
    last update:   <unknown>
    ready:         Unknown
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
    Messages
    OopsieDoodle:   a hopefully informative message about what went wrong
 
-		No pods found for workload.
+No pods found for workload.
 
-		Knative Services
-		   NAME    READY       URL
-		   ksvc1   Ready       https://example.com
-		   ksvc2   not-Ready   <empty>
+Knative Services
+   NAME    READY       URL
+   ksvc1   Ready       https://example.com
+   ksvc2   not-Ready   <empty>
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "show pods and knative services",
 			Args: []string{workloadName},
@@ -1239,35 +1293,35 @@ Supply Chain
 					}),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: Ready
-		---
-		Overview
-		   type:   web
+---
+# my-workload: Ready
+---
+Overview
+   type:   web
 
 Supply Chain
    name:          my-supply-chain
    last update:   <unknown>
    ready:         True
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
    Messages
    No messages found.
 
-		Pods
-		   NAME   STATUS    RESTARTS   AGE
-		   pod1   Running   0          2y
-		   pod2   Failed    0          2y
+Pods
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
+   pod2   0/0              0          <unknown>
 
-		Knative Services
-		   NAME    READY       URL
-		   ksvc1   Ready       https://example.com
-		   ksvc2   not-Ready   <empty>
+Knative Services
+   NAME    READY       URL
+   ksvc1   Ready       https://example.com
+   ksvc2   not-Ready   <empty>
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "not found",
 			Args: []string{workloadName},
@@ -1288,8 +1342,8 @@ Supply Chain
 				}),
 			},
 			ExpectOutput: `
-		Workload "default/my-workload" not found
-		`,
+Workload "default/my-workload" not found
+`,
 			ShouldError: true,
 		},
 		{
@@ -1302,8 +1356,8 @@ Supply Chain
 			},
 			ShouldError: true,
 			ExpectOutput: `
-		Error: namespace "foo" not found, it may not exist or user does not have permissions to read it.
-		`,
+Error: namespace "foo" not found, it may not exist or user does not have permissions to read it.
+`,
 		}, {
 			Name: "get error",
 			Args: []string{workloadName},
@@ -1334,25 +1388,24 @@ Supply Chain
 				clitesting.InduceFailure("list", "PodList"),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: <unknown>
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: <unknown>
+---
+Overview
+   type:   <empty>
 
-		Supply Chain reference not found.
+Supply Chain reference not found.
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
    Messages
    No messages found.
 
-		Failed to list pods:
-		  inducing failure for list PodList
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "get error for listing knative services",
 			Args: []string{workloadName},
@@ -1363,24 +1416,24 @@ Supply Chain
 				clitesting.InduceFailure("list", "KnativeServiceList"),
 			},
 			ExpectOutput: `
-		---
-		# my-workload: <unknown>
-		---
-		Overview
-		   type:   <empty>
+---
+# my-workload: <unknown>
+---
+Overview
+   type:   <empty>
 
-		Supply Chain reference not found.
+Supply Chain reference not found.
 
-		   Supply Chain resources not found.
+   Supply Chain resources not found.
 
    Messages
    No messages found.
 
-		No pods found for workload.
+No pods found for workload.
 
-		To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload"
 
-		`,
+`,
 		}, {
 			Name: "get workload exported data",
 			Args: []string{workloadName, flags.ExportFlagName},
@@ -1398,16 +1451,16 @@ Supply Chain
 					}),
 			},
 			ExpectOutput: `
-		---
-		apiVersion: carto.run/v1alpha1
-		kind: Workload
-		metadata:
-		  labels:
-		    app.kubernetes.io/part-of: my-workload
-		  name: my-workload
-		  namespace: default
-		spec: {}
-		`,
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  labels:
+    app.kubernetes.io/part-of: my-workload
+  name: my-workload
+  namespace: default
+spec: {}
+`,
 		}, {
 			Name: "get workload exported data in json format",
 			Args: []string{workloadName, flags.ExportFlagName, flags.OutputFlagName, printer.OutputFormatJson},
@@ -1427,19 +1480,19 @@ Supply Chain
 					}),
 			},
 			ExpectOutput: `
-		{
-			"apiVersion": "carto.run/v1alpha1",
-			"kind": "Workload",
-			"metadata": {
-				"labels": {
-					"app.kubernetes.io/part-of": "my-workload"
-				},
-				"name": "my-workload",
-				"namespace": "default"
-			},
-			"spec": {}
-		}
-		`,
+{
+	"apiVersion": "carto.run/v1alpha1",
+	"kind": "Workload",
+	"metadata": {
+		"labels": {
+			"app.kubernetes.io/part-of": "my-workload"
+		},
+		"name": "my-workload",
+		"namespace": "default"
+	},
+	"spec": {}
+}
+`,
 		}, {
 			Name: "get workload output data in yaml format",
 			Args: []string{workloadName, flags.OutputFlagName, "yaml"},
@@ -1458,26 +1511,26 @@ Supply Chain
 					}),
 			},
 			ExpectOutput: `
-		---
-		apiVersion: carto.run/v1alpha1
-		kind: Workload
-		metadata:
-		  creationTimestamp: "1970-01-01T00:00:01Z"
-		  labels:
-		    app.kubernetes.io/part-of: my-workload
-		  name: my-workload
-		  namespace: default
-		  resourceVersion: "999"
-		spec: {}
-		status:
-		  conditions:
-		  - lastTransitionTime: null
-		    message: a hopefully informative message about what went wrong
-		    reason: Workload Reason
-		    status: Unknown
-		    type: Ready
-		  supplyChainRef: {}
-		`,
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  creationTimestamp: "1970-01-01T00:00:01Z"
+  labels:
+    app.kubernetes.io/part-of: my-workload
+  name: my-workload
+  namespace: default
+  resourceVersion: "999"
+spec: {}
+status:
+  conditions:
+  - lastTransitionTime: null
+    message: a hopefully informative message about what went wrong
+    reason: Workload Reason
+    status: Unknown
+    type: Ready
+  supplyChainRef: {}
+`,
 		}, {
 			Name: "get workload output data in json format",
 			Args: []string{workloadName, flags.OutputFlagName, "json"},

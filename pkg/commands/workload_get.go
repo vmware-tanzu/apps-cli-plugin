@@ -232,17 +232,27 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 			}, ","))
 		}).
 		Do()
-	infos, _ := r.Infos()
-	if len(infos) == 0 {
-		c.Printf("\n")
-		c.Infof("No pods found for workload.\n")
+	infos, err := r.Infos()
+	if err != nil {
+		c.Eprintf("\n")
+		c.Eerrorf("Failed to list pods:\n")
+		c.Eprintf("  %s\n", err)
 	} else {
-		// var printer printers.ResourcePrinter
-		for ix := range infos {
-			// var mapping *meta.RESTMapping
+		if len(infos) == 0 {
 			c.Printf("\n")
-			c.Boldf("Pods\n")
-			printer.PodTablePrintery(c, infos[ix])
+			c.Infof("No pods found for workload.\n")
+		} else {
+			for ix := range infos {
+				tableResult, podlist, _ := printer.DecodeIntoTable(infos[ix].Object)
+				if len(podlist) == 0 {
+					c.Printf("\n")
+					c.Infof("No pods found for workload.\n")
+				} else {
+					c.Printf("\n")
+					c.Boldf("Pods\n")
+					printer.PodTablePrintery(c, infos[ix], podlist, tableResult)
+				}
+			}
 		}
 	}
 
