@@ -34,7 +34,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var namespaceFlag = "--namespace=" + it.TestingNamespace
+var (
+	namespaceFlag    = "--namespace=" + it.TestingNamespace
+	workloadTypeMeta = metav1.TypeMeta{
+		Kind:       cartov1alpha1.WorkloadKind,
+		APIVersion: cartov1alpha1.SchemeGroupVersion.String(),
+	}
+)
 
 func TestCreateFromGitWithAnnotations(t *testing.T) {
 	testSuite := it.CommandLineIntegrationTestSuite{
@@ -55,10 +61,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				return c
 			}(),
 			ExpectedObject: &cartov1alpha1.Workload{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       cartov1alpha1.WorkloadKind,
-					APIVersion: cartov1alpha1.SchemeGroupVersion.String(),
-				},
+				TypeMeta: workloadTypeMeta,
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-git-annotations-workload",
 					Namespace: it.TestingNamespace,
@@ -104,6 +107,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				return c
 			}(),
 			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-maven-workload",
 					Namespace: it.TestingNamespace,
@@ -136,10 +140,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				return c
 			}(),
 			ExpectedObject: &cartov1alpha1.Workload{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       cartov1alpha1.WorkloadKind,
-					APIVersion: cartov1alpha1.SchemeGroupVersion.String(),
-				},
+				TypeMeta: workloadTypeMeta,
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-local-registry",
 					Namespace: it.TestingNamespace,
@@ -191,10 +192,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Command: *it.NewTanzuAppsCommandLine(
 				"workload", "apply", "test-create-git-annotations-workload", namespaceFlag, "--annotation=min-instances=3", "--annotation=max-instances=5", "-y"),
 			ExpectedObject: &cartov1alpha1.Workload{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       cartov1alpha1.WorkloadKind,
-					APIVersion: cartov1alpha1.SchemeGroupVersion.String(),
-				},
+				TypeMeta: workloadTypeMeta,
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-git-annotations-workload",
 					Namespace: it.TestingNamespace,

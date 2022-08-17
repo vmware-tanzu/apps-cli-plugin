@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 
@@ -40,10 +41,10 @@ type DynamicClient interface {
 	Namespace() string
 
 	// GetUsingGVK returns unmarshalled byte array provided GVK and name of the API object
-	GetUsingGVK(ctx context.Context, gvk schema.GroupVersionKind, name string) ([]byte, error)
+	GetUsingGVK(ctx context.Context, gvk schema.GroupVersionKind, name string) (*unstructured.Unstructured, error)
 
 	// ListUsingGVK returns unmarshalled byte array provided GVK and name of the API object
-	ListUsingGVK(ctx context.Context, gvk schema.GroupVersionKind) ([]byte, error)
+	ListUsingGVK(ctx context.Context, gvk schema.GroupVersionKind) (*unstructured.UnstructuredList, error)
 
 	// RawClient returns the raw dynamic client interface
 	RawClient() dynamic.Interface
@@ -72,20 +73,12 @@ func (c dynamicClient) RawClient() dynamic.Interface {
 	return c.client
 }
 
-func (c *dynamicClient) GetUsingGVK(ctx context.Context, gvk schema.GroupVersionKind, name string) ([]byte, error) {
+func (c *dynamicClient) GetUsingGVK(ctx context.Context, gvk schema.GroupVersionKind, name string) (*unstructured.Unstructured, error) {
 	gvr := gvk.GroupVersion().WithResource(strings.ToLower(gvk.Kind) + "s")
-	unList, err := c.client.Resource(gvr).Namespace(c.namespace).Get(ctx, name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return unList.MarshalJSON()
+	return c.client.Resource(gvr).Namespace(c.namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
-func (c *dynamicClient) ListUsingGVK(ctx context.Context, gvk schema.GroupVersionKind) ([]byte, error) {
+func (c *dynamicClient) ListUsingGVK(ctx context.Context, gvk schema.GroupVersionKind) (*unstructured.UnstructuredList, error) {
 	gvr := gvk.GroupVersion().WithResource(strings.ToLower(gvk.Kind) + "s")
-	unList, err := c.client.Resource(gvr).Namespace(c.namespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return unList.MarshalJSON()
+	return c.client.Resource(gvr).Namespace(c.namespace).List(ctx, metav1.ListOptions{})
 }

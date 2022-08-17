@@ -22,19 +22,17 @@ package suite_test
 import (
 	"context"
 	"encoding/json"
-	"reflect"
 	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 )
 
 var (
@@ -46,20 +44,38 @@ var (
 		}),
 		// ^([0-9]{1,10}[dhms]{1}){1,4}$
 	}
+
+	ignoreFields = []string{
+		"CreationTimestamp",
+		"DeletionTimestamp",
+		"DeletionGracePeriodSeconds",
+		"Finalizers",
+		"Generation",
+		"ManagedFields",
+		"OwnerReferences",
+		"ResourceVersion",
+		"Status",
+		"SelfLink",
+		"UID",
+		"ZZZ_DeprecatedClusterName",
+	}
+
+	containsignoreFields = func(str string) bool {
+		for _, v := range ignoreFields {
+			if strings.ToLower(v) == strings.ToLower(str) {
+				return true
+			}
+		}
+		return false
+	}
+
 	objOpts = []cmp.Option{
-		cmpopts.IgnoreFields(cartov1alpha1.Workload{},
-			"Status",
-			"GenerateName",
-			"SelfLink",
-			"UID",
-			"ResourceVersion",
-			"CreationTimestamp",
-			"DeletionTimestamp",
-			"DeletionGracePeriodSeconds",
-			"Finalizers",
-			"ZZZ_DeprecatedClusterName",
-			"ManagedFields",
-		),
+		cmpopts.IgnoreMapEntries(func(k string, v interface{}) bool {
+			if containsignoreFields(k) {
+				return true
+			}
+			return false
+		}),
 	}
 )
 
@@ -150,54 +166,41 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 		}
 
 		if cl.ExpectedObjectList != nil {
-			gotData, err := appsclient.ListUsingGVK(ctx, cl.ExpectedObjectList.GetObjectKind().GroupVersionKind())
+			e, err := json.Marshal(cl.ExpectedObjectList)
 			if err != nil {
-				t.Fatalf("Failed to get obj: %v", err)
+				t.Fatalf("unexpected error when marshall obj: %v: %v", cl.ExpectedObjectList, err)
+			}
+			expectedObjectList := &unstructured.UnstructuredList{}
+			if _, _, err = unstructured.UnstructuredJSONScheme.Decode(e, nil, expectedObjectList); err != nil {
+				t.Fatalf("unexpected error decode obj: %v: %v", cl.ExpectedObjectList, err)
 			}
 
-			var got client.ObjectList
-			switch cl.ExpectedObjectList.(type) {
-			case *cartov1alpha1.WorkloadList:
-				got = &cartov1alpha1.WorkloadList{}
-			case *cartov1alpha1.ClusterSupplyChainList:
-				got = &cartov1alpha1.ClusterSupplyChainList{}
-			default:
-				t.Errorf("unexpected type: %v", reflect.TypeOf(cl.ExpectedObjectList))
-				t.FailNow()
+			got, err := appsclient.ListUsingGVK(ctx, cl.ExpectedObjectList.GetObjectKind().GroupVersionKind())
+			if err != nil {
+				t.Fatalf("unexpected error on get obj GVK %v, %v", cl.ExpectedObjectList.GetObjectKind().GroupVersionKind(), err)
 			}
 
-			err = json.Unmarshal(gotData, got)
-			if err != nil {
-				t.Fatalf("Failed to get obj: %v", err)
-			}
-			if diff := cmp.Diff(cl.ExpectedObjectList, got, objOpts...); diff != "" {
-				t.Errorf("%s(Object)\n(-expected, +actual)\n%s", cl.Name, diff)
+			if diff := cmp.Diff(expectedObjectList, got, objOpts...); diff != "" {
+				t.Errorf("%s(ObjectList)\n(-expected, +actual)\n%s", cl.Name, diff)
 				t.FailNow()
 			}
 		}
 
 		if cl.ExpectedObject != nil {
-			gotData, err := appsclient.GetUsingGVK(ctx, cl.ExpectedObject.GetObjectKind().GroupVersionKind(), cl.ExpectedObject.GetName())
+			e, err := json.Marshal(cl.ExpectedObject)
 			if err != nil {
-				t.Fatalf("Failed to get obj: %v", err)
+				t.Fatalf("unexpected error when marshall obj: %v: %v", cl.ExpectedObject, err)
+			}
+			expectedOBj := &unstructured.Unstructured{}
+			if _, _, err = unstructured.UnstructuredJSONScheme.Decode(e, nil, expectedOBj); err != nil {
+				t.Fatalf("unexpected error decode obj: %v: %v", cl.ExpectedObject, err)
 			}
 
-			var got client.Object
-			switch cl.ExpectedObject.(type) {
-			case *cartov1alpha1.Workload:
-				got = &cartov1alpha1.Workload{}
-			case *cartov1alpha1.ClusterSupplyChain:
-				got = &cartov1alpha1.ClusterSupplyChain{}
-			default:
-				t.Errorf("unexpected type: %v", reflect.TypeOf(cl.ExpectedObject))
-				t.FailNow()
-			}
-
-			err = json.Unmarshal(gotData, got)
+			got, err := appsclient.GetUsingGVK(ctx, cl.ExpectedObject.GetObjectKind().GroupVersionKind(), cl.ExpectedObject.GetName())
 			if err != nil {
-				t.Fatalf("Failed to get obj: %v", err)
+				t.Fatalf("unexpected error on get obj GVK %v, name %s : %v", cl.ExpectedObject.GetObjectKind().GroupVersionKind(), cl.ExpectedObject.GetName(), err)
 			}
-			if diff := cmp.Diff(cl.ExpectedObject, got, objOpts...); diff != "" {
+			if diff := cmp.Diff(expectedOBj, got, objOpts...); diff != "" {
 				t.Errorf("%s(Object)\n(-expected, +actual)\n%s", cl.Name, diff)
 				t.FailNow()
 			}
