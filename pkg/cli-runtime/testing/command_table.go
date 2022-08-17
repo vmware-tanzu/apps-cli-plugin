@@ -91,9 +91,6 @@ type CommandTestCase struct {
 	// GivenObjects represents resources that would already exist within Kubernetes. These
 	// resources are passed directly to the fake client.
 	GivenObjects []client.Object
-	// UnstructuredObjects represents resources that would already exist within Kubernetes. These
-	// resources are passed directly to the fake client.
-	UnstructuredObjects []client.Object
 	// WithReactors installs each ReactionFunc into each fake client. ReactionFuncs intercept
 	// each call to the client providing the ability to mutate the resource or inject an error.
 	WithReactors []ReactionFunc
