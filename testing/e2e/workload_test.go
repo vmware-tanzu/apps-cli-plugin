@@ -29,9 +29,17 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
-	it "github.com/vmware-tanzu/apps-cli-plugin/testing/e2e/suite"
+	it "github.com/vmware-tanzu/apps-cli-plugin/testing/suite"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+var (
+	namespaceFlag    = "--namespace=" + it.TestingNamespace
+	workloadTypeMeta = metav1.TypeMeta{
+		Kind:       cartov1alpha1.WorkloadKind,
+		APIVersion: cartov1alpha1.SchemeGroupVersion.String(),
+	}
 )
 
 func TestCreateFromGitWithAnnotations(t *testing.T) {
@@ -53,6 +61,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				return c
 			}(),
 			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-git-annotations-workload",
 					Namespace: it.TestingNamespace,
@@ -62,14 +71,12 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
-					Params: []cartov1alpha1.Param{
-						{
-							Name: "annotations",
-							Value: v1.JSON{
-								Raw: []byte(`{"max-instances":"4","min-instances":"2"}`),
-							},
+					Params: []cartov1alpha1.Param{{
+						Name: "annotations",
+						Value: v1.JSON{
+							Raw: []byte(`{"max-instances":"4","min-instances":"2"}`),
 						},
-					},
+					}},
 					Source: &cartov1alpha1.Source{
 						Git: &cartov1alpha1.GitSource{
 							URL: "https://github.com/sample-accelerators/spring-petclinic",
@@ -97,6 +104,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				return c
 			}(),
 			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-maven-workload",
 					Namespace: it.TestingNamespace,
@@ -129,6 +137,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				return c
 			}(),
 			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-local-registry",
 					Namespace: it.TestingNamespace,
@@ -179,6 +188,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Command: *it.NewTanzuAppsCommandLine(
 				"workload", "apply", "test-create-git-annotations-workload", namespaceFlag, "--annotation=min-instances=3", "--annotation=max-instances=5", "-y"),
 			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-git-annotations-workload",
 					Namespace: it.TestingNamespace,
@@ -188,14 +198,12 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
-					Params: []cartov1alpha1.Param{
-						{
-							Name: "annotations",
-							Value: v1.JSON{
-								Raw: []byte(`{"max-instances":"5","min-instances":"3"}`),
-							},
+					Params: []cartov1alpha1.Param{{
+						Name: "annotations",
+						Value: v1.JSON{
+							Raw: []byte(`{"max-instances":"5","min-instances":"3"}`),
 						},
-					},
+					}},
 					Source: &cartov1alpha1.Source{
 						Git: &cartov1alpha1.GitSource{
 							URL: "https://github.com/sample-accelerators/spring-petclinic",

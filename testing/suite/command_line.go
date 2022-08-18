@@ -50,6 +50,13 @@ func NewTanzuAppsCommandLine(args ...string) *CommandLine {
 	}
 }
 
+func NewKubectlCommandLine(args ...string) *CommandLine {
+	return &CommandLine{
+		cmd:  "kubectl",
+		args: args,
+	}
+}
+
 func (c CommandLine) GetOutput() string {
 	return c.out
 }

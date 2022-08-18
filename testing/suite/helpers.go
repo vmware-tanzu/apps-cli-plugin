@@ -17,23 +17,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package integration_test
+package suite_test
 
 import (
 	"path/filepath"
-	"testing"
-
-	"github.com/vmware-tanzu/apps-cli-plugin/testing/e2e/helpers"
-	it "github.com/vmware-tanzu/apps-cli-plugin/testing/e2e/suite"
 )
 
-func TestGetClusterSupplyChain(t *testing.T) {
-	testSuite := it.CommandLineIntegrationTestSuite{
-		{
-			Name:                      "Get the existing supply chain",
-			Command:                   *it.NewTanzuAppsCommandLine("cluster-supply-chain", "get", "ci-test"),
-			ExpectedCommandLineOutput: helpers.GetFileAsString(t, filepath.Join(consoleOutBasePath, "get-csc", "test-get-ci-test-csc.txt")),
-		},
-	}
-	testSuite.Run(t)
-}
+var (
+	ConsoleOutBasePath = filepath.Join("testdata", "console-out")
+	ExpectedBasePath   = filepath.Join("testdata", "expected")
+	SrcBasePath        = filepath.Join("testdata", "src")
+	namespaceFlag      = "--namespace=" + TestingNamespace
+)

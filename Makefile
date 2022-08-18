@@ -83,7 +83,7 @@ test: generate fmt vet ## Run tests
 
 .PHONY: integration-test
 integration-test:  ## Run integration test
-	go test -timeout 10m -covermode=atomic -coverprofile=coverage.txt github.com/vmware-tanzu/apps-cli-plugin/testing/e2e/test_cases/... --tags=integration
+	go test -timeout 10m -covermode=atomic -coverprofile=coverage.txt github.com/vmware-tanzu/apps-cli-plugin/testing/e2e/... --tags=integration
 
 .PHONY: prepare
 prepare: generate fmt vet
