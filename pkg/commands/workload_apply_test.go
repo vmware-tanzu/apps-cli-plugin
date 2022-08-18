@@ -2955,7 +2955,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 		}, {
 			Name: "git source with non-allowed env var",
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
-				os.Setenv("TANZU_APPS_LABEL", "")
+				os.Setenv("TANZU_APPS_LABEL", "foo=var")
 				return ctx, nil
 			},
 			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
@@ -3006,7 +3006,7 @@ To get status: "tanzu apps workload get my-workload"
 		}, {
 			Name: "git source with allowed and non-allowed env var",
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
-				os.Setenv("TANZU_APPS_LABEL", "")
+				os.Setenv("TANZU_APPS_LABEL", "foo=var")
 				os.Setenv("TANZU_APPS_TYPE", "web")
 				return ctx, nil
 			},
@@ -3061,7 +3061,7 @@ To get status: "tanzu apps workload get my-workload"
 
 `,
 		}, {
-			Name: "git source with allowed env var overwrited",
+			Name: "git source with allowed env var overwritten",
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				os.Setenv("TANZU_APPS_TYPE", "jar")
 				return ctx, nil

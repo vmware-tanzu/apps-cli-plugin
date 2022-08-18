@@ -130,6 +130,9 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					"workload", "create", "test-create-local-registry",
 					"--local-path=./testdata/hello.go.jar",
 					"--source-image", os.Getenv("BUNDLE"),
+					"--registry-username", os.Getenv("REGISTRY_USERNAME"),
+					"--registry-password", os.Getenv("REGISTRY_PASSWORD"),
+					"--registry-ca-cert", os.Getenv("CERT_DIR")+"/ca.pem",
 					namespaceFlag,
 					"--type=web",
 					"--yes",
@@ -159,7 +162,13 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
 
-				if err := it.NewCommandLine("imgpkg", "pull", "-i", os.Getenv("BUNDLE"), "-o", dir).Exec(); err != nil {
+				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE"), "-o", dir)
+				ic.AddEnvVars(
+					"IMGPKG_USERNAME="+os.Getenv("REGISTRY_USERNAME"),
+					"IMGPKG_PASSWORD="+os.Getenv("REGISTRY_PASSWORD"),
+				)
+
+				if err := ic.Exec(); err != nil {
 					t.Errorf("unexpected error %v ", err)
 					t.FailNow()
 				}
@@ -187,15 +196,22 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			WorkloadName: "test-create-local-registry-venv",
 			Command: func() it.CommandLine {
 				c := *it.NewTanzuAppsCommandLine(
-					"workload", "test-create-local-registry-venv",
+					"workload", "create", "test-create-local-registry-venv",
 					"--local-path=./testdata/hello.go.jar",
 					namespaceFlag,
 					"--yes",
 				)
-				c.AddEnvVars("TANZU_APPS_SOURCE_IMAGE=" + os.Getenv("BUNDLE"))
+				c.AddEnvVars(
+					"TANZU_APPS_SOURCE_IMAGE="+os.Getenv("BUNDLE")+"-env",
+					"TANZU_APPS_TYPE=web",
+					"TANZU_APPS_REGISTRY_USERNAME="+os.Getenv("REGISTRY_USERNAME"),
+					"TANZU_APPS_REGISTRY_PASSWORD="+os.Getenv("REGISTRY_PASSWORD"),
+					"TANZU_APPS_REGISTRY_CA_CERT="+os.Getenv("CERT_DIR")+"/ca.pem",
+				)
 				return c
 			}(),
 			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-local-registry-venv",
 					Namespace: it.TestingNamespace,
@@ -205,7 +221,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
-						Image: fmt.Sprintf("%v@sha256:f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be", os.Getenv("BUNDLE")),
+						Image: fmt.Sprintf("%v@sha256:f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be", os.Getenv("BUNDLE")+"-env"),
 					},
 				},
 			},
@@ -217,7 +233,13 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
 
-				if err := it.NewCommandLine("imgpkg", "pull", "-i", os.Getenv("BUNDLE"), "-o", dir).Exec(); err != nil {
+				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE")+"-env", "-o", dir)
+				ic.AddEnvVars(
+					"IMGPKG_USERNAME="+os.Getenv("REGISTRY_USERNAME"),
+					"IMGPKG_PASSWORD="+os.Getenv("REGISTRY_PASSWORD"),
+				)
+
+				if err := ic.Exec(); err != nil {
 					t.Errorf("unexpected error %v ", err)
 					t.FailNow()
 				}

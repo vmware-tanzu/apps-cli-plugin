@@ -123,7 +123,7 @@ tanzu apps workload create petclinic-image --param-yaml maven="{"artifactId":"he
 Developers will provide the same flags/values repeatedly when iterating on their application code.
 Typing or *copy*/*pasting* the flag values for every workload `create`/`apply` adds friction to the developer workflow.
 
-For this reason the apps plugin support he use some environment variables to set those values for the following flags:
+For this reason the apps plugin support the use some environment variables to set those values for the following flags:
 
 - `--type`: `TANZU_APPS_TYPE`
 - `--registry-ca-cert`: `TANZU_APPS_REGISTRY_CA_CERT`
