@@ -27,6 +27,9 @@ import (
 	regname "github.com/google/go-containerregistry/pkg/name"
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/plainimage"
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry"
+
+	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/internal/util"
 )
 
 type RegistryOpts struct {
@@ -36,7 +39,7 @@ type RegistryOpts struct {
 	RegistryToken    string
 }
 
-func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, registryOpts *RegistryOpts, image string) (string, error) {
+func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, registryOpts *RegistryOpts, image string, c *cli.Config) (string, error) {
 	options := registry.Opts{
 		CACertPaths:           registryOpts.CACertPaths,
 		Username:              registryOpts.RegistryUsername,
@@ -64,8 +67,11 @@ func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, registr
 		return "", fmt.Errorf("parsing '%s': %s", image, err)
 	}
 
+	levelLogger := util.NewUILevelLogger(util.LogWarn, ui.NewWriterUI(c.Stdout, c.Stderr, nil))
+	imagesUploaderLogger := util.NewProgressBar(levelLogger, "", "Error uploading images")
+	regWithProgress := registry.NewRegistryWithProgress(reg, imagesUploaderLogger)
 	excludedFiles = append(excludedFiles, path.Join(dir, ".imgpkg"))
-	digest, err := plainimage.NewContents([]string{dir}, excludedFiles).Push(uploadRef, nil, reg, ui.NewNoopUI())
+	digest, err := plainimage.NewContents([]string{dir}, excludedFiles).Push(uploadRef, nil, regWithProgress, ui.NewNoopUI())
 	if err != nil {
 		return "", err
 	}

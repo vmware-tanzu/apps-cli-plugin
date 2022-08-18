@@ -430,7 +430,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 
 	currentRegistryOpts := source.RegistryOpts{CACertPaths: opts.CACertPaths, RegistryUsername: opts.RegistryUsername, RegistryPassword: opts.RegistryPassword, RegistryToken: opts.RegistryToken}
 
-	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, &currentRegistryOpts, taggedImage)
+	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, &currentRegistryOpts, taggedImage, c)
 	if err != nil {
 		return okToPush, err
 	}

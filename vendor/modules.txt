@@ -684,8 +684,8 @@ github.com/stretchr/objx
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
-# github.com/subosito/gotenv v1.3.0
-## explicit; go 1.18
+# github.com/subosito/gotenv v1.2.0
+## explicit
 github.com/subosito/gotenv
 # github.com/valyala/fastjson v1.6.3
 ## explicit; go 1.12
@@ -709,7 +709,7 @@ github.com/vmware-labs/reconciler-runtime/reconcilers
 github.com/vmware-labs/reconciler-runtime/testing
 github.com/vmware-labs/reconciler-runtime/tracker
 github.com/vmware-labs/reconciler-runtime/validation
-# github.com/vmware-tanzu/carvel-imgpkg v0.30.0
+# github.com/vmware-tanzu/carvel-imgpkg v0.30.0 => /Users/kshaheer/go/src/github.com/carvel-imgpkg
 ## explicit; go 1.18
 github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/image
 github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/imagedigest
