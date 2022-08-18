@@ -80,4 +80,5 @@ tanzu apps workload apply --file workload.yaml
 ### SEE ALSO
 
 * [tanzu apps workload](tanzu_apps_workload.md)	 - Workload lifecycle management
+* [environment variable](../working-with-workloads.md#env-vars) support
 

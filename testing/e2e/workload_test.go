@@ -186,13 +186,13 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Name:         "Create workload with valid name from local source code values from environment variables",
 			WorkloadName: "test-create-local-registry-venv",
 			Command: func() it.CommandLine {
-				os.Setenv("TANZU_APPS_SOURCE_IMAGE", os.Getenv("BUNDLE"))
 				c := *it.NewTanzuAppsCommandLine(
 					"workload", "test-create-local-registry-venv",
 					"--local-path=./testdata/hello.go.jar",
 					namespaceFlag,
 					"--yes",
 				)
+				c.AddEnvVars("TANZU_APPS_SOURCE_IMAGE=" + os.Getenv("BUNDLE"))
 				return c
 			}(),
 			ExpectedObject: &cartov1alpha1.Workload{

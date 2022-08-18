@@ -43,7 +43,7 @@ Tanzu Application Platform supports creating a workload from an existing local p
 
     - `pet-clinic` is the name of the workload.
     - `--local-path` points to the directory where the source code is located.
-    - `--source-image` is the registry path where the local source code will be uploaded as an image.
+    - `--source-image` is the registry path where the local source code will be uploaded as an image. It can be set by an [environment variable](#env-vars)
 
     **Exclude Files**
     When working with local source code, you can exclude files from the source code to be uploaded within the image by creating a file `.tanzuignore` at the root of the source code. You can find the options available to specify the workload in the command reference for [`workload create`](command-reference/tanzu_apps_workload_create.md), or you can run `tanzu apps workload create --help`.
@@ -117,6 +117,22 @@ tanzu apps workload create petclinic-image --param-yaml maven=$"artifactId:hello
 # JSON
 tanzu apps workload create petclinic-image --param-yaml maven="{"artifactId":"hello-world", "type": "jar", "version": "0.0.1", "groupId": "carto.run"}"
 ```
+
+### <a id="env-vars"></a> Create and Apply environment variables
+
+Developers will provide the same flags/values repeatedly when iterating on their application code.
+Typing or *copy*/*pasting* the flag values for every workload `create`/`apply` adds friction to the developer workflow.
+
+For this reason the apps plugin support he use some environment variables to set those values for the following flags:
+
+- `--type`: `TANZU_APPS_TYPE`
+- `--registry-ca-cert`: `TANZU_APPS_REGISTRY_CA_CERT`
+- `--registry-password`: `TANZU_APPS_REGISTRY_PASSWORD`
+- `--registry-username`: `TANZU_APPS_REGISTRY_USERNAME`
+- `--registry-token`: `TANZU_APPS_REGISTRY_TOKEN`
+- `--source-image`: `TANZU_APPS_SOURCE_IMAGE`
+
+**Note:** Be aware that when set a supported environment value, each apps plugin command will set the flag with the value on the environment variable value
 
 ## <a id='service-binding'></a> Bind a Service to a Workload
 
