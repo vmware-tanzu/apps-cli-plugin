@@ -30,6 +30,8 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -662,4 +664,20 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.MarkFlagFilename(cli.StripDash(flags.FilePathFlagName), ".yaml", ".yml")
 	cmd.Flags().BoolVar(&opts.DryRun, cli.StripDash(flags.DryRunFlagName), false, "print kubernetes resources to stdout rather than apply them to the cluster, messages normally on stdout will be sent to stderr")
 	cmd.Flags().BoolVarP(&opts.Yes, cli.StripDash(flags.YesFlagName), "y", false, "accept all prompts")
+}
+
+func (opts *WorkloadOptions) DefineEnvVars(ctx context.Context, c *cli.Config, cmd *cobra.Command) {
+	v := viper.New()
+	v.SetEnvPrefix(flags.EnvironmentVariablePrefix)
+	cmd.Flags().VisitAll(func(f *pflag.Flag) {
+		ev := flags.FlagToEnvVar(f.Name)
+		if val, ok := flags.EnvVarAllowedList[ev]; ok && val {
+			v.BindEnv(f.Name, ev)
+		}
+
+		if !f.Changed && v.IsSet(f.Name) {
+			val := v.Get(f.Name)
+			cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
+		}
+	})
 }

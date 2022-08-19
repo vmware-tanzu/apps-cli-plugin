@@ -19,6 +19,7 @@ package commands_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -1055,6 +1056,169 @@ Created workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		}, {
+			Name: "git source with non-allowed env var",
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				os.Setenv("TANZU_APPS_LABEL", "foo=var")
+				return ctx, nil
+			},
+			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
+				os.Unsetenv("TANZU_APPS_LABEL")
+				return nil
+			},
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  source:
+      9 + |    git:
+     10 + |      ref:
+     11 + |        branch: main
+     12 + |      url: https://example.com/repo.git
+
+Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		}, {
+			Name: "git source with allowed and non-allowed env var",
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				os.Setenv("TANZU_APPS_LABEL", "foo=var")
+				os.Setenv("TANZU_APPS_TYPE", "web")
+				return ctx, nil
+			},
+			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
+				os.Unsetenv("TANZU_APPS_LABEL")
+				os.Unsetenv("TANZU_APPS_TYPE")
+				return nil
+			},
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
+
+Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		}, {
+			Name: "git source with allowed env var overwritten",
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				os.Setenv("TANZU_APPS_TYPE", "jar")
+				return ctx, nil
+			},
+			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
+				os.Unsetenv("TANZU_APPS_TYPE")
+				return nil
+			},
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.TypeFlagName, "web", flags.YesFlagName},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
+
+Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
 
 `,
 		},

@@ -79,6 +79,10 @@ func (c *CommandLine) SurveyAnswer(answer string) {
 	c.surveyAnswer = answer
 }
 
+func (c *CommandLine) AddEnvVars(envars ...string) {
+	c.env = append(c.env, envars...)
+}
+
 func (c *CommandLine) Exec() error {
 	// TODO: Support surveyAnswer
 	cmd := exec.Command(c.cmd, c.args...)

@@ -79,6 +79,8 @@ jobs:
         - 1.23.5
     env:
       REGISTRY_NAME: registry.local
+      REGISTRY_USERNAME: ruser
+      REGISTRY_PASSWORD: rpass
       BUNDLE: registry.local/integration-test/hellojar:source
       TANZU_CLI_NO_INIT: true
       TANZU_HOME: $HOME/tanzu
@@ -119,7 +121,7 @@ jobs:
         echo "##[group]Install CA"
           # https://ubuntu.com/server/docs/security-trust-store
           sudo apt-get install -y ca-certificates
-          sudo cp ${CERT_DIR}/ca.pem /usr/local/share/ca-certificates/ca.crt
+          # sudo cp ${CERT_DIR}/ca.pem /usr/local/share/ca-certificates/ca.crt
           sudo update-ca-certificates
         echo "##[endgroup]"
         echo "##[group]Generate cert"
@@ -135,11 +137,21 @@ jobs:
         set -o errexit
         set -o nounset
         set -o pipefail
+        # Create password file
+        REGISTRY_HTPWD=$(mktemp -d -t htpwd.XXXX)
+        docker run \
+        --entrypoint htpasswd \
+        httpd:2 -Bbn ${REGISTRY_USERNAME} ${REGISTRY_PASSWORD} > ${REGISTRY_HTPWD}/htpasswd
+        
         # Run a registry.
         docker run -d \
           --restart=always \
           --name local-registry \
           -v ${CERT_DIR}:/certs \
+          -v ${REGISTRY_HTPWD}:/auth \
+          -e "REGISTRY_AUTH=htpasswd" \
+          -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
+          -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
           -e REGISTRY_HTTP_ADDR=0.0.0.0:443 \
           -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/server.pem \
           -e REGISTRY_HTTP_TLS_KEY=/certs/server-key.pem \

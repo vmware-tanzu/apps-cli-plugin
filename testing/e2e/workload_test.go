@@ -130,6 +130,9 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					"workload", "create", "test-create-local-registry",
 					"--local-path=./testdata/hello.go.jar",
 					"--source-image", os.Getenv("BUNDLE"),
+					"--registry-username", os.Getenv("REGISTRY_USERNAME"),
+					"--registry-password", os.Getenv("REGISTRY_PASSWORD"),
+					"--registry-ca-cert", os.Getenv("CERT_DIR")+"/ca.pem",
 					namespaceFlag,
 					"--type=web",
 					"--yes",
@@ -159,7 +162,84 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
 
-				if err := it.NewCommandLine("imgpkg", "pull", "-i", os.Getenv("BUNDLE"), "-o", dir).Exec(); err != nil {
+				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE"), "-o", dir)
+				ic.AddEnvVars(
+					"IMGPKG_USERNAME="+os.Getenv("REGISTRY_USERNAME"),
+					"IMGPKG_PASSWORD="+os.Getenv("REGISTRY_PASSWORD"),
+				)
+
+				if err := ic.Exec(); err != nil {
+					t.Errorf("unexpected error %v ", err)
+					t.FailNow()
+				}
+				// compare files
+				got, err := os.ReadFile(filepath.Join(dir, "hello.go"))
+				if err != nil {
+					t.Errorf("unexpected error reading file %v ", err)
+					t.FailNow()
+				}
+
+				excepted, err := os.ReadFile("./testdata/hello.go")
+				if err != nil {
+					t.Errorf("unexpected error reading file %v ", err)
+					t.FailNow()
+				}
+
+				if diff := cmp.Diff(string(excepted), string(got)); diff != "" {
+					t.Errorf("(-expected, +actual)\n%s", diff)
+					t.FailNow()
+				}
+			},
+		},
+		{
+			Name:         "Create workload with valid name from local source code values from environment variables",
+			WorkloadName: "test-create-local-registry-venv",
+			Command: func() it.CommandLine {
+				c := *it.NewTanzuAppsCommandLine(
+					"workload", "create", "test-create-local-registry-venv",
+					"--local-path=./testdata/hello.go.jar",
+					namespaceFlag,
+					"--yes",
+				)
+				c.AddEnvVars(
+					"TANZU_APPS_SOURCE_IMAGE="+os.Getenv("BUNDLE")+"-env",
+					"TANZU_APPS_TYPE=web",
+					"TANZU_APPS_REGISTRY_USERNAME="+os.Getenv("REGISTRY_USERNAME"),
+					"TANZU_APPS_REGISTRY_PASSWORD="+os.Getenv("REGISTRY_PASSWORD"),
+					"TANZU_APPS_REGISTRY_CA_CERT="+os.Getenv("CERT_DIR")+"/ca.pem",
+				)
+				return c
+			}(),
+			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-create-local-registry-venv",
+					Namespace: it.TestingNamespace,
+					Labels: map[string]string{
+						"apps.tanzu.vmware.com/workload-type": "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image: fmt.Sprintf("%v@sha256:f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be", os.Getenv("BUNDLE")+"-env"),
+					},
+				},
+			},
+			Verify: func(t *testing.T, output string, err error) {
+				if _, err := exec.LookPath("imgpkg"); err != nil {
+					t.Errorf("expected imgpkg in PATH: %v", err)
+					t.FailNow()
+				}
+				dir, _ := ioutil.TempDir("", "")
+				defer os.RemoveAll(dir)
+
+				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE")+"-env", "-o", dir)
+				ic.AddEnvVars(
+					"IMGPKG_USERNAME="+os.Getenv("REGISTRY_USERNAME"),
+					"IMGPKG_PASSWORD="+os.Getenv("REGISTRY_PASSWORD"),
+				)
+
+				if err := ic.Exec(); err != nil {
 					t.Errorf("unexpected error %v ", err)
 					t.FailNow()
 				}

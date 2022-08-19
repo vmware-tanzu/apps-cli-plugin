@@ -631,6 +631,8 @@ The `.tanzuignore` file should contain a list of filepaths to exclude from the i
 ### `--source-image`, `-s`
 Registry path where the local source code will be uploaded as an image.
 
+[environment variable](../working-with-workloads.md#env-vars) supported
+
 <details><summary>Example</summary>
 
 ```bash
@@ -1117,6 +1119,8 @@ spring-pet-clinic-build-1-build-pod[prepare] 2022-06-15T11:28:01.365372427-05:00
 
 ### `--type`
 Sets the type of the workload by adding the label `apps.tanzu.vmware.com/workload-type`, which is very common to be used as a matcher by supply chains.
+
+[environment variable](../working-with-workloads.md#env-vars) supported
 
 <details><summary>Example</summary>
 
