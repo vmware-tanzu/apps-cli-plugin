@@ -429,8 +429,14 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	c.Infof("Publishing source in %q to %q...\n", opts.LocalPath, taggedImage)
 
 	currentRegistryOpts := source.RegistryOpts{CACertPaths: opts.CACertPaths, RegistryUsername: opts.RegistryUsername, RegistryPassword: opts.RegistryPassword, RegistryToken: opts.RegistryToken}
+	reg, err := source.GetRegistry(ctx, &currentRegistryOpts)
+	if err != nil {
+		return okToPush, err
+	}
+	writer := source.WriterObjects{OutWriter: c.Stdout, ErrWriter: c.Stderr}
+	resitryWithProgress := source.GetRegistryWithProgress(reg, &writer)
 
-	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, &currentRegistryOpts, taggedImage, c)
+	digestedImage, err := source.ImgpkgPush(contentDir, fileExclusions, resitryWithProgress, taggedImage)
 	if err != nil {
 		return okToPush, err
 	}

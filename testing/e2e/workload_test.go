@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -161,7 +162,11 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				}
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
-
+				matched, err := regexp.MatchString(`[0-9]*\.*[0-9]*\s[a-zA-Z]+\s/\s[0-9]*[\.]*[0-9]*\s[a-zA-Z]+\s\[-+>*\]\s[0-9]*\.[0-9]+%.*`, output)
+				if !matched {
+					t.Errorf("unexpected error %v ", "Progress bar not displayed")
+					t.FailNow()
+				}
 				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE"), "-o", dir)
 				ic.AddEnvVars(
 					"IMGPKG_USERNAME="+os.Getenv("REGISTRY_USERNAME"),

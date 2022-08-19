@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/cppforlife/go-cli-ui/ui"
 	"github.com/stretchr/testify/require"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/internal/util"
@@ -15,8 +14,8 @@ import (
 
 func TestLevelLogger(t *testing.T) {
 	t.Run("when log level is set to warn only write the warning message", func(t *testing.T) {
-		buf := bytes.Buffer{}
-		subject := util.NewUILevelLogger(util.LogWarn, ui.NewWriterUI(&buf, &buf, nil))
+		buf := bytes.NewBufferString("")
+		subject := util.NewUILevelLogger(util.LogWarn, util.NewBufferLogger(buf))
 		subject.Warnf("warning message\n")
 		subject.Debugf("debug message\n")
 		subject.Tracef("trace message\n")
@@ -25,8 +24,8 @@ func TestLevelLogger(t *testing.T) {
 	})
 
 	t.Run("when log level is set to debug only write the warning and debug message", func(t *testing.T) {
-		buf := bytes.Buffer{}
-		subject := util.NewUILevelLogger(util.LogDebug, ui.NewWriterUI(&buf, &buf, nil))
+		buf := bytes.NewBufferString("")
+		subject := util.NewUILevelLogger(util.LogDebug, util.NewBufferLogger(buf))
 		subject.Warnf("warning message\n")
 		subject.Debugf("debug message\n")
 		subject.Tracef("trace message\n")
@@ -35,8 +34,8 @@ func TestLevelLogger(t *testing.T) {
 	})
 
 	t.Run("when log level is set to trace only writes all messages", func(t *testing.T) {
-		buf := bytes.Buffer{}
-		subject := util.NewUILevelLogger(util.LogTrace, ui.NewWriterUI(&buf, &buf, nil))
+		buf := bytes.NewBufferString("")
+		subject := util.NewUILevelLogger(util.LogTrace, util.NewBufferLogger(buf))
 		subject.Warnf("warning message\n")
 		subject.Debugf("debug message\n")
 		subject.Tracef("trace message\n")

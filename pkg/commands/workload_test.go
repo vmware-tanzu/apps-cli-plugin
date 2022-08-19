@@ -24,6 +24,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -1890,9 +1891,12 @@ Published source
 			if test.expected != workload.Spec.Source.Image {
 				t.Errorf("PublishLocalSource() wanted %q, got %q", test.expected, workload.Spec.Source.Image)
 			}
-
-			if diff := cmp.Diff(strings.TrimSpace(test.expectedOutput), strings.TrimSpace(output.String())); diff != "" {
-				t.Errorf("PublishLocalSource() (-want, +got) = %s", diff)
+			matched, err := regexp.MatchString(`[0-9]*\.*[0-9]*\s[a-zA-Z]+\s/\s[0-9]*[\.]*[0-9]*\s[a-zA-Z]+\s\[-+>*\]\s[0-9]*\.[0-9]+%.*`, output.String())
+			if !matched {
+				t.Errorf("PublishLocalSource() Progress Bar validations failed errored %v", err)
+				if diff := cmp.Diff(strings.TrimSpace(test.expectedOutput), strings.TrimSpace(output.String())); diff != "" {
+					t.Errorf("PublishLocalSource() (-want, +got) = %s", diff)
+				}
 			}
 		})
 	}
@@ -2025,9 +2029,16 @@ No source code is changed
 			if test.expected != workload.Spec.Source.Image {
 				t.Errorf("PublishLocalSource() wanted %q, got %q", test.expected, workload.Spec.Source.Image)
 			}
-
-			if diff := cmp.Diff(strings.TrimSpace(test.expectedOutput), strings.TrimSpace(output.String())); diff != "" {
-				t.Errorf("PublishLocalSource() (-want, +got) = %s", diff)
+			var matched bool = true
+			if test.expectedOutput != "" && len(output.String()) > 0 {
+				matched, _ = regexp.MatchString(`[0-9]*\.*[0-9]*\s[a-zA-Z]+\s/\s[0-9]*[\.]*[0-9]*\s[a-zA-Z]+\s\[-+>*\]\s[0-9]*\.[0-9]+%.*`, output.String())
+				if !matched {
+					t.Errorf("PublishLocalSource() progress bar test failed")
+				}
+			} else {
+				if diff := cmp.Diff(strings.TrimSpace(test.expectedOutput), strings.TrimSpace(output.String())); diff != "" {
+					t.Errorf("PublishLocalSource() (-want, +got) = %s", diff)
+				}
 			}
 		})
 	}

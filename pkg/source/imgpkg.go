@@ -21,57 +21,21 @@ import (
 	"fmt"
 	"net/http"
 	"path"
-	"time"
 
-	"github.com/cppforlife/go-cli-ui/ui"
 	regname "github.com/google/go-containerregistry/pkg/name"
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/plainimage"
-	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry"
 
-	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/internal/util"
 )
 
-type RegistryOpts struct {
-	CACertPaths      []string
-	RegistryUsername string
-	RegistryPassword string
-	RegistryToken    string
-}
-
-func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, registryOpts *RegistryOpts, image string, c *cli.Config) (string, error) {
-	options := registry.Opts{
-		CACertPaths:           registryOpts.CACertPaths,
-		Username:              registryOpts.RegistryUsername,
-		Password:              registryOpts.RegistryPassword,
-		Token:                 registryOpts.RegistryToken,
-		VerifyCerts:           true,
-		RetryCount:            5,
-		ResponseHeaderTimeout: 30 * time.Second,
-	}
-
-	var reg registry.Registry
-	var err error
-	transport := RetrieveStashContainerRemoteTransport(ctx)
-	if transport == nil {
-		reg, err = registry.NewSimpleRegistry(options)
-	} else {
-		reg, err = registry.NewSimpleRegistryWithTransport(options, *transport)
-	}
-	if err != nil {
-		return "", fmt.Errorf("unable to create a registry with provided options: %v", err)
-	}
+func ImgpkgPush(dir string, excludedFiles []string, writer plainimage.ImagesWriter, image string) (string, error) {
 
 	uploadRef, err := regname.NewTag(image, regname.WeakValidation)
 	if err != nil {
 		return "", fmt.Errorf("parsing '%s': %s", image, err)
 	}
-
-	levelLogger := util.NewUILevelLogger(util.LogWarn, ui.NewWriterUI(c.Stdout, c.Stderr, nil))
-	imagesUploaderLogger := util.NewProgressBar(levelLogger, "", "Error uploading images")
-	regWithProgress := registry.NewRegistryWithProgress(reg, imagesUploaderLogger)
 	excludedFiles = append(excludedFiles, path.Join(dir, ".imgpkg"))
-	digest, err := plainimage.NewContents([]string{dir}, excludedFiles).Push(uploadRef, nil, regWithProgress, ui.NewNoopUI())
+	digest, err := plainimage.NewContents([]string{dir}, excludedFiles).Push(uploadRef, nil, writer, util.NewNoopLevelLogger())
 	if err != nil {
 		return "", err
 	}

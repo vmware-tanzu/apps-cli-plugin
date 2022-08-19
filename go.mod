@@ -12,13 +12,12 @@ require (
 	github.com/go-logr/logr v1.2.3
 	github.com/google/go-cmp v0.5.8
 	github.com/google/go-containerregistry v0.11.0
-	github.com/mattn/go-isatty v0.0.14
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.12.0
 	github.com/stern/stern v1.21.0
 	github.com/stretchr/testify v1.8.0
 	github.com/vmware-labs/reconciler-runtime v0.7.1
-	github.com/vmware-tanzu/carvel-imgpkg v0.30.0
+	github.com/vmware-tanzu/carvel-imgpkg v0.31.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-framework v0.25.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
@@ -137,6 +136,7 @@ require (
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
@@ -223,7 +223,6 @@ require (
 )
 
 replace (
-	github.com/vmware-tanzu/carvel-imgpkg v0.30.0 => /Users/kshaheer/go/src/github.com/carvel-imgpkg
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.23.4
 	sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.1.3
 )
