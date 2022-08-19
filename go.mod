@@ -12,6 +12,7 @@ require (
 	github.com/google/go-cmp v0.5.8
 	github.com/google/go-containerregistry v0.11.0
 	github.com/spf13/cobra v1.5.0
+	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.12.0
 	github.com/stern/stern v1.21.0
 	github.com/stretchr/testify v1.8.0
@@ -21,9 +22,9 @@ require (
 	github.com/vmware-tanzu/tanzu-framework v0.25.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	gotest.tools/v3 v3.0.3
-	k8s.io/api v0.24.3
+	k8s.io/api v0.24.4
 	k8s.io/apiextensions-apiserver v0.24.2
-	k8s.io/apimachinery v0.24.3
+	k8s.io/apimachinery v0.24.4
 	k8s.io/client-go v0.24.3
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
 	sigs.k8s.io/controller-runtime v0.12.3
@@ -163,7 +164,6 @@ require (
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/subosito/gotenv v1.3.0 // indirect
