@@ -684,8 +684,9 @@ github.com/stretchr/objx
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
-# github.com/subosito/gotenv v1.2.0
-## explicit
+github.com/stretchr/testify/require
+# github.com/subosito/gotenv v1.3.0
+## explicit; go 1.18
 github.com/subosito/gotenv
 # github.com/valyala/fastjson v1.6.3
 ## explicit; go 1.12
