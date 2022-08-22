@@ -226,7 +226,7 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 
 	var mavenSourceViaFlags bool
 	if opts.MavenArtifact != "" || opts.MavenVersion != "" || opts.MavenGroup != "" || opts.MavenType != "" {
-		mavenInfo := cartov1alpha1.MavenSource{}
+		mavenInfo := cartov1alpha1.MavenSourceType{}
 		if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.MavenArtifactFlagName)) {
 			mavenInfo.ArtifactId = opts.MavenArtifact
 		}

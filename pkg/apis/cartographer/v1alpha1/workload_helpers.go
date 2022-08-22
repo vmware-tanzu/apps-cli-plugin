@@ -42,11 +42,23 @@ const (
 	WorkloadMavenParam      = "maven"
 )
 
+type MavenSourceType struct {
+	MavenSource
+	Type *string `json:"type"`
+}
+
 type MavenSource struct {
-	ArtifactId string  `json:"artifactId"`
-	GroupId    string  `json:"groupId"`
-	Version    string  `json:"version"`
-	Type       *string `json:"type"`
+	ArtifactId string `json:"artifactId"`
+	GroupId    string `json:"groupId"`
+	Version    string `json:"version"`
+}
+
+func (m MavenSourceType) ToSource() MavenSource {
+	return MavenSource{
+		ArtifactId: m.ArtifactId,
+		GroupId:    m.GroupId,
+		Version:    m.Version,
+	}
 }
 
 func (w *Workload) GetGroupVersionKind() schema.GroupVersionKind {
@@ -107,8 +119,8 @@ func (w *Workload) Merge(updates *Workload) {
 	w.Spec.Merge(&updates.Spec)
 }
 
-func (w *WorkloadSpec) GetMavenSource() *MavenSource {
-	var currentMaven *MavenSource
+func (w *WorkloadSpec) GetMavenSource() *MavenSourceType {
+	var currentMaven *MavenSourceType
 	w.GetParam("maven", &currentMaven)
 	return currentMaven
 }
@@ -283,7 +295,7 @@ func (w *WorkloadSpec) RemoveAnnotationParams(name string) {
 	}
 }
 
-func (w *WorkloadSpec) MergeMavenSource(source MavenSource) {
+func (w *WorkloadSpec) MergeMavenSource(source MavenSourceType) {
 	currentMaven := w.GetMavenSource()
 
 	if currentMaven == nil {
@@ -298,6 +310,13 @@ func (w *WorkloadSpec) MergeMavenSource(source MavenSource) {
 		if source.Version != "" {
 			currentMaven.Version = source.Version
 		}
+		if source.Type != nil && *source.Type != "" {
+			currentMaven.Type = source.Type
+		}
+	}
+	if currentMaven.Type == nil || *currentMaven.Type == "" {
+		w.MergeParams(WorkloadMavenParam, currentMaven.ToSource())
+		return
 	}
 	w.MergeParams(WorkloadMavenParam, currentMaven)
 }
