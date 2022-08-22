@@ -17,7 +17,7 @@ require (
 	github.com/stern/stern v1.21.0
 	github.com/stretchr/testify v1.8.0
 	github.com/vmware-labs/reconciler-runtime v0.7.1
-	github.com/vmware-tanzu/carvel-imgpkg v0.30.0
+	github.com/vmware-tanzu/carvel-imgpkg v0.31.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-framework v0.25.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
