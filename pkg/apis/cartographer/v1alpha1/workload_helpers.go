@@ -46,7 +46,7 @@ type MavenSource struct {
 	ArtifactId string  `json:"artifactId"`
 	GroupId    string  `json:"groupId"`
 	Version    string  `json:"version"`
-	Type       *string `json:"type"`
+	Type       *string `json:"type,omitempty"`
 }
 
 func (w *Workload) GetGroupVersionKind() schema.GroupVersionKind {

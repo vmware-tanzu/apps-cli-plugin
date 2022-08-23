@@ -116,7 +116,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					Params: []cartov1alpha1.Param{{
 						Name: "maven",
 						Value: v1.JSON{
-							Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","type":null,"version":"v2.6.0"}`),
+							Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"v2.6.0"}`),
 						},
 					}},
 				},
