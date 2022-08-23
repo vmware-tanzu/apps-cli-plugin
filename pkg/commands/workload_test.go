@@ -807,7 +807,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Params: []cartov1alpha1.Param{
 						{
 							Name:  "maven",
-							Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0","type":null}`)},
+							Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0"}`)},
 						},
 					},
 				},
