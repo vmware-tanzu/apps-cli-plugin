@@ -25,7 +25,6 @@ var (
 		FlagToEnvVar(RegistryPasswordFlagName): true,
 		FlagToEnvVar(RegistryTokenFlagName):    true,
 		FlagToEnvVar(RegistryUsernameFlagName): true,
-		FlagToEnvVar(SourceImageFlagName):      true,
 		FlagToEnvVar(TypeFlagName):             true,
 	}
 )
