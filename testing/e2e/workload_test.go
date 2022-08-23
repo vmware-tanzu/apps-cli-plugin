@@ -26,6 +26,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -41,6 +42,12 @@ var (
 		Kind:       cartov1alpha1.WorkloadKind,
 		APIVersion: cartov1alpha1.SchemeGroupVersion.String(),
 	}
+)
+
+var (
+	pattern    = "\\\\U000[a-zA-Z0-9]+"
+	regexEmoji = regexp.MustCompile(pattern)
+	regexPod   = regexp.MustCompile("\\s*NAME\\s+READY\\s+STATUS\\s+RESTARTS\\s+AGE\\s*")
 )
 
 func TestCreateFromGitWithAnnotations(t *testing.T) {
@@ -302,10 +309,13 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Command: *it.NewTanzuAppsCommandLine(
 				"workload", "get", "test-create-git-annotations-workload", namespaceFlag),
 			Verify: func(t *testing.T, output string, err error) {
-				regex := regexp.MustCompile("\\s*NAME\\s+READY\\s+STATUS\\s+RESTARTS\\s+AGE\\s*")
-				found := regex.FindString(output) != ""
-				if !found {
+				if regexPod.FindString(output) == "" {
 					t.Errorf("expected Pod results in output %v", output)
+					t.FailNow()
+				}
+				decodedString := strconv.QuoteToASCII(output)
+				if regexEmoji.FindString(decodedString) == "" {
+					t.Errorf("output does not have Emoji")
 					t.FailNow()
 				}
 			},

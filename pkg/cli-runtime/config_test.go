@@ -153,3 +153,41 @@ func TestConfig_Print(t *testing.T) {
 		})
 	}
 }
+func TestConfig_EmojiPrint(t *testing.T) {
+	scheme := runtime.NewScheme()
+	config := cli.NewDefaultConfig("test", scheme)
+
+	tests := []struct {
+		name    string
+		icon    cli.Icon
+		args    []interface{}
+		printer func(icon cli.Icon, format string, a ...interface{}) (n int, err error)
+		stdout  string
+	}{{
+		name:    "EmojiSuccessf",
+		icon:    cli.ThumpsUp,
+		args:    []interface{}{"Pods created Successfully"},
+		printer: config.EmojiSuccessf,
+		stdout:  `👍 Pods created Successfully`,
+	}, {
+		name:    "EmojiBoldf",
+		icon:    cli.FloppyDisk,
+		args:    []interface{}{"Source"},
+		printer: config.EmojiBoldf,
+		stdout:  `💾 Source`,
+	}}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			stdout := &bytes.Buffer{}
+			config.Stdout = stdout
+
+			_, err := test.printer(test.icon, "%s", test.args...)
+			if err != nil {
+				t.Errorf("Expected no error, actually %q", err)
+			}
+			if expected, actual := test.stdout, stdout.String(); expected != actual {
+				t.Errorf("Expected stdout to be %q, actually %q", expected, actual)
+			}
+		})
+	}
+}

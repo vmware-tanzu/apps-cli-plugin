@@ -183,7 +183,7 @@ func TestWorkloadGetCommand(t *testing.T) {
 			Args:         []string{workloadName},
 			GivenObjects: []client.Object{parent},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
@@ -191,11 +191,11 @@ Supply Chain reference not found.
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    No messages found.
 
 No pods found for workload.
@@ -213,7 +213,7 @@ To see logs: "tanzu apps workload tail my-workload"
 				}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
@@ -221,11 +221,11 @@ Supply Chain reference not found.
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    No messages found.
 
 No pods found for workload.
@@ -247,20 +247,20 @@ To see logs: "tanzu apps workload tail my-workload --namespace my-custom-namespa
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   <none>
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
@@ -283,20 +283,20 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    No messages found.
 
 No pods found for workload.
@@ -333,23 +333,23 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
-Services
+🔁 Services
    CLAIM      NAME         KIND         API VERSION
    database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
 
@@ -390,23 +390,23 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   web
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
-Services
+🔁 Services
    CLAIM      NAME         KIND         API VERSION
    database   my-prod-db   PostgreSQL   services.tanzu.vmware.com/v1alpha1
 
@@ -434,20 +434,20 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    No messages found.
 
 No pods found for workload.
@@ -477,20 +477,20 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   web
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    No messages found.
 
 No pods found for workload.
@@ -518,20 +518,20 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
@@ -562,20 +562,20 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   web
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
@@ -605,20 +605,20 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   web
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
@@ -657,27 +657,27 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Source
+💾 Source
    type:     git
    url:      https://example.com
    branch:   master
    tag:      v1.0.0
    commit:   abcdef
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
@@ -719,27 +719,27 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   web
 
-Source
+💾 Source
    type:     git
    url:      https://example.com
    branch:   master
    tag:      v1.0.0
    commit:   abcdef
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
@@ -776,24 +776,24 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   web
 
-Source
+💾 Source
    type:    source image
    image:   my-registry/my-image:v1.0.0
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
@@ -823,24 +823,24 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Source
+💾 Source
    type:    image
    image:   docker.io/library/nginx:latest
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
@@ -914,29 +914,29 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Source
+💾 Source
    type:     git
    url:      https://example.com
    branch:   master
    tag:      v1.0.0
    commit:   abcdef
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    RESOURCE          READY   HEALTHY   TIME        OUTPUT
    source-provider   True    True      <unknown>   not found
    image-builder     False   False     <unknown>   not found
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
@@ -1012,29 +1012,29 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   web
 
-Source
+💾 Source
    type:     git
    url:      https://example.com
    branch:   master
    tag:      v1.0.0
    commit:   abcdef
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    RESOURCE          READY   HEALTHY   TIME        OUTPUT
    source-provider   True    True      <unknown>   not found
    image-builder     False   False     <unknown>   image/petclinic
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
@@ -1066,24 +1066,24 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			BuilderObjects: []client.Object{pod1Die},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   <none>
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:          a hopefully informative message about what went wrong
    Workload [AnotherOopsieDoodle]:   a hopefully informative message about what is not healthy
 
-Pods
+🛶 Pods
    NAME   READY   STATUS   RESTARTS   AGE
    pod1   0/0              0          <unknown>
 
@@ -1114,23 +1114,23 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			BuilderObjects: []client.Object{pod1Die},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   <none>
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
-Pods
+🛶 Pods
    NAME   READY   STATUS   RESTARTS   AGE
    pod1   0/0              0          <unknown>
 
@@ -1170,23 +1170,23 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   <none>
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
-Pods
+🛶 Pods
    NAME   READY   STATUS   RESTARTS   AGE
    pod1   0/0              0          <unknown>
    pod2   0/0              0          <unknown>
@@ -1230,25 +1230,25 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 No pods found for workload.
 
-Knative Services
+🚢 Knative Services
    NAME    READY       URL
    ksvc1   Ready       https://example.com
    ksvc2   not-Ready   <empty>
@@ -1290,28 +1290,28 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   web
 
-Supply Chain
+📦 Supply Chain
    name:   my-supply-chain
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    No messages found.
 
-Pods
+🛶 Pods
    NAME   READY   STATUS   RESTARTS   AGE
    pod1   0/0              0          <unknown>
    pod2   0/0              0          <unknown>
 
-Knative Services
+🚢 Knative Services
    NAME    READY       URL
    ksvc1   Ready       https://example.com
    ksvc2   not-Ready   <empty>
@@ -1385,7 +1385,7 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 				clitesting.InduceFailure("list", "PodList"),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
@@ -1393,11 +1393,11 @@ Supply Chain reference not found.
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    No messages found.
 
 No pods found for workload.
@@ -1415,7 +1415,7 @@ To see logs: "tanzu apps workload tail my-workload"
 				clitesting.InduceFailure("list", "KnativeServiceList"),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
@@ -1423,11 +1423,11 @@ Supply Chain reference not found.
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    No messages found.
 
 No pods found for workload.
@@ -1665,24 +1665,24 @@ status:
 					}),
 			},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   <none>
 
    RESOURCE          READY   HEALTHY   TIME        OUTPUT
    source-provider   True    True      <unknown>   ImageRepository/my-workload
 
-Delivery
+🚚 Delivery
    name:   delivery-basic
 
    RESOURCE          READY   HEALTHY   TIME        OUTPUT
    source-provider   True    False     <unknown>   ImageRepository/my-workload-delivery
    deployer          True    Unknown   <unknown>   App/my-workload
 
-Messages
+💬 Messages
    Workload [OopsieDoodle]:          a hopefully informative message about what went wrong
    Workload [AnotherOopsieDoodle]:   a hopefully informative message about what is not healthy
    Deliverable [OopsieDoodle]:          a hopefully informative message about what went wrong
@@ -1768,27 +1768,27 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   <none>
 
    RESOURCE          READY   HEALTHY   TIME        OUTPUT
    source-provider   True    True      <unknown>   ImageRepository/my-workload
 
-Delivery
+🚚 Delivery
    name:   delivery-basic
 
    RESOURCE          READY   HEALTHY   TIME        OUTPUT
    source-provider   True    True      <unknown>   ImageRepository/my-workload-delivery
    deployer          True    True      <unknown>   App/my-workload
 
-Messages
+💬 Messages
    No messages found.
 
-Pods
+🛶 Pods
    NAME   READY   STATUS   RESTARTS   AGE
    pod1   0/0              0          <unknown>
    pod2   0/0              0          <unknown>
@@ -1852,25 +1852,25 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   <none>
 
    RESOURCE          READY   HEALTHY   TIME        OUTPUT
    source-provider   True    True      <unknown>   ImageRepository/my-workload
 
-Delivery
+🚚 Delivery
    name:   delivery-basic
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    No messages found.
 
-Pods
+🛶 Pods
    NAME   READY   STATUS   RESTARTS   AGE
    pod1   0/0              0          <unknown>
    pod2   0/0              0          <unknown>
@@ -1912,23 +1912,23 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
-Overview
+📡 Overview
    name:   my-workload
    type:   <empty>
 
-Supply Chain
+📦 Supply Chain
    name:   <none>
 
    Supply Chain resources not found.
 
-Delivery
+🚚 Delivery
 
    Delivery resources not found.
 
-Messages
+💬 Messages
    No messages found.
 
-Pods
+🛶 Pods
    NAME   READY   STATUS   RESTARTS   AGE
    pod1   0/0              0          <unknown>
    pod2   0/0              0          <unknown>
