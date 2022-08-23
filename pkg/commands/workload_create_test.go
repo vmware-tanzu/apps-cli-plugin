@@ -876,7 +876,7 @@ To get status: "tanzu apps workload get my-workload"
 						Params: []cartov1alpha1.Param{
 							{
 								Name:  "maven",
-								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0"}`)},
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0","type":null}`)},
 							},
 						},
 					},
@@ -896,7 +896,8 @@ Create workload:
      10 + |    value:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
-     13 + |      version: 2.6.0
+     13 + |      type: null
+     14 + |      version: 2.6.0
 
 Created workload "my-workload"
 

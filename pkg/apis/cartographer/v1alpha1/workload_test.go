@@ -1025,22 +1025,20 @@ func TestWorkloadSpec_MergeMavenSource(t *testing.T) {
 	tests := []struct {
 		name  string
 		seed  *WorkloadSpec
-		value MavenSourceType
+		value MavenSource
 		want  *WorkloadSpec
 	}{{
 		name: "add maven info",
 		seed: &WorkloadSpec{},
-		value: MavenSourceType{
-			MavenSource: MavenSource{
-				ArtifactId: "foo",
-				GroupId:    "bar",
-				Version:    "0.1.0",
-			},
+		value: MavenSource{
+			ArtifactId: "foo",
+			GroupId:    "bar",
+			Version:    "0.1.0",
 		},
 		want: &WorkloadSpec{
 			Params: []Param{{
 				Name:  "maven",
-				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0"}`)},
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
 			}},
 		},
 	}, {
@@ -1051,17 +1049,15 @@ func TestWorkloadSpec_MergeMavenSource(t *testing.T) {
 				Value: apiextensionsv1.JSON{Raw: []byte(`{"version":"0.1.0"}`)},
 			}},
 		},
-		value: MavenSourceType{
-			MavenSource: MavenSource{
-				ArtifactId: "foo",
-				GroupId:    "bar",
-				Version:    "0.1.1",
-			},
+		value: MavenSource{
+			ArtifactId: "foo",
+			GroupId:    "bar",
+			Version:    "0.1.1",
 		},
 		want: &WorkloadSpec{
 			Params: []Param{{
 				Name:  "maven",
-				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.1"}`)},
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.1","type":null}`)},
 			}},
 		},
 	}, {
@@ -1069,20 +1065,18 @@ func TestWorkloadSpec_MergeMavenSource(t *testing.T) {
 		seed: &WorkloadSpec{
 			Params: []Param{{
 				Name:  "maven",
-				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0"}`)},
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
 			}},
 		},
-		value: MavenSourceType{
-			MavenSource: MavenSource{
-				ArtifactId: "foo",
-				GroupId:    "bar",
-				Version:    "0.1.0",
-			},
+		value: MavenSource{
+			ArtifactId: "foo",
+			GroupId:    "bar",
+			Version:    "0.1.0",
 		},
 		want: &WorkloadSpec{
 			Params: []Param{{
 				Name:  "maven",
-				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0"}`)},
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
 			}},
 		},
 	}, {
@@ -1090,14 +1084,14 @@ func TestWorkloadSpec_MergeMavenSource(t *testing.T) {
 		seed: &WorkloadSpec{
 			Params: []Param{{
 				Name:  "maven",
-				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0"}`)},
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
 			}},
 		},
-		value: MavenSourceType{},
+		value: MavenSource{},
 		want: &WorkloadSpec{
 			Params: []Param{{
 				Name:  "maven",
-				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0"}`)},
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.0","type":null}`)},
 			}},
 		},
 	}}
@@ -2192,7 +2186,7 @@ func TestGetMavenSource(t *testing.T) {
 	tests := []struct {
 		name string
 		seed *WorkloadSpec
-		want *MavenSourceType
+		want *MavenSource
 	}{{
 		name: "maven source",
 		seed: &WorkloadSpec{
@@ -2201,12 +2195,10 @@ func TestGetMavenSource(t *testing.T) {
 				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.1"}`)},
 			}},
 		},
-		want: &MavenSourceType{
-			MavenSource: MavenSource{
-				ArtifactId: "foo",
-				GroupId:    "bar",
-				Version:    "0.1.1",
-			},
+		want: &MavenSource{
+			ArtifactId: "foo",
+			GroupId:    "bar",
+			Version:    "0.1.1",
 		},
 	}, {
 		name: "empty",
