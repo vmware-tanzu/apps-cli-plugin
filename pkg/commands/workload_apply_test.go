@@ -2720,7 +2720,7 @@ To get status: "tanzu apps workload get my-workload"
 		},
 		{
 			Name: "update workload to add maven through flags",
-			Args: []string{workloadName, flags.MavenArtifactFlagName, "spring-petclinic", flags.MavenVersionFlagName, "2.6.0", flags.MavenGroupFlagName, "org.springframework.samples", flags.YesFlagName},
+			Args: []string{workloadName, flags.MavenArtifactFlagName, "spring-petclinic", flags.MavenVersionFlagName, "2.6.0", flags.MavenGroupFlagName, "org.springframework.samples", flags.MavenTypeFlagName, "jar", flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {}),
@@ -2736,7 +2736,7 @@ To get status: "tanzu apps workload get my-workload"
 						Params: []cartov1alpha1.Param{
 							{
 								Name:  "maven",
-								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0"}`)},
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0","type":"jar"}`)},
 							},
 						},
 					},
@@ -2756,7 +2756,8 @@ Update workload:
      10 + |    value:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
-     13 + |      version: 2.6.0
+     13 + |      type: jar
+     14 + |      version: 2.6.0
 
 Updated workload "my-workload"
 
@@ -2767,7 +2768,7 @@ To get status: "tanzu apps workload get my-workload"
 		},
 		{
 			Name: "update workload to change maven info through flags",
-			Args: []string{workloadName, flags.MavenVersionFlagName, "2.6.1", flags.YesFlagName},
+			Args: []string{workloadName, flags.MavenVersionFlagName, "2.6.1", flags.MavenTypeFlagName, "jar", flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
@@ -2788,7 +2789,7 @@ To get status: "tanzu apps workload get my-workload"
 						Params: []cartov1alpha1.Param{
 							{
 								Name:  "maven",
-								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.1"}`)},
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.1","type":"jar"}`)},
 							},
 						},
 					},
@@ -2802,7 +2803,8 @@ Update workload:
  11, 11   |      artifactId: spring-petclinic
  12, 12   |      groupId: org.springframework.samples
  13     - |      version: 2.6.0
-     13 + |      version: 2.6.1
+     13 + |      type: jar
+     14 + |      version: 2.6.1
 
 Updated workload "my-workload"
 
