@@ -406,6 +406,14 @@ func (d *CSIPersistentVolumeSourceDie) ControllerExpandSecretRefDie(fn func(d *S
 	})
 }
 
+func (d *CSIPersistentVolumeSourceDie) NodeExpandSecretRefDie(fn func(d *SecretReferenceDie)) *CSIPersistentVolumeSourceDie {
+	return d.DieStamp(func(r *corev1.CSIPersistentVolumeSource) {
+		d := SecretReferenceBlank.DieImmutable(false).DieFeedPtr(r.NodeExpandSecretRef)
+		fn(d)
+		r.NodeExpandSecretRef = d.DieReleasePtr()
+	})
+}
+
 // +die
 type _ = corev1.VolumeNodeAffinity
 
