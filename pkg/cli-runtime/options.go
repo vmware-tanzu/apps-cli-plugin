@@ -29,12 +29,10 @@ import (
 // validated. This function is typically used to define the PreRunE phase of a command.
 //
 // ```
-//
-//	cmd := &cobra.Command{
-//		   ...
-//		   PreRunE: cli.ValidateE(obj),
-//	}
-//
+// cmd := &cobra.Command{
+// 	   ...
+// 	   PreRunE: cli.ValidateE(obj),
+// }
 // ```
 func ValidateE(ctx context.Context, obj validation.Validatable) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
@@ -56,12 +54,10 @@ type Executable interface {
 // executed. This function is typically used to define the RunE phase of a command.
 //
 // ```
-//
-//	cmd := &cobra.Command{
-//		   ...
-//		   RunE: cli.ExecE(c, obj),
-//	}
-//
+// cmd := &cobra.Command{
+// 	   ...
+// 	   RunE: cli.ExecE(c, obj),
+// }
 // ```
 func ExecE(ctx context.Context, c *Config, obj Executable) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {

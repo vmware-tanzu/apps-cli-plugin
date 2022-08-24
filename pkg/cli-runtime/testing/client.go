@@ -23,7 +23,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/meta/testrestmapper"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/discovery/cached/disk"
@@ -98,21 +97,7 @@ func (d *FakeCachedDiscoveryClient) ServerGroupsAndResources() ([]*metav1.APIGro
 
 // NewBuilder returns a new resource builder for structured api objects.
 func (c *fakeclient) NewBuilder() *resource.Builder {
-	return resource.NewFakeBuilder(
-		func(version schema.GroupVersion) (resource.RESTClient, error) {
-			if c.UnstructuredClientForMappingFunc != nil {
-				return c.UnstructuredClientForMappingFunc(version)
-			}
-			if c.UnstructuredClient != nil {
-				return c.UnstructuredClient, nil
-			}
-			return c.Clients, nil
-		},
-		c.ToRESTMapper,
-		func() (restmapper.CategoryExpander, error) {
-			return resource.FakeCategoryExpander, nil
-		},
-	)
+	panic(fmt.Errorf("not implemented"))
 }
 
 type FakeCachedDiscoveryClient struct {

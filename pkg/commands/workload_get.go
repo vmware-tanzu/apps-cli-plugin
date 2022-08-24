@@ -51,6 +51,8 @@ var (
 	_ cli.Executable         = (*WorkloadGetOptions)(nil)
 )
 
+const contentType = "application/json"
+
 func (opts *WorkloadGetOptions) Validate(ctx context.Context) validation.FieldErrors {
 	errs := validation.FieldErrors{}
 
@@ -228,8 +230,8 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		Flatten().
 		TransformRequests(func(req *rest.Request) {
 			req.SetHeader("Accept", strings.Join([]string{
-				fmt.Sprintf("application/json;as=Table;v=%s;g=%s", metav1.SchemeGroupVersion.Version, metav1.GroupName),
-				"application/json",
+				fmt.Sprintf(contentType+";as=Table;v=%s;g=%s", metav1.SchemeGroupVersion.Version, metav1.GroupName),
+				contentType,
 			}, ","))
 		}).
 		Do()
@@ -242,7 +244,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		if tableResult, err := printer.DecodeIntoTable(infos); err == nil {
 			c.Printf("\n")
 			c.Boldf("Pods\n")
-			printer.PodTablePrinterFromObject(c, tableResult)
+			printer.PodTablePrinter(c, tableResult)
 		} else {
 			c.Printf("\n")
 			c.Infof("No pods found for workload.\n")
