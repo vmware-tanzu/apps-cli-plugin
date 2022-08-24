@@ -298,6 +298,9 @@ func (w *WorkloadSpec) MergeMavenSource(source MavenSource) {
 		if source.Version != "" {
 			currentMaven.Version = source.Version
 		}
+		if source.Type != nil {
+			currentMaven.Type = source.Type
+		}
 	}
 	w.MergeParams(WorkloadMavenParam, currentMaven)
 }

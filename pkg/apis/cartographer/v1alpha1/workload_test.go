@@ -1022,6 +1022,7 @@ func TestWorkloadSpec_RemoveAnnotationParams(t *testing.T) {
 }
 
 func TestWorkloadSpec_MergeMavenSource(t *testing.T) {
+	temp := "jar"
 	tests := []struct {
 		name  string
 		seed  *WorkloadSpec
@@ -1058,6 +1059,23 @@ func TestWorkloadSpec_MergeMavenSource(t *testing.T) {
 			Params: []Param{{
 				Name:  "maven",
 				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"foo","groupId":"bar","version":"0.1.1"}`)},
+			}},
+		},
+	}, {
+		name: "change maven type",
+		seed: &WorkloadSpec{
+			Params: []Param{{
+				Name:  "maven",
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"version":"0.1.0"}`)},
+			}},
+		},
+		value: MavenSource{
+			Type: &temp,
+		},
+		want: &WorkloadSpec{
+			Params: []Param{{
+				Name:  "maven",
+				Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"","groupId":"","version":"0.1.0","type":"jar"}`)},
 			}},
 		},
 	}, {
