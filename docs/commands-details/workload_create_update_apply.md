@@ -800,6 +800,75 @@ Update workload:
 ```
 </details>
 
+### `--registry-ca-cert`
+File path to CA certificate used to authenticate with a private or custom registry to upload the source code image, this should be used with `--source-image`
+
+### `--registry-password`
+Password to be used in to authenticate with a private or custom registry to upload the source code image, this should be used with `--registry-username`, `--source-image`
+
+### `--registry-token`
+Token to be used in to authenticate with a private or custom registry to upload the source code image, this should be used with `--source-image`
+
+### `--registry-username`
+Username to be used in to authenticate with a private or custom registry to upload the source code image, this should be used with `--source-image`
+
+<details><summary>Example</summary>
+
+```bash
+tanzu apps workload apply spring-pet-clinic --local-path /home/user/workspace/spring-pet-clinic --source-image company-registry.org/spring-community/spring-pet-clinic --type web --registry-ca-cert ~/workspace/registry/company-registry.org.crt --registry-username admin --registry-password $3cur3P$$
+? Publish source in "/home/user/workspace/spring-pet-clinic" to "company-registry.org/spring-community/spring-pet-clinic"? It may be visible to others who can pull images from that repository Yes
+The files and/or directories listed in the .tanzuignore file are being excluded from the uploaded source code.
+Publishing source in "/home/user/workspace/spring-pet-clinic" to "company-registry.org/spring-community/spring-pet-clinic"...
+Published source
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: spring-pet-clinic
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    image: company-registry.org/spring-community/spring-pet-clinic:latest@sha256:5feb0d9daf3f639755d8683ca7b647027cfddc7012e80c61dcdac27f0d7856a7
+
+? Do you want to create this workload? (y/N)
+```
+</details>
+
+Note: `--registry-ca-cert`, `--registry-password`, `--registry-token`, `--registry-username` can be set by [environment variable](../working-with-workloads.md#env-vars)
+<details><summary>Example</summary>
+
+```bash
+export TANZU_APPS_REGISTRY_USERNAME=admin
+export TANZU_APPS_REGISTRY_PASSWORD=$3cur3P$$
+export TANZU_APPS_REGISTRY_CA_CERT=~/workspace/registry/company-registry.org.crt
+
+tanzu apps workload apply spring-pet-clinic --local-path /home/user/workspace/spring-pet-clinic --source-image company-registry.org/spring-community/spring-pet-clinic --type web
+? Publish source in "/home/user/workspace/spring-pet-clinic" to "company-registry.org/spring-community/spring-pet-clinic"? It may be visible to others who can pull images from that repository Yes
+The files and/or directories listed in the .tanzuignore file are being excluded from the uploaded source code.
+Publishing source in "/home/user/workspace/spring-pet-clinic" to "company-registry.org/spring-community/spring-pet-clinic"...
+Published source
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: spring-pet-clinic
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    image: company-registry.org/spring-community/spring-pet-clinic:latest@sha256:5feb0d9daf3f639755d8683ca7b647027cfddc7012e80c61dcdac27f0d7856a7
+
+? Do you want to create this workload? (y/N)
+```
+</details>
+
+
+
 ### `--request-cpu`
 Refers to the minimum CPU the workload pods are requesting to use.
 
@@ -1120,7 +1189,7 @@ spring-pet-clinic-build-1-build-pod[prepare] 2022-06-15T11:28:01.365372427-05:00
 ### `--type`
 Sets the type of the workload by adding the label `apps.tanzu.vmware.com/workload-type`, which is very common to be used as a matcher by supply chains.
 
-[environment variable](../working-with-workloads.md#env-vars) supported
+[environment variable](../working-with-workloads.md#env-vars) supported to set it for all commands (`TANZU_APPS_TYPE`)
 
 <details><summary>Example</summary>
 
