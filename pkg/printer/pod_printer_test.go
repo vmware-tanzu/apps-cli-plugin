@@ -64,8 +64,8 @@ func TestPodTablePrinter(t *testing.T) {
 			}},
 		},
 		expectedOutput: `
-   NAME     STATUS    RESTARTS   AGE
-   my-pod   Running   0          <unknown>
+   NAME     READY   STATUS   RESTARTS   AGE
+   my-pod   0/0              0          <unknown>
 `,
 	}, {
 		name: "failed status",
@@ -89,8 +89,8 @@ func TestPodTablePrinter(t *testing.T) {
 			}},
 		},
 		expectedOutput: `
-   NAME     STATUS   RESTARTS   AGE
-   my-pod   Failed   1          <unknown>
+   NAME     READY   STATUS   RESTARTS   AGE
+   my-pod   0/0              0          <unknown>
 `,
 	}, {
 		name: "terminating pod",
@@ -107,8 +107,8 @@ func TestPodTablePrinter(t *testing.T) {
 			}},
 		},
 		expectedOutput: `
-   NAME     STATUS        RESTARTS   AGE
-   my-pod   Terminating   0          <unknown>
+   NAME     READY   STATUS   RESTARTS   AGE
+   my-pod   0/0              0          <unknown>
 `,
 	}}
 
@@ -116,7 +116,8 @@ func TestPodTablePrinter(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			output := &bytes.Buffer{}
 			testConfig.Stdout = output
-			if err := printer.PodTablePrinter(testConfig, test.testPodList); err != nil {
+			podObject := podV1TableObjBody(test.testPodList.Items...)
+			if err := printer.PodTablePrinter(testConfig, podObject); err != nil {
 				t.Errorf("PodTablePrinter() expected no error, got %v", err)
 			}
 			outputString := output.String()
@@ -125,4 +126,30 @@ func TestPodTablePrinter(t *testing.T) {
 			}
 		})
 	}
+}
+
+func podV1TableObjBody(pods ...corev1.Pod) runtime.Object {
+	var podColumns = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string", Format: "name"},
+		{Name: "Ready", Type: "string", Format: ""},
+		{Name: "Status", Type: "string", Format: ""},
+		{Name: "Restarts", Type: "integer", Format: ""},
+		{Name: "Age", Type: "string", Format: ""},
+		{Name: "IP", Type: "string", Format: "", Priority: 1},
+		{Name: "Node", Type: "string", Format: "", Priority: 1},
+		{Name: "Nominated Node", Type: "string", Format: "", Priority: 1},
+		{Name: "Readiness Gates", Type: "string", Format: "", Priority: 1},
+	}
+	table := &metav1.Table{
+		TypeMeta:          metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"},
+		ColumnDefinitions: podColumns,
+	}
+	for i := range pods {
+		b := bytes.NewBuffer(nil)
+		table.Rows = append(table.Rows, metav1.TableRow{
+			Object: runtime.RawExtension{Raw: b.Bytes()},
+			Cells:  []interface{}{pods[i].Name, "0/0", "", int64(0), "<unknown>", "<none>", "<none>", "<none>", "<none>"},
+		})
+	}
+	return table
 }

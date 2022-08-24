@@ -130,7 +130,7 @@ func TestWorkloadGetCommand(t *testing.T) {
 			d.Namespace(defaultNamespace)
 			d.AddLabel(cartov1alpha1.WorkloadLabelName, workloadName)
 			d.CreationTimestamp(objTimeStamp)
-		})
+		}).Kind("pod")
 
 	pod2Die := diecorev1.PodBlank.
 		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -138,7 +138,7 @@ func TestWorkloadGetCommand(t *testing.T) {
 			d.Namespace(defaultNamespace)
 			d.AddLabel(cartov1alpha1.WorkloadLabelName, workloadName)
 			d.CreationTimestamp(objTimeStamp)
-		})
+		}).Kind("pod")
 	ksvcDieWithURL := diev1.ServiceBlank.
 		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
 			d.Name("ksvc1")
@@ -1119,8 +1119,8 @@ Messages
    Workload [AnotherOopsieDoodle]:   a hopefully informative message about what is not healthy
 
 Pods
-   NAME   STATUS    RESTARTS   AGE
-   pod1   Running   0          2y
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1167,8 +1167,8 @@ Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 Pods
-   NAME   STATUS    RESTARTS   AGE
-   pod1   Running   0          2y
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1224,9 +1224,9 @@ Messages
    Workload [OopsieDoodle]:   a hopefully informative message about what went wrong
 
 Pods
-   NAME   STATUS    RESTARTS   AGE
-   pod1   Running   0          2y
-   pod2   Failed    0          2y
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
+   pod2   0/0              0          <unknown>
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1347,9 +1347,9 @@ Messages
    No messages found.
 
 Pods
-   NAME   STATUS    RESTARTS   AGE
-   pod1   Running   0          2y
-   pod2   Failed    0          2y
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
+   pod2   0/0              0          <unknown>
 
 Knative Services
    NAME    READY       URL
@@ -1442,8 +1442,7 @@ Delivery
 Messages
    No messages found.
 
-Failed to list pods:
-  inducing failure for list PodList
+No pods found for workload.
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1837,9 +1836,9 @@ Messages
    No messages found.
 
 Pods
-   NAME   STATUS    RESTARTS   AGE
-   pod1   Running   0          2y
-   pod2   Running   0          2y
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
+   pod2   0/0              0          <unknown>
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1920,9 +1919,9 @@ Messages
    No messages found.
 
 Pods
-   NAME   STATUS    RESTARTS   AGE
-   pod1   Running   0          2y
-   pod2   Running   0          2y
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
+   pod2   0/0              0          <unknown>
 
 To see logs: "tanzu apps workload tail my-workload"
 
@@ -1979,9 +1978,9 @@ Messages
    No messages found.
 
 Pods
-   NAME   STATUS    RESTARTS   AGE
-   pod1   Running   0          2y
-   pod2   Running   0          2y
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
+   pod2   0/0              0          <unknown>
 
 To see logs: "tanzu apps workload tail my-workload"
 

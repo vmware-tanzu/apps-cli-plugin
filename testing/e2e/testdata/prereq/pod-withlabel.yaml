@@ -1,0 +1,13 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  namespace: apps-integration-testing
+  name: pod1
+  labels:
+    app.kubernetes.io/name: test-create-git-annotations-workload-pod
+    apps.tanzu.vmware.com/workload-type : web
+    carto.run/workload-name: test-create-git-annotations-workload
+spec:
+  containers:
+  - image: nginx
+    name: nginx

@@ -225,10 +225,20 @@ func setup(t *testing.T) error {
 		t.Errorf("unexpected error: %v\n%s\n%s", err, createClusterCmd.GetOutput(), createClusterCmd.GetError())
 		return err
 	}
+	// create pod
+	createPodCmd := NewKubectlCommandLine("apply", "-f", "testdata/prereq/pod-withlabel.yaml")
+	err = createPodCmd.Exec()
+	if err != nil {
+		t.Errorf("unexpected error: %v\n%s\n%s", err, createPodCmd.GetOutput(), createPodCmd.GetError())
+		return err
+	}
 	return nil
 }
 
 func tearDown(t *testing.T) {
+	// delete pod
+	NewKubectlCommandLine("delete", "--all", "pods", "-n", TestingNamespace).Exec()
+
 	// delete namespace
 	NewKubectlCommandLine("delete", "namespace", TestingNamespace).Exec()
 
@@ -262,4 +272,8 @@ func dumpResourceInfo(t *testing.T, namespace string) {
 	descrCSC := NewKubectlCommandLine("describe", "clustersupplychains")
 	descrCSC.Exec()
 	t.Logf("Describe clustersupplychains \n %s", descrCSC.GetOutput())
+	// describe pod
+	descrPod := NewKubectlCommandLine("describe", "pods", "-n", TestingNamespace)
+	descrPod.Exec()
+	t.Logf("Describe pods \n %s", descrPod.GetOutput())
 }

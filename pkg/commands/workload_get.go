@@ -25,7 +25,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/cli-runtime/pkg/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -35,9 +39,11 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/printer"
+	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 )
 
 type WorkloadGetOptions struct {
+	WorkloadOptions
 	Namespace string
 	Name      string
 
@@ -49,6 +55,8 @@ var (
 	_ validation.Validatable = (*WorkloadGetOptions)(nil)
 	_ cli.Executable         = (*WorkloadGetOptions)(nil)
 )
+
+const contentType = "application/json"
 
 func (opts *WorkloadGetOptions) Validate(ctx context.Context) validation.FieldErrors {
 	errs := validation.FieldErrors{}
@@ -218,26 +226,16 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		}
 	}
 
-	pods := &corev1.PodList{}
-	err = c.List(ctx, pods, client.InNamespace(workload.Namespace), client.MatchingLabels{cartov1alpha1.WorkloadLabelName: workload.Name})
-	if err != nil {
-		c.Eprintf("\n")
-		c.Eerrorf("Failed to list pods:\n")
-		c.Eprintf("  %s\n", err)
+	arg := []string{"Pod"}
+	if tableResult, err := opts.FetchResourceObject(c, workload, arg); err == nil {
+		c.Printf("\n")
+		c.Boldf("Pods\n")
+		printer.PodTablePrinter(c, tableResult)
 	} else {
-		if len(pods.Items) == 0 {
-			c.Printf("\n")
-			c.Infof("No pods found for workload.\n")
-		} else {
-			pods = pods.DeepCopy()
-			printer.SortByNamespaceAndName(pods.Items)
-			c.Printf("\n")
-			c.Boldf("Pods\n")
-			if err := printer.PodTablePrinter(c, pods); err != nil {
-				return err
-			}
-		}
+		c.Printf("\n")
+		c.Infof("No pods found for workload.\n")
 	}
+	// }
 
 	ksvcs := &knativeservingv1.ServiceList{}
 	_ = c.List(ctx, ksvcs, client.InNamespace(workload.Namespace), client.MatchingLabels{cartov1alpha1.WorkloadLabelName: workload.Name})
@@ -304,4 +302,54 @@ func areAllResourcesReady(resourcesConditions ...*metav1.Condition) bool {
 		}
 	}
 	return true
+}
+func decodeIntoTable(info []*resource.Info) (runtime.Object, error) {
+	if len(info) == 1 {
+		obj := info[0].Object
+		event, isEvent := obj.(*metav1.WatchEvent)
+		if isEvent {
+			obj = event.Object.Object
+		}
+		if !recognizedTableVersions[obj.GetObjectKind().GroupVersionKind()] {
+			return nil, fmt.Errorf("attempt to decode non-Table object")
+		}
+
+		unstr, ok := obj.(*unstructured.Unstructured)
+		if !ok {
+			return nil, fmt.Errorf("attempt to decode non-Unstructured object")
+		}
+		table := &metav1.Table{}
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstr.Object, table); err != nil {
+			return nil, err
+		}
+		if len(table.Rows) == 0 {
+			return nil, fmt.Errorf("no pod details found")
+		}
+		for i := range table.Rows {
+			row := &table.Rows[i]
+			if row.Object.Raw == nil || row.Object.Object != nil {
+				continue
+			}
+			var converted runtime.Object
+			var err error
+
+			converted, err = runtime.Decode(unstructured.UnstructuredJSONScheme, row.Object.Raw)
+			if err != nil {
+				return nil, err
+			}
+
+			row.Object.Object = converted
+		}
+
+		return table, nil
+	}
+	return nil, fmt.Errorf("no pod details found")
+}
+
+// TablePrinter decodes table objects into typed objects before delegating to another printer.
+// Non-table types are simply passed through
+
+var recognizedTableVersions = map[schema.GroupVersionKind]bool{
+	metav1beta1.SchemeGroupVersion.WithKind("Table"): true,
+	metav1.SchemeGroupVersion.WithKind("Table"):      true,
 }

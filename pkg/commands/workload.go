@@ -35,6 +35,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -491,6 +494,30 @@ func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config) []string {
 		c.Infof("The files and/or directories listed in the %s file are being excluded from the uploaded source code.\n", opts.ExcludePathFile)
 	}
 	return exclude
+}
+
+func (opts *WorkloadOptions) FetchResourceObject(c *cli.Config, workload *cartov1alpha1.Workload, args []string) (runtime.Object, error) {
+	r := c.Builder.Unstructured().
+		NamespaceParam(workload.Namespace).
+		LabelSelectorParam(fmt.Sprintf("%s%s%s", cartov1alpha1.WorkloadLabelName, "=", workload.Name)).
+		ResourceTypeOrNameArgs(true, args...).
+		Latest().
+		Flatten().
+		TransformRequests(func(req *rest.Request) {
+			req.SetHeader("Accept", strings.Join([]string{
+				fmt.Sprintf(contentType+";as=Table;v=%s;g=%s", metav1.SchemeGroupVersion.Version, metav1.GroupName),
+				contentType,
+			}, ","))
+		}).
+		Do()
+	infos, err := r.Infos()
+	if err != nil {
+		c.Eprintf("\n")
+		c.Eerrorf("Failed to list pods:\n")
+		c.Eprintf("  %s\n", err)
+		return nil, fmt.Errorf("failed to list pods:\n  %s", err)
+	}
+	return decodeIntoTable(infos)
 }
 
 func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentWorkload *cartov1alpha1.Workload, workload *cartov1alpha1.Workload) (bool, error) {

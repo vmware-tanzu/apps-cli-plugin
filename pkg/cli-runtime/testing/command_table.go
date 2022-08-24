@@ -19,6 +19,7 @@ package testing
 import (
 	"bytes"
 	"context"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -28,7 +29,13 @@ import (
 	"github.com/spf13/cobra"
 	rtesting "github.com/vmware-labs/reconciler-runtime/testing"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/restmapper"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/client-go/rest/fake"
+	k8sscheme "k8s.io/kubectl/pkg/scheme"
 
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 )
@@ -223,6 +230,28 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 				t.Errorf("error during prepare: %s", err)
 			}
 		}
+
+		var pods []client.Object
+		for _, obj := range tc.GivenObjects {
+			if strings.ToLower(obj.GetObjectKind().GroupVersionKind().Kind) == "pod" {
+				pods = append(pods, obj)
+			}
+		}
+		c.Builder = resource.NewFakeBuilder(
+			func(version schema.GroupVersion) (resource.RESTClient, error) {
+				codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
+				UnstructuredClient := &fake.RESTClient{
+					NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
+					Resp:                 &http.Response{StatusCode: http.StatusOK, Header: DefaultHeader(), Body: PodV1TableObjBody(codec, pods)},
+				}
+				return UnstructuredClient, nil
+
+			},
+			c.ToRESTMapper,
+			func() (restmapper.CategoryExpander, error) {
+				return resource.FakeCategoryExpander, nil
+			},
+		)
 
 		cmd := cmdFactory(ctx, c)
 		cmd.SilenceErrors = true
