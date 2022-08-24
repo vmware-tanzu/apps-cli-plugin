@@ -18,22 +18,20 @@ package flags
 
 import "strings"
 
+const TanzuAppsEnvVarPrefix = "TANZU_APPS"
+
 var (
-	EnvironmentVariablePrefix = "TANZU_APPS"
-	EnvVarAllowedList         = map[string]bool{
-		FlagToEnvVar(RegistryCertFlagName):     true,
-		FlagToEnvVar(RegistryPasswordFlagName): true,
-		FlagToEnvVar(RegistryTokenFlagName):    true,
-		FlagToEnvVar(RegistryUsernameFlagName): true,
-		FlagToEnvVar(TypeFlagName):             true,
+	EnvVarAllowedList = map[string]struct{}{
+		FlagToEnvVar(RegistryCertFlagName):     {},
+		FlagToEnvVar(RegistryPasswordFlagName): {},
+		FlagToEnvVar(RegistryTokenFlagName):    {},
+		FlagToEnvVar(RegistryUsernameFlagName): {},
+		FlagToEnvVar(TypeFlagName):             {},
 	}
 )
 
 func FlagToEnvVar(name string) string {
-	ev := strings.ToUpper(name)
-	if strings.HasPrefix(ev, "--") {
-		ev = ev[2:]
-	}
-	ev = strings.ReplaceAll(ev, "-", "_")
-	return EnvironmentVariablePrefix + "_" + strings.ToUpper(ev)
+	envVar := strings.TrimPrefix(name, "--")
+	envVar = strings.ReplaceAll(envVar, "-", "_")
+	return strings.ToUpper(TanzuAppsEnvVarPrefix + "_" + envVar)
 }

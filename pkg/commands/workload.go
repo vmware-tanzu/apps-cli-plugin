@@ -668,10 +668,10 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 
 func (opts *WorkloadOptions) DefineEnvVars(ctx context.Context, c *cli.Config, cmd *cobra.Command) {
 	v := viper.New()
-	v.SetEnvPrefix(flags.EnvironmentVariablePrefix)
+	v.SetEnvPrefix(flags.TanzuAppsEnvVarPrefix)
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		ev := flags.FlagToEnvVar(f.Name)
-		if val, ok := flags.EnvVarAllowedList[ev]; ok && val {
+		if _, ok := flags.EnvVarAllowedList[ev]; ok {
 			v.BindEnv(f.Name, ev)
 		}
 
