@@ -1235,7 +1235,7 @@ func (d *ContainerDie) WorkingDir(v string) *ContainerDie {
 	})
 }
 
-// List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
+// List of ports to expose from the container. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Modifying this array with strategic merge patch may corrupt the data. For more information See https://github.com/kubernetes/kubernetes/issues/108255. Cannot be updated.
 func (d *ContainerDie) Ports(v ...corev1.ContainerPort) *ContainerDie {
 	return d.DieStamp(func(r *corev1.Container) {
 		r.Ports = v
@@ -7855,7 +7855,7 @@ func (d *ContainerImageDie) DeepCopy() *ContainerImageDie {
 	}
 }
 
-// Names by which this image is known. e.g. ["k8s.gcr.io/hyperkube:v1.0.7", "dockerhub.io/google_containers/hyperkube:v1.0.7"]
+// Names by which this image is known. e.g. ["kubernetes.example/hyperkube:v1.0.7", "cloud-vendor.registry.example/cloud-vendor/hyperkube:v1.0.7"]
 func (d *ContainerImageDie) Names(v ...string) *ContainerImageDie {
 	return d.DieStamp(func(r *corev1.ContainerImage) {
 		r.Names = v
@@ -9904,10 +9904,17 @@ func (d *CSIPersistentVolumeSourceDie) NodePublishSecretRef(v *corev1.SecretRefe
 	})
 }
 
-// controllerExpandSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI ControllerExpandVolume call. This is an alpha field and requires enabling ExpandCSIVolumes feature gate. This field is optional, and may be empty if no secret is required. If the secret object contains more than one secret, all secrets are passed.
+// controllerExpandSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI ControllerExpandVolume call. This is an beta field and requires enabling ExpandCSIVolumes feature gate. This field is optional, and may be empty if no secret is required. If the secret object contains more than one secret, all secrets are passed.
 func (d *CSIPersistentVolumeSourceDie) ControllerExpandSecretRef(v *corev1.SecretReference) *CSIPersistentVolumeSourceDie {
 	return d.DieStamp(func(r *corev1.CSIPersistentVolumeSource) {
 		r.ControllerExpandSecretRef = v
+	})
+}
+
+// nodeExpandSecretRef is a reference to the secret object containing sensitive information to pass to the CSI driver to complete the CSI NodeExpandVolume call. This is an alpha field and requires enabling CSINodeExpandSecret feature gate. This field is optional, may be omitted if no secret is required. If the secret object contains more than one secret, all secrets are passed.
+func (d *CSIPersistentVolumeSourceDie) NodeExpandSecretRef(v *corev1.SecretReference) *CSIPersistentVolumeSourceDie {
+	return d.DieStamp(func(r *corev1.CSIPersistentVolumeSource) {
+		r.NodeExpandSecretRef = v
 	})
 }
 
@@ -11125,7 +11132,7 @@ func (d *PodSpecDie) Containers(v ...corev1.Container) *PodSpecDie {
 	})
 }
 
-// List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing pod to perform user-initiated actions such as debugging. This list cannot be specified when creating a pod, and it cannot be modified by updating the pod spec. In order to add an ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource. This field is beta-level and available on clusters that haven't disabled the EphemeralContainers feature gate.
+// List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing pod to perform user-initiated actions such as debugging. This list cannot be specified when creating a pod, and it cannot be modified by updating the pod spec. In order to add an ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource.
 func (d *PodSpecDie) EphemeralContainers(v ...corev1.EphemeralContainer) *PodSpecDie {
 	return d.DieStamp(func(r *corev1.PodSpec) {
 		r.EphemeralContainers = v
@@ -11353,10 +11360,17 @@ func (d *PodSpecDie) SetHostnameAsFQDN(v *bool) *PodSpecDie {
 //
 // If the OS field is set to linux, the following fields must be unset: -securityContext.windowsOptions
 //
-// If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup This is a beta field and requires the IdentifyPodOS feature
+// If the OS field is set to windows, following fields must be unset: - spec.hostPID - spec.hostIPC - spec.hostUsers - spec.securityContext.seLinuxOptions - spec.securityContext.seccompProfile - spec.securityContext.fsGroup - spec.securityContext.fsGroupChangePolicy - spec.securityContext.sysctls - spec.shareProcessNamespace - spec.securityContext.runAsUser - spec.securityContext.runAsGroup - spec.securityContext.supplementalGroups - spec.containers[*].securityContext.seLinuxOptions - spec.containers[*].securityContext.seccompProfile - spec.containers[*].securityContext.capabilities - spec.containers[*].securityContext.readOnlyRootFilesystem - spec.containers[*].securityContext.privileged - spec.containers[*].securityContext.allowPrivilegeEscalation - spec.containers[*].securityContext.procMount - spec.containers[*].securityContext.runAsUser - spec.containers[*].securityContext.runAsGroup
 func (d *PodSpecDie) OS(v *corev1.PodOS) *PodSpecDie {
 	return d.DieStamp(func(r *corev1.PodSpec) {
 		r.OS = v
+	})
+}
+
+// Use the host's user namespace. Optional: Default to true. If set to true or not present, the pod will be run in the host user namespace, useful for when the pod needs a feature only available to the host user namespace, such as loading a kernel module with CAP_SYS_MODULE. When set to false, a new userns is created for the pod. Setting false is useful for mitigating container breakout vulnerabilities even allowing users to run their containers as root without actually having root privileges on the host. This field is alpha-level and is only honored by servers that enable the UserNamespacesSupport feature.
+func (d *PodSpecDie) HostUsers(v *bool) *PodSpecDie {
+	return d.DieStamp(func(r *corev1.PodSpec) {
+		r.HostUsers = v
 	})
 }
 
@@ -12217,7 +12231,7 @@ func (d *TopologySpreadConstraintDie) MaxSkew(v int32) *TopologySpreadConstraint
 	})
 }
 
-// TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes match the node selector. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
+// TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes meet the requirements of nodeAffinityPolicy and nodeTaintsPolicy. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
 func (d *TopologySpreadConstraintDie) TopologyKey(v string) *TopologySpreadConstraintDie {
 	return d.DieStamp(func(r *corev1.TopologySpreadConstraint) {
 		r.TopologyKey = v
@@ -12242,10 +12256,35 @@ func (d *TopologySpreadConstraintDie) LabelSelector(v *apismetav1.LabelSelector)
 //
 // For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same labelSelector spread as 2/2/2: | zone1 | zone2 | zone3 | |  P P  |  P P  |  P P  | The number of domains is less than 5(MinDomains), so "global minimum" is treated as 0. In this situation, new pod with the same labelSelector cannot be scheduled, because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones, it will violate MaxSkew.
 //
-// This is an alpha field and requires enabling MinDomainsInPodTopologySpread feature gate.
+// This is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).
 func (d *TopologySpreadConstraintDie) MinDomains(v *int32) *TopologySpreadConstraintDie {
 	return d.DieStamp(func(r *corev1.TopologySpreadConstraint) {
 		r.MinDomains = v
+	})
+}
+
+// NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector when calculating pod topology spread skew. Options are: - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations. - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
+//
+// If this value is nil, the behavior is equivalent to the Honor policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+func (d *TopologySpreadConstraintDie) NodeAffinityPolicy(v *corev1.NodeInclusionPolicy) *TopologySpreadConstraintDie {
+	return d.DieStamp(func(r *corev1.TopologySpreadConstraint) {
+		r.NodeAffinityPolicy = v
+	})
+}
+
+// NodeTaintsPolicy indicates how we will treat node taints when calculating pod topology spread skew. Options are: - Honor: nodes without taints, along with tainted nodes for which the incoming pod has a toleration, are included. - Ignore: node taints are ignored. All nodes are included.
+//
+// If this value is nil, the behavior is equivalent to the Ignore policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+func (d *TopologySpreadConstraintDie) NodeTaintsPolicy(v *corev1.NodeInclusionPolicy) *TopologySpreadConstraintDie {
+	return d.DieStamp(func(r *corev1.TopologySpreadConstraint) {
+		r.NodeTaintsPolicy = v
+	})
+}
+
+// MatchLabelKeys is a set of pod label keys to select the pods over which spreading will be calculated. The keys are used to lookup values from the incoming pod labels, those key-value labels are ANDed with labelSelector to select the group of existing pods over which spreading will be calculated for the incoming pod. Keys that don't exist in the incoming pod labels will be ignored. A null or empty list means only match against labelSelector.
+func (d *TopologySpreadConstraintDie) MatchLabelKeys(v ...string) *TopologySpreadConstraintDie {
+	return d.DieStamp(func(r *corev1.TopologySpreadConstraint) {
+		r.MatchLabelKeys = v
 	})
 }
 
@@ -12512,7 +12551,7 @@ func (d *PodStatusDie) QOSClass(v corev1.PodQOSClass) *PodStatusDie {
 	})
 }
 
-// Status for any ephemeral containers that have run in this pod. This field is beta-level and available on clusters that haven't disabled the EphemeralContainers feature gate.
+// Status for any ephemeral containers that have run in this pod.
 func (d *PodStatusDie) EphemeralContainerStatuses(v ...corev1.ContainerStatus) *PodStatusDie {
 	return d.DieStamp(func(r *corev1.PodStatus) {
 		r.EphemeralContainerStatuses = v
@@ -14267,14 +14306,14 @@ func (d *ServiceSpecDie) ExternalName(v string) *ServiceSpecDie {
 	})
 }
 
-// externalTrafficPolicy denotes if this Service desires to route external traffic to node-local or cluster-wide endpoints. "Local" preserves the client source IP and avoids a second hop for LoadBalancer and Nodeport type services, but risks potentially imbalanced traffic spreading. "Cluster" obscures the client source IP and may cause a second hop to another node, but should have good overall load-spreading.
+// externalTrafficPolicy describes how nodes distribute service traffic they receive on one of the Service's "externally-facing" addresses (NodePorts, ExternalIPs, and LoadBalancer IPs). If set to "Local", the proxy will configure the service in a way that assumes that external load balancers will take care of balancing the service traffic between nodes, and so each node will deliver traffic only to the node-local endpoints of the service, without masquerading the client source IP. (Traffic mistakenly sent to a node with no endpoints will be dropped.) The default value, "Cluster", uses the standard behavior of routing to all endpoints evenly (possibly modified by topology and other features). Note that traffic sent to an External IP or LoadBalancer IP from within the cluster will always get "Cluster" semantics, but clients sending to a NodePort from within the cluster may need to take traffic policy into account when picking a node.
 func (d *ServiceSpecDie) ExternalTrafficPolicy(v corev1.ServiceExternalTrafficPolicyType) *ServiceSpecDie {
 	return d.DieStamp(func(r *corev1.ServiceSpec) {
 		r.ExternalTrafficPolicy = v
 	})
 }
 
-// healthCheckNodePort specifies the healthcheck nodePort for the service. This only applies when type is set to LoadBalancer and externalTrafficPolicy is set to Local. If a value is specified, is in-range, and is not in use, it will be used.  If not specified, a value will be automatically allocated.  External systems (e.g. load-balancers) can use this port to determine if a given node holds endpoints for this service or not.  If this field is specified when creating a Service which does not need it, creation will fail. This field will be wiped when updating a Service to no longer need it (e.g. changing type).
+// healthCheckNodePort specifies the healthcheck nodePort for the service. This only applies when type is set to LoadBalancer and externalTrafficPolicy is set to Local. If a value is specified, is in-range, and is not in use, it will be used.  If not specified, a value will be automatically allocated.  External systems (e.g. load-balancers) can use this port to determine if a given node holds endpoints for this service or not.  If this field is specified when creating a Service which does not need it, creation will fail. This field will be wiped when updating a Service to no longer need it (e.g. changing type). This field cannot be updated once set.
 func (d *ServiceSpecDie) HealthCheckNodePort(v int32) *ServiceSpecDie {
 	return d.DieStamp(func(r *corev1.ServiceSpec) {
 		r.HealthCheckNodePort = v
@@ -14305,7 +14344,7 @@ func (d *ServiceSpecDie) IPFamilies(v ...corev1.IPFamily) *ServiceSpecDie {
 }
 
 // IPFamilyPolicy represents the dual-stack-ness requested or required by this Service. If there is no value provided, then this field will be set to SingleStack. Services can be "SingleStack" (a single IP family), "PreferDualStack" (two IP families on dual-stack configured clusters or a single IP family on single-stack clusters), or "RequireDualStack" (two IP families on dual-stack configured clusters, otherwise fail). The ipFamilies and clusterIPs fields depend on the value of this field. This field will be wiped when updating a service to type ExternalName.
-func (d *ServiceSpecDie) IPFamilyPolicy(v *corev1.IPFamilyPolicyType) *ServiceSpecDie {
+func (d *ServiceSpecDie) IPFamilyPolicy(v *corev1.IPFamilyPolicy) *ServiceSpecDie {
 	return d.DieStamp(func(r *corev1.ServiceSpec) {
 		r.IPFamilyPolicy = v
 	})
@@ -14325,7 +14364,7 @@ func (d *ServiceSpecDie) LoadBalancerClass(v *string) *ServiceSpecDie {
 	})
 }
 
-// InternalTrafficPolicy specifies if the cluster internal traffic should be routed to all endpoints or node-local endpoints only. "Cluster" routes internal traffic to a Service to all endpoints. "Local" routes traffic to node-local endpoints only, traffic is dropped if no node-local endpoints are ready. The default value is "Cluster".
+// InternalTrafficPolicy describes how nodes distribute service traffic they receive on the ClusterIP. If set to "Local", the proxy will assume that pods only want to talk to endpoints of the service on the same node as the pod, dropping the traffic if there are no local endpoints. The default value, "Cluster", uses the standard behavior of routing to all endpoints evenly (possibly modified by topology and other features).
 func (d *ServiceSpecDie) InternalTrafficPolicy(v *corev1.ServiceInternalTrafficPolicyType) *ServiceSpecDie {
 	return d.DieStamp(func(r *corev1.ServiceSpec) {
 		r.InternalTrafficPolicy = v
