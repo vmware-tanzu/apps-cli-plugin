@@ -26,6 +26,7 @@ import (
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/utils/integer"
 
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
@@ -92,31 +93,9 @@ func maxContainerRestarts(status corev1.PodStatus) int {
 	}
 	return maxRestarts
 }
-func PodTablePrinterFromObject(c *cli.Config, podlist []Podview, tableResult runtime.Object) error {
-
-	printPodRow := func(poddtls *Podview, _ table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		row := metav1beta1.TableRow{
-			Object: runtime.RawExtension{Object: nil},
-		}
-		row.Cells = append(row.Cells,
-			poddtls.name,
-			poddtls.ready,
-			poddtls.status,
-			poddtls.restarts,
-			poddtls.age,
-		)
-		return []metav1beta1.TableRow{row}, nil
-	}
-	printPodList := func(podlist []Podview, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
-		rows := make([]metav1beta1.TableRow, 0, len(podlist))
-		for i := range podlist {
-			r, err := printPodRow(&podlist[i], printOpts)
-			if err != nil {
-				return nil, err
-			}
-			rows = append(rows, r...)
-		}
-		return rows, nil
+func PodTablePrinterFromObject(c *cli.Config, tableResult runtime.Object) error {
+	printPodList := func(printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
+		return nil, nil
 	}
 	tablePrinter := table.NewTablePrinter(table.PrintOptions{PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
 		columns := []metav1beta1.TableColumnDefinition{
@@ -127,52 +106,51 @@ func PodTablePrinterFromObject(c *cli.Config, podlist []Podview, tableResult run
 			{Name: "Age", Type: "string"},
 		}
 		h.TableHandler(columns, printPodList)
-		h.TableHandler(columns, printPodRow)
 	})
 
 	return tablePrinter.PrintObj(tableResult, c.Stdout)
 }
-func DecodeIntoTable(obj runtime.Object) (runtime.Object, []Podview, error) {
-	event, isEvent := obj.(*metav1.WatchEvent)
-	if isEvent {
-		obj = event.Object.Object
-	}
-	var poddtls []Podview
-	if !recognizedTableVersions[obj.GetObjectKind().GroupVersionKind()] {
-		return nil, poddtls, fmt.Errorf("attempt to decode non-Table object")
-	}
-
-	unstr, ok := obj.(*unstructured.Unstructured)
-	if !ok {
-		return nil, poddtls, fmt.Errorf("attempt to decode non-Unstructured object")
-	}
-	table := &metav1.Table{}
-	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstr.Object, table); err != nil {
-		return nil, poddtls, err
-	}
-	poddtls = make([]Podview, len(table.Rows))
-	for i := range table.Rows {
-		row := &table.Rows[i]
-		if row.Object.Raw == nil || row.Object.Object != nil {
-			continue
+func DecodeIntoTable(info []*resource.Info) (runtime.Object, error) {
+	if len(info) == 1 {
+		obj := info[0].Object
+		event, isEvent := obj.(*metav1.WatchEvent)
+		if isEvent {
+			obj = event.Object.Object
 		}
-		var converted runtime.Object
-		var err error
-		if len(row.Cells) != 0 {
-			poddtls[i].name = fmt.Sprintf("%v", row.Cells[0])
-			poddtls[i].ready = fmt.Sprintf("%v", row.Cells[1])
-			poddtls[i].status = fmt.Sprintf("%v", row.Cells[2])
-			poddtls[i].restarts = fmt.Sprintf("%v", row.Cells[3])
-			poddtls[i].age = fmt.Sprintf("%v", row.Cells[4])
+
+		if !recognizedTableVersions[obj.GetObjectKind().GroupVersionKind()] {
+			return nil, fmt.Errorf("attempt to decode non-Table object")
+		}
+
+		unstr, ok := obj.(*unstructured.Unstructured)
+		if !ok {
+			return nil, fmt.Errorf("attempt to decode non-Unstructured object")
+		}
+		table := &metav1.Table{}
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstr.Object, table); err != nil {
+			return nil, err
+		}
+		if len(table.Rows) == 0 {
+			return nil, fmt.Errorf("no pod details available")
+		}
+		for i := range table.Rows {
+			row := &table.Rows[i]
+			if row.Object.Raw == nil || row.Object.Object != nil {
+				continue
+			}
+			var converted runtime.Object
+			var err error
+
 			converted, err = runtime.Decode(unstructured.UnstructuredJSONScheme, row.Object.Raw)
 			if err != nil {
-				return nil, poddtls, err
+				return nil, err
 			}
-		}
-		row.Object.Object = converted
-	}
 
-	return table, poddtls, nil
+			row.Object.Object = converted
+		}
+		return table, nil
+	}
+	return nil, fmt.Errorf("no pod details available")
 }
 
 // TablePrinter decodes table objects into typed objects before delegating to another printer.

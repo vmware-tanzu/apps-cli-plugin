@@ -70,18 +70,19 @@ func (c *fakeclient) RESTClient() (*rest.RESTClient, error) {
 	restClient.Client = fakeClient.Client
 	return restClient, nil
 }
-func (c *fakeclient) RESTMapper() meta.RESTMapper {
-	return testRESTMapper()
-}
+
 func (c *fakeclient) ToRESTMapper() (meta.RESTMapper, error) {
-	return c.RESTMapper(), nil
+	return testRESTMapper(), nil
 }
+
 func (c *fakeclient) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
 	return disk.NewCachedDiscoveryClientForConfig(&rest.Config{}, "", "", 0) // need alignment with sash
 }
+
 func (c *fakeclient) ToRESTConfig() (*rest.Config, error) {
 	return c.KubeRestConfig(), nil
 }
+
 func NewFakeCachedDiscoveryClient() *FakeCachedDiscoveryClient {
 	return &FakeCachedDiscoveryClient{
 		Groups:             []*metav1.APIGroup{},
@@ -90,6 +91,7 @@ func NewFakeCachedDiscoveryClient() *FakeCachedDiscoveryClient {
 		Invalidations:      0,
 	}
 }
+
 func (d *FakeCachedDiscoveryClient) ServerGroupsAndResources() ([]*metav1.APIGroup, []*metav1.APIResourceList, error) {
 	return d.Groups, d.Resources, nil
 }
@@ -160,29 +162,8 @@ func testDynamicResources() []*restmapper.APIGroupResources {
 				"v1": {
 					{Name: "pods", Namespaced: true, Kind: "Pod"},
 					{Name: "services", Namespaced: true, Kind: "Service"},
-					{Name: "replicationcontrollers", Namespaced: true, Kind: "ReplicationController"},
-					{Name: "componentstatuses", Namespaced: false, Kind: "ComponentStatus"},
-					{Name: "nodes", Namespaced: false, Kind: "Node"},
-					{Name: "secrets", Namespaced: true, Kind: "Secret"},
-					{Name: "configmaps", Namespaced: true, Kind: "ConfigMap"},
 					{Name: "namespacedtype", Namespaced: true, Kind: "NamespacedType"},
 					{Name: "namespaces", Namespaced: false, Kind: "Namespace"},
-					{Name: "resourcequotas", Namespaced: true, Kind: "ResourceQuota"},
-				},
-			},
-		},
-		{
-			Group: metav1.APIGroup{
-				Name: "extensions",
-				Versions: []metav1.GroupVersionForDiscovery{
-					{Version: "v1beta1"},
-				},
-				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1beta1"},
-			},
-			VersionedResources: map[string][]metav1.APIResource{
-				"v1beta1": {
-					{Name: "deployments", Namespaced: true, Kind: "Deployment"},
-					{Name: "replicasets", Namespaced: true, Kind: "ReplicaSet"},
 				},
 			},
 		},

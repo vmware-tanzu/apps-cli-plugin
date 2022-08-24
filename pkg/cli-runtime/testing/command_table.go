@@ -234,30 +234,29 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 				t.Errorf("error during prepare: %s", err)
 			}
 		}
-		if len(tc.GivenObjects) != 0 {
-			var pods []client.Object
-			for _, obj := range tc.GivenObjects {
-				if strings.ToLower(obj.GetObjectKind().GroupVersionKind().Kind) == "pod" {
-					pods = append(pods, obj)
-				}
+
+		var pods []client.Object
+		for _, obj := range tc.GivenObjects {
+			if strings.ToLower(obj.GetObjectKind().GroupVersionKind().Kind) == "pod" {
+				pods = append(pods, obj)
 			}
-
-			c.Builder = resource.NewFakeBuilder(
-				func(version schema.GroupVersion) (resource.RESTClient, error) {
-					codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
-					UnstructuredClient := &fake.RESTClient{
-						NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
-						Resp:                 &http.Response{StatusCode: http.StatusOK, Header: defaultHeader(), Body: podV1TableObjBody(codec, pods)},
-					}
-					return UnstructuredClient, nil
-
-				},
-				c.ToRESTMapper,
-				func() (restmapper.CategoryExpander, error) {
-					return resource.FakeCategoryExpander, nil
-				},
-			)
 		}
+		c.Builder = resource.NewFakeBuilder(
+			func(version schema.GroupVersion) (resource.RESTClient, error) {
+				codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
+				UnstructuredClient := &fake.RESTClient{
+					NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
+					Resp:                 &http.Response{StatusCode: http.StatusOK, Header: defaultHeader(), Body: podV1TableObjBody(codec, pods)},
+				}
+				return UnstructuredClient, nil
+
+			},
+			c.ToRESTMapper,
+			func() (restmapper.CategoryExpander, error) {
+				return resource.FakeCategoryExpander, nil
+			},
+		)
+		// }
 		cmd := cmdFactory(ctx, c)
 		cmd.SilenceErrors = true
 		cmd.SilenceUsage = true
