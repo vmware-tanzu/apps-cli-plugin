@@ -496,7 +496,7 @@ func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config) []string {
 	return exclude
 }
 
-func (opts *WorkloadOptions) FetchResourceObject(c *cli.Config, workload *cartov1alpha1.Workload, args []string) (runtime.Object, error) {
+func FetchResourceObject(c *cli.Config, workload *cartov1alpha1.Workload, args []string) (runtime.Object, error) {
 	r := c.Builder.Unstructured().
 		NamespaceParam(workload.Namespace).
 		LabelSelectorParam(fmt.Sprintf("%s%s%s", cartov1alpha1.WorkloadLabelName, "=", workload.Name)).
@@ -512,9 +512,6 @@ func (opts *WorkloadOptions) FetchResourceObject(c *cli.Config, workload *cartov
 		Do()
 	infos, err := r.Infos()
 	if err != nil {
-		c.Eprintf("\n")
-		c.Eerrorf("Failed to list pods:\n")
-		c.Eprintf("  %s\n", err)
 		return nil, fmt.Errorf("failed to list pods:\n  %s", err)
 	}
 	return decodeIntoTable(infos)

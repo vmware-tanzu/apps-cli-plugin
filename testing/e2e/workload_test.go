@@ -25,7 +25,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
+	"regexp"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -302,7 +302,9 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Command: *it.NewTanzuAppsCommandLine(
 				"workload", "get", "test-create-git-annotations-workload", namespaceFlag),
 			Verify: func(t *testing.T, output string, err error) {
-				if !strings.Contains(output, "NAME   READY   STATUS    RESTARTS   AGE") {
+				regex := regexp.MustCompile("\\s*NAME\\s+READY\\s+STATUS\\s+RESTARTS\\s+AGE\\s*")
+				found := regex.FindString(output) != ""
+				if !found {
 					t.Errorf("expected Pod results in output %v", output)
 					t.FailNow()
 				}

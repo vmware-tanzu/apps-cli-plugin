@@ -2601,7 +2601,7 @@ func TestWorkloadOptionsFetchResourceObject(t *testing.T) {
 			arg := []string{"pods"}
 			workload := currentWorkload.DeepCopy()
 			opts.ApplyOptionsToWorkload(ctx, workload)
-			_, err = opts.FetchResourceObject(c, workload, arg)
+			_, err = commands.FetchResourceObject(c, workload, arg)
 
 			if err != nil && !test.shouldError {
 				t.Errorf("Update() errored %v", err)

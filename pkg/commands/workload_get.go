@@ -43,7 +43,6 @@ import (
 )
 
 type WorkloadGetOptions struct {
-	WorkloadOptions
 	Namespace string
 	Name      string
 
@@ -227,15 +226,20 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	}
 
 	arg := []string{"Pod"}
-	if tableResult, err := opts.FetchResourceObject(c, workload, arg); err == nil {
-		c.Printf("\n")
-		c.Boldf("Pods\n")
-		printer.PodTablePrinter(c, tableResult)
+	if tableResult, err := FetchResourceObject(c, workload, arg); err != nil {
+		c.Eprintf("\n")
+		c.Eerrorf("Failed to list pods:\n")
+		c.Eprintf("  %s\n", err)
 	} else {
-		c.Printf("\n")
-		c.Infof("No pods found for workload.\n")
+		if tableResult != nil {
+			c.Printf("\n")
+			c.Boldf("Pods\n")
+			printer.PodTablePrinter(c, tableResult)
+		} else {
+			c.Printf("\n")
+			c.Infof("No pods found for workload.\n")
+		}
 	}
-	// }
 
 	ksvcs := &knativeservingv1.ServiceList{}
 	_ = c.List(ctx, ksvcs, client.InNamespace(workload.Namespace), client.MatchingLabels{cartov1alpha1.WorkloadLabelName: workload.Name})
@@ -323,7 +327,7 @@ func decodeIntoTable(info []*resource.Info) (runtime.Object, error) {
 			return nil, err
 		}
 		if len(table.Rows) == 0 {
-			return nil, fmt.Errorf("no pod details found")
+			return nil, nil
 		}
 		for i := range table.Rows {
 			row := &table.Rows[i]
@@ -343,7 +347,7 @@ func decodeIntoTable(info []*resource.Info) (runtime.Object, error) {
 
 		return table, nil
 	}
-	return nil, fmt.Errorf("no pod details found")
+	return nil, nil
 }
 
 // TablePrinter decodes table objects into typed objects before delegating to another printer.
