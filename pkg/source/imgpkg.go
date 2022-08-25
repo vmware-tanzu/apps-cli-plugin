@@ -23,10 +23,11 @@ import (
 	"path"
 	"time"
 
-	"github.com/cppforlife/go-cli-ui/ui"
 	regname "github.com/google/go-containerregistry/pkg/name"
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/plainimage"
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry"
+
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/logger"
 )
 
 type RegistryOpts struct {
@@ -65,7 +66,8 @@ func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, registr
 	}
 
 	excludedFiles = append(excludedFiles, path.Join(dir, ".imgpkg"))
-	digest, err := plainimage.NewContents([]string{dir}, excludedFiles).Push(uploadRef, nil, reg, ui.NewNoopUI())
+	logger := logger.RetrieveStashLogger(ctx)
+	digest, err := plainimage.NewContents([]string{dir}, excludedFiles).Push(uploadRef, nil, reg, logger)
 	if err != nil {
 		return "", err
 	}

@@ -9,37 +9,44 @@ import (
 	"os"
 
 	pb "github.com/cheggaaa/pb/v3"
-	goui "github.com/cppforlife/go-cli-ui/ui"
 	regv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/mattn/go-isatty"
 )
 
+// ProgressLogger Progress bar
 type ProgressLogger interface {
-	Start(progress <-chan regv1.Update)
+	Start(ctx context.Context, progress <-chan regv1.Update)
 	End()
 }
 
 // NewProgressBar constructor to build a ProgressLogger responsible for printing out a progress bar using updates when
 // writing to a registry via ggcr
-func NewProgressBar(ui goui.UI, finalMessage, errorMessagePrefix string) ProgressLogger {
-	ctx, cancel := context.WithCancel(context.Background())
+func NewProgressBar(logger LoggerWithLevels, finalMessage, errorMessagePrefix string) ProgressLogger {
 	if isatty.IsTerminal(os.Stdout.Fd()) {
-		return &ProgressBarLogger{ctx: ctx, cancelFunc: cancel, ui: ui, finalMessage: finalMessage, errorMessagePrefix: errorMessagePrefix}
+		return &ProgressBarLogger{logger: logger, finalMessage: finalMessage, errorMessagePrefix: errorMessagePrefix}
 	}
 
-	return &ProgressBarNoTTYLogger{ui: ui, ctx: ctx, cancelFunc: cancel, finalMessage: finalMessage}
+	return &ProgressBarNoTTYLogger{logger: logger, finalMessage: finalMessage}
 }
 
+// NewNoopProgressBar constructs a Noop Progress bar that will not display anything
+func NewNoopProgressBar() ProgressLogger {
+	return &ProgressBarNoTTYLogger{}
+}
+
+// ProgressBarLogger display progress bar on output
 type ProgressBarLogger struct {
-	ctx                context.Context
 	cancelFunc         context.CancelFunc
 	bar                *pb.ProgressBar
-	ui                 goui.UI
+	logger             LoggerWithLevels
 	finalMessage       string
 	errorMessagePrefix string
 }
 
-func (l *ProgressBarLogger) Start(progressChan <-chan regv1.Update) {
+// Start the display of the Progress Bar
+func (l *ProgressBarLogger) Start(ctx context.Context, progressChan <-chan regv1.Update) {
+	ctx, cancelFunc := context.WithCancel(ctx)
+	l.cancelFunc = cancelFunc
 	// Add a new empty line to separate the progress bar from prior output
 	fmt.Println()
 	l.bar = pb.New64(0)
@@ -48,11 +55,11 @@ func (l *ProgressBarLogger) Start(progressChan <-chan regv1.Update) {
 	go func() {
 		for {
 			select {
-			case <-l.ctx.Done():
+			case <-ctx.Done():
 				return
 			case update := <-progressChan:
 				if update.Error != nil {
-					l.ui.ErrorLinef("%s: %s\n", l.errorMessagePrefix, update.Error)
+					l.logger.Errorf("%s: %s\n", l.errorMessagePrefix, update.Error)
 					continue
 				}
 
@@ -70,24 +77,30 @@ func (l *ProgressBarLogger) Start(progressChan <-chan regv1.Update) {
 	}()
 }
 
+// End stops the progress bar and writes the final message
 func (l *ProgressBarLogger) End() {
-	l.cancelFunc()
+	if l.cancelFunc != nil {
+		l.cancelFunc()
+	}
 	l.bar.Finish()
-	l.ui.BeginLinef("\n%s", l.finalMessage)
+	l.logger.Logf("\n%s", l.finalMessage)
 }
 
+// ProgressBarNoTTYLogger does not display the progress bar
 type ProgressBarNoTTYLogger struct {
-	ctx          context.Context
 	cancelFunc   context.CancelFunc
-	ui           goui.UI
+	logger       Logger
 	finalMessage string
 }
 
-func (l *ProgressBarNoTTYLogger) Start(progressChan <-chan regv1.Update) {
+// Start consuming the progress channel but does not display anything
+func (l *ProgressBarNoTTYLogger) Start(ctx context.Context, progressChan <-chan regv1.Update) {
+	ctx, cancelFunc := context.WithCancel(ctx)
+	l.cancelFunc = cancelFunc
 	go func() {
 		for {
 			select {
-			case <-l.ctx.Done():
+			case <-ctx.Done():
 				return
 			case <-progressChan:
 			}
@@ -95,7 +108,12 @@ func (l *ProgressBarNoTTYLogger) Start(progressChan <-chan regv1.Update) {
 	}()
 }
 
+// End Write the final message
 func (l *ProgressBarNoTTYLogger) End() {
-	l.cancelFunc()
-	l.ui.BeginLinef(l.finalMessage)
+	if l.cancelFunc != nil {
+		l.cancelFunc()
+	}
+	if l.logger != nil && l.finalMessage != "" {
+		l.logger.Logf(l.finalMessage)
+	}
 }

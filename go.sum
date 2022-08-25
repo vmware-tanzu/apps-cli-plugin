@@ -1225,8 +1225,8 @@ github.com/vito/go-interact v1.0.1 h1:O8xi8c93bRUv2Tb/v6HdiuGc+WnWt+AQzF74MOOdlB
 github.com/vito/go-interact v1.0.1/go.mod h1:HrdHSJXD2yn1MhlTwSIMeFgQ5WftiIorszVGd3S/DAA=
 github.com/vmware-labs/reconciler-runtime v0.8.0 h1:3ZhFw9SbRsKwNXnkNVqexv9o384QEfoWHLYAaJ+FzgA=
 github.com/vmware-labs/reconciler-runtime v0.8.0/go.mod h1:+Q4oBEd//FGjRBmt3m7gydDg7xqlxFJv9+Ik8oc4kzk=
-github.com/vmware-tanzu/carvel-imgpkg v0.30.0 h1:zbBzWk0Z2lQy0ddn2OD9QyvQKJNayR+XPoYvEHVKEN0=
-github.com/vmware-tanzu/carvel-imgpkg v0.30.0/go.mod h1:sw3Mb1kqhZ60RXYnO07tJ5gYDGNPZHy2MtFgDJKd1sM=
+github.com/vmware-tanzu/carvel-imgpkg v0.31.0 h1:jtT0vs8rTvxRuwZ4HaAT//iCun4V9WS0MQalN3XggSU=
+github.com/vmware-tanzu/carvel-imgpkg v0.31.0/go.mod h1:sw3Mb1kqhZ60RXYnO07tJ5gYDGNPZHy2MtFgDJKd1sM=
 github.com/vmware-tanzu/carvel-kapp-controller v0.35.0 h1:zgWNumjhN+0CCiq1Wo4lVTmO89eOA6HuPXgv1sVhE4k=
 github.com/vmware-tanzu/carvel-kapp-controller v0.35.0/go.mod h1:Hldrv7kPAD3THS1yUYZPFIaHmPE0ENO0ljzbJrpftiE=
 github.com/vmware-tanzu/carvel-secretgen-controller v0.5.0 h1:3mSDyzhf52Y0jdvHrhJUf4Sk97CILBOkQt/WUaD8G/8=
