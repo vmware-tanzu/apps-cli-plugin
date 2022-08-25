@@ -876,7 +876,7 @@ To get status: "tanzu apps workload get my-workload"
 						Params: []cartov1alpha1.Param{
 							{
 								Name:  "maven",
-								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0","type":null}`)},
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0"}`)},
 							},
 						},
 					},
@@ -896,7 +896,50 @@ Create workload:
      10 + |    value:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
-     13 + |      type: null
+     13 + |      version: 2.6.0
+
+Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+		{
+			Name: "create from maven artifact using paramyaml with type",
+			Args: []string{workloadName, flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples", "type": "jar"}`, flags.YesFlagName},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Params: []cartov1alpha1.Param{
+							{
+								Name:  "maven",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","type":"jar","version":"2.6.0"}`)},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  params:
+      9 + |  - name: maven
+     10 + |    value:
+     11 + |      artifactId: spring-petclinic
+     12 + |      groupId: org.springframework.samples
+     13 + |      type: jar
      14 + |      version: 2.6.0
 
 Created workload "my-workload"

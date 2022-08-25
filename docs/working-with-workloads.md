@@ -130,7 +130,6 @@ For this reason the apps plugin support the use some environment variables to se
 - `--registry-password`: `TANZU_APPS_REGISTRY_PASSWORD`
 - `--registry-username`: `TANZU_APPS_REGISTRY_USERNAME`
 - `--registry-token`: `TANZU_APPS_REGISTRY_TOKEN`
-- `--source-image`: `TANZU_APPS_SOURCE_IMAGE`
 
 **Note:** Be aware that when set a supported environment value, each apps plugin command will set the flag with the value on the environment variable value
 

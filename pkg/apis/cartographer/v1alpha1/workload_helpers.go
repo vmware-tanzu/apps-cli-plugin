@@ -46,7 +46,7 @@ type MavenSource struct {
 	ArtifactId string  `json:"artifactId"`
 	GroupId    string  `json:"groupId"`
 	Version    string  `json:"version"`
-	Type       *string `json:"type"`
+	Type       *string `json:"type,omitempty"`
 }
 
 func (w *Workload) GetGroupVersionKind() schema.GroupVersionKind {
@@ -297,6 +297,9 @@ func (w *WorkloadSpec) MergeMavenSource(source MavenSource) {
 		}
 		if source.Version != "" {
 			currentMaven.Version = source.Version
+		}
+		if source.Type != nil {
+			currentMaven.Type = source.Type
 		}
 	}
 	w.MergeParams(WorkloadMavenParam, currentMaven)

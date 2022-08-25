@@ -116,7 +116,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					Params: []cartov1alpha1.Param{{
 						Name: "maven",
 						Value: v1.JSON{
-							Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","type":null,"version":"v2.6.0"}`),
+							Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"v2.6.0"}`),
 						},
 					}},
 				},
@@ -199,10 +199,10 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					"workload", "create", "test-create-local-registry-venv",
 					"--local-path=./testdata/hello.go.jar",
 					namespaceFlag,
+					"--source-image", os.Getenv("BUNDLE")+"-env",
 					"--yes",
 				)
 				c.AddEnvVars(
-					"TANZU_APPS_SOURCE_IMAGE="+os.Getenv("BUNDLE")+"-env",
 					"TANZU_APPS_TYPE=web",
 					"TANZU_APPS_REGISTRY_USERNAME="+os.Getenv("REGISTRY_USERNAME"),
 					"TANZU_APPS_REGISTRY_PASSWORD="+os.Getenv("REGISTRY_PASSWORD"),

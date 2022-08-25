@@ -2543,7 +2543,7 @@ To get status: "tanzu apps workload get my-workload"
 						Params: []cartov1alpha1.Param{
 							{
 								Name:  "maven",
-								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0","type":null}`)},
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0"}`)},
 							},
 						},
 					},
@@ -2563,8 +2563,7 @@ Create workload:
      10 + |    value:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
-     13 + |      type: null
-     14 + |      version: 2.6.0
+     13 + |      version: 2.6.0
 
 Created workload "my-workload"
 
@@ -2588,7 +2587,7 @@ To get status: "tanzu apps workload get my-workload"
 						Params: []cartov1alpha1.Param{
 							{
 								Name:  "maven",
-								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0","type":null}`)},
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0"}`)},
 							},
 						},
 					},
@@ -2608,8 +2607,7 @@ Create workload:
      10 + |    value:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
-     13 + |      type: null
-     14 + |      version: 2.6.0
+     13 + |      version: 2.6.0
 
 NOTICE: Maven configuration flags have overwritten values provided by "--params-yaml".
 
@@ -2629,7 +2627,7 @@ To get status: "tanzu apps workload get my-workload"
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Params(cartov1alpha1.Param{
 							Name:  "maven",
-							Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0","type":null}`)},
+							Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0"}`)},
 						})
 					}),
 			},
@@ -2644,7 +2642,7 @@ To get status: "tanzu apps workload get my-workload"
 						Params: []cartov1alpha1.Param{
 							{
 								Name:  "maven",
-								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic-test","groupId":"org.springframework.samples.test","version":"2.6.1","type":null}`)},
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic-test","groupId":"org.springframework.samples.test","version":"2.6.1"}`)},
 							},
 						},
 					},
@@ -2659,11 +2657,10 @@ Update workload:
  10, 10   |    value:
  11     - |      artifactId: spring-petclinic
  12     - |      groupId: org.springframework.samples
+ 13     - |      version: 2.6.0
      11 + |      artifactId: spring-petclinic-test
      12 + |      groupId: org.springframework.samples.test
- 13, 13   |      type: null
- 14     - |      version: 2.6.0
-     14 + |      version: 2.6.1
+     13 + |      version: 2.6.1
 
 NOTICE: Maven configuration flags have overwritten values provided by "--params-yaml".
 
@@ -2723,7 +2720,7 @@ To get status: "tanzu apps workload get my-workload"
 		},
 		{
 			Name: "update workload to add maven through flags",
-			Args: []string{workloadName, flags.MavenArtifactFlagName, "spring-petclinic", flags.MavenVersionFlagName, "2.6.0", flags.MavenGroupFlagName, "org.springframework.samples", flags.YesFlagName},
+			Args: []string{workloadName, flags.MavenArtifactFlagName, "spring-petclinic", flags.MavenVersionFlagName, "2.6.0", flags.MavenGroupFlagName, "org.springframework.samples", flags.MavenTypeFlagName, "jar", flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {}),
@@ -2739,7 +2736,7 @@ To get status: "tanzu apps workload get my-workload"
 						Params: []cartov1alpha1.Param{
 							{
 								Name:  "maven",
-								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0","type":null}`)},
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0","type":"jar"}`)},
 							},
 						},
 					},
@@ -2759,7 +2756,7 @@ Update workload:
      10 + |    value:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
-     13 + |      type: null
+     13 + |      type: jar
      14 + |      version: 2.6.0
 
 Updated workload "my-workload"
@@ -2771,13 +2768,13 @@ To get status: "tanzu apps workload get my-workload"
 		},
 		{
 			Name: "update workload to change maven info through flags",
-			Args: []string{workloadName, flags.MavenVersionFlagName, "2.6.1", flags.YesFlagName},
+			Args: []string{workloadName, flags.MavenVersionFlagName, "2.6.1", flags.MavenTypeFlagName, "jar", flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Params(cartov1alpha1.Param{
 							Name:  "maven",
-							Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0","type":null}`)},
+							Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.0"}`)},
 						})
 					}),
 			},
@@ -2792,7 +2789,7 @@ To get status: "tanzu apps workload get my-workload"
 						Params: []cartov1alpha1.Param{
 							{
 								Name:  "maven",
-								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.1","type":null}`)},
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","version":"2.6.1","type":"jar"}`)},
 							},
 						},
 					},
@@ -2801,11 +2798,12 @@ To get status: "tanzu apps workload get my-workload"
 			ExpectOutput: `
 Update workload:
 ...
+  9,  9   |  - name: maven
  10, 10   |    value:
  11, 11   |      artifactId: spring-petclinic
  12, 12   |      groupId: org.springframework.samples
- 13, 13   |      type: null
- 14     - |      version: 2.6.0
+ 13     - |      version: 2.6.0
+     13 + |      type: jar
      14 + |      version: 2.6.1
 
 Updated workload "my-workload"
@@ -2860,6 +2858,50 @@ Update workload:
      13 + |      version: 2.6.0
 
 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+		{
+			Name: "create from maven artifact using paramyaml with type",
+			Args: []string{workloadName, flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples", "type": "jar"}`, flags.YesFlagName},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Params: []cartov1alpha1.Param{
+							{
+								Name:  "maven",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"artifactId":"spring-petclinic","groupId":"org.springframework.samples","type":"jar","version":"2.6.0"}`)},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  params:
+      9 + |  - name: maven
+     10 + |    value:
+     11 + |      artifactId: spring-petclinic
+     12 + |      groupId: org.springframework.samples
+     13 + |      type: jar
+     14 + |      version: 2.6.0
+
+Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
