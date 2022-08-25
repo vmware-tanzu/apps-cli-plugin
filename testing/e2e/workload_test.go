@@ -303,7 +303,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				"workload", "get", "test-create-git-annotations-workload", namespaceFlag),
 			Verify: func(t *testing.T, output string, err error) {
 				if !strings.Contains(output, "NAME   READY   STATUS    RESTARTS   AGE") {
-					t.Errorf("expected Pod results in output, missing pods")
+					t.Errorf("expected Pod results in output %v", output)
 					t.FailNow()
 				}
 			},
