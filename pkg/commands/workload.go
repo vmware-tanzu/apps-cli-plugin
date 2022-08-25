@@ -35,6 +35,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -491,6 +492,22 @@ func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config) []string {
 		c.Infof("The files and/or directories listed in the %s file are being excluded from the uploaded source code.\n", opts.ExcludePathFile)
 	}
 	return exclude
+}
+
+func loadNamespace(ctx context.Context, c *cli.Config, name string) (*corev1.Namespace, error) {
+	ns := &corev1.Namespace{}
+	if err := c.Get(ctx, types.NamespacedName{Name: name}, ns); err != nil && apierrs.IsNotFound(err) {
+		return nil, err
+	}
+	return ns, nil
+}
+
+func validateNamespace(ctx context.Context, c *cli.Config, name string) error {
+	if _, nsErr := loadNamespace(ctx, c, name); nsErr != nil {
+		c.Eprintf("%s %s\n", printer.Serrorf("Error:"), fmt.Sprintf("namespace %q not found, it may not exist or user does not have permissions to read it.", name))
+		return cli.SilenceError(nsErr)
+	}
+	return nil
 }
 
 func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentWorkload *cartov1alpha1.Workload, workload *cartov1alpha1.Workload) (bool, error) {

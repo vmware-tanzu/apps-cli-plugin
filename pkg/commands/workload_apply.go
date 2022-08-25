@@ -88,11 +88,17 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 	workload := &cartov1alpha1.Workload{}
 	var currentWorkload *cartov1alpha1.Workload
 	err := c.Get(ctx, client.ObjectKey{Namespace: opts.Namespace, Name: opts.Name}, workload)
-	if err != nil && !apierrs.IsNotFound(err) {
-		return err
-	}
 	if err == nil {
 		currentWorkload = workload.DeepCopy()
+	} else {
+		if !apierrs.IsNotFound(err) {
+			return err
+		}
+		if apierrs.IsNotFound(err) {
+			if nsErr := validateNamespace(ctx, c, opts.Namespace); nsErr != nil {
+				return nsErr
+			}
+		}
 	}
 
 	workload.Name = opts.Name
