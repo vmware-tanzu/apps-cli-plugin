@@ -183,10 +183,8 @@ func TestWorkloadGetCommand(t *testing.T) {
 			Args:         []string{workloadName},
 			GivenObjects: []client.Object{parent},
 			ExpectOutput: `
----
-# my-workload: <unknown>
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain reference not found.
@@ -215,10 +213,8 @@ To see logs: "tanzu apps workload tail my-workload"
 				}),
 			},
 			ExpectOutput: `
----
-# my-workload: <unknown>
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain reference not found.
@@ -251,10 +247,8 @@ To see logs: "tanzu apps workload tail my-workload --namespace my-custom-namespa
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: OopsieDoodle
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain
@@ -289,10 +283,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: <unknown>
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain
@@ -341,10 +333,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: OopsieDoodle
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain
@@ -400,10 +390,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: OopsieDoodle
----
 Overview
+   name:   my-workload
    type:   web
 
 Supply Chain
@@ -446,10 +434,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Ready
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain
@@ -491,10 +477,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Ready
----
 Overview
+   name:   my-workload
    type:   web
 
 Supply Chain
@@ -534,10 +518,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Unknown
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain
@@ -558,7 +540,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 `,
 		}, {
-			Name: "show issues with unknown status overview type",
+			Name: "show issues",
 			Args: []string{workloadName},
 			GivenObjects: []client.Object{
 				parent.
@@ -580,10 +562,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Unknown
----
 Overview
+   name:   my-workload
    type:   web
 
 Supply Chain
@@ -625,10 +605,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: OopsieDoodle
----
 Overview
+   name:   my-workload
    type:   web
 
 Supply Chain
@@ -679,10 +657,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: OopsieDoodle
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Source
@@ -743,10 +719,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: OopsieDoodle
----
 Overview
+   name:   my-workload
    type:   web
 
 Source
@@ -802,10 +776,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: OopsieDoodle
----
 Overview
+   name:   my-workload
    type:   web
 
 Source
@@ -851,10 +823,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: OopsieDoodle
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Source
@@ -944,10 +914,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: OopsieDoodle
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Source
@@ -1044,10 +1012,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: OopsieDoodle
----
 Overview
+   name:   my-workload
    type:   web
 
 Source
@@ -1099,10 +1065,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Unknown
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain
@@ -1148,10 +1112,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Unknown
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain
@@ -1205,10 +1167,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Unknown
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain
@@ -1267,10 +1227,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Unknown
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain
@@ -1328,10 +1286,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Ready
----
 Overview
+   name:   my-workload
    type:   web
 
 Supply Chain
@@ -1425,10 +1381,8 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 				clitesting.InduceFailure("list", "PodList"),
 			},
 			ExpectOutput: `
----
-# my-workload: <unknown>
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain reference not found.
@@ -1458,10 +1412,8 @@ To see logs: "tanzu apps workload tail my-workload"
 				clitesting.InduceFailure("list", "KnativeServiceList"),
 			},
 			ExpectOutput: `
----
-# my-workload: <unknown>
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain reference not found.
@@ -1710,10 +1662,8 @@ status:
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Unknown
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain
@@ -1814,10 +1764,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Ready
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain
@@ -1899,10 +1847,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Ready
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain
@@ -1960,10 +1906,8 @@ To see logs: "tanzu apps workload tail my-workload"
 					}),
 			},
 			ExpectOutput: `
----
-# my-workload: Ready
----
 Overview
+   name:   my-workload
    type:   <empty>
 
 Supply Chain

@@ -33,6 +33,12 @@ func WorkloadOverviewPrinter(w io.Writer, workload *cartov1alpha1.Workload) erro
 		if labels == nil {
 			labels = map[string]string{}
 		}
+		nameRow := metav1beta1.TableRow{
+			Cells: []interface{}{
+				"name:",
+				workload.GetName(),
+			},
+		}
 		sourceRow := metav1beta1.TableRow{
 			Cells: []interface{}{
 				"type:",
@@ -40,7 +46,7 @@ func WorkloadOverviewPrinter(w io.Writer, workload *cartov1alpha1.Workload) erro
 			},
 		}
 
-		rows := []metav1beta1.TableRow{sourceRow}
+		rows := []metav1beta1.TableRow{nameRow, sourceRow}
 
 		return rows, nil
 	}
