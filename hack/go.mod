@@ -3,7 +3,7 @@ module github.com/vmware-tanzu/apps-cli-plugin/tools
 go 1.18
 
 require (
-	dies.dev/diegen v0.6.0
+	dies.dev/diegen v0.6.1
 	golang.org/x/tools v0.1.12
 	sigs.k8s.io/controller-tools v0.9.2
 )
