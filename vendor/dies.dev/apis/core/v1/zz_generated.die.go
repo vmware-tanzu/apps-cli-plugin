@@ -98,7 +98,7 @@ func (d *BindingDie) DieReleasePtr() *corev1.Binding {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *BindingDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *BindingDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -869,7 +869,7 @@ func (d *ComponentStatusDie) DieReleasePtr() *corev1.ComponentStatus {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *ComponentStatusDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *ComponentStatusDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -1024,7 +1024,7 @@ func (d *ConfigMapDie) DieReleasePtr() *corev1.ConfigMap {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *ConfigMapDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *ConfigMapDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -4928,7 +4928,7 @@ func (d *EndpointsDie) DieReleasePtr() *corev1.Endpoints {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *EndpointsDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *EndpointsDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -5412,7 +5412,7 @@ func (d *EventDie) DieReleasePtr() *corev1.Event {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *EventDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *EventDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -5854,7 +5854,7 @@ func (d *LimitRangeDie) DieReleasePtr() *corev1.LimitRange {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *LimitRangeDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *LimitRangeDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -6235,7 +6235,7 @@ func (d *NamespaceDie) DieReleasePtr() *corev1.Namespace {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *NamespaceDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *NamespaceDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -6604,7 +6604,7 @@ func (d *NodeDie) DieReleasePtr() *corev1.Node {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *NodeDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *NodeDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -8142,7 +8142,7 @@ func (d *PersistentVolumeDie) DieReleasePtr() *corev1.PersistentVolume {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *PersistentVolumeDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *PersistentVolumeDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -10366,7 +10366,7 @@ func (d *PersistentVolumeClaimDie) DieReleasePtr() *corev1.PersistentVolumeClaim
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *PersistentVolumeClaimDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *PersistentVolumeClaimDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -10910,7 +10910,7 @@ func (d *PodDie) DieReleasePtr() *corev1.Pod {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *PodDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *PodDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -12621,7 +12621,7 @@ func (d *PodTemplateDie) DieReleasePtr() *corev1.PodTemplate {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *PodTemplateDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *PodTemplateDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -12874,7 +12874,7 @@ func (d *ReplicationControllerDie) DieReleasePtr() *corev1.ReplicationController
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *ReplicationControllerDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *ReplicationControllerDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -13292,7 +13292,7 @@ func (d *ResourceQuotaDie) DieReleasePtr() *corev1.ResourceQuota {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *ResourceQuotaDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *ResourceQuotaDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -13871,7 +13871,7 @@ func (d *SecretDie) DieReleasePtr() *corev1.Secret {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *SecretDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *SecretDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -14033,7 +14033,7 @@ func (d *ServiceDie) DieReleasePtr() *corev1.Service {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *ServiceDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *ServiceDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -15155,7 +15155,7 @@ func (d *ServiceAccountDie) DieReleasePtr() *corev1.ServiceAccount {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *ServiceAccountDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *ServiceAccountDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{

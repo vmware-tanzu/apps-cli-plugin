@@ -3,10 +3,9 @@ module github.com/vmware-tanzu/apps-cli-plugin
 go 1.18
 
 require (
-	dies.dev v0.6.0
+	dies.dev v0.6.1
 	github.com/AlecAivazis/survey/v2 v2.3.5
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
-	github.com/cppforlife/go-cli-ui v0.0.0-20220425131040-94f26b16bc14
 	github.com/fatih/color v1.13.0
 	github.com/go-logr/logr v1.2.3
 	github.com/google/go-cmp v0.5.8
@@ -74,6 +73,7 @@ require (
 	github.com/coredns/corefile-migration v1.0.17 // indirect
 	github.com/cppforlife/cobrautil v0.0.0-20220411122935-c28a9f274a4e // indirect
 	github.com/cppforlife/color v1.9.1-0.20200716202919-6706ac40b835 // indirect
+	github.com/cppforlife/go-cli-ui v0.0.0-20220425131040-94f26b16bc14 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
