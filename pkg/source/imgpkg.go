@@ -50,7 +50,7 @@ func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, registr
 
 	var reg registry.Registry
 	var err error
-	transport := RetrieveStashContainerRemoteTransport(ctx)
+	transport := RetrieveContainerRemoteTransport(ctx)
 	if transport == nil {
 		reg, err = registry.NewSimpleRegistry(options)
 	} else {
@@ -66,7 +66,7 @@ func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, registr
 	}
 
 	excludedFiles = append(excludedFiles, path.Join(dir, ".imgpkg"))
-	logger := logger.RetrieveStashLogger(ctx)
+	logger := logger.RetrieveSourceImageLogger(ctx)
 	digest, err := plainimage.NewContents([]string{dir}, excludedFiles).Push(uploadRef, nil, reg, logger)
 	if err != nil {
 		return "", err
@@ -84,7 +84,7 @@ func StashContainerRemoteTransport(ctx context.Context, rTripper http.RoundTripp
 	return context.WithValue(ctx, containerRemoteTransportStashKey{}, rTripper)
 }
 
-func RetrieveStashContainerRemoteTransport(ctx context.Context) *http.RoundTripper {
+func RetrieveContainerRemoteTransport(ctx context.Context) *http.RoundTripper {
 	transport, ok := ctx.Value(containerRemoteTransportStashKey{}).(http.RoundTripper)
 	if !ok {
 		return nil

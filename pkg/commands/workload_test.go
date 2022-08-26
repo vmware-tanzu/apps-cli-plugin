@@ -48,6 +48,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/logger"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
 )
 
@@ -1861,6 +1862,7 @@ Published source
 
 			cmd := &cobra.Command{}
 			ctx := cli.WithCommand(context.Background(), cmd)
+			ctx = logger.StashSourceImageLogger(ctx, logger.NewNoopLogger())
 			opts := &commands.WorkloadOptions{}
 			opts.LoadDefaults(c)
 			opts.DefineFlags(ctx, c, cmd)
@@ -1996,6 +1998,7 @@ No source code is changed
 			cmd := &cobra.Command{}
 			ctx := cli.WithCommand(context.Background(), cmd)
 			ctx = source.StashContainerRemoteTransport(ctx, reg.Client().Transport)
+			ctx = logger.StashSourceImageLogger(ctx, logger.NewNoopLogger())
 			opts := &commands.WorkloadOptions{}
 			opts.LoadDefaults(c)
 			opts.DefineFlags(ctx, c, cmd)

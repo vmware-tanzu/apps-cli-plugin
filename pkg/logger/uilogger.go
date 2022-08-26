@@ -22,9 +22,6 @@ import (
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/plainimage"
 )
 
-// Logger interface that defines the logger functions
-type loggerkey struct{}
-
 var _ plainimage.Logger = &NoopLogger{}
 
 // NewNoopLogger creates a new noop logger
@@ -38,10 +35,17 @@ type NoopLogger struct{}
 // Logf does nothing
 func (n NoopLogger) Logf(string, ...interface{}) {}
 
-func RetrieveStashLogger(ctx context.Context) plainimage.Logger {
-	val, ok := ctx.Value(loggerkey{}).(plainimage.Logger)
+// Logger interface that defines the logger functions
+type sourceImageloggerkey struct{}
+
+func RetrieveSourceImageLogger(ctx context.Context) plainimage.Logger {
+	val, ok := ctx.Value(sourceImageloggerkey{}).(plainimage.Logger)
 	if ok {
 		return val
 	}
-	return NewNoopLogger()
+	return nil
+}
+
+func StashSourceImageLogger(ctx context.Context, logger plainimage.Logger) context.Context {
+	return context.WithValue(ctx, sourceImageloggerkey{}, logger)
 }
