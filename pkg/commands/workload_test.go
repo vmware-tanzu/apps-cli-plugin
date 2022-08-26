@@ -49,6 +49,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/logger"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/logger/fake"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
 )
 
@@ -1868,6 +1869,7 @@ Published source
 			opts.DefineFlags(ctx, c, cmd)
 			cmd.ParseFlags(test.args)
 
+			ctx = logger.StashProgressBarLogger(ctx, fake.NewNoopProgressBar())
 			workload := &cartov1alpha1.Workload{
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
@@ -2016,6 +2018,7 @@ Published source
 			opts.DefineFlags(ctx, c, cmd)
 			cmd.ParseFlags(test.args)
 
+			ctx = logger.StashProgressBarLogger(ctx, fake.NewNoopProgressBar())
 			workload := &cartov1alpha1.Workload{
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{

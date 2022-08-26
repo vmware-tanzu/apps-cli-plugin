@@ -21,44 +21,14 @@ import (
 	"fmt"
 	"net/http"
 	"path"
-	"time"
 
 	regname "github.com/google/go-containerregistry/pkg/name"
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/plainimage"
-	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/logger"
 )
 
-type RegistryOpts struct {
-	CACertPaths      []string
-	RegistryUsername string
-	RegistryPassword string
-	RegistryToken    string
-}
-
-func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, registryOpts *RegistryOpts, image string) (string, error) {
-	options := registry.Opts{
-		CACertPaths:           registryOpts.CACertPaths,
-		Username:              registryOpts.RegistryUsername,
-		Password:              registryOpts.RegistryPassword,
-		Token:                 registryOpts.RegistryToken,
-		VerifyCerts:           true,
-		RetryCount:            5,
-		ResponseHeaderTimeout: 30 * time.Second,
-	}
-
-	var reg registry.Registry
-	var err error
-	transport := RetrieveContainerRemoteTransport(ctx)
-	if transport == nil {
-		reg, err = registry.NewSimpleRegistry(options)
-	} else {
-		reg, err = registry.NewSimpleRegistryWithTransport(options, *transport)
-	}
-	if err != nil {
-		return "", fmt.Errorf("unable to create a registry with provided options: %v", err)
-	}
+func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, reg plainimage.ImagesWriter, image string) (string, error) {
 
 	uploadRef, err := regname.NewTag(image, regname.WeakValidation)
 	if err != nil {

@@ -45,9 +45,10 @@ var (
 )
 
 var (
-	pattern    = "\\\\U000[a-zA-Z0-9]+"
-	regexEmoji = regexp.MustCompile(pattern)
-	regexPod   = regexp.MustCompile("\\s*NAME\\s+READY\\s+STATUS\\s+RESTARTS\\s+AGE\\s*")
+	pattern       = "\\\\U000[a-zA-Z0-9]+"
+	regexEmoji    = regexp.MustCompile(pattern)
+	regexPod      = regexp.MustCompile("\\s*NAME\\s+READY\\s+STATUS\\s+RESTARTS\\s+AGE\\s*")
+	regexProgress = regexp.MustCompile(`[0-9]*\.*[0-9]*\s[a-zA-Z]+\s/\s[0-9]*[\.]*[0-9]*\s[a-zA-Z]+\s\[-+>*_*\]\s[0-9]*\.[0-9]+%.*`)
 )
 
 func TestCreateFromGitWithAnnotations(t *testing.T) {
@@ -181,6 +182,10 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
 
+				if regexProgress.FindString(output) == "" {
+					t.Errorf("expected progressbar in output %v", output)
+					t.FailNow()
+				}
 				if err := it.NewCommandLine("imgpkg", "pull", "-i", os.Getenv("BUNDLE"), "-o", dir).Exec(); err != nil {
 					t.Errorf("unexpected error %v ", err)
 					t.FailNow()
@@ -258,6 +263,10 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
 
+				if regexProgress.FindString(output) == "" {
+					t.Errorf("expected progressbar in output %v", output)
+					t.FailNow()
+				}
 				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE"), "-o", dir)
 				ic.AddEnvVars(
 					"IMGPKG_USERNAME="+os.Getenv("REGISTRY_USERNAME"),
@@ -330,6 +339,10 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
 
+				if regexProgress.FindString(output) == "" {
+					t.Errorf("expected progressbar in output %v", output)
+					t.FailNow()
+				}
 				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE")+"-env", "-o", dir)
 				ic.AddEnvVars(
 					"IMGPKG_USERNAME="+os.Getenv("REGISTRY_USERNAME"),
