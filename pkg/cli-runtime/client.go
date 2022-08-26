@@ -49,10 +49,10 @@ type Client interface {
 	KubeRestConfig() *rest.Config
 	Discovery() discovery.DiscoveryInterface
 	SetLogger(logger logr.Logger)
-	crclient.Client
 	ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error)
 	ToRESTConfig() (*rest.Config, error)
 	ToRESTMapper() (meta.RESTMapper, error)
+	crclient.Client
 }
 
 func (c *client) DefaultNamespace() string {

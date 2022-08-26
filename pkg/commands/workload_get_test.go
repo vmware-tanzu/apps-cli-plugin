@@ -1098,6 +1098,7 @@ To see logs: "tanzu apps workload tail my-workload"
 						d.Phase(corev1.PodRunning)
 					}),
 			},
+			BuilderObjects: []client.Object{pod1Die},
 			ExpectOutput: `
 ---
 # my-workload: Unknown
@@ -1147,6 +1148,7 @@ To see logs: "tanzu apps workload tail my-workload"
 						d.Phase(corev1.PodRunning)
 					}),
 			},
+			BuilderObjects: []client.Object{pod1Die},
 			ExpectOutput: `
 ---
 # my-workload: Unknown
@@ -1204,6 +1206,7 @@ To see logs: "tanzu apps workload tail my-workload"
 						d.Phase(corev1.PodFailed)
 					}),
 			},
+			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
 ---
 # my-workload: Unknown
@@ -1327,6 +1330,7 @@ To see logs: "tanzu apps workload tail my-workload"
 						d.Phase(corev1.PodFailed)
 					}),
 			},
+			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
 ---
 # my-workload: Ready
@@ -1812,6 +1816,7 @@ To see logs: "tanzu apps workload tail my-workload"
 						)
 					}),
 			},
+			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
 ---
 # my-workload: Ready
@@ -1897,6 +1902,7 @@ To see logs: "tanzu apps workload tail my-workload"
 						})
 					}),
 			},
+			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
 ---
 # my-workload: Ready
@@ -1958,6 +1964,7 @@ To see logs: "tanzu apps workload tail my-workload"
 						})
 					}),
 			},
+			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
 ---
 # my-workload: Ready

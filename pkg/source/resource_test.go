@@ -1,14 +1,33 @@
+/*
+Copyright 2022 VMware, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package source_test
 
 import (
 	"bytes"
-	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
 	diecorev1 "dies.dev/apis/core/v1"
 	diemetav1 "dies.dev/apis/meta/v1"
-	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -18,15 +37,14 @@ import (
 	k8sscheme "k8s.io/kubectl/pkg/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/google/go-cmp/cmp"
+
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
 )
 
-func TestWorkloadOptionsFetchResourceObject(t *testing.T) {
+func TestWorkloadOptionsFetchResourceObjects(t *testing.T) {
 	defaultNamespace := "default"
 	workloadName := "my-workload"
 	pod1Die := diecorev1.PodBlank.
@@ -37,95 +55,129 @@ func TestWorkloadOptionsFetchResourceObject(t *testing.T) {
 		}).Kind("pod")
 
 	scheme := runtime.NewScheme()
-	c := cli.NewDefaultConfig("test", scheme)
-	c.Client = clitesting.NewFakeCliClient(clitesting.NewFakeClient(scheme))
-
+	fakeClient := clitesting.NewFakeCliClient(clitesting.NewFakeClient(scheme))
+	table := &metav1.Table{}
 	tests := []struct {
-		name           string
-		args           []string
-		givenWorkload  *cartov1alpha1.Workload
-		shouldError    bool
-		expectedOutput string
-		withReactors   []clitesting.ReactionFunc
-	}{
-		{
-			name: "Fetch Resource Object successfully",
-			args: []string{flags.LabelFlagName, "NEW=value", flags.YesFlagName},
-			givenWorkload: &cartov1alpha1.Workload{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: defaultNamespace,
-					Name:      workloadName,
-					Labels: map[string]string{
-						"FOO": "bar",
-					},
-				},
-				Spec: cartov1alpha1.WorkloadSpec{
-					Image: "ubuntu",
-				},
+		name        string
+		args        []string
+		shouldError bool
+		expected    []metav1.TableRow
+		builder     *resource.Builder
+	}{{
+		name:        "Fetch Resource Object successfully",
+		args:        []string{"pods"},
+		shouldError: false,
+		builder: resource.NewFakeBuilder(
+			func(version schema.GroupVersion) (resource.RESTClient, error) {
+				codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
+				UnstructuredClient := &fake.RESTClient{
+					NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
+					Resp:                 &http.Response{StatusCode: http.StatusOK, Header: clitesting.DefaultHeader(), Body: clitesting.PodV1TableObjBody(codec, []client.Object{pod1Die})},
+				}
+				return UnstructuredClient, nil
 			},
-			shouldError: false,
-		},
-	}
+			fakeClient.ToRESTMapper,
+			func() (restmapper.CategoryExpander, error) {
+				return resource.FakeCategoryExpander, nil
+			},
+		),
+		expected: append(table.Rows, metav1.TableRow{
+			Cells: []interface{}{"pod1", "0/0", "", int64(0), "<unknown>", "<none>", "<none>", "<none>", "<none>"},
+		})}, {
+		name:        "Fetch Empty Resource Object successfully",
+		args:        []string{"pods"},
+		shouldError: false,
+		builder: resource.NewFakeBuilder(
+			func(version schema.GroupVersion) (resource.RESTClient, error) {
+				codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
+				UnstructuredClient := &fake.RESTClient{
+					NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
+					Resp:                 &http.Response{StatusCode: http.StatusOK, Header: clitesting.DefaultHeader(), Body: clitesting.PodV1TableObjBody(codec, []client.Object{})},
+				}
+				return UnstructuredClient, nil
+			},
+			fakeClient.ToRESTMapper,
+			func() (restmapper.CategoryExpander, error) {
+				return resource.FakeCategoryExpander, nil
+			},
+		),
+	}, {
+		name:        "Fetch  Resource Object Error",
+		args:        []string{"pods"},
+		shouldError: true,
+		builder: resource.NewFakeBuilder(
+			func(version schema.GroupVersion) (resource.RESTClient, error) {
+				UnstructuredClient := &fake.RESTClient{
+					NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
+					Resp:                 &http.Response{StatusCode: http.StatusPreconditionFailed, Header: clitesting.DefaultHeader(), Body: nil},
+				}
+				return UnstructuredClient, nil
+			},
+			fakeClient.ToRESTMapper,
+			func() (restmapper.CategoryExpander, error) {
+				return resource.FakeCategoryExpander, nil
+			},
+		),
+	}, {
+		name:        "Fetch  Resource  Error",
+		args:        []string{"pods"},
+		shouldError: true,
+		builder: resource.NewFakeBuilder(
+			func(version schema.GroupVersion) (resource.RESTClient, error) {
+				codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
+				UnstructuredClient := &fake.RESTClient{
+					NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
+					Resp:                 &http.Response{StatusCode: http.StatusOK, Header: clitesting.DefaultHeader(), Body: podV1TableErrorObjBody(codec, []client.Object{pod1Die})},
+				}
+				return UnstructuredClient, nil
+			},
+			fakeClient.ToRESTMapper,
+			func() (restmapper.CategoryExpander, error) {
+				return resource.FakeCategoryExpander, nil
+			},
+		),
+	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			scheme := runtime.NewScheme()
-			_ = cartov1alpha1.AddToScheme(scheme)
-			c := cli.NewDefaultConfig("test", scheme)
-			output := &bytes.Buffer{}
-			c.Stdout = output
-			c.Stderr = output
-			fakeClient := clitesting.NewFakeClient(scheme, test.givenWorkload)
-
-			for i := range test.withReactors {
-				// in reverse order since we prepend
-				reactor := test.withReactors[len(test.withReactors)-1-i]
-				fakeClient.PrependReactor("*", "*", reactor)
+			labelparam := fmt.Sprintf("%s%s%s", cartov1alpha1.WorkloadLabelName, "=", workloadName)
+			obj, err := source.FetchResourceObjects(test.builder, defaultNamespace, labelparam, test.args)
+			if obj != nil {
+				gotTable := obj.(*metav1.Table)
+				if d := cmp.Diff(gotTable.Rows, test.expected); d != "" {
+					t.Errorf("Diff() %s", d)
+				}
 			}
-
-			c.Client = clitesting.NewFakeCliClient(fakeClient)
-
-			cmd := &cobra.Command{}
-			ctx := cli.WithCommand(context.Background(), cmd)
-			c.Builder = resource.NewFakeBuilder(
-				func(version schema.GroupVersion) (resource.RESTClient, error) {
-					codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
-					UnstructuredClient := &fake.RESTClient{
-						NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
-						Resp:                 &http.Response{StatusCode: http.StatusOK, Header: clitesting.DefaultHeader(), Body: clitesting.PodV1TableObjBody(codec, []client.Object{pod1Die})},
-					}
-					return UnstructuredClient, nil
-
-				},
-				c.ToRESTMapper,
-				func() (restmapper.CategoryExpander, error) {
-					return resource.FakeCategoryExpander, nil
-				},
-			)
-
-			currentWorkload := &cartov1alpha1.Workload{}
-			err := c.Get(ctx, client.ObjectKey{Namespace: defaultNamespace, Name: workloadName}, currentWorkload)
-
-			if err != nil {
-				t.Errorf("Update() errored %v", err)
-			}
-
-			opts := &commands.WorkloadOptions{}
-			opts.DefineFlags(ctx, c, cmd)
-			cmd.ParseFlags(test.args)
-			arg := []string{"pods"}
-			workload := currentWorkload.DeepCopy()
-			opts.ApplyOptionsToWorkload(ctx, workload)
-			_, err = source.FetchResourceObject(c, workload, arg)
-
 			if err != nil && !test.shouldError {
-				t.Errorf("Update() errored %v", err)
+				t.Errorf("FetchResourceObjects() errored %v", err)
 			}
 			if err == nil && test.shouldError {
-				t.Errorf("Update() expected error")
+				t.Errorf("FetchResourceObjects() expected error %v, got nil", test.shouldError)
 			}
 			if test.shouldError {
 				return
 			}
 		})
 	}
+}
+
+// build a meta table response from a pod list
+func podV1TableErrorObjBody(codec runtime.Codec, pods []client.Object) io.ReadCloser {
+	table := &metav1.Table{
+		TypeMeta:          metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "pod"},
+		ColumnDefinitions: []metav1.TableColumnDefinition{},
+	}
+	for _, obj := range pods {
+		b := bytes.NewBuffer(nil)
+		codec.Encode(obj, b)
+		table.Rows = append(table.Rows, metav1.TableRow{})
+	}
+
+	data, err := json.Marshal(table)
+	if err != nil {
+		panic(err)
+	}
+	if !strings.Contains(string(data), `"meta.k8s.io/v1"`) {
+		panic("expected v1, got " + string(data))
+	}
+	return ioutil.NopCloser(bytes.NewReader(data))
 }

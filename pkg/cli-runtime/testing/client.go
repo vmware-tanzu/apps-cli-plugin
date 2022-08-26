@@ -150,8 +150,27 @@ func testDynamicResources() []*restmapper.APIGroupResources {
 	}
 }
 
-// build a meta table response from a pod list
+// build a readercloser response from a pod list
 func PodV1TableObjBody(codec runtime.Codec, pods []client.Object) io.ReadCloser {
+	table := TableMetaObject(pods)
+	data, err := json.Marshal(table)
+	if err != nil {
+		panic(err)
+	}
+	if !strings.Contains(string(data), `"meta.k8s.io/v1"`) {
+		panic("expected v1, got " + string(data))
+	}
+	return ioutil.NopCloser(bytes.NewReader(data))
+}
+
+func DefaultHeader() http.Header {
+	header := http.Header{}
+	header.Set("Content-Type", runtime.ContentTypeJSON)
+	return header
+}
+
+// build a meta table response from list of client objects
+func TableMetaObject(objects []client.Object) *metav1.Table {
 	var podColumns = []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string", Format: "name"},
 		{Name: "Ready", Type: "string", Format: ""},
@@ -167,27 +186,12 @@ func PodV1TableObjBody(codec runtime.Codec, pods []client.Object) io.ReadCloser 
 		TypeMeta:          metav1.TypeMeta{APIVersion: "meta.k8s.io/v1", Kind: "Table"},
 		ColumnDefinitions: podColumns,
 	}
-	for _, obj := range pods {
+	for i := range objects {
 		b := bytes.NewBuffer(nil)
-		codec.Encode(obj, b)
 		table.Rows = append(table.Rows, metav1.TableRow{
 			Object: runtime.RawExtension{Raw: b.Bytes()},
-			Cells:  []interface{}{obj.GetName(), "0/0", "", int64(0), "<unknown>", "<none>", "<none>", "<none>", "<none>"},
+			Cells:  []interface{}{objects[i].GetName(), "0/0", "", int64(0), "<unknown>", "<none>", "<none>", "<none>", "<none>"},
 		})
 	}
-
-	data, err := json.Marshal(table)
-	if err != nil {
-		panic(err)
-	}
-	if !strings.Contains(string(data), `"meta.k8s.io/v1"`) {
-		panic("expected v1, got " + string(data))
-	}
-	return ioutil.NopCloser(bytes.NewReader(data))
-}
-
-func DefaultHeader() http.Header {
-	header := http.Header{}
-	header.Set("Content-Type", runtime.ContentTypeJSON)
-	return header
+	return table
 }

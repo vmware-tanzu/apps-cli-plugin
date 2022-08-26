@@ -85,7 +85,9 @@ type CommandTestCase struct {
 	// always be replaced with a FakeClient configured with the given objects and reactors to
 	// intercept all calls to the fake client for comparison with the expected operations.
 	Config *cli.Config
-
+	// BuilderObjects represents resources needed to build the fake builder. These
+	// resources are passed in the http response to the fake builder.
+	BuilderObjects []client.Object
 	// GivenObjects represents resources that would already exist within Kubernetes. These
 	// resources are passed directly to the fake client.
 	GivenObjects []client.Object
@@ -231,18 +233,14 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 			}
 		}
 
-		var pods []client.Object
-		for _, obj := range tc.GivenObjects {
-			if strings.ToLower(obj.GetObjectKind().GroupVersionKind().Kind) == "pod" {
-				pods = append(pods, obj)
-			}
-		}
+		// set up a fake builder that operates on generic objects. Testing should access the unstructured fake client
+		// with the POD details as http response.
 		c.Builder = resource.NewFakeBuilder(
 			func(version schema.GroupVersion) (resource.RESTClient, error) {
 				codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
 				UnstructuredClient := &fake.RESTClient{
 					NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
-					Resp:                 &http.Response{StatusCode: http.StatusOK, Header: DefaultHeader(), Body: PodV1TableObjBody(codec, pods)},
+					Resp:                 &http.Response{StatusCode: http.StatusOK, Header: DefaultHeader(), Body: PodV1TableObjBody(codec, tc.BuilderObjects)},
 				}
 				return UnstructuredClient, nil
 

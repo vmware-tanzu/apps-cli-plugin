@@ -220,7 +220,8 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	}
 
 	arg := []string{"Pod"}
-	if tableResult, err := source.FetchResourceObject(c, workload, arg); err != nil {
+	labelSelectorParams := fmt.Sprintf("%s%s%s", cartov1alpha1.WorkloadLabelName, "=", workload.Name)
+	if tableResult, err := source.FetchResourceObjects(c.Builder, workload.Namespace, labelSelectorParams, arg); err != nil {
 		c.Eprintf("\n")
 		c.Eerrorf("Failed to list pods:\n")
 		c.Eprintf("  %s\n", err)
