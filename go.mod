@@ -3,7 +3,7 @@ module github.com/vmware-tanzu/apps-cli-plugin
 go 1.18
 
 require (
-	dies.dev v0.6.0
+	dies.dev v0.6.1
 	github.com/AlecAivazis/survey/v2 v2.3.5
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/fatih/color v1.13.0

@@ -16,7 +16,7 @@ cloud.google.com/go/iam
 cloud.google.com/go/storage
 cloud.google.com/go/storage/internal
 cloud.google.com/go/storage/internal/apiv2
-# dies.dev v0.6.0
+# dies.dev v0.6.1
 ## explicit; go 1.19
 dies.dev/apis/core/v1
 dies.dev/apis/meta/v1
