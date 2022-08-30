@@ -93,7 +93,6 @@ jobs:
     - uses: actions/setup-go@v3
       with:
         go-version: 1.19.x
-    - uses: vmware-tanzu/carvel-setup-action@v1
     - name: Download plugin bundle
       uses: actions/download-artifact@v3
       with:
@@ -106,15 +105,15 @@ jobs:
         CERT_DIR=$(mktemp -d -t certs.XXXX)
         echo "CERT_DIR=$CERT_DIR" >> $GITHUB_ENV
         echo "##[group]Install cfssl"
-          go install github.com/cloudflare/cfssl/cmd/cfssl@v1.6.1
-          go install github.com/cloudflare/cfssl/cmd/cfssljson@v1.6.1
+          go install github.com/cloudflare/cfssl/cmd/cfssl@v1.6.2
+          go install github.com/cloudflare/cfssl/cmd/cfssljson@v1.6.2
         echo "##[endgroup]"
         echo "##[group]Generate CA"
-          cfssl gencert -initca .github/tls/root-csr.json \
+          cfssl gencert -initca ./.github/tls/root-csr.json \
             | cfssljson -bare ${CERT_DIR}/root-ca
           cfssl gencert -ca ${CERT_DIR}/root-ca.pem -ca-key ${CERT_DIR}/root-ca-key.pem \
             -config=".github/tls/config.json" \
-            -profile="intermediate" .github/tls/intermediate-csr.json \
+            -profile="intermediate" ./.github/tls/intermediate-csr.json \
             | cfssljson -bare ${CERT_DIR}/signing-ca
           cat ${CERT_DIR}/signing-ca.pem ${CERT_DIR}/root-ca.pem > ${CERT_DIR}/ca.pem
         echo "##[endgroup]"
