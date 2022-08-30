@@ -44,6 +44,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/logger"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/printer"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
 )
@@ -430,6 +431,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	c.Infof("Publishing source in %q to %q...\n", opts.LocalPath, taggedImage)
 
 	currentRegistryOpts := source.RegistryOpts{CACertPaths: opts.CACertPaths, RegistryUsername: opts.RegistryUsername, RegistryPassword: opts.RegistryPassword, RegistryToken: opts.RegistryToken}
+	ctx = logger.StashSourceImageLogger(ctx, logger.NewNoopLogger())
 
 	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, &currentRegistryOpts, taggedImage)
 	if err != nil {

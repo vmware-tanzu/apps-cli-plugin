@@ -98,7 +98,7 @@ func (d *ClusterSupplyChainDie) DieReleasePtr() *cartographerv1alpha1.ClusterSup
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *ClusterSupplyChainDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *ClusterSupplyChainDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -492,7 +492,7 @@ func (d *DeliverableDie) DieReleasePtr() *cartographerv1alpha1.Deliverable {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *DeliverableDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *DeliverableDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
@@ -885,7 +885,7 @@ func (d *WorkloadDie) DieReleasePtr() *cartographerv1alpha1.Workload {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *WorkloadDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *WorkloadDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{

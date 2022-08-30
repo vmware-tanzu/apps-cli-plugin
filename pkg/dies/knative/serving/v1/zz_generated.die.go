@@ -97,7 +97,7 @@ func (d *ServiceDie) DieReleasePtr() *servingv1.Service {
 }
 
 // DieReleaseUnstructured returns the resource managed by the die as an unstructured object.
-func (d *ServiceDie) DieReleaseUnstructured() runtime.Unstructured {
+func (d *ServiceDie) DieReleaseUnstructured() *unstructured.Unstructured {
 	r := d.DieReleasePtr()
 	u, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(r)
 	return &unstructured.Unstructured{
