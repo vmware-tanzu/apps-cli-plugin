@@ -22,7 +22,7 @@ Before submitting a PR, see also [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 You must install these tools:
 
-- [`go`](https://golang.org/doc/install): for compiling the plugin as well as other dependencies - 1.18+
+- [`go`](https://golang.org/doc/install): for compiling the plugin as well as other dependencies - 1.19+
 - [`tanzu CLI`](https://github.com/vmware-tanzu/tanzu-framework/blob/main/docs/cli/getting-started.md#install-the-latest-release-of-tanzu-cli): for adding the plugin
 - [`git`](https://help.github.com/articles/set-up-git/): for source control
 
