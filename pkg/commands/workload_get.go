@@ -115,14 +115,14 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	}
 
 	//print workload details
-	c.Boldf("Overview\n")
+	c.EmojiBoldf(cli.Antenna, "Overview\n")
 	if err := printer.WorkloadOverviewPrinter(c.Stdout, workload); err != nil {
 		return err
 	}
 	c.Printf("\n")
 	// Print workload source
 	if workload.Spec.Image != "" || workload.Spec.Source != nil {
-		c.Boldf("Source\n")
+		c.EmojiBoldf(cli.FloppyDisk, "Source\n")
 
 		if workload.Spec.Image != "" {
 			if err := printer.WorkloadSourceImagePrinter(c.Stdout, workload); err != nil {
@@ -149,7 +149,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	if workload.Status.SupplyChainRef == (cartov1alpha1.ObjectReference{}) && len(workload.Status.Conditions) == 0 {
 		c.Infof("Supply Chain reference not found.\n")
 	} else {
-		c.Boldf("Supply Chain\n")
+		c.EmojiBoldf(cli.Package, "Supply Chain\n")
 
 		if err := printer.WorkloadSupplyChainInfoPrinter(c.Stdout, workload); err != nil {
 			return err
@@ -168,7 +168,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 	// Deliverable
 	c.Printf("\n")
-	c.Boldf("Delivery\n")
+	c.EmojiBoldf(cli.Delivery, "Delivery\n")
 	// Print workload deliverable resources
 	wldDeliverable := getWorkloadResourceByKind(workload, cartov1alpha1.DeliverableKind)
 	var deliverableStatusReadyCond *metav1.Condition
@@ -197,7 +197,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 	// Print workload issues
 	c.Printf("\n")
-	c.Boldf("Messages\n")
+	c.EmojiBoldf(cli.SpeechBalloon, "Messages\n")
 	workloadStatusReadyCond := printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadConditionReady)
 	if areAllResourcesReady(workloadStatusReadyCond, deliverableStatusReadyCond) {
 		c.Infof(printer.AddPaddingStart("No messages found.\n"))
@@ -212,7 +212,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 	if len(workload.Spec.ServiceClaims) > 0 {
 		c.Printf("\n")
-		c.Boldf("Services\n")
+		c.EmojiBoldf(cli.Repeat, "Services\n")
 		if err := cartov1alpha1.WorkloadServiceClaimPrinter(c.Stdout, workload); err != nil {
 			return err
 		}
@@ -227,7 +227,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	} else {
 		if tableResult != nil {
 			c.Printf("\n")
-			c.Boldf("Pods\n")
+			c.EmojiBoldf(cli.Canoe, "Pods\n")
 			printer.PodTablePrinter(c, tableResult)
 		} else {
 			c.Printf("\n")
@@ -241,7 +241,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		ksvcs = ksvcs.DeepCopy()
 		printer.SortByNamespaceAndName(ksvcs.Items)
 		c.Printf("\n")
-		c.Boldf("Knative Services\n")
+		c.EmojiBoldf(cli.Ship, "Knative Services\n")
 		if err := printer.KnativeServicePrinter(c, ksvcs); err != nil {
 			return err
 		}
