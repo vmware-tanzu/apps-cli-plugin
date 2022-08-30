@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/discovery/cached/disk"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -76,7 +75,8 @@ func (c *client) ToRESTConfig() (*rest.Config, error) {
 }
 
 func (c *client) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
-	return disk.NewCachedDiscoveryClientForConfig(c.restConfig, "", "", 0)
+	discoveryClient := discovery.NewDiscoveryClientForConfigOrDie(c.KubeRestConfig())
+	return NewCacheDiscoveryClient(discoveryClient), nil
 }
 
 func (c *client) ToRESTMapper() (meta.RESTMapper, error) {
@@ -251,4 +251,20 @@ func (c *client) lazyLoadDefaultNamespaceOrDie() string {
 		c.defaultNamespace = namespace
 	}
 	return c.defaultNamespace
+}
+
+var _ discovery.CachedDiscoveryInterface = &cachedDiscoveryClient{}
+
+type cachedDiscoveryClient struct {
+	*discovery.DiscoveryClient
+}
+
+func (d *cachedDiscoveryClient) Fresh() bool {
+	return true
+}
+
+func (d *cachedDiscoveryClient) Invalidate() {}
+
+func NewCacheDiscoveryClient(discoveryClient *discovery.DiscoveryClient) *cachedDiscoveryClient {
+	return &cachedDiscoveryClient{discoveryClient}
 }
