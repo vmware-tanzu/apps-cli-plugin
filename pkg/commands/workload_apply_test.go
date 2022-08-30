@@ -22,11 +22,13 @@ import (
 	"testing"
 	"time"
 
+	diecorev1 "dies.dev/apis/core/v1"
 	diemetav1 "dies.dev/apis/meta/v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -89,6 +91,7 @@ func TestWorkloadApplyCommand(t *testing.T) {
 
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
+	_ = corev1.AddToScheme(scheme)
 
 	var cmd *cobra.Command
 
@@ -97,6 +100,13 @@ func TestWorkloadApplyCommand(t *testing.T) {
 			d.Name(workloadName)
 			d.Namespace(defaultNamespace)
 		})
+
+	givenNamespaceDefault := []client.Object{
+		diecorev1.NamespaceBlank.
+			MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+				d.Name(defaultNamespace)
+			}),
+	}
 
 	table := clitesting.CommandTestSuite{
 		{
@@ -113,8 +123,9 @@ func TestWorkloadApplyCommand(t *testing.T) {
 			ShouldError: true,
 		},
 		{
-			Name: "dry run",
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.DryRunFlagName, flags.YesFlagName},
+			Name:         "dry run",
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.DryRunFlagName, flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectOutput: `
 ---
 apiVersion: carto.run/v1alpha1
@@ -134,8 +145,9 @@ status:
 `,
 		},
 		{
-			Name: "git source with subPath",
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.SubPathFlagName, "./app", flags.YesFlagName},
+			Name:         "git source with subPath",
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.SubPathFlagName, "./app", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -177,6 +189,19 @@ Created workload "my-workload"
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
 
+`,
+		},
+		{
+			Name: "create git source with invalid namespace",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.NamespaceFlagName, "foo", flags.YesFlagName},
+			WithReactors: []clitesting.ReactionFunc{
+				clitesting.InduceFailure("get", "Namespace", clitesting.InduceFailureOpts{
+					Error: apierrors.NewNotFound(corev1.Resource("Namespace"), "foo"),
+				}),
+			},
+			ShouldError: true,
+			ExpectOutput: `
+Error: namespace "foo" not found, it may not exist or user does not have permissions to read it.
 `,
 		},
 		{
@@ -231,8 +256,9 @@ To get status: "tanzu apps workload get my-workload"
 `,
 		},
 		{
-			Name: "Create git source with subPath from file",
-			Args: []string{workloadName, flags.FilePathFlagName, "./testdata/workload-subPath.yaml", flags.YesFlagName},
+			Name:         "Create git source with subPath from file",
+			Args:         []string{workloadName, flags.FilePathFlagName, "./testdata/workload-subPath.yaml", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -304,6 +330,7 @@ To get status: "tanzu apps workload get my-workload"
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -372,6 +399,7 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -445,6 +473,7 @@ Workload "my-workload" is ready
 
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
 				tailer := logs.RetrieveTailer(ctx).(*logs.FakeTailer)
 				tailer.AssertExpectations(t)
@@ -500,6 +529,7 @@ Workload "my-workload" is ready
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("create", "Workload"),
 			},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -529,6 +559,7 @@ Workload "my-workload" is ready
 				ctx = watchhelper.WithWatcher(ctx, fakewatch)
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -576,6 +607,7 @@ Workload "my-workload" is ready
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -621,8 +653,9 @@ Error: Failed to become ready: a hopefully informative message about what went w
 `,
 		},
 		{
-			Name: "filepath",
-			Args: []string{flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
+			Name:         "filepath",
+			Args:         []string{flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -724,6 +757,7 @@ spec:
       ref:
         branch: main
 `),
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -841,6 +875,7 @@ spec:
 							},
 						)
 					}),
+				givenNamespaceDefault[0],
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -949,8 +984,9 @@ status:
 `),
 		},
 		{
-			Name: "create - accept yaml file through stdin - using --dry-run flag",
-			Args: []string{flags.FilePathFlagName, "-", flags.DryRunFlagName},
+			Name:         "create - accept yaml file through stdin - using --dry-run flag",
+			Args:         []string{flags.FilePathFlagName, "-", flags.DryRunFlagName},
+			GivenObjects: givenNamespaceDefault,
 			Stdin: []byte(`
 apiVersion: carto.run/v1alpha1
 kind: Workload
@@ -969,8 +1005,9 @@ status:
 `),
 		},
 		{
-			Name: "filepath - service account build-env",
-			Args: []string{flags.FilePathFlagName, "testdata/workload-build-env.yaml", flags.YesFlagName},
+			Name:         "filepath - service account build-env",
+			Args:         []string{flags.FilePathFlagName, "testdata/workload-build-env.yaml", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1713,9 +1750,10 @@ To get status: "tanzu apps workload get my-workload --namespace test-namespace"
 `,
 		},
 		{
-			Name:        "local path - missing fields",
-			Args:        []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
-			ShouldError: true,
+			Name:         "local path - missing fields",
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
+			ShouldError:  true,
 			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
 				if expected, actual := false, cmd.SilenceUsage; expected != actual {
 					t.Errorf("expected cmd.SilenceUsage to be %t, actually %t", expected, actual)
@@ -1790,8 +1828,9 @@ To get status: "tanzu apps workload get my-workload"
 `,
 		},
 		{
-			Name: "create - serviceclaim with deprecation warning",
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-ns:my-prod-db", flags.YesFlagName},
+			Name:         "create - serviceclaim with deprecation warning",
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-ns:my-prod-db", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -2276,8 +2315,9 @@ To get status: "tanzu apps workload get my-workload"
 `,
 		},
 		{
-			Name: "create with serviceAccountName",
-			Args: []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.YesFlagName},
+			Name:         "create with serviceAccountName",
+			Args:         []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -2328,8 +2368,9 @@ To get status: "tanzu apps workload get spring-petclinic"
 `,
 		},
 		{
-			Name: "create with serviceAccountName via flag",
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.ServiceAccountFlagName, serviceAccountName, flags.YesFlagName},
+			Name:         "create with serviceAccountName via flag",
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.ServiceAccountFlagName, serviceAccountName, flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -2374,8 +2415,9 @@ To get status: "tanzu apps workload get my-workload"
 `,
 		},
 		{
-			Name: "create with serviceAccountName from file and flag",
-			Args: []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.ServiceAccountFlagName, serviceAccountNameUpdated, flags.YesFlagName},
+			Name:         "create with serviceAccountName from file and flag",
+			Args:         []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.ServiceAccountFlagName, serviceAccountNameUpdated, flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -2431,6 +2473,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 				flags.ParamYamlFlagName, `ports_json={"name": "smtp", "port": 1026}`,
 				flags.ParamYamlFlagName, "ports_nesting_yaml=- deployment:\n    name: smtp\n    port: 1026",
 				flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -2487,8 +2530,9 @@ To get status: "tanzu apps workload get spring-petclinic"
 `,
 		},
 		{
-			Name: "create from maven artifact using paramyaml",
-			Args: []string{workloadName, flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples"}`, flags.YesFlagName},
+			Name:         "create from maven artifact using paramyaml",
+			Args:         []string{workloadName, flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples"}`, flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -2530,8 +2574,9 @@ To get status: "tanzu apps workload get my-workload"
 `,
 		},
 		{
-			Name: "create from maven artifact using flags",
-			Args: []string{workloadName, flags.MavenArtifactFlagName, "spring-petclinic", flags.MavenVersionFlagName, "2.6.0", flags.MavenGroupFlagName, "org.springframework.samples", flags.YesFlagName},
+			Name:         "create from maven artifact using flags",
+			Args:         []string{workloadName, flags.MavenArtifactFlagName, "spring-petclinic", flags.MavenVersionFlagName, "2.6.0", flags.MavenGroupFlagName, "org.springframework.samples", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -2576,6 +2621,7 @@ To get status: "tanzu apps workload get my-workload"
 			Name: "create from maven artifact taking priority from flags",
 			Args: []string{workloadName, flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic-test", "version": "2.6.1", "groupId": "org.springframework.samples.test"}`,
 				flags.MavenArtifactFlagName, "spring-petclinic", flags.MavenVersionFlagName, "2.6.0", flags.MavenGroupFlagName, "org.springframework.samples", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -2865,8 +2911,9 @@ To get status: "tanzu apps workload get my-workload"
 `,
 		},
 		{
-			Name: "create from maven artifact using paramyaml with type",
-			Args: []string{workloadName, flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples", "type": "jar"}`, flags.YesFlagName},
+			Name:         "create from maven artifact using paramyaml with type",
+			Args:         []string{workloadName, flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples", "type": "jar"}`, flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -2921,6 +2968,7 @@ To get status: "tanzu apps workload get my-workload"
 			Name: "create with multiple param-yaml using valid json and yaml from file",
 			Args: []string{flags.FilePathFlagName, "testdata/workload-param-yaml.yaml",
 				flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -3004,7 +3052,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				os.Unsetenv("TANZU_APPS_LABEL")
 				return nil
 			},
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName},
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -3057,7 +3106,8 @@ To get status: "tanzu apps workload get my-workload"
 				os.Unsetenv("TANZU_APPS_TYPE")
 				return nil
 			},
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName},
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -3112,7 +3162,8 @@ To get status: "tanzu apps workload get my-workload"
 				os.Unsetenv("TANZU_APPS_TYPE")
 				return nil
 			},
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.TypeFlagName, "web", flags.YesFlagName},
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.TypeFlagName, "web", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{

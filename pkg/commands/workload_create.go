@@ -75,6 +75,10 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		// return err, except when not found
 		if !apierrs.IsNotFound(err) {
 			return err
+		} else if apierrs.IsNotFound(err) {
+			if nsErr := validateNamespace(ctx, c, opts.Namespace); nsErr != nil {
+				return err
+			}
 		}
 	}
 

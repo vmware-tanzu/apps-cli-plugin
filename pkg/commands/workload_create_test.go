@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	diecorev1 "dies.dev/apis/core/v1"
 	diemetav1 "dies.dev/apis/meta/v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
@@ -98,8 +99,16 @@ func TestWorkloadCreateCommand(t *testing.T) {
 
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
+	_ = corev1.AddToScheme(scheme)
 
 	var cmd *cobra.Command
+
+	givenNamespaceDefault := []client.Object{
+		diecorev1.NamespaceBlank.
+			MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+				d.Name(defaultNamespace)
+			}),
+	}
 
 	table := clitesting.CommandTestSuite{
 		{
@@ -108,12 +117,14 @@ func TestWorkloadCreateCommand(t *testing.T) {
 			ShouldError: true,
 		},
 		{
-			Name: "no source",
-			Args: []string{workloadName},
+			Name:         "no source",
+			Args:         []string{workloadName},
+			GivenObjects: givenNamespaceDefault,
 		},
 		{
-			Name: "dry run",
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.DryRunFlagName, flags.YesFlagName},
+			Name:         "dry run",
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.DryRunFlagName, flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectOutput: `
 ---
 apiVersion: carto.run/v1alpha1
@@ -158,6 +169,7 @@ status:
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -226,6 +238,7 @@ Error: Failed to become ready: a hopefully informative message about what went w
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -294,6 +307,7 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -367,6 +381,7 @@ Workload "my-workload" is ready
 
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
 				tailer := logs.RetrieveTailer(ctx).(*logs.FakeTailer)
 				tailer.AssertExpectations(t)
@@ -446,6 +461,7 @@ Workload "my-workload" is ready
 
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
 				tailer := logs.RetrieveTailer(ctx).(*logs.FakeTailer)
 				tailer.AssertExpectations(t)
@@ -515,6 +531,7 @@ Error: workload "default/my-workload" already exists
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("create", "Workload"),
 			},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -544,6 +561,7 @@ Error: workload "default/my-workload" already exists
 				ctx = watchhelper.WithWatcher(ctx, fakewatch)
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -566,8 +584,9 @@ Error: workload "default/my-workload" already exists
 			ShouldError: true,
 		},
 		{
-			Name: "accept yaml file through stdin - using --yes flag",
-			Args: []string{flags.FilePathFlagName, "-", flags.YesFlagName},
+			Name:         "accept yaml file through stdin - using --yes flag",
+			Args:         []string{flags.FilePathFlagName, "-", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			Stdin: []byte(`
 apiVersion: carto.run/v1alpha1
 kind: Workload
@@ -667,8 +686,9 @@ To get status: "tanzu apps workload get spring-petclinic"
 `,
 		},
 		{
-			Name: "accept yaml file through stdin - using --dry-run flag",
-			Args: []string{flags.FilePathFlagName, "-", flags.DryRunFlagName},
+			Name:         "accept yaml file through stdin - using --dry-run flag",
+			Args:         []string{flags.FilePathFlagName, "-", flags.DryRunFlagName},
+			GivenObjects: givenNamespaceDefault,
 			Stdin: []byte(`
 apiVersion: carto.run/v1alpha1
 kind: Workload
@@ -728,9 +748,10 @@ spec:
 			ShouldError: true,
 		},
 		{
-			Name:        "local path - missing fields",
-			Args:        []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
-			ShouldError: true,
+			Name:         "local path - missing fields",
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
+			ShouldError:  true,
 			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
 				if expected, actual := false, cmd.SilenceUsage; expected != actual {
 					t.Errorf("expected cmd.SilenceUsage to be %t, actually %t", expected, actual)
@@ -740,8 +761,9 @@ spec:
 			},
 		},
 		{
-			Name: "add annotation",
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.AnnotationFlagName, "NEW=value", flags.AnnotationFlagName, "FOO=bar", flags.AnnotationFlagName, "removeme-"},
+			Name:         "add annotation",
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.AnnotationFlagName, "NEW=value", flags.AnnotationFlagName, "FOO=bar", flags.AnnotationFlagName, "removeme-"},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -768,8 +790,9 @@ spec:
 			},
 		},
 		{
-			Name: "create with serviceAccountName specifying other flags from cli",
-			Args: []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.GitTagFlagName, "tap-1.2", flags.TypeFlagName, "whatever", flags.YesFlagName},
+			Name:         "create with serviceAccountName specifying other flags from cli",
+			Args:         []string{flags.FilePathFlagName, "testdata/service-account-name.yaml", flags.GitTagFlagName, "tap-1.2", flags.TypeFlagName, "whatever", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -820,8 +843,9 @@ To get status: "tanzu apps workload get spring-petclinic"
 `,
 		},
 		{
-			Name: "create from maven artifact using paramyaml",
-			Args: []string{workloadName, flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples"}`, flags.YesFlagName},
+			Name:         "create from maven artifact using paramyaml",
+			Args:         []string{workloadName, flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples"}`, flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -863,8 +887,9 @@ To get status: "tanzu apps workload get my-workload"
 `,
 		},
 		{
-			Name: "create from maven artifact using flags",
-			Args: []string{workloadName, flags.MavenArtifactFlagName, "spring-petclinic", flags.MavenVersionFlagName, "2.6.0", flags.MavenGroupFlagName, "org.springframework.samples", flags.YesFlagName},
+			Name:         "create from maven artifact using flags",
+			Args:         []string{workloadName, flags.MavenArtifactFlagName, "spring-petclinic", flags.MavenVersionFlagName, "2.6.0", flags.MavenGroupFlagName, "org.springframework.samples", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -906,8 +931,9 @@ To get status: "tanzu apps workload get my-workload"
 `,
 		},
 		{
-			Name: "create from maven artifact using paramyaml with type",
-			Args: []string{workloadName, flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples", "type": "jar"}`, flags.YesFlagName},
+			Name:         "create from maven artifact using paramyaml with type",
+			Args:         []string{workloadName, flags.ParamYamlFlagName, `maven={"artifactId": "spring-petclinic", "version": "2.6.0", "groupId": "org.springframework.samples", "type": "jar"}`, flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -960,6 +986,7 @@ To get status: "tanzu apps workload get my-workload"
 				flags.ParamYamlFlagName, `ports_json={"name": "smtp", "port": 1026}`,
 				flags.ParamYamlFlagName, "ports_nesting_yaml=- deployment:\n    name: smtp\n    port: 1026",
 				flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1028,6 +1055,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 			Name: "create with multiple param-yaml using valid json and yaml from file",
 			Args: []string{flags.FilePathFlagName, "testdata/workload-param-yaml.yaml",
 				flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1107,6 +1135,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 				os.Setenv("TANZU_APPS_LABEL", "foo=var")
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
 				os.Unsetenv("TANZU_APPS_LABEL")
 				return nil
@@ -1159,6 +1188,7 @@ To get status: "tanzu apps workload get my-workload"
 				os.Setenv("TANZU_APPS_TYPE", "web")
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
 				os.Unsetenv("TANZU_APPS_LABEL")
 				os.Unsetenv("TANZU_APPS_TYPE")
@@ -1215,6 +1245,7 @@ To get status: "tanzu apps workload get my-workload"
 				os.Setenv("TANZU_APPS_TYPE", "jar")
 				return ctx, nil
 			},
+			GivenObjects: givenNamespaceDefault,
 			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
 				os.Unsetenv("TANZU_APPS_TYPE")
 				return nil
