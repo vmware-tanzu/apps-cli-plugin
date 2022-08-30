@@ -54,6 +54,15 @@ func TestNewClient(t *testing.T) {
 	if c.Discovery() == nil {
 		t.Errorf("expected discovery client")
 	}
+	if _, err := c.ToRESTConfig(); err != nil {
+		t.Errorf("error durring get Restconfig: %v", err)
+	}
+	if _, err := c.ToDiscoveryClient(); err != nil {
+		t.Errorf("error durring get DiscoveryClient: %v", err)
+	}
+	if _, err := c.ToRESTMapper(); err != nil {
+		t.Errorf("error durring get RESTMapper: %v", err)
+	}
 
 	tr := &clitestingresource.TestResource{}
 	if err := c.Get(ctx, types.NamespacedName{Namespace: "my-namespace", Name: "my-resource"}, tr); err != nil {
@@ -104,6 +113,15 @@ func TestNewClientWithEnvVarKubeconfig(t *testing.T) {
 	if c.DefaultNamespace() != "my-namespace" {
 		t.Errorf("unexpected default namespace")
 	}
+	if _, err := c.ToRESTConfig(); err != nil {
+		t.Errorf("error durring get Restconfig: %v", err)
+	}
+	if _, err := c.ToDiscoveryClient(); err != nil {
+		t.Errorf("error durring get DiscoveryClient: %v", err)
+	}
+	if _, err := c.ToRESTMapper(); err != nil {
+		t.Errorf("error durring get RESTMapper: %v", err)
+	}
 }
 
 func TestNewClientWithEnvVarKubeconfigPathWithColon(t *testing.T) {
@@ -129,5 +147,14 @@ func TestNewClientWithEnvVarKubeconfigPathWithColon(t *testing.T) {
 	}
 	if c.DefaultNamespace() != "my-namespace" {
 		t.Errorf("unexpected default namespace")
+	}
+	if _, err := c.ToRESTConfig(); err != nil {
+		t.Errorf("error durring get Restconfig: %v", err)
+	}
+	if _, err := c.ToDiscoveryClient(); err != nil {
+		t.Errorf("error durring get DiscoveryClient: %v", err)
+	}
+	if _, err := c.ToRESTMapper(); err != nil {
+		t.Errorf("error durring get RESTMapper: %v", err)
 	}
 }

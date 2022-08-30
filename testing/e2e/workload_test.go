@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -300,6 +301,14 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			WorkloadName: "test-create-git-annotations-workload",
 			Command: *it.NewTanzuAppsCommandLine(
 				"workload", "get", "test-create-git-annotations-workload", namespaceFlag),
+			Verify: func(t *testing.T, output string, err error) {
+				regex := regexp.MustCompile("\\s*NAME\\s+READY\\s+STATUS\\s+RESTARTS\\s+AGE\\s*")
+				found := regex.FindString(output) != ""
+				if !found {
+					t.Errorf("expected Pod results in output %v", output)
+					t.FailNow()
+				}
+			},
 		},
 		{
 			Name:         "Delete the created workload",

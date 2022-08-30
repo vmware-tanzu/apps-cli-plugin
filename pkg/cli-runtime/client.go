@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/discovery/cached/disk"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -48,6 +49,9 @@ type Client interface {
 	KubeRestConfig() *rest.Config
 	Discovery() discovery.DiscoveryInterface
 	SetLogger(logger logr.Logger)
+	ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error)
+	ToRESTConfig() (*rest.Config, error)
+	ToRESTMapper() (meta.RESTMapper, error)
 	crclient.Client
 }
 
@@ -65,6 +69,18 @@ func (c *client) Discovery() discovery.DiscoveryInterface {
 
 func (c *client) Client() crclient.Client {
 	return c.lazyLoadClientOrDie()
+}
+
+func (c *client) ToRESTConfig() (*rest.Config, error) {
+	return c.KubeRestConfig(), nil
+}
+
+func (c *client) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
+	return disk.NewCachedDiscoveryClientForConfig(c.restConfig, "", "", 0)
+}
+
+func (c *client) ToRESTMapper() (meta.RESTMapper, error) {
+	return c.RESTMapper(), nil
 }
 
 func (c *client) Get(ctx context.Context, key crclient.ObjectKey, obj crclient.Object) error {

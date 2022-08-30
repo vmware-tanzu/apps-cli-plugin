@@ -19,6 +19,7 @@ package testing
 import (
 	"bytes"
 	"context"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -28,7 +29,13 @@ import (
 	"github.com/spf13/cobra"
 	rtesting "github.com/vmware-labs/reconciler-runtime/testing"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/restmapper"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/client-go/rest/fake"
+	k8sscheme "k8s.io/kubectl/pkg/scheme"
 
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 )
@@ -78,7 +85,9 @@ type CommandTestCase struct {
 	// always be replaced with a FakeClient configured with the given objects and reactors to
 	// intercept all calls to the fake client for comparison with the expected operations.
 	Config *cli.Config
-
+	// BuilderObjects represents resources needed to build the fake builder. These
+	// resources are passed in the http response to the fake builder.
+	BuilderObjects []client.Object
 	// GivenObjects represents resources that would already exist within Kubernetes. These
 	// resources are passed directly to the fake client.
 	GivenObjects []client.Object
@@ -223,6 +232,24 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *runtime.Scheme, cmdFactory f
 				t.Errorf("error during prepare: %s", err)
 			}
 		}
+
+		// set up a fake builder that operates on generic objects. Testing should access the unstructured fake client
+		// with the POD details as http response.
+		c.Builder = resource.NewFakeBuilder(
+			func(version schema.GroupVersion) (resource.RESTClient, error) {
+				codec := k8sscheme.Codecs.LegacyCodec(scheme.PrioritizedVersionsAllGroups()...)
+				UnstructuredClient := &fake.RESTClient{
+					NegotiatedSerializer: resource.UnstructuredPlusDefaultContentConfig().NegotiatedSerializer,
+					Resp:                 &http.Response{StatusCode: http.StatusOK, Header: DefaultHeader(), Body: PodV1TableObjBody(codec, tc.BuilderObjects)},
+				}
+				return UnstructuredClient, nil
+
+			},
+			c.ToRESTMapper,
+			func() (restmapper.CategoryExpander, error) {
+				return resource.FakeCategoryExpander, nil
+			},
+		)
 
 		cmd := cmdFactory(ctx, c)
 		cmd.SilenceErrors = true

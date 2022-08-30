@@ -35,6 +35,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/printer"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
 )
 
 type WorkloadGetOptions struct {
@@ -218,24 +219,20 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		}
 	}
 
-	pods := &corev1.PodList{}
-	err = c.List(ctx, pods, client.InNamespace(workload.Namespace), client.MatchingLabels{cartov1alpha1.WorkloadLabelName: workload.Name})
-	if err != nil {
+	arg := []string{"Pod"}
+	labelSelectorParams := fmt.Sprintf("%s%s%s", cartov1alpha1.WorkloadLabelName, "=", workload.Name)
+	if tableResult, err := source.FetchResourceObjects(c.Builder, workload.Namespace, labelSelectorParams, arg); err != nil {
 		c.Eprintf("\n")
 		c.Eerrorf("Failed to list pods:\n")
 		c.Eprintf("  %s\n", err)
 	} else {
-		if len(pods.Items) == 0 {
-			c.Printf("\n")
-			c.Infof("No pods found for workload.\n")
-		} else {
-			pods = pods.DeepCopy()
-			printer.SortByNamespaceAndName(pods.Items)
+		if tableResult != nil {
 			c.Printf("\n")
 			c.Boldf("Pods\n")
-			if err := printer.PodTablePrinter(c, pods); err != nil {
-				return err
-			}
+			printer.PodTablePrinter(c, tableResult)
+		} else {
+			c.Printf("\n")
+			c.Infof("No pods found for workload.\n")
 		}
 	}
 
