@@ -50,6 +50,7 @@ func TestWorkloadDetailsPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
+   name:   my-workload
    type:   <empty>
 `,
 	}, {
@@ -65,6 +66,7 @@ func TestWorkloadDetailsPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
+   name:   my-workload
    type:   web
 `,
 	}}

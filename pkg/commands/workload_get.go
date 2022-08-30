@@ -114,8 +114,6 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		return nil
 	}
 
-	workloadStatusReadyCond := printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadConditionReady)
-	c.Printf(printer.ResourceStatus(workload.Name, workloadStatusReadyCond))
 	//print workload details
 	c.Boldf("Overview\n")
 	if err := printer.WorkloadOverviewPrinter(c.Stdout, workload); err != nil {
@@ -200,6 +198,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	// Print workload issues
 	c.Printf("\n")
 	c.Boldf("Messages\n")
+	workloadStatusReadyCond := printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadConditionReady)
 	if areAllResourcesReady(workloadStatusReadyCond, deliverableStatusReadyCond) {
 		c.Infof(printer.AddPaddingStart("No messages found.\n"))
 	} else {
