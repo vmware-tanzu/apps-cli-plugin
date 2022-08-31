@@ -133,9 +133,97 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 		{
 			Name:         "Create workload with valid name from local source code",
 			WorkloadName: "test-create-local-registry",
+			RequireEnvs:  []string{"BUNDLE"},
 			Command: func() it.CommandLine {
 				c := *it.NewTanzuAppsCommandLine(
 					"workload", "create", "test-create-local-registry",
+					"--local-path=./testdata/hello.go.jar",
+					"--source-image", os.Getenv("BUNDLE"),
+					namespaceFlag,
+					"--type=web",
+					"--yes",
+				)
+				return c
+			}(),
+			Prepare: func(t *testing.T) error {
+				if v, ok := os.LookupEnv("CERT_DIR"); ok {
+					if err := it.NewCommandLine("sudo", "cp", v+"/ca.pem", "/usr/local/share/ca-certificates/ca.crt").Exec(); err != nil {
+						t.Errorf("unexpected error while try to copy registry certs %v ", err)
+						t.FailNow()
+					}
+					if err := it.NewCommandLine("sudo", "update-ca-certificates").Exec(); err != nil {
+						t.Errorf("unexpected error while try to copy registry certs %v ", err)
+						t.FailNow()
+					}
+				}
+				return nil
+			},
+			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-create-local-registry",
+					Namespace: it.TestingNamespace,
+					Labels: map[string]string{
+						"apps.tanzu.vmware.com/workload-type": "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image: fmt.Sprintf("%v@sha256:f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be", os.Getenv("BUNDLE")),
+					},
+				},
+			},
+			Verify: func(t *testing.T, output string, err error) {
+				if _, err := exec.LookPath("imgpkg"); err != nil {
+					t.Errorf("expected imgpkg in PATH: %v", err)
+					t.FailNow()
+				}
+				dir, _ := ioutil.TempDir("", "")
+				defer os.RemoveAll(dir)
+
+				if err := it.NewCommandLine("imgpkg", "pull", "-i", os.Getenv("BUNDLE"), "-o", dir).Exec(); err != nil {
+					t.Errorf("unexpected error %v ", err)
+					t.FailNow()
+				}
+				// compare files
+				got, err := os.ReadFile(filepath.Join(dir, "hello.go"))
+				if err != nil {
+					t.Errorf("unexpected error reading file %v ", err)
+					t.FailNow()
+				}
+
+				excepted, err := os.ReadFile("./testdata/hello.go")
+				if err != nil {
+					t.Errorf("unexpected error reading file %v ", err)
+					t.FailNow()
+				}
+
+				if diff := cmp.Diff(string(excepted), string(got)); diff != "" {
+					t.Errorf("(-expected, +actual)\n%s", diff)
+					t.FailNow()
+				}
+			},
+			CleanUp: func(t *testing.T) error {
+				if _, ok := os.LookupEnv("CERT_DIR"); ok {
+					if err := it.NewCommandLine("sudo", "rm", "-f", "/usr/local/share/ca-certificates/ca.crt").Exec(); err != nil {
+						t.Errorf("unexpected error while try to copy registry certs %v ", err)
+						t.FailNow()
+					}
+					if err := it.NewCommandLine("sudo", "update-ca-certificates").Exec(); err != nil {
+						t.Errorf("unexpected error while try to copy registry certs %v ", err)
+						t.FailNow()
+					}
+				}
+				return nil
+			},
+		},
+		{
+			Name:         "Create workload with valid name from local source code with private repo",
+			WorkloadName: "test-create-local-registry-priv",
+			RequireEnvs:  []string{"BUNDLE", "REGISTRY_USERNAME", "REGISTRY_PASSWORD", "CERT_DIR"},
+			Command: func() it.CommandLine {
+				c := *it.NewTanzuAppsCommandLine(
+					"workload", "create", "test-create-local-registry-priv",
 					"--local-path=./testdata/hello.go.jar",
 					"--source-image", os.Getenv("BUNDLE"),
 					"--registry-username", os.Getenv("REGISTRY_USERNAME"),
@@ -150,7 +238,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			ExpectedObject: &cartov1alpha1.Workload{
 				TypeMeta: workloadTypeMeta,
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-create-local-registry",
+					Name:      "test-create-local-registry-priv",
 					Namespace: it.TestingNamespace,
 					Labels: map[string]string{
 						"apps.tanzu.vmware.com/workload-type": "web",
@@ -200,8 +288,9 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
-			Name:         "Create workload with valid name from local source code values from environment variables",
+			Name:         "Create workload with valid name from local source code values from environment variables with private repo",
 			WorkloadName: "test-create-local-registry-venv",
+			RequireEnvs:  []string{"BUNDLE", "REGISTRY_USERNAME", "REGISTRY_PASSWORD", "CERT_DIR"},
 			Command: func() it.CommandLine {
 				c := *it.NewTanzuAppsCommandLine(
 					"workload", "create", "test-create-local-registry-venv",
