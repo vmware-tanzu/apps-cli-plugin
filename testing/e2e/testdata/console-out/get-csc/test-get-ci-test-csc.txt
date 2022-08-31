@@ -1,6 +1,3 @@
----
-# ci-test: <unknown>
----
 Supply Chain Selectors
    TYPE          KEY                                   OPERATOR   VALUE
    labels        apps.tanzu.vmware.com/workload-type              web
