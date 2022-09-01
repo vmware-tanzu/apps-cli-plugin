@@ -439,7 +439,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	}
 	workload.Spec.Source.Image = digestedImage
 
-	if currentWorkload != nil && currentWorkload.Spec.Source.Image == workload.Spec.Source.Image {
+	if currentWorkload != nil && currentWorkload.Spec.Source != nil && currentWorkload.Spec.Source.Image == workload.Spec.Source.Image {
 		c.Infof("No source code is changed\n")
 		return okToPush, nil
 	}

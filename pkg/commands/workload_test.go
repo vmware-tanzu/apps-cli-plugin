@@ -1975,6 +1975,18 @@ Publishing source in "testdata/hello.go.jar" to "` + registryHost + `/hello:sour
 No source code is changed
 `,
 	}, {
+		name:     "when workload already has resolved image with digest and no source",
+		args:     []string{flags.LocalPathFlagName, "testdata/hello.go.jar", flags.YesFlagName},
+		input:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
+		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		existingWorkload: &cartov1alpha1.Workload{
+			Spec: cartov1alpha1.WorkloadSpec{},
+		},
+		expectedOutput: `
+Publishing source in "testdata/hello.go.jar" to "` + registryHost + `/hello:source"...
+Published source
+`,
+	}, {
 		name:           "no local path",
 		args:           []string{},
 		input:          fmt.Sprintf("%s/hello:source", registryHost),
