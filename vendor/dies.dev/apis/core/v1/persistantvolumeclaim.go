@@ -65,6 +65,9 @@ type _ = corev1.PersistentVolumeClaimStatus
 
 func (d *PersistentVolumeClaimStatusDie) AddCapacity(name corev1.ResourceName, quantity resource.Quantity) *PersistentVolumeClaimStatusDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimStatus) {
+		if r.Capacity == nil {
+			r.Capacity = corev1.ResourceList{}
+		}
 		r.Capacity[name] = quantity
 	})
 }
@@ -91,6 +94,9 @@ func (d *PersistentVolumeClaimStatusDie) ConditionsDie(conditions ...*diemetav1.
 
 func (d *PersistentVolumeClaimStatusDie) AddAllocatedResources(name corev1.ResourceName, quantity resource.Quantity) *PersistentVolumeClaimStatusDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimStatus) {
+		if r.AllocatedResources == nil {
+			r.AllocatedResources = corev1.ResourceList{}
+		}
 		r.AllocatedResources[name] = quantity
 	})
 }

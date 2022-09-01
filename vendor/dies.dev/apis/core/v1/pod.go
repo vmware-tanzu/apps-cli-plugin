@@ -132,6 +132,9 @@ func (d *PodSpecDie) ReadinessGatesDie(gates ...*PodReadinessGateDie) *PodSpecDi
 
 func (d *PodSpecDie) AddOverhead(name corev1.ResourceName, quantity resource.Quantity) *PodSpecDie {
 	return d.DieStamp(func(r *corev1.PodSpec) {
+		if r.Overhead == nil {
+			r.Overhead = corev1.ResourceList{}
+		}
 		r.Overhead[name] = quantity
 	})
 }

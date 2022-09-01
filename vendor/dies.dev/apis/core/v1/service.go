@@ -47,6 +47,9 @@ func (d *ServiceSpecDie) PortDie(protocol corev1.Protocol, port int32, fn func(d
 
 func (d *ServiceSpecDie) AddSelector(key, value string) *ServiceSpecDie {
 	return d.DieStamp(func(r *corev1.ServiceSpec) {
+		if r.Selector == nil {
+			r.Selector = map[string]string{}
+		}
 		r.Selector[key] = value
 	})
 }
