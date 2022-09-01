@@ -264,6 +264,9 @@ type _ = corev1.ResourceRequirements
 
 func (d *ResourceRequirementsDie) AddLimit(name corev1.ResourceName, quantity resource.Quantity) *ResourceRequirementsDie {
 	return d.DieStamp(func(r *corev1.ResourceRequirements) {
+		if r.Limits == nil {
+			r.Limits = corev1.ResourceList{}
+		}
 		r.Limits[name] = quantity
 	})
 }
@@ -274,6 +277,9 @@ func (d *ResourceRequirementsDie) AddLimitString(name corev1.ResourceName, quant
 
 func (d *ResourceRequirementsDie) AddRequest(name corev1.ResourceName, quantity resource.Quantity) *ResourceRequirementsDie {
 	return d.DieStamp(func(r *corev1.ResourceRequirements) {
+		if r.Requests == nil {
+			r.Requests = corev1.ResourceList{}
+		}
 		r.Requests[name] = quantity
 	})
 }

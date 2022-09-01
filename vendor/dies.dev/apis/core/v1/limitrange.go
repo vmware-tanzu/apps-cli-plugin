@@ -41,6 +41,9 @@ type _ = corev1.LimitRangeItem
 
 func (d *LimitRangeItemDie) AddMax(name corev1.ResourceName, quantity resource.Quantity) *LimitRangeItemDie {
 	return d.DieStamp(func(r *corev1.LimitRangeItem) {
+		if r.Max == nil {
+			r.Max = corev1.ResourceList{}
+		}
 		r.Max[name] = quantity
 	})
 }
@@ -51,6 +54,9 @@ func (d *LimitRangeItemDie) AddMaxString(name corev1.ResourceName, quantity stri
 
 func (d *LimitRangeItemDie) AddMin(name corev1.ResourceName, quantity resource.Quantity) *LimitRangeItemDie {
 	return d.DieStamp(func(r *corev1.LimitRangeItem) {
+		if r.Min == nil {
+			r.Min = corev1.ResourceList{}
+		}
 		r.Min[name] = quantity
 	})
 }
@@ -61,6 +67,9 @@ func (d *LimitRangeItemDie) AddMinString(name corev1.ResourceName, quantity stri
 
 func (d *LimitRangeItemDie) AddDefault(name corev1.ResourceName, quantity resource.Quantity) *LimitRangeItemDie {
 	return d.DieStamp(func(r *corev1.LimitRangeItem) {
+		if r.Default == nil {
+			r.Default = corev1.ResourceList{}
+		}
 		r.Default[name] = quantity
 	})
 }
@@ -71,6 +80,9 @@ func (d *LimitRangeItemDie) AddDefaultString(name corev1.ResourceName, quantity 
 
 func (d *LimitRangeItemDie) AddDefaultRequest(name corev1.ResourceName, quantity resource.Quantity) *LimitRangeItemDie {
 	return d.DieStamp(func(r *corev1.LimitRangeItem) {
+		if r.DefaultRequest == nil {
+			r.DefaultRequest = corev1.ResourceList{}
+		}
 		r.DefaultRequest[name] = quantity
 	})
 }
@@ -81,6 +93,9 @@ func (d *LimitRangeItemDie) AddDefaultRequestString(name corev1.ResourceName, qu
 
 func (d *LimitRangeItemDie) AddMaxLimitRequestRatio(name corev1.ResourceName, quantity resource.Quantity) *LimitRangeItemDie {
 	return d.DieStamp(func(r *corev1.LimitRangeItem) {
+		if r.MaxLimitRequestRatio == nil {
+			r.MaxLimitRequestRatio = corev1.ResourceList{}
+		}
 		r.MaxLimitRequestRatio[name] = quantity
 	})
 }

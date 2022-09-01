@@ -29,6 +29,9 @@ type _ = corev1.ResourceQuotaSpec
 
 func (d *ResourceQuotaSpecDie) AddHard(name corev1.ResourceName, quantity resource.Quantity) *ResourceQuotaSpecDie {
 	return d.DieStamp(func(r *corev1.ResourceQuotaSpec) {
+		if r.Hard == nil {
+			r.Hard = corev1.ResourceList{}
+		}
 		r.Hard[name] = quantity
 	})
 }
@@ -73,6 +76,9 @@ type _ = corev1.ResourceQuotaStatus
 
 func (d *ResourceQuotaStatusDie) AddHard(name corev1.ResourceName, quantity resource.Quantity) *ResourceQuotaStatusDie {
 	return d.DieStamp(func(r *corev1.ResourceQuotaStatus) {
+		if r.Hard == nil {
+			r.Hard = corev1.ResourceList{}
+		}
 		r.Hard[name] = quantity
 	})
 }
@@ -83,6 +89,9 @@ func (d *ResourceQuotaStatusDie) AddHardString(name corev1.ResourceName, quantit
 
 func (d *ResourceQuotaStatusDie) AddUsed(name corev1.ResourceName, quantity resource.Quantity) *ResourceQuotaStatusDie {
 	return d.DieStamp(func(r *corev1.ResourceQuotaStatus) {
+		if r.Used == nil {
+			r.Used = corev1.ResourceList{}
+		}
 		r.Used[name] = quantity
 	})
 }

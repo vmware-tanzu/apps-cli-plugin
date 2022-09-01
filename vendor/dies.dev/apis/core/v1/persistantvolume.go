@@ -29,6 +29,9 @@ type _ = corev1.PersistentVolumeSpec
 
 func (d *PersistentVolumeSpecDie) AddCapacity(name corev1.ResourceName, quantity resource.Quantity) *PersistentVolumeSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeSpec) {
+		if r.Capacity == nil {
+			r.Capacity = corev1.ResourceList{}
+		}
 		r.Capacity[name] = quantity
 	})
 }
