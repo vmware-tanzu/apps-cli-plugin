@@ -160,28 +160,43 @@ func TestConfig_EmojiPrint(t *testing.T) {
 	tests := []struct {
 		name    string
 		icon    cli.Icon
+		noColor bool
 		args    []interface{}
-		printer func(icon cli.Icon, format string, a ...interface{}) (n int, err error)
+		printer func(noColor bool, icon cli.Icon, format string, a ...interface{}) (n int, err error)
 		stdout  string
 	}{{
 		name:    "EmojiSuccessf",
-		icon:    cli.ThumpsUp,
+		icon:    cli.ThumbsUp,
+		noColor: false,
 		args:    []interface{}{"Pods created Successfully"},
 		printer: config.EmojiSuccessf,
 		stdout:  `👍 Pods created Successfully`,
 	}, {
 		name:    "EmojiBoldf",
 		icon:    cli.FloppyDisk,
+		noColor: false,
 		args:    []interface{}{"Source"},
 		printer: config.EmojiBoldf,
 		stdout:  `💾 Source`,
+	}, {
+		name:    "Print success without emoji",
+		noColor: true,
+		args:    []interface{}{"Pods created Successfully"},
+		printer: config.EmojiSuccessf,
+		stdout:  `Pods created Successfully`,
+	}, {
+		name:    "Print bold without emoji",
+		noColor: true,
+		args:    []interface{}{"Source"},
+		printer: config.EmojiBoldf,
+		stdout:  `Source`,
 	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			stdout := &bytes.Buffer{}
 			config.Stdout = stdout
 
-			_, err := test.printer(test.icon, "%s", test.args...)
+			_, err := test.printer(test.noColor, test.icon, "%s", test.args...)
 			if err != nil {
 				t.Errorf("Expected no error, actually %q", err)
 			}

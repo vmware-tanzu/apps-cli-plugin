@@ -82,7 +82,11 @@ func (c *Config) Successf(format string, a ...interface{}) (n int, err error) {
 	return printer.SuccessColor.Fprintf(c.Stdout, format, a...)
 }
 
-func (c *Config) EmojiSuccessf(emoji Icon, format string, a ...interface{}) (n int, err error) {
+func (c *Config) EmojiSuccessf(noColor bool, emoji Icon, format string, a ...interface{}) (n int, err error) {
+	// If no color flag is set, do not print emojis
+	if noColor {
+		return c.Boldf(format, a...)
+	}
 	emojiFormat := fmt.Sprintf("%s%s%s", string(emoji), " ", format)
 	return printer.SuccessColor.Fprintf(c.Stdout, emojiFormat, a...)
 }
@@ -111,7 +115,11 @@ func (c *Config) Boldf(format string, a ...interface{}) (n int, err error) {
 	return printer.BoldColor.Fprintf(c.Stdout, format, a...)
 }
 
-func (c *Config) EmojiBoldf(emoji Icon, format string, a ...interface{}) (n int, err error) {
+func (c *Config) EmojiBoldf(noColor bool, emoji Icon, format string, a ...interface{}) (n int, err error) {
+	// If no color flag is set, do not print emojis
+	if noColor {
+		return c.Boldf(format, a...)
+	}
 	emojiFormat := fmt.Sprintf("%s%s%s", string(emoji), " ", format)
 	return printer.BoldColor.Fprintf(c.Stdout, emojiFormat, a...)
 }
