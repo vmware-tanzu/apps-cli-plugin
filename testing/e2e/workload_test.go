@@ -26,7 +26,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -413,11 +412,6 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Verify: func(t *testing.T, output string, err error) {
 				if regexPod.FindString(output) == "" {
 					t.Errorf("expected Pod results in output %v", output)
-					t.FailNow()
-				}
-				decodedString := strconv.QuoteToASCII(output)
-				if regexEmoji.FindString(decodedString) == "" {
-					t.Errorf("output does not have Emoji")
 					t.FailNow()
 				}
 			},

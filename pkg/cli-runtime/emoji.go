@@ -23,7 +23,7 @@ const (
 	Package         Icon = '📦'
 	Delivery        Icon = '🚚'
 	SpeechBalloon   Icon = '💬'
-	Maginifying     Icon = '🔎'
+	Magnifying      Icon = '🔎'
 	Repeat          Icon = '🔁'
 	Antenna         Icon = '📡'
 	Ship            Icon = '🚢'
@@ -32,5 +32,5 @@ const (
 	Canoe           Icon = '🛶'
 	Inbox           Icon = '📥'
 	Question        Icon = '❓'
-	ThumpsUp        Icon = '👍'
+	ThumbsUp        Icon = '👍'
 )
