@@ -97,9 +97,9 @@ type CommandLineIntegrationTestCase struct {
 	ExpectedObject            client.Object
 	IsList                    bool
 	ExpectedObjectList        client.ObjectList
-	Verify                    func(t *testing.T, output string, err error)
-	Prepare                   func(t *testing.T) error
-	CleanUp                   func(t *testing.T) error
+	Verify                    func(ctx context.Context, t *testing.T, output string, err error)
+	Prepare                   func(context.Context, *testing.T) (context.Context, error)
+	CleanUp                   func(context.Context, *testing.T) error
 }
 
 func (ts CommandLineIntegrationTestSuite) Run(t *testing.T) {
@@ -153,14 +153,36 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 			}
 		}
 		if cl.Prepare != nil {
-			if err := cl.Prepare(t); err != nil {
+			var err error
+			if ctx, err = cl.Prepare(ctx, t); err != nil {
 				t.Errorf("unexpected error in prepare: %v", err)
 				t.FailNow()
 			}
 
 		}
-		err := cl.Command.Exec()
-		// t.Logf("Command output:\n%s\n\n%v\n", cl.Command.String(), cl.Command.GetOutput())
+
+		w, okWriter := ctx.Value("writer").(*os.File)
+		r, okReader := ctx.Value("reader").(*os.File)
+
+		var err error
+
+		//t.Logf("Command output:\n%s\n\n%v\n", cl.Command.String(), cl.Command.GetOutput())
+
+		if okWriter && okReader {
+			err = cl.Command.ExecWithCustomPipe(w, r)
+			if err != nil && !cl.ShouldError {
+				t.Errorf("unexpected error in exec with custom pipe: %v: %v, ", err, cl.Command.GetOutput())
+				t.FailNow()
+			}
+		} else {
+			err = cl.Command.Exec()
+			// t.Logf("Command output:\n%s\n\n%v\n", cl.Command.String(), cl.Command.GetOutput())
+			if err != nil && !cl.ShouldError {
+				t.Errorf("unexpected error in exec: %v: %v, ", err, cl.Command.GetOutput())
+				t.FailNow()
+			}
+		}
+
 		if err != nil && !cl.ShouldError {
 			t.Errorf("unexpected error in exec: %v: %v, ", err, cl.Command.GetOutput())
 			t.FailNow()
@@ -220,10 +242,11 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 		}
 
 		if cl.Verify != nil {
-			cl.Verify(t, cl.Command.GetOutput(), err)
+			cl.Verify(ctx, t, cl.Command.GetOutput(), err)
 		}
 		if cl.CleanUp != nil {
-			if err := cl.CleanUp(t); err != nil {
+			var err error
+			if err = cl.CleanUp(ctx, t); err != nil {
 				t.Errorf("unexpected error in clean up: %v", err)
 				t.FailNow()
 			}

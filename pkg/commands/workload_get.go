@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
@@ -32,6 +31,7 @@ import (
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	knativeservingv1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/knative/serving/v1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
+	cliprinter "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
@@ -116,14 +116,14 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	}
 
 	//print workload details
-	c.EmojiBoldf(color.NoColor, cli.Antenna, "Overview\n")
+	c.Emoji(cli.Antenna, cliprinter.Sboldf("Overview\n"))
 	if err := printer.WorkloadOverviewPrinter(c.Stdout, workload); err != nil {
 		return err
 	}
 	c.Printf("\n")
 	// Print workload source
 	if workload.Spec.Image != "" || workload.Spec.Source != nil {
-		c.EmojiBoldf(color.NoColor, cli.FloppyDisk, "Source\n")
+		c.Emoji(cli.FloppyDisk, cliprinter.Sboldf("Source\n"))
 
 		if workload.Spec.Image != "" {
 			if err := printer.WorkloadSourceImagePrinter(c.Stdout, workload); err != nil {
@@ -150,7 +150,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	if workload.Status.SupplyChainRef == (cartov1alpha1.ObjectReference{}) && len(workload.Status.Conditions) == 0 {
 		c.Infof("Supply Chain reference not found.\n")
 	} else {
-		c.EmojiBoldf(color.NoColor, cli.Package, "Supply Chain\n")
+		c.Emoji(cli.Package, cliprinter.Sboldf("Supply Chain\n"))
 
 		if err := printer.WorkloadSupplyChainInfoPrinter(c.Stdout, workload); err != nil {
 			return err
@@ -169,7 +169,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 	// Deliverable
 	c.Printf("\n")
-	c.EmojiBoldf(color.NoColor, cli.Delivery, "Delivery\n")
+	c.Emoji(cli.Delivery, cliprinter.Sboldf("Delivery\n"))
 	// Print workload deliverable resources
 	wldDeliverable := getWorkloadResourceByKind(workload, cartov1alpha1.DeliverableKind)
 	var deliverableStatusReadyCond *metav1.Condition
@@ -198,7 +198,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 	// Print workload issues
 	c.Printf("\n")
-	c.EmojiBoldf(color.NoColor, cli.SpeechBalloon, "Messages\n")
+	c.Emoji(cli.SpeechBalloon, cliprinter.Sboldf("Messages\n"))
 	workloadStatusReadyCond := printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadConditionReady)
 	if areAllResourcesReady(workloadStatusReadyCond, deliverableStatusReadyCond) {
 		c.Infof(printer.AddPaddingStart("No messages found.\n"))
@@ -213,7 +213,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 	if len(workload.Spec.ServiceClaims) > 0 {
 		c.Printf("\n")
-		c.EmojiBoldf(color.NoColor, cli.Repeat, "Services\n")
+		c.Emoji(cli.Repeat, cliprinter.Sboldf("Services\n"))
 		if err := cartov1alpha1.WorkloadServiceClaimPrinter(c.Stdout, workload); err != nil {
 			return err
 		}
@@ -228,7 +228,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 	} else {
 		if tableResult != nil {
 			c.Printf("\n")
-			c.EmojiBoldf(color.NoColor, cli.Canoe, "Pods\n")
+			c.Emoji(cli.Canoe, cliprinter.Sboldf("Pods\n"))
 			printer.PodTablePrinter(c, tableResult)
 		} else {
 			c.Printf("\n")
@@ -242,7 +242,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		ksvcs = ksvcs.DeepCopy()
 		printer.SortByNamespaceAndName(ksvcs.Items)
 		c.Printf("\n")
-		c.EmojiBoldf(color.NoColor, cli.Ship, "Knative Services\n")
+		c.Emoji(cli.Ship, cliprinter.Sboldf("Knative Services\n"))
 		if err := printer.KnativeServicePrinter(c, ksvcs); err != nil {
 			return err
 		}

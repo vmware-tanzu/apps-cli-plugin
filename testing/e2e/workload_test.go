@@ -20,12 +20,14 @@ limitations under the License.
 package integration_test
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -53,7 +55,8 @@ var (
 func TestCreateFromGitWithAnnotations(t *testing.T) {
 	testSuite := it.CommandLineIntegrationTestSuite{
 		{
-			Name:         "Create workload with valid name from a git repo and annotations",
+			Name: "Create workload with valid name from a git repo and annotations",
+			//Focus:        true,
 			WorkloadName: "test-create-git-annotations-workload",
 			Command: func() it.CommandLine {
 				c := *it.NewTanzuAppsCommandLine(
@@ -145,7 +148,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				)
 				return c
 			}(),
-			Prepare: func(t *testing.T) error {
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
 				if v, ok := os.LookupEnv("CERT_DIR"); ok {
 					if err := it.NewCommandLine("sudo", "cp", v+"/ca.pem", "/usr/local/share/ca-certificates/ca.crt").Exec(); err != nil {
 						t.Errorf("unexpected error while try to copy registry certs %v ", err)
@@ -156,7 +159,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 						t.FailNow()
 					}
 				}
-				return nil
+				return ctx, nil
 			},
 			ExpectedObject: &cartov1alpha1.Workload{
 				TypeMeta: workloadTypeMeta,
@@ -173,7 +176,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					},
 				},
 			},
-			Verify: func(t *testing.T, output string, err error) {
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if _, err := exec.LookPath("imgpkg"); err != nil {
 					t.Errorf("expected imgpkg in PATH: %v", err)
 					t.FailNow()
@@ -207,7 +210,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					t.FailNow()
 				}
 			},
-			CleanUp: func(t *testing.T) error {
+			CleanUp: func(ctx context.Context, t *testing.T) error {
 				if _, ok := os.LookupEnv("CERT_DIR"); ok {
 					if err := it.NewCommandLine("sudo", "rm", "-f", "/usr/local/share/ca-certificates/ca.crt").Exec(); err != nil {
 						t.Errorf("unexpected error while try to copy registry certs %v ", err)
@@ -254,7 +257,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					},
 				},
 			},
-			Verify: func(t *testing.T, output string, err error) {
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if _, err := exec.LookPath("imgpkg"); err != nil {
 					t.Errorf("expected imgpkg in PATH: %v", err)
 					t.FailNow()
@@ -330,7 +333,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					},
 				},
 			},
-			Verify: func(t *testing.T, output string, err error) {
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if _, err := exec.LookPath("imgpkg"); err != nil {
 					t.Errorf("expected imgpkg in PATH: %v", err)
 					t.FailNow()
@@ -405,13 +408,59 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
-			Name:         "Get the updated workload",
+			Name: "Get the updated workload with color",
+			//Focus:        true,
 			WorkloadName: "test-create-git-annotations-workload",
 			Command: *it.NewTanzuAppsCommandLine(
 				"workload", "get", "test-create-git-annotations-workload", namespaceFlag),
-			Verify: func(t *testing.T, output string, err error) {
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				r, w, err := os.Pipe()
+				if err != nil {
+					t.Errorf("error while creating pipe %v", err)
+					t.FailNow()
+				}
+
+				originalStdout := os.Stdout
+				os.Stdout = w
+
+				ctx = context.WithValue(ctx, "reader", r)
+				ctx = context.WithValue(ctx, "writer", w)
+				ctx = context.WithValue(ctx, "stdout", originalStdout)
+
+				return ctx, nil
+			},
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if regexPod.FindString(output) == "" {
 					t.Errorf("expected Pod results in output %v", output)
+					t.FailNow()
+				}
+				decodedString := strconv.QuoteToASCII(output)
+				if regexEmoji.FindString(decodedString) == "" {
+					t.Errorf("output does not have Emoji")
+					t.FailNow()
+				}
+			},
+			CleanUp: func(ctx context.Context, t *testing.T) error {
+				ctx = context.WithValue(ctx, "reader", nil)
+				ctx = context.WithValue(ctx, "writer", nil)
+				os.Stdout = ctx.Value("stdout").(*os.File)
+				return nil
+			},
+		},
+		{
+			Name: "Get the updated workload without color",
+			//Focus:        true,
+			WorkloadName: "test-create-git-annotations-workload",
+			Command: *it.NewTanzuAppsCommandLine(
+				"workload", "get", "test-create-git-annotations-workload", namespaceFlag),
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
+				if regexPod.FindString(output) == "" {
+					t.Errorf("expected Pod results in output %v", output)
+					t.FailNow()
+				}
+				decodedString := strconv.QuoteToASCII(output)
+				if regexEmoji.FindString(decodedString) != "" {
+					t.Errorf("output has Emoji")
 					t.FailNow()
 				}
 			},

@@ -93,10 +93,12 @@ func main() {
 	p.Cmd.PersistentFlags().StringVar(&c.KubeConfigFile, cli.StripDash(flags.KubeConfigFlagName), "", "kubeconfig `file` (default is $HOME/.kube/config)")
 	p.Cmd.MarkFlagFilename(cli.StripDash(flags.KubeConfigFlagName))
 	p.Cmd.PersistentFlags().StringVar(&c.CurrentContext, cli.StripDash(flags.ContextFlagName), "", "`name` of the kubeconfig context to use (default is current-context defined by kubeconfig)")
-	p.Cmd.PersistentFlags().BoolVar(&color.NoColor, cli.StripDash(flags.NoColorFlagName), color.NoColor, "disable color output in terminals")
+	p.Cmd.PersistentFlags().BoolVar(&color.NoColor, cli.StripDash(flags.NoColorFlagName), color.NoColor, "deactivate color, bold, and emoji output")
 	p.Cmd.PersistentFlags().Int32VarP(c.Verbose, cli.StripDash(flags.VerboseLevelFlagName), "v", 1, "number for the log level verbosity")
 
 	cobra.OnInitialize(func() {
+		// sync config and fatih to disable emojis printing
+		c.NoColor = color.NoColor
 		// set the default logger
 		c.SetLogger(logger.NewSinkLogger(c.Name, c.Verbose, c.Stderr))
 	})
