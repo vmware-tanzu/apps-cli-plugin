@@ -153,7 +153,8 @@ func TestConfig_Print(t *testing.T) {
 		})
 	}
 }
-func TestConfig_EmojiPrint(t *testing.T) {
+
+func TestConfig_Emoji(t *testing.T) {
 	scheme := runtime.NewScheme()
 	config := cli.NewDefaultConfig("test", scheme)
 
@@ -161,47 +162,38 @@ func TestConfig_EmojiPrint(t *testing.T) {
 		name    string
 		icon    cli.Icon
 		noColor bool
-		args    []interface{}
-		printer func(noColor bool, icon cli.Icon, format string, a ...interface{}) (n int, err error)
-		stdout  string
+		input   string
+		output  string
 	}{{
-		name:    "EmojiSuccessf",
-		icon:    cli.ThumbsUp,
-		noColor: false,
-		args:    []interface{}{"Pods created Successfully"},
-		printer: config.EmojiSuccessf,
-		stdout:  `👍 Pods created Successfully`,
+		name:   "Text with emoji",
+		icon:   cli.FloppyDisk,
+		input:  "Source",
+		output: `💾 Source`,
 	}, {
-		name:    "EmojiBoldf",
+		name:    "Text without emoji",
+		noColor: true,
+		input:   "Source",
+		output:  "Source",
+	}, {
+		name:    "Do not print emoji",
+		noColor: true,
 		icon:    cli.FloppyDisk,
-		noColor: false,
-		args:    []interface{}{"Source"},
-		printer: config.EmojiBoldf,
-		stdout:  `💾 Source`,
-	}, {
-		name:    "Print success without emoji",
-		noColor: true,
-		args:    []interface{}{"Pods created Successfully"},
-		printer: config.EmojiSuccessf,
-		stdout:  `Pods created Successfully`,
-	}, {
-		name:    "Print bold without emoji",
-		noColor: true,
-		args:    []interface{}{"Source"},
-		printer: config.EmojiBoldf,
-		stdout:  `Source`,
+		input:   `Source`,
+		output:  `Source`,
 	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			stdout := &bytes.Buffer{}
 			config.Stdout = stdout
+			config.NoColor = test.noColor
 
-			_, err := test.printer(test.noColor, test.icon, "%s", test.args...)
+			_, err := config.Emoji(test.icon, test.input)
 			if err != nil {
 				t.Errorf("Expected no error, actually %q", err)
 			}
-			if expected, actual := test.stdout, stdout.String(); expected != actual {
-				t.Errorf("Expected stdout to be %q, actually %q", expected, actual)
+
+			if expected, actual := test.output, stdout.String(); expected != actual {
+				t.Errorf("Expected string to be %q, actually %q", expected, actual)
 			}
 		})
 	}

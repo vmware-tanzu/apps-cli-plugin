@@ -20,6 +20,8 @@ limitations under the License.
 package suite_test
 
 import (
+	"bytes"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -104,6 +106,53 @@ func (c *CommandLine) Exec() error {
 		c.err = err.Error()
 		return err
 	}
+
+	return nil
+}
+
+func (c *CommandLine) ExecWithCustomPipe(w *os.File, r *os.File) error {
+	outC := make(chan string)
+	// copy the output in a separate goroutine so it won't block indefinitely
+	go func() {
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		outC <- buf.String()
+	}()
+
+	// use command stdin
+	cmd := exec.Command(c.cmd, c.args...)
+	cmd.Env = append(os.Environ(), c.env...)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		c.err = err.Error()
+		return err
+	}
+
+	if c.surveyAnswer != "" {
+		go func() {
+			stdin.Write([]byte(c.surveyAnswer + "\n"))
+		}()
+	}
+
+	// change command stdout to overwrite it with pipe
+	// this behavior is similar to cmd.CombinedOutput()
+	cmd.Stdout = w
+	cmd.Stderr = cmd.Stdout
+	err = cmd.Run()
+	if err != nil {
+		c.err = err.Error()
+		return err
+	}
+
+	// close pipe writer
+	go func() {
+		_ = cmd.Wait()
+		w.Close()
+	}()
+
+	// close channel and assign to output
+	out := <-outC
+	c.out = string(out)
 
 	return nil
 }
