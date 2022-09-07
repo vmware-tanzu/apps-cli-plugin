@@ -69,7 +69,6 @@ tanzu plugin install test --local ${TANZU_HOME}/admin-plugins
 To build and install the apps plugin, run: (repeat this step any time you pull new source code to get the latest)
 
 ```sh
-make patch
 make install
 ```
 Note : For machines with arm64 processor run `make install GOHOSTARCH=amd64`
