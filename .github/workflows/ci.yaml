@@ -13,6 +13,7 @@ jobs:
 
   unit:
     env:
+      TKG_CUSTOM_IMAGE_REPOSITORY: projects-stg.registry.vmware.com/tkg
       TANZU_CLI_NO_INIT: true
       TANZU_HOME: $HOME/tanzu
     runs-on: ubuntu-latest
@@ -85,6 +86,7 @@ jobs:
       TANZU_CLI_NO_INIT: true
       TANZU_HOME: $HOME/tanzu
       OS_ARCH: linux-amd64
+      TKG_CUSTOM_IMAGE_REPOSITORY: projects-stg.registry.vmware.com/tkg
     steps:
     - uses: actions/checkout@v3
     - uses: vmware-tanzu/carvel-setup-action@v1
