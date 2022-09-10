@@ -21,7 +21,7 @@ cloud.google.com/go/storage/internal/apiv2
 dies.dev/apis/core/v1
 dies.dev/apis/meta/v1
 dies.dev/testing
-# github.com/AlecAivazis/survey/v2 v2.3.5
+# github.com/AlecAivazis/survey/v2 v2.3.6
 ## explicit; go 1.13
 github.com/AlecAivazis/survey/v2
 github.com/AlecAivazis/survey/v2/core
