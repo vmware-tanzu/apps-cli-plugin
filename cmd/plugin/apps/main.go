@@ -96,9 +96,6 @@ func main() {
 	p.Cmd.PersistentFlags().StringVar(&c.CurrentContext, cli.StripDash(flags.ContextFlagName), "", "`name` of the kubeconfig context to use (default is current-context defined by kubeconfig)")
 	p.Cmd.PersistentFlags().BoolVar(&color.NoColor, cli.StripDash(flags.NoColorFlagName), color.NoColor, "disable color output in terminals")
 	p.Cmd.PersistentFlags().Int32VarP(c.Verbose, cli.StripDash(flags.VerboseLevelFlagName), "v", 1, "number for the log level verbosity")
-	if markHiddenErr := p.Cmd.LocalFlags().MarkHidden("azure-container-registry-config"); markHiddenErr != nil {
-		c.Eprintf("%s %s: %s\n", printer.Serrorf("Error:"), "Unable to hide plugin unused flags", markHiddenErr)
-	}
 
 	cobra.OnInitialize(func() {
 		// sync survey and faith option to disable color
