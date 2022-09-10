@@ -53,7 +53,6 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
     - name: Build
       run: |
-        make patch
         make publish
     - uses: actions/upload-artifact@v3
       with:

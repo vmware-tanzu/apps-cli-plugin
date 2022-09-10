@@ -88,10 +88,6 @@ integration-test:  ## Run integration test
 .PHONY: prepare
 prepare: generate fmt vet
 
-.PHONY: patch
-patch: ## Appli the configured patch to the code
-	git apply hack/patch-k8s-pkg-credentialprovider.patch
-
 .PHONY: fmt
 fmt: ## Run go fmt against code
 	$(GOIMPORTS) --local github.com/vmware-tanzu/apps-cli-plugin -w pkg/ cmd/
