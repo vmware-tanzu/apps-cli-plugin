@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	dies.dev v0.6.2
-	github.com/AlecAivazis/survey/v2 v2.3.5
+	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/fatih/color v1.13.0
 	github.com/go-logr/logr v1.2.3
