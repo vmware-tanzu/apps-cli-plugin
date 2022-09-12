@@ -121,8 +121,6 @@ jobs:
         echo "##[group]Install CA"
           # https://ubuntu.com/server/docs/security-trust-store
           sudo apt-get install -y ca-certificates
-          # sudo cp ${CERT_DIR}/ca.pem /usr/local/share/ca-certificates/ca.crt
-          sudo update-ca-certificates
         echo "##[endgroup]"
         echo "##[group]Generate cert"
           cfssl gencert -ca ${CERT_DIR}/signing-ca.pem -ca-key ${CERT_DIR}/signing-ca-key.pem \
@@ -148,10 +146,6 @@ jobs:
           --restart=always \
           --name local-registry \
           -v ${CERT_DIR}:/certs \
-          -v ${REGISTRY_HTPWD}:/auth \
-          -e "REGISTRY_AUTH=htpasswd" \
-          -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
-          -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
           -e REGISTRY_HTTP_ADDR=0.0.0.0:443 \
           -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/server.pem \
           -e REGISTRY_HTTP_TLS_KEY=/certs/server-key.pem \

@@ -20,7 +20,8 @@ limitations under the License.
 package integration_test
 
 import (
-	"path/filepath"
+	"regexp"
+	"strings"
 	"testing"
 
 	it "github.com/vmware-tanzu/apps-cli-plugin/testing/suite"
@@ -29,14 +30,49 @@ import (
 func TestClusterSupplyChain(t *testing.T) {
 	testSuite := it.CommandLineIntegrationTestSuite{
 		{
-			Name:                      "List the existing supply chains",
-			Command:                   *it.NewTanzuAppsCommandLine("cluster-supply-chain", "list"),
-			ExpectedCommandLineOutput: it.GetFileAsString(t, filepath.Join(it.ConsoleOutBasePath, "list-csc", "test-list-csc.txt")),
+			Name:    "List the existing supply chains",
+			Command: *it.NewTanzuAppsCommandLine("cluster-supply-chain", "list"),
+			Verify: func(t *testing.T, output string, err error) {
+				match, err := regexp.MatchString(`.*.\nci-test[ ]{3,}[<>a-zA-Z]{5,}[ ]{3,}[0-9]{1,}s\n.*`, output)
+				if err != nil {
+					t.Error("Error while validating the output", err)
+					t.FailNow()
+				}
+				if !match {
+					t.Errorf("Expected 'ci-test   <status>   0s' to be present in\n%s", output)
+					t.FailNow()
+				}
+				expectedFooter := `
+To view details: "tanzu apps cluster-supply-chain get <name>"
+
+`
+				if !strings.HasSuffix(output, expectedFooter) {
+					t.Errorf("Expected %s to be present in the output", expectedFooter)
+					t.FailNow()
+				}
+
+			},
 		},
 		{
-			Name:                      "Get the existing supply chain",
-			Command:                   *it.NewTanzuAppsCommandLine("cluster-supply-chain", "get", "ci-test"),
-			ExpectedCommandLineOutput: it.GetFileAsString(t, filepath.Join(it.ConsoleOutBasePath, "get-csc", "test-get-ci-test-csc.txt")),
+			Name:    "Get the existing supply chain",
+			Command: *it.NewTanzuAppsCommandLine("cluster-supply-chain", "get", "ci-test"),
+			Verify: func(t *testing.T, output string, err error) {
+				expectedHeader := "---\n# ci-test:"
+				if !strings.HasPrefix(output, expectedHeader) {
+					t.Errorf("Expected %s to be present in the output", expectedHeader)
+					t.FailNow()
+				}
+				match, err := regexp.MatchString(`.*.\n[ ]{3,}labels[ ]{3,}apps\.tanzu\.vmware\.com\/workload-type[ ]{3,}web\n.*`, output)
+				if err != nil {
+					t.Error("Error while validating the output", err)
+					t.FailNow()
+				}
+				if !match {
+					t.Errorf("Expected 'labels   apps.tanzu.vmware.com/workload-type   web' to be present in\n%s", output)
+					t.FailNow()
+				}
+
+			},
 		},
 	}
 	testSuite.Run(t)

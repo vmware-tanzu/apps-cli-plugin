@@ -22,6 +22,7 @@ package suite_test
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -88,6 +89,7 @@ type CommandLineIntegrationTestCase struct {
 	Name                      string
 	Skip                      bool
 	Focus                     bool
+	RequireEnvs               []string
 	WorkloadName              string
 	Command                   CommandLine
 	ShouldError               bool
@@ -96,6 +98,8 @@ type CommandLineIntegrationTestCase struct {
 	IsList                    bool
 	ExpectedObjectList        client.ObjectList
 	Verify                    func(t *testing.T, output string, err error)
+	Prepare                   func(t *testing.T) error
+	CleanUp                   func(t *testing.T) error
 }
 
 func (ts CommandLineIntegrationTestSuite) Run(t *testing.T) {
@@ -142,6 +146,18 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 	t.Run(cl.Name, func(t *testing.T) {
 		if cl.Skip {
 			t.SkipNow()
+		}
+		for _, e := range cl.RequireEnvs {
+			if _, ok := os.LookupEnv(e); !ok {
+				t.Skipf("Required %q environment variable not present, skipping test", e)
+			}
+		}
+		if cl.Prepare != nil {
+			if err := cl.Prepare(t); err != nil {
+				t.Errorf("unexpected error in prepare: %v", err)
+				t.FailNow()
+			}
+
 		}
 		err := cl.Command.Exec()
 		// t.Logf("Command output:\n%s\n\n%v\n", cl.Command.String(), cl.Command.GetOutput())
@@ -205,6 +221,12 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 
 		if cl.Verify != nil {
 			cl.Verify(t, cl.Command.GetOutput(), err)
+		}
+		if cl.CleanUp != nil {
+			if err := cl.CleanUp(t); err != nil {
+				t.Errorf("unexpected error in clean up: %v", err)
+				t.FailNow()
+			}
 		}
 	})
 }
