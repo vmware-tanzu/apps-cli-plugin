@@ -428,12 +428,15 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 		return false, fmt.Errorf("unsupported file format %q", opts.LocalPath)
 	}
 
+	currentRegistryOpts := source.RegistryOpts{CACertPaths: opts.CACertPaths, RegistryUsername: opts.RegistryUsername, RegistryPassword: opts.RegistryPassword, RegistryToken: opts.RegistryToken}
+	registryWithProgress, err := source.NewRegistryWithProgress(ctx, &currentRegistryOpts)
+	if err != nil {
+		return okToPush, err
+	}
+	ctx = logger.StashSourceImageLogger(ctx, logger.NewNoopLogger())
 	c.Infof("Publishing source in %q to %q...\n", opts.LocalPath, taggedImage)
 
-	currentRegistryOpts := source.RegistryOpts{CACertPaths: opts.CACertPaths, RegistryUsername: opts.RegistryUsername, RegistryPassword: opts.RegistryPassword, RegistryToken: opts.RegistryToken}
-	ctx = logger.StashSourceImageLogger(ctx, logger.NewNoopLogger())
-
-	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, &currentRegistryOpts, taggedImage)
+	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, registryWithProgress, taggedImage)
 	if err != nil {
 		return okToPush, err
 	}
