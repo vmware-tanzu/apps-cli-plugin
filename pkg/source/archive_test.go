@@ -24,10 +24,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-)
 
-const cr = "\r"
-const lf = "\n"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg"
+)
 
 func TestIsDir(t *testing.T) {
 	tests := []struct {
@@ -170,8 +169,8 @@ func TestHandleZip(t *testing.T) {
 
 func normalizeNewlines(d []byte) string {
 	// replace CR LF \r\n (windows) with LF \n (unix)
-	normalizedOutput := strings.ReplaceAll(string(d), fmt.Sprintf("%s%s", cr, lf), lf)
+	normalizedOutput := strings.ReplaceAll(string(d), fmt.Sprintf("%s%s", pkg.CR, pkg.LF), pkg.LF)
 	// replace CR \r (mac) with LF \n (unix)
-	normalizedOutput = strings.ReplaceAll(normalizedOutput, cr, lf)
+	normalizedOutput = strings.ReplaceAll(normalizedOutput, pkg.CR, pkg.LF)
 	return normalizedOutput
 }

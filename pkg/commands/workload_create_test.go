@@ -26,6 +26,7 @@ import (
 
 	diecorev1 "dies.dev/apis/core/v1"
 	diemetav1 "dies.dev/apis/meta/v1"
+	"github.com/Netflix/go-expect"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
 	corev1 "k8s.io/api/core/v1"
@@ -1297,6 +1298,134 @@ To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
 
 `,
+		},
+		{
+			Name:         "git source with terminal interaction",
+			GivenObjects: givenNamespaceDefault,
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.TypeFlagName, "web"},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("Do you want to create this workload? [yN]: "))
+				c.Send(clitesting.InteractInputLine("y"))
+				c.ExpectString(clitesting.ToInteractOutput(`
+Created workload %q
+
+To see logs:   "tanzu apps workload tail %s"
+To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
+			},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
+
+%s
+
+Created workload %q
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
+`, clitesting.ToInteractTerminal("? Do you want to create this workload? [yN]: y"), workloadName),
+		},
+		{
+			Name:         "git source with terminal interaction reject",
+			GivenObjects: givenNamespaceDefault,
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.TypeFlagName, "web"},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("Do you want to create this workload? [yN]: "))
+				c.Send(clitesting.InteractInputLine("n"))
+				c.ExpectString(clitesting.ToInteractOutput("Skipping workload %q", workloadName))
+			},
+			ExpectOutput: fmt.Sprintf(`
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
+
+%s
+
+Skipping workload %q`, clitesting.ToInteractTerminal("? Do you want to create this workload? [yN]: n"), workloadName),
+		},
+		{
+			Name:         "git source with wrong answer terminal interaction reject",
+			GivenObjects: givenNamespaceDefault,
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.TypeFlagName, "web"},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("Do you want to create this workload? [yN]: "))
+				c.Send(clitesting.InteractInputLine("m"))
+				c.ExpectString(clitesting.ToInteractTerminal("invalid input (not y, n, yes, or no)"))
+				c.ExpectString(clitesting.ToInteractTerminal("Do you want to create this workload? [yN]: "))
+				c.Send(clitesting.InteractInputLine("n"))
+				c.ExpectString(clitesting.ToInteractOutput("Skipping workload %q", workloadName))
+			},
+			ExpectOutput: fmt.Sprintf(`
+Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
+
+%s
+
+invalid input (not y, n, yes, or no)
+%s
+
+Skipping workload %q`,
+				clitesting.ToInteractTerminal("? Do you want to create this workload? [yN]: m"),
+				clitesting.ToInteractTerminal("? Do you want to create this workload? [yN]: n"), workloadName),
 		},
 	}
 

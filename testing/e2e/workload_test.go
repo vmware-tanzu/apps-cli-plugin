@@ -65,8 +65,8 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					"--git-repo=https://github.com/sample-accelerators/spring-petclinic",
 					namespaceFlag,
 					"--type=web",
-					"--yes",
 				)
+				c.SurveyAnswer("y")
 				return c
 			}(),
 			ExpectedObject: &cartov1alpha1.Workload{
