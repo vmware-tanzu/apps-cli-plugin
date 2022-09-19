@@ -1478,7 +1478,7 @@ k8s.io/client-go/util/workqueue
 ## explicit; go 1.16
 k8s.io/cluster-bootstrap/token/api
 k8s.io/cluster-bootstrap/token/util
-# k8s.io/component-base v0.25.0
+# k8s.io/component-base v0.25.1
 ## explicit; go 1.19
 k8s.io/component-base/config
 k8s.io/component-base/config/v1alpha1
@@ -1507,7 +1507,7 @@ k8s.io/kube-openapi/pkg/validation/spec
 k8s.io/kube-openapi/pkg/validation/strfmt
 k8s.io/kube-openapi/pkg/validation/strfmt/bson
 k8s.io/kube-openapi/pkg/validation/validate
-# k8s.io/kubectl v0.25.0
+# k8s.io/kubectl v0.25.1
 ## explicit; go 1.19
 k8s.io/kubectl/pkg/scheme
 # k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
