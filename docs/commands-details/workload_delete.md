@@ -24,7 +24,7 @@ Deletes all workloads in a namespace
 
 ```bash
 tanzu apps workload delete --all
-? Really delete all workloads in the namespace "default"? (y/N) Y
+? Really delete all workloads in the namespace "default"? [yN] Y
 Deleted workloads in namespace "default"
 ```
 

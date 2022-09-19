@@ -28,7 +28,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -454,9 +453,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 func (opts *WorkloadOptions) checkToPublishLocalSource(taggedImage string, c *cli.Config, workload *cartov1alpha1.Workload) bool {
 	okToPush := true
 	if !opts.Yes {
-		err := survey.AskOne(&survey.Confirm{
-			Message: fmt.Sprintf("Publish source in %q to %q? It may be visible to others who can pull images from that repository", opts.LocalPath, taggedImage),
-		}, &okToPush, printer.WithSurveyStdio(c.Stdin, c.Stdout, c.Stderr))
+		err := cli.NewConfirmSurvey(c, "Publish source in %q to %q? It may be visible to others who can pull images from that repository", opts.LocalPath, taggedImage).Resolve(&okToPush)
 		if err != nil || !okToPush {
 			c.Infof("Skipping workload %q\n", workload.Name)
 			return false
@@ -547,10 +544,7 @@ func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentW
 			c.Errorf("Skipping workload, cannot confirm intent. Run command with %s flag to confirm intent when providing input from stdin\n", flags.YesFlagName)
 			return okToUpdate, nil
 		} else {
-			err := survey.AskOne(&survey.Confirm{
-				Message: fmt.Sprintf("Really update the workload %q?", workload.Name),
-			}, &okToUpdate, printer.WithSurveyStdio(c.Stdin, c.Stdout, c.Stderr))
-
+			err := cli.NewConfirmSurvey(c, "Really update the workload %q?", workload.Name).Resolve(&okToUpdate)
 			if err != nil || !okToUpdate {
 				c.Infof("Skipping workload %q\n", workload.Name)
 				return okToUpdate, nil
@@ -600,10 +594,7 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 			c.Errorf("Skipping workload, cannot confirm intent. Run command with %s flag to confirm intent when providing input from stdin\n", flags.YesFlagName)
 			return okToCreate, nil
 		} else {
-			err := survey.AskOne(&survey.Confirm{
-				Message: "Do you want to create this workload?",
-			}, &okToCreate, printer.WithSurveyStdio(c.Stdin, c.Stdout, c.Stderr))
-
+			err := cli.NewConfirmSurvey(c, "Do you want to create this workload?").Resolve(&okToCreate)
 			if err != nil || !okToCreate {
 				c.Infof("Skipping workload %q\n", workload.Name)
 				return okToCreate, nil

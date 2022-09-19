@@ -29,7 +29,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 
-	surveycore "github.com/AlecAivazis/survey/v2/core"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	tanzucliv1alpha1 "github.com/vmware-tanzu/tanzu-framework/apis/cli/v1alpha1"
@@ -98,9 +97,6 @@ func main() {
 	p.Cmd.PersistentFlags().Int32VarP(c.Verbose, cli.StripDash(flags.VerboseLevelFlagName), "v", 1, "number for the log level verbosity")
 
 	cobra.OnInitialize(func() {
-		// sync survey and faith option to disable color
-		surveycore.DisableColor = color.NoColor
-
 		// set the default logger
 		c.SetLogger(logger.NewSinkLogger(c.Name, c.Verbose, c.Stderr))
 	})
