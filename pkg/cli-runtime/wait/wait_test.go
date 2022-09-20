@@ -158,7 +158,7 @@ func TestUntilDelete(t *testing.T) {
 	defer func() {
 		BackOffTime = previousBackOffTime
 	}()
-	BackOffTime = 10 * time.Millisecond
+	BackOffTime = 30 * time.Millisecond
 	workload := &cartov1alpha1.Workload{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: defaultNamespace,
@@ -189,7 +189,7 @@ func TestUntilDelete(t *testing.T) {
 		reactorFunc clitesting.ReactionFunc
 	}{{
 		name:    "smaller timeout",
-		timeout: time.Millisecond,
+		timeout: time.Nanosecond,
 		err:     context.DeadlineExceeded,
 	}, {
 		name:    "API not found error",
