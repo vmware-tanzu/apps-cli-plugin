@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	runtm "runtime"
 	"testing"
 	"time"
 
@@ -308,6 +309,7 @@ To get status: "tanzu apps workload get my-workload"
 		},
 		{
 			Name: "wait with timeout error",
+			Skip: runtm.GOOS == "windows",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName, flags.WaitTimeoutFlagName, "1ns"},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -1234,6 +1236,7 @@ Error: conflict updating workload, the object was modified by another user; plea
 		},
 		{
 			Name: "update - wait error with timeout",
+			Skip: runtm.GOOS == "windows",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
 			GivenObjects: []client.Object{
 				parent.
