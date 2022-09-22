@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -28,6 +29,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"k8s.io/apimachinery/pkg/runtime"
 )
+
+var kubeConfPath = filepath.Join("testdata", ".kube", "config")
 
 func TestInitialize(t *testing.T) {
 	scheme := runtime.NewScheme()
@@ -64,12 +67,12 @@ func TestInitKubeConfig_Flag(t *testing.T) {
 	c.Stdout = output
 	c.Stderr = output
 
-	c.KubeConfigFile = "testdata/.kube/config"
+	c.KubeConfigFile = kubeConfPath
 
 	if expected, actual := "cli name", c.Name; expected != actual {
 		t.Errorf("Expected name %q, actually %q", expected, actual)
 	}
-	if expected, actual := "testdata/.kube/config", c.KubeConfigFile; expected != actual {
+	if expected, actual := kubeConfPath, c.KubeConfigFile; expected != actual {
 		t.Errorf("Expected kubeconfig path %q, actually %q", expected, actual)
 	}
 	if diff := cmp.Diff("", strings.TrimSpace(output.String())); diff != "" {
@@ -88,7 +91,7 @@ func TestInit(t *testing.T) {
 	c.Stdout = output
 	c.Stderr = output
 
-	c.KubeConfigFile = "testdata/.kube/config"
+	c.KubeConfigFile = kubeConfPath
 	c.init()
 
 	if expected, actual := "my-namespace", c.DefaultNamespace(); expected != actual {

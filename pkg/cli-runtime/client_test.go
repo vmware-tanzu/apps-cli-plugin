@@ -18,7 +18,9 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	rtesting "github.com/vmware-labs/reconciler-runtime/testing"
@@ -30,11 +32,13 @@ import (
 	clitestingresource "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing/resource"
 )
 
+var kubeConfigPath = filepath.Join("testdata", ".kube", "config")
+
 func TestNewClient(t *testing.T) {
 	scheme := runtime.NewScheme()
 	clitestingresource.AddToScheme(scheme)
 
-	c := NewClient("testdata/.kube/config", "", scheme)
+	c := NewClient(kubeConfigPath, "", scheme)
 	r := &clitestingresource.TestResource{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "my-namespace",
@@ -101,7 +105,7 @@ func TestNewClientWithEnvVarKubeconfig(t *testing.T) {
 			os.Unsetenv("KUBECONFIG")
 		}
 	}()
-	os.Setenv("KUBECONFIG", "testdata/.kube/config")
+	os.Setenv("KUBECONFIG", kubeConfigPath)
 
 	c := NewClient("", "", scheme)
 
@@ -136,7 +140,7 @@ func TestNewClientWithEnvVarKubeconfigPathWithColon(t *testing.T) {
 			os.Unsetenv("KUBECONFIG")
 		}
 	}()
-	os.Setenv("KUBECONFIG", "testdata/.kube/config:")
+	os.Setenv("KUBECONFIG", fmt.Sprintf("%s%s", kubeConfigPath, string(filepath.ListSeparator)))
 
 	c := NewClient("", "", scheme)
 
