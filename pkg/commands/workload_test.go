@@ -24,6 +24,8 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -36,7 +38,7 @@ import (
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -54,7 +56,7 @@ import (
 )
 
 func TestWorkloadCommand(t *testing.T) {
-	scheme := runtime.NewScheme()
+	scheme := k8sruntime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
 
 	table := clitesting.CommandTestSuite{
@@ -643,7 +645,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 	gitTag := "v0.0.1"
 	gitCommit := "abcdefg"
 
-	scheme := runtime.NewScheme()
+	scheme := k8sruntime.NewScheme()
 	c := cli.NewDefaultConfig("test", scheme)
 	c.Client = clitesting.NewFakeCliClient(clitesting.NewFakeClient(scheme))
 
@@ -1854,7 +1856,7 @@ Published source
 	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			scheme := runtime.NewScheme()
+			scheme := k8sruntime.NewScheme()
 			c := cli.NewDefaultConfig("test", scheme)
 			output := &bytes.Buffer{}
 			c.Stdout = output
@@ -1909,6 +1911,10 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 	u, err := url.Parse(reg.URL)
 	utilruntime.Must(err)
 	registryHost := u.Host
+	expectedImageDigest := "fedc574423e7aa2ecdd2ffb3381214e3c288db871ab9a3758f77489d6a777a1d"
+	if runtime.GOOS == "windows" {
+		expectedImageDigest = "4b931bb7ef0a7780a3fc58364aaf8634cf4885af6359fb692461f0247c8a9f34"
+	}
 
 	tests := []struct {
 		name             string
@@ -1917,15 +1923,27 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 		expected         string
 		shouldError      bool
 		expectedOutput   string
+		skip             bool
 		existingWorkload *cartov1alpha1.Workload
 	}{{
 		name:     "local source with excluded files",
 		args:     []string{flags.LocalPathFlagName, "testdata/local-source-exclude-files", flags.YesFlagName},
 		input:    fmt.Sprintf("%s/hello:source", registryHost),
-		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "fedc574423e7aa2ecdd2ffb3381214e3c288db871ab9a3758f77489d6a777a1d"),
+		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, expectedImageDigest),
 		expectedOutput: `
 The files and/or directories listed in the .tanzuignore file are being excluded from the uploaded source code.
 Publishing source in "testdata/local-source-exclude-files" to "` + registryHost + `/hello:source"...
+Published source
+`,
+	}, {
+		name:     "local source include tanzu ignore with windows path",
+		skip:     runtime.GOOS != "windows",
+		args:     []string{flags.LocalPathFlagName, filepath.Join("testdata", "local-source-exclude-files-windows"), flags.YesFlagName},
+		input:    fmt.Sprintf("%s/hello:source", registryHost),
+		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "8ce661d3fc7f94de72d76ec32f3ab6befc159fc263977e5b80564bf9e97a4509"),
+		expectedOutput: `
+The files and/or directories listed in the .tanzuignore file are being excluded from the uploaded source code.
+Publishing source in ` + fmt.Sprintf("%q", filepath.Join("testdata", "local-source-exclude-files-windows")) + ` to "` + registryHost + `/hello:source"...
 Published source
 `,
 	}, {
@@ -2002,7 +2020,10 @@ Published source
 	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			scheme := runtime.NewScheme()
+			if test.skip {
+				t.SkipNow()
+			}
+			scheme := k8sruntime.NewScheme()
 			c := cli.NewDefaultConfig("test", scheme)
 			output := &bytes.Buffer{}
 			c.Stdout = output
@@ -2165,7 +2186,7 @@ Created workload "my-workload"`,
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			scheme := runtime.NewScheme()
+			scheme := k8sruntime.NewScheme()
 			_ = cartov1alpha1.AddToScheme(scheme)
 			c := cli.NewDefaultConfig("test", scheme)
 			output := &bytes.Buffer{}
@@ -2210,7 +2231,7 @@ func TestWorkloadOptionsUpdate(t *testing.T) {
 	defaultNamespace := "default"
 	workloadName := "my-workload"
 
-	scheme := runtime.NewScheme()
+	scheme := k8sruntime.NewScheme()
 	c := cli.NewDefaultConfig("test", scheme)
 	c.Client = clitesting.NewFakeCliClient(clitesting.NewFakeClient(scheme))
 
@@ -2372,7 +2393,7 @@ Updated workload "my-workload"`,
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			scheme := runtime.NewScheme()
+			scheme := k8sruntime.NewScheme()
 			_ = cartov1alpha1.AddToScheme(scheme)
 			c := cli.NewDefaultConfig("test", scheme)
 			output := &bytes.Buffer{}
@@ -2424,7 +2445,7 @@ Updated workload "my-workload"`,
 }
 
 func TestLoadInputWorkload(t *testing.T) {
-	scheme := runtime.NewScheme()
+	scheme := k8sruntime.NewScheme()
 	c := cli.NewDefaultConfig("test", scheme)
 
 	tests := []struct {

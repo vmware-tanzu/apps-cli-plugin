@@ -1,0 +1,11 @@
+# this is a comment
+
+Tiltfile
+
+excludable
+
+resources\config\dev
+# This does not exist
+noExistentDirectory
+
+noExistentDirectory2\
