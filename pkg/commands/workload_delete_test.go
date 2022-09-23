@@ -19,6 +19,7 @@ package commands_test
 import (
 	"context"
 	"fmt"
+	runtm "runtime"
 	"strings"
 	"testing"
 	"time"
@@ -386,6 +387,7 @@ Workload "test-workload" was deleted
 			}},
 		}, {
 			Name: "delete workload failed with wait timeout error",
+			Skip: runtm.GOOS == "windows",
 			Args: []string{workloadName, flags.YesFlagName, flags.WaitFlagName},
 			GivenObjects: []client.Object{
 				parent,

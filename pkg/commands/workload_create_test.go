@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	runtm "runtime"
 	"testing"
 	"time"
 
@@ -216,6 +217,7 @@ Error: Failed to become ready: a hopefully informative message about what went w
 		},
 		{
 			Name: "wait with timeout error",
+			Skip: runtm.GOOS == "windows",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName, flags.WaitTimeoutFlagName, "1ns"},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{

@@ -19,6 +19,7 @@ package commands_test
 import (
 	"context"
 	"fmt"
+	runtm "runtime"
 	"testing"
 	"time"
 
@@ -404,6 +405,7 @@ Error: conflict updating workload, the object was modified by another user; plea
 		},
 		{
 			Name: "wait error with timeout",
+			Skip: runtm.GOOS == "windows",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
 			GivenObjects: []client.Object{
 				parent.
