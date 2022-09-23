@@ -22,11 +22,11 @@ require (
 	github.com/vmware-tanzu/tanzu-framework v0.25.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	gotest.tools/v3 v3.3.0
-	k8s.io/api v0.25.1
+	k8s.io/api v0.25.2
 	k8s.io/apiextensions-apiserver v0.25.0
-	k8s.io/apimachinery v0.25.1
-	k8s.io/cli-runtime v0.25.1
-	k8s.io/client-go v0.25.1
+	k8s.io/apimachinery v0.25.2
+	k8s.io/cli-runtime v0.25.2
+	k8s.io/client-go v0.25.2
 	k8s.io/kubectl v0.25.1
 	sigs.k8s.io/controller-runtime v0.12.3
 	sigs.k8s.io/yaml v1.3.0
