@@ -1206,7 +1206,7 @@ gotest.tools/v3/internal/assert
 gotest.tools/v3/internal/difflib
 gotest.tools/v3/internal/format
 gotest.tools/v3/internal/source
-# k8s.io/api v0.25.1
+# k8s.io/api v0.25.2
 ## explicit; go 1.19
 k8s.io/api/admission/v1
 k8s.io/api/admission/v1beta1
@@ -1269,7 +1269,7 @@ k8s.io/apiextensions-apiserver/pkg/apiserver/schema/objectmeta
 k8s.io/apiextensions-apiserver/pkg/apiserver/schema/pruning
 k8s.io/apiextensions-apiserver/pkg/apiserver/validation
 k8s.io/apiextensions-apiserver/third_party/forked/celopenapi/model
-# k8s.io/apimachinery v0.25.1
+# k8s.io/apimachinery v0.25.2
 ## explicit; go 1.19
 k8s.io/apimachinery/pkg/api/apitesting
 k8s.io/apimachinery/pkg/api/apitesting/fuzzer
@@ -1330,10 +1330,10 @@ k8s.io/apimachinery/third_party/forked/golang/reflect
 # k8s.io/apiserver v0.24.0
 ## explicit; go 1.16
 k8s.io/apiserver/pkg/storage/names
-# k8s.io/cli-runtime v0.25.1
+# k8s.io/cli-runtime v0.25.2
 ## explicit; go 1.19
 k8s.io/cli-runtime/pkg/resource
-# k8s.io/client-go v0.25.1
+# k8s.io/client-go v0.25.2
 ## explicit; go 1.19
 k8s.io/client-go/applyconfigurations/admissionregistration/v1
 k8s.io/client-go/applyconfigurations/admissionregistration/v1beta1
@@ -1478,7 +1478,7 @@ k8s.io/client-go/util/workqueue
 ## explicit; go 1.16
 k8s.io/cluster-bootstrap/token/api
 k8s.io/cluster-bootstrap/token/util
-# k8s.io/component-base v0.25.1
+# k8s.io/component-base v0.25.2
 ## explicit; go 1.19
 k8s.io/component-base/config
 k8s.io/component-base/config/v1alpha1
@@ -1507,7 +1507,7 @@ k8s.io/kube-openapi/pkg/validation/spec
 k8s.io/kube-openapi/pkg/validation/strfmt
 k8s.io/kube-openapi/pkg/validation/strfmt/bson
 k8s.io/kube-openapi/pkg/validation/validate
-# k8s.io/kubectl v0.25.1
+# k8s.io/kubectl v0.25.2
 ## explicit; go 1.19
 k8s.io/kubectl/pkg/scheme
 # k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
