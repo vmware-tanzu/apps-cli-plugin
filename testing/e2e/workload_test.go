@@ -27,9 +27,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"testing"
 
+	"github.com/creack/pty"
 	"github.com/google/go-cmp/cmp"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	it "github.com/vmware-tanzu/apps-cli-plugin/testing/suite"
@@ -408,18 +410,17 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
-			Name: "Get the updated workload with color",
-			//Focus:        true,
+			Name:         "Get the updated workload with color",
+			Skip:         runtime.GOOS == "windows",
 			WorkloadName: "test-create-git-annotations-workload",
 			Command: *it.NewTanzuAppsCommandLine(
 				"workload", "get", "test-create-git-annotations-workload", namespaceFlag),
 			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
-				r, w, err := os.Pipe()
+				r, w, err := pty.Open()
 				if err != nil {
 					t.Errorf("error while creating pipe %v", err)
 					t.FailNow()
 				}
-
 				originalStdout := os.Stdout
 				os.Stdout = w
 
@@ -448,11 +449,26 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
-			Name: "Get the updated workload without color",
-			//Focus:        true,
+			Name:         "Get the updated workload with no color flag",
+			Skip:         runtime.GOOS == "windows",
 			WorkloadName: "test-create-git-annotations-workload",
 			Command: *it.NewTanzuAppsCommandLine(
-				"workload", "get", "test-create-git-annotations-workload", namespaceFlag),
+				"workload", "get", "test-create-git-annotations-workload", namespaceFlag, "--no-color"),
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				r, w, err := pty.Open()
+				if err != nil {
+					t.Errorf("error while creating pipe %v", err)
+					t.FailNow()
+				}
+				originalStdout := os.Stdout
+				os.Stdout = w
+
+				ctx = context.WithValue(ctx, "reader", r)
+				ctx = context.WithValue(ctx, "writer", w)
+				ctx = context.WithValue(ctx, "stdout", originalStdout)
+
+				return ctx, nil
+			},
 			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if regexPod.FindString(output) == "" {
 					t.Errorf("expected Pod results in output %v", output)
@@ -460,7 +476,44 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				}
 				decodedString := strconv.QuoteToASCII(output)
 				if regexEmoji.FindString(decodedString) != "" {
-					t.Errorf("output has Emoji")
+					t.Errorf("output should not have Emoji")
+					t.FailNow()
+				}
+			},
+		},
+		{
+			Name:         "Get the updated workload with no color envvar",
+			Skip:         runtime.GOOS == "windows",
+			WorkloadName: "test-create-git-annotations-workload",
+			Command: func() it.CommandLine {
+				c := it.NewTanzuAppsCommandLine(
+					"workload", "get", "test-create-git-annotations-workload", namespaceFlag)
+				c.AddEnvVars("NO_COLOR=true")
+				return *c
+			}(),
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				r, w, err := pty.Open()
+				if err != nil {
+					t.Errorf("error while creating pipe %v", err)
+					t.FailNow()
+				}
+				originalStdout := os.Stdout
+				os.Stdout = w
+
+				ctx = context.WithValue(ctx, "reader", r)
+				ctx = context.WithValue(ctx, "writer", w)
+				ctx = context.WithValue(ctx, "stdout", originalStdout)
+
+				return ctx, nil
+			},
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
+				if regexPod.FindString(output) == "" {
+					t.Errorf("expected Pod results in output %v", output)
+					t.FailNow()
+				}
+				decodedString := strconv.QuoteToASCII(output)
+				if regexEmoji.FindString(decodedString) != "" {
+					t.Errorf("output should not have Emoji")
 					t.FailNow()
 				}
 			},
