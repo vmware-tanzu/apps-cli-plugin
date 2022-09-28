@@ -16,13 +16,18 @@ limitations under the License.
 package source
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
+
+const cr = "\r"
+const lf = "\n"
 
 func TestIsDir(t *testing.T) {
 	tests := []struct {
@@ -151,7 +156,7 @@ func TestHandleZip(t *testing.T) {
 						return err
 					}
 
-					if diff := cmp.Diff(wantFile, gotFile); diff != "" {
+					if diff := cmp.Diff(normalizeNewlines(wantFile), normalizeNewlines(gotFile)); diff != "" {
 						t.Errorf("ExtractZip() (-want, +got) = %v", diff)
 					}
 					return nil
@@ -161,4 +166,12 @@ func TestHandleZip(t *testing.T) {
 			}
 		})
 	}
+}
+
+func normalizeNewlines(d []byte) string {
+	// replace CR LF \r\n (windows) with LF \n (unix)
+	normalizedOutput := strings.ReplaceAll(string(d), fmt.Sprintf("%s%s", cr, lf), lf)
+	// replace CR \r (mac) with LF \n (unix)
+	normalizedOutput = strings.ReplaceAll(normalizedOutput, cr, lf)
+	return normalizedOutput
 }
