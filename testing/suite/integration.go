@@ -183,11 +183,6 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 			}
 		}
 
-		if err != nil && !cl.ShouldError {
-			t.Errorf("unexpected error in exec: %v: %v, ", err, cl.Command.GetOutput())
-			t.FailNow()
-		}
-
 		if err == nil && cl.ShouldError {
 			t.Errorf("Expected error, got nil")
 			t.FailNow()
