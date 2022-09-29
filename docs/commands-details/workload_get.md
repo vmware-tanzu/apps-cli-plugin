@@ -8,9 +8,9 @@ You can view workload details at anytime in the process. Some details, such as t
 
 There are multiple sections in workload get command output. Following data is displayed
 
-- Name of the workload and its status.
-- Display source information of workload.
-- If the workload was matched with a supply chain, the information of its name and the status is displayed.
+- An overview section, where workload name, type and namespace are displayed.
+- Display workload source information.
+- If the workload was matched with a supply chain, the information of its name and the resources related to it are also displayed.
 - Information and status of the individual steps that's defined in the supply chain for workload.
 - Any issue with the workload, the name and corresponding message.
 - Workload related resource information and status like services claims, related pods, knative services.
@@ -19,52 +19,52 @@ At the very end of the command output, a hint to follow up commands is also disp
 
 ```bash
 tanzu apps workload get rmq-sample-app
----
-# rmq-sample-app: Ready
----
-Overview
-    type:   web
 
-Source
+📡 Overview
+   name:        rmq-sample-app
+   type:        web
+   namespace:   default
+
+💾 Source
    type:     git
    url:      https://github.com/jhvhs/rabbitmq-sample
    branch:   main
 
-Supply Chain
-   name:          source-to-url
+📦 Supply Chain
+   name:   source-to-url
 
    RESOURCE          READY   HEALTHY   TIME    OUTPUT
-   source-provider   True    True      3m51s   ImageRepository/rmq-sample-app
-   image-builder     True    True      101s    Image/rmq-sample-app
-   config-provider   True    True      94s     PodIntent/rmq-sample-app
-   app-config        True    True      94s     ConfigMap/rmq-sample-app
-   config-writer     True    True      94s     Runnable/rmq-sample-app-config-writer
+   source-provider   True    True      4d10h   GitRepository/rmq-sample-app
+   image-builder     True    True      4d10h   Image/rmq-sample-app
+   config-provider   True    True      4d10h   PodIntent/rmq-sample-app
+   app-config        True    True      4d10h   ConfigMap/rmq-sample-app
+   config-writer     True    True      4d10h   Runnable/rmq-sample-app-config-writer
 
-Delivery
+🚚 Delivery
    name:   delivery-basic
 
-   RESOURCE          READY   HEALTHY   TIME   OUTPUT
-   source-provider   True    True      6d     ImageRepository/rmq-sample-app-delivery
-   deployer          True    True      21h    App/rmq-sample-app
+   RESOURCE          READY   HEALTHY   TIME    OUTPUT
+   source-provider   True    True      4d10h   ImageRepository/rmq-sample-app-delivery
+   deployer          True    True      4d10h   App/rmq-sample-app
 
-Messages
+💬 Messages
    No messages found.
 
-Services
+🔁 Services
    CLAIM   NAME                         KIND              API VERSION
    rmq     example-rabbitmq-cluster-1   RabbitmqCluster   rabbitmq.com/v1beta1
 
-Pods
-   NAME                                               STATUS      RESTARTS   AGE
-   rmq-sample-app-00001-deployment-78fc86b47c-r5jws   Running     0          45s
-   rmq-sample-app-build-1-build-pod                   Succeeded   0          3m50s
-   rmq-sample-app-config-writer-pbshl-pod             Succeeded   0          94s
+🛶 Pods
+   NAME                                     READY   STATUS      RESTARTS   AGE
+   rmq-sample-app-build-1-build-pod         0/1     Completed   0          4d10h
+   rmq-sample-app-config-writer-5m6cc-pod   0/1     Completed   0          4d10h
 
-Knative Services
+🚢 Knative Services
    NAME             READY   URL
-   rmq-sample-app   Ready   http://rmq-sample-app.default.example.com
+   rmq-sample-app   Ready   http://rmq-sample-app.default.127.0.0.1.nip.io
 
 To see logs: "tanzu apps workload tail rmq-sample-app"
+
 ```
 
 ### `--export`
@@ -221,18 +221,17 @@ Specifies the namespace where the workload was deployed
 ```bash
 tanzu apps workload get pet-clinic -n development
 
----
-# pet-clinic: Ready
----
-Overview
-    type:   web
+📡 Overview
+   name:        pet-clinic
+   type:        web
+   namespace:   development
 
-Source
+💾 Source
    type:   git
    url:    https://github.com/sample-accelerators/spring-petclinic
    tag:    tap-1.2
 
-Supply Chain
+📦 Supply Chain
    name:          source-to-url
 
    RESOURCE          READY   HEALTHY   TIME    OUTPUT
@@ -242,25 +241,30 @@ Supply Chain
    app-config        True    True      94s     ConfigMap/pet-clinic
    config-writer     True    True      94s     Runnable/pet-clinic-config-writer
 
-Delivery
+🚚 Delivery
    name:   delivery-basic
 
    RESOURCE          READY   HEALTHY   TIME   OUTPUT
    source-provider   True    True      6d     ImageRepository/pet-clinic-delivery
    deployer          True    True      21h    App/pet-clinic
 
-Messages
+💬 Messages
    No messages found.
 
-Pods
+🔁 Services
+   CLAIM   NAME                         KIND              API VERSION
+   rmq     example-rabbitmq-cluster-1   RabbitmqCluster   rabbitmq.com/v1beta1
+
+🛶 Pods
    NAME                                           STATUS      RESTARTS   AGE
    pet-clinic-00001-deployment-6445565f7b-ts8l5   Running     0          102s
    pet-clinic-build-1-build-pod                   Succeeded   0          102s
    pet-clinic-config-writer-8c9zv-pod             Succeeded   0          2m7s
 
-Knative Services
+🚢 Knative Services
    NAME         READY   URL
    pet-clinic   Ready   http://pet-clinic.default.apps.34.133.168.14.nip.io
 
 To see logs: "tanzu apps workload tail pet-clinic"
+
 ```

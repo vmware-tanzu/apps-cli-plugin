@@ -184,8 +184,9 @@ func TestWorkloadGetCommand(t *testing.T) {
 			GivenObjects: []client.Object{parent},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 Supply Chain reference not found.
 
@@ -214,8 +215,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   my-custom-namespace
 
 Supply Chain reference not found.
 
@@ -248,8 +250,9 @@ To see logs: "tanzu apps workload tail my-workload --namespace my-custom-namespa
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   <none>
@@ -284,8 +287,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   my-supply-chain
@@ -334,8 +338,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   my-supply-chain
@@ -391,8 +396,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   web
+   name:        my-workload
+   type:        web
+   namespace:   default
 
 📦 Supply Chain
    name:   my-supply-chain
@@ -435,8 +441,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   my-supply-chain
@@ -478,8 +485,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   web
+   name:        my-workload
+   type:        web
+   namespace:   default
 
 📦 Supply Chain
    name:   my-supply-chain
@@ -519,8 +527,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   my-supply-chain
@@ -563,8 +572,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   web
+   name:        my-workload
+   type:        web
+   namespace:   default
 
 📦 Supply Chain
    name:   my-supply-chain
@@ -606,8 +616,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   web
+   name:        my-workload
+   type:        web
+   namespace:   default
 
 📦 Supply Chain
    name:   my-supply-chain
@@ -658,8 +669,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 💾 Source
    type:     git
@@ -720,8 +732,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   web
+   name:        my-workload
+   type:        web
+   namespace:   default
 
 💾 Source
    type:     git
@@ -777,8 +790,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   web
+   name:        my-workload
+   type:        web
+   namespace:   default
 
 💾 Source
    type:    source image
@@ -824,8 +838,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 💾 Source
    type:    image
@@ -915,8 +930,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 💾 Source
    type:     git
@@ -1013,8 +1029,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   web
+   name:        my-workload
+   type:        web
+   namespace:   default
 
 💾 Source
    type:     git
@@ -1067,8 +1084,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			BuilderObjects: []client.Object{pod1Die},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   <none>
@@ -1115,8 +1133,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			BuilderObjects: []client.Object{pod1Die},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   <none>
@@ -1171,8 +1190,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   <none>
@@ -1231,8 +1251,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   my-supply-chain
@@ -1291,8 +1312,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   web
+   name:        my-workload
+   type:        web
+   namespace:   default
 
 📦 Supply Chain
    name:   my-supply-chain
@@ -1386,8 +1408,9 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 Supply Chain reference not found.
 
@@ -1416,8 +1439,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 Supply Chain reference not found.
 
@@ -1666,8 +1690,9 @@ status:
 			},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   <none>
@@ -1769,8 +1794,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   <none>
@@ -1853,8 +1879,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   <none>
@@ -1913,8 +1940,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
 📡 Overview
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 
 📦 Supply Chain
    name:   <none>

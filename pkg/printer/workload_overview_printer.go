@@ -28,7 +28,7 @@ import (
 )
 
 func WorkloadOverviewPrinter(w io.Writer, workload *cartov1alpha1.Workload) error {
-	printLocalSourceInfo := func(workload *cartov1alpha1.Workload, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
+	printWorkloadOverview := func(workload *cartov1alpha1.Workload, printOpts table.PrintOptions) ([]metav1beta1.TableRow, error) {
 		labels := workload.Labels
 		if labels == nil {
 			labels = map[string]string{}
@@ -39,19 +39,25 @@ func WorkloadOverviewPrinter(w io.Writer, workload *cartov1alpha1.Workload) erro
 				workload.GetName(),
 			},
 		}
-		sourceRow := metav1beta1.TableRow{
+		typeRow := metav1beta1.TableRow{
 			Cells: []interface{}{
 				"type:",
 				printer.EmptyString(labels[apis.WorkloadTypeLabelName]),
 			},
 		}
+		namespaceRow := metav1beta1.TableRow{
+			Cells: []interface{}{
+				"namespace:",
+				workload.GetNamespace(),
+			},
+		}
 
-		rows := []metav1beta1.TableRow{nameRow, sourceRow}
+		rows := []metav1beta1.TableRow{nameRow, typeRow, namespaceRow}
 
 		return rows, nil
 	}
 	tablePrinter := table.NewTablePrinter(table.PrintOptions{NoHeaders: true, PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
-		h.TableHandler(nil, printLocalSourceInfo)
+		h.TableHandler(nil, printWorkloadOverview)
 	})
 
 	return tablePrinter.PrintObj(workload, w)

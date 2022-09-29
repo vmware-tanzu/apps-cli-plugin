@@ -29,7 +29,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/printer"
 )
 
-func TestWorkloadDetailsPrinter(t *testing.T) {
+func TestWorkloadOverviewPrinter(t *testing.T) {
 	defaultNamespace := "default"
 	workloadName := "my-workload"
 	labels := make(map[string]string)
@@ -50,8 +50,9 @@ func TestWorkloadDetailsPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   name:   my-workload
-   type:   <empty>
+   name:        my-workload
+   type:        <empty>
+   namespace:   default
 `,
 	}, {
 		name: "type label present",
@@ -66,8 +67,26 @@ func TestWorkloadDetailsPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   name:   my-workload
-   type:   web
+   name:        my-workload
+   type:        web
+   namespace:   default
+`,
+	}, {
+		name: "check another namespace not default",
+		testWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      workloadName,
+				Namespace: "my-namespace",
+				Labels:    labels,
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Image: "my-image",
+			},
+		},
+		expectedOutput: `
+   name:        my-workload
+   type:        web
+   namespace:   my-namespace
 `,
 	}}
 
@@ -75,7 +94,7 @@ func TestWorkloadDetailsPrinter(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			output := &bytes.Buffer{}
 			if err := printer.WorkloadOverviewPrinter(output, test.testWorkload); err != nil {
-				t.Errorf("WorkloadSourcePrinter() expected no error, got %v", err)
+				t.Errorf("WorkloadOverviewPrinter() expected no error, got %v", err)
 			}
 			outputString := output.String()
 			if diff := cmp.Diff(strings.TrimPrefix(test.expectedOutput, "\n"), outputString); diff != "" {
