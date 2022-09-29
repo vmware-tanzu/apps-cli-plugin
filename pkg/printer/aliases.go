@@ -29,7 +29,6 @@ var ResourceDiff = printer.ResourceDiff
 var ResourceStatus = printer.ResourceStatus
 var Serrorf = printer.Serrorf
 var SortByNamespaceAndName = printer.SortByNamespaceAndName
-var WithSurveyStdio = printer.WithSurveyStdio
 
 type OutputFormat = printer.OutputFormat
 

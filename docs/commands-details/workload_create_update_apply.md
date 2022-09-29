@@ -88,7 +88,7 @@ Update workload:
 18, 17   |        tag: tap-1.1
 ...
 
-? Really update the workload "spring-pet-clinic"? (y/N)
+? Really update the workload "spring-pet-clinic"? [yN]
 ```
 </details>
 
@@ -179,7 +179,7 @@ Update workload:
   17, 13   |        tag: tap-1.1
 ...
 
-? Really update the workload "spring-pet-clinic"? (y/N)
+? Really update the workload "spring-pet-clinic"? [yN]
 ```
 </details>
 
@@ -209,7 +209,7 @@ Create workload:
      16 + |        branch: main
      17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -296,7 +296,7 @@ Update workload:
   16, 13   |        tag: tap-1.1
 ...
 
-? Really update the workload "spring-pet-clinic"? (y/N)
+? Really update the workload "spring-pet-clinic"? [yN]
 ```
 </details>
 
@@ -332,7 +332,7 @@ Create workload:
       22 + |        tag: tap-1.1
       23 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -429,7 +429,7 @@ Create workload:
       22 + |        tag: tap-1.1
       23 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -457,7 +457,7 @@ Create workload:
      14 + |        branch: main
      15 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -480,7 +480,7 @@ Update workload:
   11, 10   |  source:
 ...
 
-? Really update the workload "spring-pet-clinic"? (y/N)
+? Really update the workload "spring-pet-clinic"? [yN]
 ```
 </details>
 
@@ -510,7 +510,7 @@ Create workload:
    16 + |        branch: main
    17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -540,7 +540,7 @@ Create workload:
    16 + |        branch: main
    17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -654,7 +654,7 @@ Create workload:
      10 + |  source:
      11 + |    image:gcr.io/spring-community/spring-pet-clinic:latest@sha256:5feb0d9daf3f639755d8683ca7b647027cfddc7012e80c61dcdac27f0d7856a7
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -681,7 +681,7 @@ Create workload:
    13 + |        branch: main
    14 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -713,7 +713,7 @@ Create workload:
      18 + |        branch: main
      19 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -737,7 +737,7 @@ Update workload:
   16, 14   |    git:
 ...
 
-? Really update the workload "spring-pet-clinic"? (y/N)
+? Really update the workload "spring-pet-clinic"? [yN]
 ```
 </details>
  
@@ -769,7 +769,7 @@ Create workload:
      18 + |        branch: main
      19 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -796,7 +796,7 @@ Update workload:
   18, 13   |        branch: main
 ...
 
-? Really update the workload "spring-pet-clinic"? (y/N)
+? Really update the workload "spring-pet-clinic"? [yN]
 ```
 </details>
 
@@ -833,7 +833,7 @@ Create workload:
      10 + |  source:
      11 + |    image: company-registry.org/spring-community/spring-pet-clinic:latest@sha256:5feb0d9daf3f639755d8683ca7b647027cfddc7012e80c61dcdac27f0d7856a7
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -863,7 +863,7 @@ Create workload:
      10 + |  source:
      11 + |    image: company-registry.org/spring-community/spring-pet-clinic:latest@sha256:5feb0d9daf3f639755d8683ca7b647027cfddc7012e80c61dcdac27f0d7856a7
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -895,7 +895,7 @@ Create workload:
    16 + |        branch: main
    17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -925,7 +925,7 @@ Create workload:
     16 + |        branch: main
     17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -953,7 +953,7 @@ Create workload:
      14 + |        branch: main
      15 + |      url: https://github.com/sample-accelerators/spring-petclinic
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -976,7 +976,7 @@ Update workload:
  14, 13   |        branch: main
 ...
 
-? Really update the workload "spring-pet-clinic"? (y/N)
+? Really update the workload "spring-pet-clinic"? [yN]
 ```
 </details>
 
@@ -1007,7 +1007,7 @@ Create workload:
     17 + |        branch: main
     18 + |      url: https://github.com/jhvhs/rabbitmq-sample
 
-? Do you want to create this workload? (y/N)
+? Do you want to create this workload? [yN]
 ```
 </details>
 
@@ -1035,7 +1035,7 @@ Update workload:
   17, 11   |        branch: main
 ...
 
-? Really update the workload "rmq-sample-app"? (y/N)
+? Really update the workload "rmq-sample-app"? [yN]
 ```
 </details>
 
@@ -1065,7 +1065,7 @@ It's used to define which path is going to be used as root to create/update the 
        14 + |      url: https://github.com/path-to-repo/my-repo
        15 + |    subPath: my-subpath
 
-    ? Do you want to create this workload? (y/N)
+    ? Do you want to create this workload? [yN]
     ```
 
   - Local path
@@ -1087,7 +1087,7 @@ It's used to define which path is going to be used as root to create/update the 
             9 + |    image: gcr.io/my-registry/my-workload-image:latest@sha256:f28c5fedd0e902800e6df9605ce5e20a8e835df9e87b1a0aa256666ea179fc3f
            10 + |    subPath: subpath_folder
 
-      ? Do you want to create this workload? (y/N)
+      ? Do you want to create this workload? [yN]
 
       ```
 </details>

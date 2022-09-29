@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -103,10 +102,7 @@ func (opts *WorkloadDeleteOptions) Exec(ctx context.Context, c *cli.Config) erro
 				return nil
 			} else {
 				okToDeleteAll := false
-				err := survey.AskOne(&survey.Confirm{
-					Message: fmt.Sprintf("Really delete all workloads in the namespace %q?", opts.Namespace),
-				}, &okToDeleteAll, printer.WithSurveyStdio(c.Stdin, c.Stdout, c.Stderr))
-
+				err := cli.NewConfirmSurvey(c, "Really delete all workloads in the namespace %q?", opts.Namespace).Resolve(&okToDeleteAll)
 				if err != nil || !okToDeleteAll {
 					c.Infof("Skipping workloads in namespace %q\n", opts.Namespace)
 					return nil
@@ -135,10 +131,7 @@ func (opts *WorkloadDeleteOptions) Exec(ctx context.Context, c *cli.Config) erro
 				return nil
 			} else {
 				okToDelete := false
-				err := survey.AskOne(&survey.Confirm{
-					Message: fmt.Sprintf("Really delete the workload %q?", name),
-				}, &okToDelete, printer.WithSurveyStdio(c.Stdin, c.Stdout, c.Stderr))
-
+				err := cli.NewConfirmSurvey(c, "Really delete the workload %q?", name).Resolve(&okToDelete)
 				if err != nil || !okToDelete {
 					c.Infof("Skipping workload %q\n", name)
 					continue
