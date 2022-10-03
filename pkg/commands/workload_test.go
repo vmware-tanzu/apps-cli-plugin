@@ -55,6 +55,8 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
 )
 
+var localSource = filepath.Join("testdata", "local-source")
+
 func TestWorkloadCommand(t *testing.T) {
 	scheme := k8sruntime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
@@ -75,6 +77,11 @@ func TestWorkloadCommand(t *testing.T) {
 }
 
 func TestWorkloadOptionsValidate(t *testing.T) {
+	filePathSeparator := string(filepath.Separator)
+	localRepo := filepath.Join(filePathSeparator, "path", "to", "local", "repo")
+	caCertPath := filepath.Join(filePathSeparator, "path", "to", "ca.crt")
+	caCertPath2 := filepath.Join(filePathSeparator, "path", "2", "to", "ca.crt")
+	caCertPath3 := filepath.Join(filePathSeparator, "path", "3", "to", "ca.crt")
 	table := clitesting.ValidatableTestSuite{
 		{
 			Name: "empty namespace",
@@ -480,7 +487,7 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 				RegistryUsername: "username",
 				RegistryPassword: "password",
 				SourceImage:      "repo.example/image:tag",
-				LocalPath:        "/path/to/local/repo",
+				LocalPath:        localRepo,
 			},
 			ShouldValidate: true,
 		},
@@ -491,9 +498,9 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 				Name:             "my-resource",
 				RegistryUsername: "username",
 				RegistryPassword: "password",
-				CACertPaths:      []string{"/path/to/ca.crt"},
+				CACertPaths:      []string{caCertPath},
 				SourceImage:      "repo.example/image:tag",
-				LocalPath:        "/path/to/local/repo",
+				LocalPath:        localRepo,
 			},
 			ShouldValidate: true,
 		},
@@ -502,9 +509,9 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			Validatable: &commands.WorkloadOptions{
 				Namespace:   "default",
 				Name:        "my-resource",
-				CACertPaths: []string{"/path/to/ca.crt"},
+				CACertPaths: []string{caCertPath},
 				SourceImage: "repo.example/image:tag",
-				LocalPath:   "/path/to/local/repo",
+				LocalPath:   localRepo,
 			},
 			ShouldValidate: true,
 		},
@@ -513,9 +520,9 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			Validatable: &commands.WorkloadOptions{
 				Namespace:   "default",
 				Name:        "my-resource",
-				CACertPaths: []string{"/path/to/ca.crt", "/path/2/to/ca.crt", "/path/3/to/ca.crt"},
+				CACertPaths: []string{caCertPath, caCertPath2, caCertPath3},
 				SourceImage: "repo.example/image:tag",
-				LocalPath:   "/path/to/local/repo",
+				LocalPath:   localRepo,
 			},
 			ShouldValidate: true,
 		},
@@ -524,7 +531,7 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			Validatable: &commands.WorkloadOptions{
 				Namespace:   "default",
 				Name:        "my-resource",
-				CACertPaths: []string{"/path/to/ca.crt"},
+				CACertPaths: []string{caCertPath},
 				SourceImage: "repo.example/image:tag",
 			},
 			ExpectFieldErrors: validation.ErrMissingField(flags.LocalPathFlagName),
@@ -534,8 +541,8 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			Validatable: &commands.WorkloadOptions{
 				Namespace:   "default",
 				Name:        "my-resource",
-				LocalPath:   "/path/to/local/repo",
-				CACertPaths: []string{"/path/to/ca.crt"},
+				LocalPath:   localRepo,
+				CACertPaths: []string{caCertPath},
 			},
 			ExpectFieldErrors: validation.ErrMissingField(flags.SourceImageFlagName),
 		},
@@ -544,7 +551,7 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			Validatable: &commands.WorkloadOptions{
 				Namespace:   "default",
 				Name:        "my-resource",
-				CACertPaths: []string{"/path/to/ca.crt"},
+				CACertPaths: []string{caCertPath},
 			},
 			ExpectFieldErrors: validation.FieldErrors{}.Also(
 				validation.ErrMissingField(flags.SourceImageFlagName),
@@ -556,7 +563,7 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			Validatable: &commands.WorkloadOptions{
 				Namespace:        "default",
 				Name:             "my-resource",
-				LocalPath:        "/path/to/local/repo",
+				LocalPath:        localRepo,
 				RegistryUsername: "username",
 				RegistryPassword: "password",
 			},
@@ -592,7 +599,7 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 				Namespace:     "default",
 				Name:          "my-resource",
 				RegistryToken: "my-token",
-				LocalPath:     "/path/to/local/repo",
+				LocalPath:     localRepo,
 			},
 			ExpectFieldErrors: validation.ErrMissingField(flags.SourceImageFlagName),
 		},
@@ -625,7 +632,7 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 				Name:          "my-resource",
 				RegistryToken: "my-token",
 				SourceImage:   "repo.example/image:tag",
-				LocalPath:     "/path/to/local/repo",
+				LocalPath:     localRepo,
 			},
 			ShouldValidate: true,
 		},
@@ -1828,29 +1835,29 @@ func TestWorkloadOptionsPublishLocalSourcePrivateRegistry(t *testing.T) {
 		expectedOutput string
 	}{{
 		name:     "local source to private registry",
-		args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.RegistryCertFlagName, cert.Name(), flags.YesFlagName},
+		args:     []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.YesFlagName},
 		input:    fmt.Sprintf("%s/hello:source", registryHost),
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
-Publishing source in "testdata/local-source" to "` + registryHost + `/hello:source"...
+Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 Published source
 `,
 	}, {
 		name:     "local source to private registry with username and pass",
-		args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.RegistryCertFlagName, cert.Name(), flags.RegistryUsernameFlagName, "admin", flags.RegistryPasswordFlagName, "password", flags.YesFlagName},
+		args:     []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.RegistryUsernameFlagName, "admin", flags.RegistryPasswordFlagName, "password", flags.YesFlagName},
 		input:    fmt.Sprintf("%s/hello:source", registryHost),
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
-Publishing source in "testdata/local-source" to "` + registryHost + `/hello:source"...
+Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 Published source
 `,
 	}, {
 		name:     "local source to private registry with token",
-		args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.RegistryCertFlagName, cert.Name(), flags.RegistryTokenFlagName, "myToken123", flags.YesFlagName},
+		args:     []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.RegistryTokenFlagName, "myToken123", flags.YesFlagName},
 		input:    fmt.Sprintf("%s/hello:source", registryHost),
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
-Publishing source in "testdata/local-source" to "` + registryHost + `/hello:source"...
+Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 Published source
 `,
 	}}
@@ -1911,6 +1918,7 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 	u, err := url.Parse(reg.URL)
 	utilruntime.Must(err)
 	registryHost := u.Host
+	helloJarFilePath := filepath.Join("testdata", "hello.go.jar")
 	expectedImageDigest := "fedc574423e7aa2ecdd2ffb3381214e3c288db871ab9a3758f77489d6a777a1d"
 	if runtime.GOOS == "windows" {
 		expectedImageDigest = "4b931bb7ef0a7780a3fc58364aaf8634cf4885af6359fb692461f0247c8a9f34"
@@ -1927,12 +1935,12 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 		existingWorkload *cartov1alpha1.Workload
 	}{{
 		name:     "local source with excluded files",
-		args:     []string{flags.LocalPathFlagName, "testdata/local-source-exclude-files", flags.YesFlagName},
+		args:     []string{flags.LocalPathFlagName, filepath.Join("testdata", "local-source-exclude-files"), flags.YesFlagName},
 		input:    fmt.Sprintf("%s/hello:source", registryHost),
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, expectedImageDigest),
 		expectedOutput: `
 The files and/or directories listed in the .tanzuignore file are being excluded from the uploaded source code.
-Publishing source in "testdata/local-source-exclude-files" to "` + registryHost + `/hello:source"...
+Publishing source in ` + fmt.Sprintf("%q", filepath.Join("testdata", "local-source-exclude-files")) + ` to "` + registryHost + `/hello:source"...
 Published source
 `,
 	}, {
@@ -1948,39 +1956,39 @@ Published source
 `,
 	}, {
 		name:     "local source",
-		args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
+		args:     []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
 		input:    fmt.Sprintf("%s/hello:source", registryHost),
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
-Publishing source in "testdata/local-source" to "` + registryHost + `/hello:source"...
+Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 Published source
 `,
 	}, {
 		name:     "jar file",
-		args:     []string{flags.LocalPathFlagName, "testdata/hello.go.jar", flags.YesFlagName},
+		args:     []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
 		input:    fmt.Sprintf("%s/hello:source", registryHost),
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
 		expectedOutput: `
-Publishing source in "testdata/hello.go.jar" to "` + registryHost + `/hello:source"...
+Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registryHost + `/hello:source"...
 Published source
 `,
 	}, {
 		name:        "invalid file",
-		args:        []string{flags.LocalPathFlagName, "testdata/invalid.zip", flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, filepath.Join("testdata", "invalid.zip"), flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
 		shouldError: true,
 	}, {
 		name:     "with digest",
-		args:     []string{flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
+		args:     []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
 		input:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
-Publishing source in "testdata/local-source" to "` + registryHost + `/hello:source"...
+Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 Published source
 `,
 	}, {
 		name:     "when workload already has resolved image with digest",
-		args:     []string{flags.LocalPathFlagName, "testdata/hello.go.jar", flags.YesFlagName},
+		args:     []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
 		input:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
 		existingWorkload: &cartov1alpha1.Workload{
@@ -1991,19 +1999,19 @@ Published source
 			},
 		},
 		expectedOutput: `
-Publishing source in "testdata/hello.go.jar" to "` + registryHost + `/hello:source"...
+Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registryHost + `/hello:source"...
 No source code is changed
 `,
 	}, {
 		name:     "when workload already has resolved image with digest and no source",
-		args:     []string{flags.LocalPathFlagName, "testdata/hello.go.jar", flags.YesFlagName},
+		args:     []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
 		input:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
 		existingWorkload: &cartov1alpha1.Workload{
 			Spec: cartov1alpha1.WorkloadSpec{},
 		},
 		expectedOutput: `
-Publishing source in "testdata/hello.go.jar" to "` + registryHost + `/hello:source"...
+Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registryHost + `/hello:source"...
 Published source
 `,
 	}, {
@@ -2014,7 +2022,7 @@ Published source
 		expectedOutput: "",
 	}, {
 		name:        "publish local source with error",
-		args:        []string{flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
 		input:       "a",
 		shouldError: true,
 	}}

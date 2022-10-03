@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"path"
+	"path/filepath"
 
 	regname "github.com/google/go-containerregistry/pkg/name"
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/plainimage"
@@ -35,7 +35,7 @@ func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, reg pla
 		return "", fmt.Errorf("parsing '%s': %s", image, err)
 	}
 
-	excludedFiles = append(excludedFiles, path.Join(dir, ".imgpkg"))
+	excludedFiles = append(excludedFiles, filepath.Join(dir, ".imgpkg"))
 	logger := logger.RetrieveSourceImageLogger(ctx)
 	digest, err := plainimage.NewContents([]string{dir}, excludedFiles).Push(uploadRef, nil, reg, logger)
 	if err != nil {
