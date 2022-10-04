@@ -20,15 +20,18 @@ limitations under the License.
 package integration_test
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"testing"
 
+	"github.com/creack/pty"
 	"github.com/google/go-cmp/cmp"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	it "github.com/vmware-tanzu/apps-cli-plugin/testing/suite"
@@ -146,18 +149,16 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				)
 				return c
 			}(),
-			Prepare: func(t *testing.T) error {
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
 				if v, ok := os.LookupEnv("CERT_DIR"); ok {
 					if err := it.NewCommandLine("sudo", "cp", v+"/ca.pem", "/usr/local/share/ca-certificates/ca.crt").Exec(); err != nil {
-						t.Errorf("unexpected error while try to copy registry certs %v ", err)
-						t.FailNow()
+						t.Fatalf("unexpected error while trying to copy registry certs %v ", err)
 					}
 					if err := it.NewCommandLine("sudo", "update-ca-certificates").Exec(); err != nil {
-						t.Errorf("unexpected error while try to copy registry certs %v ", err)
-						t.FailNow()
+						t.Fatalf("unexpected error while trying to update registry certs %v ", err)
 					}
 				}
-				return nil
+				return ctx, nil
 			},
 			ExpectedObject: &cartov1alpha1.Workload{
 				TypeMeta: workloadTypeMeta,
@@ -174,49 +175,41 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					},
 				},
 			},
-			Verify: func(t *testing.T, output string, err error) {
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if _, err := exec.LookPath("imgpkg"); err != nil {
-					t.Errorf("expected imgpkg in PATH: %v", err)
-					t.FailNow()
+					t.Fatalf("expected imgpkg in PATH: %v", err)
 				}
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
 
 				if regexProgress.FindString(output) == "" {
-					t.Errorf("expected progressbar in output %v", output)
-					t.FailNow()
+					t.Fatalf("expected progressbar in output %v", output)
 				}
 				if err := it.NewCommandLine("imgpkg", "pull", "-i", os.Getenv("BUNDLE"), "-o", dir).Exec(); err != nil {
-					t.Errorf("unexpected error %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error %v", err)
 				}
 				// compare files
 				got, err := os.ReadFile(filepath.Join(dir, "hello.go"))
 				if err != nil {
-					t.Errorf("unexpected error reading file %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
 				excepted, err := os.ReadFile("./testdata/hello.go")
 				if err != nil {
-					t.Errorf("unexpected error reading file %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
 				if diff := cmp.Diff(string(excepted), string(got)); diff != "" {
-					t.Errorf("(-expected, +actual)\n%s", diff)
-					t.FailNow()
+					t.Fatalf("(-expected, +actual)\n%s", diff)
 				}
 			},
-			CleanUp: func(t *testing.T) error {
+			CleanUp: func(ctx context.Context, t *testing.T) error {
 				if _, ok := os.LookupEnv("CERT_DIR"); ok {
 					if err := it.NewCommandLine("sudo", "rm", "-f", "/usr/local/share/ca-certificates/ca.crt").Exec(); err != nil {
-						t.Errorf("unexpected error while try to copy registry certs %v ", err)
-						t.FailNow()
+						t.Fatalf("unexpected error while trying to delete registry certs %v ", err)
 					}
 					if err := it.NewCommandLine("sudo", "update-ca-certificates").Exec(); err != nil {
-						t.Errorf("unexpected error while try to copy registry certs %v ", err)
-						t.FailNow()
+						t.Fatalf("unexpected error while trying to update registry certs %v ", err)
 					}
 				}
 				return nil
@@ -255,17 +248,15 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					},
 				},
 			},
-			Verify: func(t *testing.T, output string, err error) {
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if _, err := exec.LookPath("imgpkg"); err != nil {
-					t.Errorf("expected imgpkg in PATH: %v", err)
-					t.FailNow()
+					t.Fatalf("expected imgpkg in PATH: %v", err)
 				}
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
 
 				if regexProgress.FindString(output) == "" {
-					t.Errorf("expected progressbar in output %v", output)
-					t.FailNow()
+					t.Fatalf("expected progressbar in output %v", output)
 				}
 				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE"), "-o", dir)
 				ic.AddEnvVars(
@@ -274,25 +265,21 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				)
 
 				if err := ic.Exec(); err != nil {
-					t.Errorf("unexpected error %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error %v", err)
 				}
 				// compare files
 				got, err := os.ReadFile(filepath.Join(dir, "hello.go"))
 				if err != nil {
-					t.Errorf("unexpected error reading file %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
 				excepted, err := os.ReadFile("./testdata/hello.go")
 				if err != nil {
-					t.Errorf("unexpected error reading file %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
 				if diff := cmp.Diff(string(excepted), string(got)); diff != "" {
-					t.Errorf("(-expected, +actual)\n%s", diff)
-					t.FailNow()
+					t.Fatalf("(-expected, +actual)\n%s", diff)
 				}
 			},
 		},
@@ -331,17 +318,15 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					},
 				},
 			},
-			Verify: func(t *testing.T, output string, err error) {
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if _, err := exec.LookPath("imgpkg"); err != nil {
-					t.Errorf("expected imgpkg in PATH: %v", err)
-					t.FailNow()
+					t.Fatalf("expected imgpkg in PATH: %v", err)
 				}
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
 
 				if regexProgress.FindString(output) == "" {
-					t.Errorf("expected progressbar in output %v", output)
-					t.FailNow()
+					t.Fatalf("expected progressbar in output %v", output)
 				}
 				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE")+"-env", "-o", dir)
 				ic.AddEnvVars(
@@ -350,25 +335,21 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				)
 
 				if err := ic.Exec(); err != nil {
-					t.Errorf("unexpected error %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error %v", err)
 				}
 				// compare files
 				got, err := os.ReadFile(filepath.Join(dir, "hello.go"))
 				if err != nil {
-					t.Errorf("unexpected error reading file %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
 				excepted, err := os.ReadFile("./testdata/hello.go")
 				if err != nil {
-					t.Errorf("unexpected error reading file %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
 				if diff := cmp.Diff(string(excepted), string(got)); diff != "" {
-					t.Errorf("(-expected, +actual)\n%s", diff)
-					t.FailNow()
+					t.Fatalf("(-expected, +actual)\n%s", diff)
 				}
 			},
 		},
@@ -406,20 +387,109 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
-			Name:         "Get the updated workload",
+			Name:         "Get the updated workload with color",
+			Skip:         runtime.GOOS == "windows",
 			WorkloadName: "test-create-git-annotations-workload",
 			Command: *it.NewTanzuAppsCommandLine(
 				"workload", "get", "test-create-git-annotations-workload", namespaceFlag),
-			Verify: func(t *testing.T, output string, err error) {
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				r, w, err := pty.Open()
+				if err != nil {
+					t.Fatalf("error while opening pty %v", err)
+				}
+				originalStdout := os.Stdout
+				os.Stdout = w
+
+				ctx = context.WithValue(ctx, "reader", r)
+				ctx = context.WithValue(ctx, "writer", w)
+				ctx = context.WithValue(ctx, "stdout", originalStdout)
+
+				return ctx, nil
+			},
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if regexPod.FindString(output) == "" {
-					t.Errorf("expected Pod results in output %v", output)
-					t.FailNow()
+					t.Fatalf("expected Pod results in output %v", output)
 				}
 				decodedString := strconv.QuoteToASCII(output)
 				if regexEmoji.FindString(decodedString) == "" {
-					t.Errorf("output does not have Emoji")
-					t.FailNow()
+					t.Fatalf("output should have Emoji")
 				}
+			},
+			CleanUp: func(ctx context.Context, t *testing.T) error {
+				os.Stdout = ctx.Value("stdout").(*os.File)
+				return nil
+			},
+		},
+		{
+			Name:         "Get the updated workload with no color flag",
+			Skip:         runtime.GOOS == "windows",
+			WorkloadName: "test-create-git-annotations-workload",
+			Command: *it.NewTanzuAppsCommandLine(
+				"workload", "get", "test-create-git-annotations-workload", namespaceFlag, "--no-color"),
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				r, w, err := pty.Open()
+				if err != nil {
+					t.Fatalf("error while opening pty %v", err)
+				}
+				originalStdout := os.Stdout
+				os.Stdout = w
+
+				ctx = context.WithValue(ctx, "reader", r)
+				ctx = context.WithValue(ctx, "writer", w)
+				ctx = context.WithValue(ctx, "stdout", originalStdout)
+
+				return ctx, nil
+			},
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
+				if regexPod.FindString(output) == "" {
+					t.Fatalf("expected Pod results in output %v", output)
+				}
+				decodedString := strconv.QuoteToASCII(output)
+				if regexEmoji.FindString(decodedString) != "" {
+					t.Fatalf("output should not have Emoji")
+				}
+			},
+			CleanUp: func(ctx context.Context, t *testing.T) error {
+				os.Stdout = ctx.Value("stdout").(*os.File)
+				return nil
+			},
+		},
+		{
+			Name:         "Get the updated workload with no color envvar",
+			Skip:         runtime.GOOS == "windows",
+			WorkloadName: "test-create-git-annotations-workload",
+			Command: func() it.CommandLine {
+				c := it.NewTanzuAppsCommandLine(
+					"workload", "get", "test-create-git-annotations-workload", namespaceFlag)
+				c.AddEnvVars("NO_COLOR=true")
+				return *c
+			}(),
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				r, w, err := pty.Open()
+				if err != nil {
+					t.Fatalf("error while opening pty %v", err)
+				}
+				originalStdout := os.Stdout
+				os.Stdout = w
+
+				ctx = context.WithValue(ctx, "reader", r)
+				ctx = context.WithValue(ctx, "writer", w)
+				ctx = context.WithValue(ctx, "stdout", originalStdout)
+
+				return ctx, nil
+			},
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
+				if regexPod.FindString(output) == "" {
+					t.Fatalf("expected Pod results in output %v", output)
+				}
+				decodedString := strconv.QuoteToASCII(output)
+				if regexEmoji.FindString(decodedString) != "" {
+					t.Fatalf("output should not have Emoji")
+				}
+			},
+			CleanUp: func(ctx context.Context, t *testing.T) error {
+				os.Stdout = ctx.Value("stdout").(*os.File)
+				return nil
 			},
 		},
 		{

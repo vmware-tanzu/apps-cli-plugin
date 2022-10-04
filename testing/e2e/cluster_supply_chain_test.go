@@ -20,6 +20,7 @@ limitations under the License.
 package integration_test
 
 import (
+	"context"
 	"regexp"
 	"strings"
 	"testing"
@@ -32,23 +33,20 @@ func TestClusterSupplyChain(t *testing.T) {
 		{
 			Name:    "List the existing supply chains",
 			Command: *it.NewTanzuAppsCommandLine("cluster-supply-chain", "list"),
-			Verify: func(t *testing.T, output string, err error) {
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				match, err := regexp.MatchString(`.*.\nci-test[ ]{3,}[<>a-zA-Z]{5,}[ ]{3,}[0-9]{1,}s\n.*`, output)
 				if err != nil {
-					t.Error("Error while validating the output", err)
-					t.FailNow()
+					t.Fatalf("Error while validating the output %v", err)
 				}
 				if !match {
-					t.Errorf("Expected 'ci-test   <status>   0s' to be present in\n%s", output)
-					t.FailNow()
+					t.Fatalf("Expected 'ci-test   <status>   0s' to be present in\n%s", output)
 				}
 				expectedFooter := `
 To view details: "tanzu apps cluster-supply-chain get <name>"
 
 `
 				if !strings.HasSuffix(output, expectedFooter) {
-					t.Errorf("Expected %s to be present in the output", expectedFooter)
-					t.FailNow()
+					t.Fatalf("Expected %s to be present in the output", expectedFooter)
 				}
 
 			},
@@ -56,20 +54,17 @@ To view details: "tanzu apps cluster-supply-chain get <name>"
 		{
 			Name:    "Get the existing supply chain",
 			Command: *it.NewTanzuAppsCommandLine("cluster-supply-chain", "get", "ci-test"),
-			Verify: func(t *testing.T, output string, err error) {
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				expectedHeader := "---\n# ci-test:"
 				if !strings.HasPrefix(output, expectedHeader) {
-					t.Errorf("Expected %s to be present in the output", expectedHeader)
-					t.FailNow()
+					t.Fatalf("Expected %s to be present in the output", expectedHeader)
 				}
 				match, err := regexp.MatchString(`.*.\n[ ]{3,}labels[ ]{3,}apps\.tanzu\.vmware\.com\/workload-type[ ]{3,}web\n.*`, output)
 				if err != nil {
-					t.Error("Error while validating the output", err)
-					t.FailNow()
+					t.Fatalf("Error while validating the output %v", err)
 				}
 				if !match {
-					t.Errorf("Expected 'labels   apps.tanzu.vmware.com/workload-type   web' to be present in\n%s", output)
-					t.FailNow()
+					t.Fatalf("Expected 'labels   apps.tanzu.vmware.com/workload-type   web' to be present in\n%s", output)
 				}
 
 			},

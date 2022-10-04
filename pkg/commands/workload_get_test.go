@@ -1936,6 +1936,70 @@ To see logs: "tanzu apps workload tail my-workload"
 To see logs: "tanzu apps workload tail my-workload"
 
 `,
+		}, {
+			Name:   "no emoji displayed for no-color flag",
+			Args:   []string{workloadName},
+			Config: &cli.Config{NoColor: true},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.AddLabel(apis.WorkloadTypeLabelName, "web")
+					}).
+					StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+						d.ConditionsDie(
+							diecartov1alpha1.WorkloadConditionReadyBlank.
+								Status(metav1.ConditionTrue).
+								Reason("Worked").
+								Message("Ready"),
+						).SupplyChainRef(cartov1alpha1.ObjectReference{
+							APIVersion: "supplychains.tanzu.vmware.com/v1alpha1",
+							Kind:       "SupplyChain",
+							Name:       "my-supply-chain",
+							Namespace:  defaultNamespace,
+						})
+					}),
+				ksvcDieWithURL,
+				ksvcDieWithNoURL,
+				pod1Die.
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodRunning)
+					}),
+				pod2Die.
+					StatusDie(func(d *diecorev1.PodStatusDie) {
+						d.Phase(corev1.PodFailed)
+					}),
+			},
+			BuilderObjects: []client.Object{pod1Die, pod2Die},
+			ExpectOutput: `
+Overview
+   name:   my-workload
+   type:   web
+
+Supply Chain
+   name:   my-supply-chain
+
+   Supply Chain resources not found.
+
+Delivery
+
+   Delivery resources not found.
+
+Messages
+   No messages found.
+
+Pods
+   NAME   READY   STATUS   RESTARTS   AGE
+   pod1   0/0              0          <unknown>
+   pod2   0/0              0          <unknown>
+
+Knative Services
+   NAME    READY       URL
+   ksvc1   Ready       https://example.com
+   ksvc2   not-Ready   <empty>
+
+To see logs: "tanzu apps workload tail my-workload"
+
+`,
 		},
 	}
 
