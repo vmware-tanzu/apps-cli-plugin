@@ -57,8 +57,7 @@ var (
 func TestCreateFromGitWithAnnotations(t *testing.T) {
 	testSuite := it.CommandLineIntegrationTestSuite{
 		{
-			Name: "Create workload with valid name from a git repo and annotations",
-			//Focus:        true,
+			Name:         "Create workload with valid name from a git repo and annotations",
 			WorkloadName: "test-create-git-annotations-workload",
 			Command: func() it.CommandLine {
 				c := *it.NewTanzuAppsCommandLine(
@@ -153,12 +152,10 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
 				if v, ok := os.LookupEnv("CERT_DIR"); ok {
 					if err := it.NewCommandLine("sudo", "cp", v+"/ca.pem", "/usr/local/share/ca-certificates/ca.crt").Exec(); err != nil {
-						t.Errorf("unexpected error while try to copy registry certs %v ", err)
-						t.FailNow()
+						t.Fatalf("unexpected error while trying to copy registry certs %v ", err)
 					}
 					if err := it.NewCommandLine("sudo", "update-ca-certificates").Exec(); err != nil {
-						t.Errorf("unexpected error while try to copy registry certs %v ", err)
-						t.FailNow()
+						t.Fatalf("unexpected error while trying to update registry certs %v ", err)
 					}
 				}
 				return ctx, nil
@@ -180,47 +177,39 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if _, err := exec.LookPath("imgpkg"); err != nil {
-					t.Errorf("expected imgpkg in PATH: %v", err)
-					t.FailNow()
+					t.Fatalf("expected imgpkg in PATH: %v", err)
 				}
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
 
 				if regexProgress.FindString(output) == "" {
-					t.Errorf("expected progressbar in output %v", output)
-					t.FailNow()
+					t.Fatalf("expected progressbar in output %v", output)
 				}
 				if err := it.NewCommandLine("imgpkg", "pull", "-i", os.Getenv("BUNDLE"), "-o", dir).Exec(); err != nil {
-					t.Errorf("unexpected error %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error %v", err)
 				}
 				// compare files
 				got, err := os.ReadFile(filepath.Join(dir, "hello.go"))
 				if err != nil {
-					t.Errorf("unexpected error reading file %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
 				excepted, err := os.ReadFile("./testdata/hello.go")
 				if err != nil {
-					t.Errorf("unexpected error reading file %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
 				if diff := cmp.Diff(string(excepted), string(got)); diff != "" {
-					t.Errorf("(-expected, +actual)\n%s", diff)
-					t.FailNow()
+					t.Fatalf("(-expected, +actual)\n%s", diff)
 				}
 			},
 			CleanUp: func(ctx context.Context, t *testing.T) error {
 				if _, ok := os.LookupEnv("CERT_DIR"); ok {
 					if err := it.NewCommandLine("sudo", "rm", "-f", "/usr/local/share/ca-certificates/ca.crt").Exec(); err != nil {
-						t.Errorf("unexpected error while try to copy registry certs %v ", err)
-						t.FailNow()
+						t.Fatalf("unexpected error while trying to delete registry certs %v ", err)
 					}
 					if err := it.NewCommandLine("sudo", "update-ca-certificates").Exec(); err != nil {
-						t.Errorf("unexpected error while try to copy registry certs %v ", err)
-						t.FailNow()
+						t.Fatalf("unexpected error while trying to update registry certs %v ", err)
 					}
 				}
 				return nil
@@ -261,15 +250,13 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if _, err := exec.LookPath("imgpkg"); err != nil {
-					t.Errorf("expected imgpkg in PATH: %v", err)
-					t.FailNow()
+					t.Fatalf("expected imgpkg in PATH: %v", err)
 				}
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
 
 				if regexProgress.FindString(output) == "" {
-					t.Errorf("expected progressbar in output %v", output)
-					t.FailNow()
+					t.Fatalf("expected progressbar in output %v", output)
 				}
 				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE"), "-o", dir)
 				ic.AddEnvVars(
@@ -278,25 +265,21 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				)
 
 				if err := ic.Exec(); err != nil {
-					t.Errorf("unexpected error %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error %v", err)
 				}
 				// compare files
 				got, err := os.ReadFile(filepath.Join(dir, "hello.go"))
 				if err != nil {
-					t.Errorf("unexpected error reading file %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
 				excepted, err := os.ReadFile("./testdata/hello.go")
 				if err != nil {
-					t.Errorf("unexpected error reading file %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
 				if diff := cmp.Diff(string(excepted), string(got)); diff != "" {
-					t.Errorf("(-expected, +actual)\n%s", diff)
-					t.FailNow()
+					t.Fatalf("(-expected, +actual)\n%s", diff)
 				}
 			},
 		},
@@ -337,15 +320,13 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if _, err := exec.LookPath("imgpkg"); err != nil {
-					t.Errorf("expected imgpkg in PATH: %v", err)
-					t.FailNow()
+					t.Fatalf("expected imgpkg in PATH: %v", err)
 				}
 				dir, _ := ioutil.TempDir("", "")
 				defer os.RemoveAll(dir)
 
 				if regexProgress.FindString(output) == "" {
-					t.Errorf("expected progressbar in output %v", output)
-					t.FailNow()
+					t.Fatalf("expected progressbar in output %v", output)
 				}
 				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE")+"-env", "-o", dir)
 				ic.AddEnvVars(
@@ -354,25 +335,21 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				)
 
 				if err := ic.Exec(); err != nil {
-					t.Errorf("unexpected error %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error %v", err)
 				}
 				// compare files
 				got, err := os.ReadFile(filepath.Join(dir, "hello.go"))
 				if err != nil {
-					t.Errorf("unexpected error reading file %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
 				excepted, err := os.ReadFile("./testdata/hello.go")
 				if err != nil {
-					t.Errorf("unexpected error reading file %v ", err)
-					t.FailNow()
+					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
 				if diff := cmp.Diff(string(excepted), string(got)); diff != "" {
-					t.Errorf("(-expected, +actual)\n%s", diff)
-					t.FailNow()
+					t.Fatalf("(-expected, +actual)\n%s", diff)
 				}
 			},
 		},
@@ -418,8 +395,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
 				r, w, err := pty.Open()
 				if err != nil {
-					t.Errorf("error while creating pipe %v", err)
-					t.FailNow()
+					t.Fatalf("error while opening pty %v", err)
 				}
 				originalStdout := os.Stdout
 				os.Stdout = w
@@ -432,18 +408,14 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if regexPod.FindString(output) == "" {
-					t.Errorf("expected Pod results in output %v", output)
-					t.FailNow()
+					t.Fatalf("expected Pod results in output %v", output)
 				}
 				decodedString := strconv.QuoteToASCII(output)
 				if regexEmoji.FindString(decodedString) == "" {
-					t.Errorf("output does not have Emoji")
-					t.FailNow()
+					t.Fatalf("output should have Emoji")
 				}
 			},
 			CleanUp: func(ctx context.Context, t *testing.T) error {
-				ctx = context.WithValue(ctx, "reader", nil)
-				ctx = context.WithValue(ctx, "writer", nil)
 				os.Stdout = ctx.Value("stdout").(*os.File)
 				return nil
 			},
@@ -457,8 +429,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
 				r, w, err := pty.Open()
 				if err != nil {
-					t.Errorf("error while creating pipe %v", err)
-					t.FailNow()
+					t.Fatalf("error while opening pty %v", err)
 				}
 				originalStdout := os.Stdout
 				os.Stdout = w
@@ -471,14 +442,16 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if regexPod.FindString(output) == "" {
-					t.Errorf("expected Pod results in output %v", output)
-					t.FailNow()
+					t.Fatalf("expected Pod results in output %v", output)
 				}
 				decodedString := strconv.QuoteToASCII(output)
 				if regexEmoji.FindString(decodedString) != "" {
-					t.Errorf("output should not have Emoji")
-					t.FailNow()
+					t.Fatalf("output should not have Emoji")
 				}
+			},
+			CleanUp: func(ctx context.Context, t *testing.T) error {
+				os.Stdout = ctx.Value("stdout").(*os.File)
+				return nil
 			},
 		},
 		{
@@ -494,8 +467,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
 				r, w, err := pty.Open()
 				if err != nil {
-					t.Errorf("error while creating pipe %v", err)
-					t.FailNow()
+					t.Fatalf("error while opening pty %v", err)
 				}
 				originalStdout := os.Stdout
 				os.Stdout = w
@@ -508,14 +480,16 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
 				if regexPod.FindString(output) == "" {
-					t.Errorf("expected Pod results in output %v", output)
-					t.FailNow()
+					t.Fatalf("expected Pod results in output %v", output)
 				}
 				decodedString := strconv.QuoteToASCII(output)
 				if regexEmoji.FindString(decodedString) != "" {
-					t.Errorf("output should not have Emoji")
-					t.FailNow()
+					t.Fatalf("output should not have Emoji")
 				}
+			},
+			CleanUp: func(ctx context.Context, t *testing.T) error {
+				os.Stdout = ctx.Value("stdout").(*os.File)
+				return nil
 			},
 		},
 		{

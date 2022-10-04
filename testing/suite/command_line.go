@@ -110,7 +110,7 @@ func (c *CommandLine) Exec() error {
 	return nil
 }
 
-func (c *CommandLine) ExecWithCustomPipe(w *os.File, r *os.File) error {
+func (c *CommandLine) ExecWithCustomPipe(w, r *os.File) error {
 	outC := make(chan string)
 	// copy the output in a separate goroutine so it won't block indefinitely
 	go func() {

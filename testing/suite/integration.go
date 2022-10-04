@@ -166,8 +166,6 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 
 		var err error
 
-		//t.Logf("Command output:\n%s\n\n%v\n", cl.Command.String(), cl.Command.GetOutput())
-
 		if okWriter && okReader {
 			err = cl.Command.ExecWithCustomPipe(w, r)
 			if err != nil && !cl.ShouldError {
@@ -176,7 +174,6 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 			}
 		} else {
 			err = cl.Command.Exec()
-			// t.Logf("Command output:\n%s\n\n%v\n", cl.Command.String(), cl.Command.GetOutput())
 			if err != nil && !cl.ShouldError {
 				t.Errorf("unexpected error in exec: %v: %v, ", err, cl.Command.GetOutput())
 				t.FailNow()
