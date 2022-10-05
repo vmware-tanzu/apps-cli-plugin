@@ -97,9 +97,9 @@ type CommandLineIntegrationTestCase struct {
 	ExpectedObject            client.Object
 	IsList                    bool
 	ExpectedObjectList        client.ObjectList
-	Verify                    func(t *testing.T, output string, err error)
-	Prepare                   func(t *testing.T) error
-	CleanUp                   func(t *testing.T) error
+	Verify                    func(ctx context.Context, t *testing.T, output string, err error)
+	Prepare                   func(context.Context, *testing.T) (context.Context, error)
+	CleanUp                   func(context.Context, *testing.T) error
 }
 
 func (ts CommandLineIntegrationTestSuite) Run(t *testing.T) {
@@ -153,28 +153,37 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 			}
 		}
 		if cl.Prepare != nil {
-			if err := cl.Prepare(t); err != nil {
-				t.Errorf("unexpected error in prepare: %v", err)
-				t.FailNow()
+			var err error
+			if ctx, err = cl.Prepare(ctx, t); err != nil {
+				t.Fatalf("unexpected error in prepare: %v", err)
 			}
 
 		}
-		err := cl.Command.Exec()
-		// t.Logf("Command output:\n%s\n\n%v\n", cl.Command.String(), cl.Command.GetOutput())
-		if err != nil && !cl.ShouldError {
-			t.Errorf("unexpected error in exec: %v: %v, ", err, cl.Command.GetOutput())
-			t.FailNow()
+
+		w, okWriter := ctx.Value("writer").(*os.File)
+		r, okReader := ctx.Value("reader").(*os.File)
+
+		var err error
+
+		if okWriter && okReader {
+			err = cl.Command.ExecWithCustomPipe(w, r)
+			if err != nil && !cl.ShouldError {
+				t.Fatalf("unexpected error in exec with custom pipe: %v: %v, ", err, cl.Command.GetOutput())
+			}
+		} else {
+			err = cl.Command.Exec()
+			if err != nil && !cl.ShouldError {
+				t.Fatalf("unexpected error in exec: %v: %v, ", err, cl.Command.GetOutput())
+			}
 		}
 
 		if err == nil && cl.ShouldError {
-			t.Errorf("Expected error, got nil")
-			t.FailNow()
+			t.Fatalf("Expected error, got nil")
 		}
 
 		if cl.ExpectedCommandLineOutput != "" {
 			if diff := cmp.Diff(cl.ExpectedCommandLineOutput, cl.Command.GetOutput(), dfOpts...); diff != "" {
-				t.Errorf("%s\n(-expected, +actual)\n%s", cl.Name, diff)
-				t.FailNow()
+				t.Fatalf("%s\n(-expected, +actual)\n%s", cl.Name, diff)
 			}
 		}
 
@@ -194,8 +203,7 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 			}
 
 			if diff := cmp.Diff(expectedObjectList, got, objOpts...); diff != "" {
-				t.Errorf("%s(ObjectList)\n(-expected, +actual)\n%s", cl.Name, diff)
-				t.FailNow()
+				t.Fatalf("%s(ObjectList)\n(-expected, +actual)\n%s", cl.Name, diff)
 			}
 		}
 
@@ -214,18 +222,17 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 				t.Fatalf("unexpected error on get obj GVK %v, name %s : %v", cl.ExpectedObject.GetObjectKind().GroupVersionKind(), cl.ExpectedObject.GetName(), err)
 			}
 			if diff := cmp.Diff(expectedOBj, got, objOpts...); diff != "" {
-				t.Errorf("%s(Object)\n(-expected, +actual)\n%s", cl.Name, diff)
-				t.FailNow()
+				t.Fatalf("%s(Object)\n(-expected, +actual)\n%s", cl.Name, diff)
 			}
 		}
 
 		if cl.Verify != nil {
-			cl.Verify(t, cl.Command.GetOutput(), err)
+			cl.Verify(ctx, t, cl.Command.GetOutput(), err)
 		}
 		if cl.CleanUp != nil {
-			if err := cl.CleanUp(t); err != nil {
-				t.Errorf("unexpected error in clean up: %v", err)
-				t.FailNow()
+			var err error
+			if err = cl.CleanUp(ctx, t); err != nil {
+				t.Fatalf("unexpected error in clean up: %v", err)
 			}
 		}
 	})

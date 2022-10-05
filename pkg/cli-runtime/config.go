@@ -46,6 +46,7 @@ type Config struct {
 	Stderr          io.Writer
 	Verbose         *int32
 	Builder         *resource.Builder
+	NoColor         bool
 }
 
 func NewDefaultConfig(name string, scheme *runtime.Scheme) *Config {
@@ -82,11 +83,6 @@ func (c *Config) Successf(format string, a ...interface{}) (n int, err error) {
 	return printer.SuccessColor.Fprintf(c.Stdout, format, a...)
 }
 
-func (c *Config) EmojiSuccessf(emoji Icon, format string, a ...interface{}) (n int, err error) {
-	emojiFormat := fmt.Sprintf("%s%s%s", string(emoji), " ", format)
-	return printer.SuccessColor.Fprintf(c.Stdout, emojiFormat, a...)
-}
-
 func (c *Config) Esuccessf(format string, a ...interface{}) (n int, err error) {
 	return printer.SuccessColor.Fprintf(c.Stderr, format, a...)
 }
@@ -111,9 +107,13 @@ func (c *Config) Boldf(format string, a ...interface{}) (n int, err error) {
 	return printer.BoldColor.Fprintf(c.Stdout, format, a...)
 }
 
-func (c *Config) EmojiBoldf(emoji Icon, format string, a ...interface{}) (n int, err error) {
-	emojiFormat := fmt.Sprintf("%s%s%s", string(emoji), " ", format)
-	return printer.BoldColor.Fprintf(c.Stdout, emojiFormat, a...)
+func (c *Config) Emoji(emoji Icon, format string, a ...interface{}) (n int, err error) {
+	if c.NoColor {
+		return c.Printf(format, a...)
+	}
+
+	emojiFormat := fmt.Sprintf("%s %s", string(emoji), format)
+	return c.Printf(emojiFormat, a...)
 }
 
 func (c *Config) Eboldf(format string, a ...interface{}) (n int, err error) {
