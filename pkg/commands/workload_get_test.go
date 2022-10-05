@@ -2000,8 +2000,9 @@ To see logs: "tanzu apps workload tail my-workload"
 			BuilderObjects: []client.Object{pod1Die, pod2Die},
 			ExpectOutput: `
 Overview
-   name:   my-workload
-   type:   web
+   name:        my-workload
+   type:        web
+   namespace:   default
 
 Supply Chain
    name:   my-supply-chain
