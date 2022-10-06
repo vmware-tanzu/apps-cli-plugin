@@ -40,6 +40,7 @@ import (
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/parsers"
+	cliprinter "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
@@ -442,11 +443,11 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	workload.Spec.Source.Image = digestedImage
 
 	if currentWorkload != nil && currentWorkload.Spec.Source != nil && currentWorkload.Spec.Source.Image == workload.Spec.Source.Image {
-		c.Infof("No source code is changed\n")
+		c.Infof("No source code is changed\n\n")
 		return okToPush, nil
 	}
 
-	c.Successf("Published source\n")
+	c.Emoji(cli.Inbox, cliprinter.Ssuccessf("Published source\n\n"))
 	return okToPush, nil
 }
 
@@ -517,7 +518,7 @@ func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentW
 
 	if msgs := workload.DeprecationWarnings(); len(msgs) != 0 {
 		for _, msg := range msgs {
-			c.Infof("WARNING: %s\n", msg)
+			c.Emoji(cli.Exclamation, cliprinter.Sinfof("WARNING: %s\n", msg))
 		}
 	}
 
@@ -530,12 +531,12 @@ func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentW
 		c.Infof("Workload is unchanged, skipping update\n")
 		return okToUpdate, nil
 	}
-	c.Printf("Update workload:\n")
-	c.Printf("%s\n", difference)
+	c.Emoji(cli.Magnifying, "Update workload:\n")
+	c.Printf("%s", difference)
 
 	if noticeMsgs := workload.GetNotices(ctx); len(noticeMsgs) != 0 {
 		for _, msg := range noticeMsgs {
-			c.Infof("NOTICE: %s\n\n", msg)
+			c.Emoji(cli.Exclamation, cliprinter.Sinfof("NOTICE: %s\n", msg))
 		}
 	}
 
@@ -563,7 +564,7 @@ func (opts *WorkloadOptions) Update(ctx context.Context, c *cli.Config, currentW
 		return okToUpdate, err
 	}
 
-	c.Successf("Updated workload %q\n", workload.Name)
+	c.Emoji(cli.ThumbsUp, cliprinter.Ssuccessf("Updated workload %q\n", workload.Name))
 	return okToUpdate, nil
 }
 
@@ -572,7 +573,7 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 
 	if msgs := workload.DeprecationWarnings(); len(msgs) != 0 {
 		for _, msg := range msgs {
-			c.Infof("WARNING: %s\n", msg)
+			c.Emoji(cli.Exclamation, cliprinter.Sinfof("WARNING: %s\n", msg))
 		}
 	}
 
@@ -581,12 +582,12 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 		return okToCreate, err
 	}
 
-	c.Printf("Create workload:\n")
-	c.Printf("%s\n", diff)
+	c.Emoji(cli.Magnifying, "Create workload:\n")
+	c.Printf("%s", diff)
 
 	if noticeMsgs := workload.GetNotices(ctx); len(noticeMsgs) != 0 {
 		for _, msg := range noticeMsgs {
-			c.Infof("NOTICE: %s\n\n", msg)
+			c.Emoji(cli.Exclamation, cliprinter.Sinfof("NOTICE: %s\n", msg))
 		}
 	}
 	if !opts.Yes {
@@ -608,7 +609,7 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 		return okToCreate, err
 	}
 
-	c.Successf("Created workload %q\n", workload.Name)
+	c.Emoji(cli.ThumbsUp, cliprinter.Ssuccessf("Created workload %q\n", workload.Name))
 	return okToCreate, nil
 }
 

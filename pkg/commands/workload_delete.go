@@ -30,6 +30,7 @@ import (
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
+	cliprinter "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/wait"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
@@ -113,7 +114,7 @@ func (opts *WorkloadDeleteOptions) Exec(ctx context.Context, c *cli.Config) erro
 		if err != nil {
 			return err
 		}
-		c.Successf("Deleted workloads in namespace %q\n", opts.Namespace)
+		c.Emoji(cli.ThumbsUp, cliprinter.Ssuccessf("Deleted workloads in namespace %q\n", opts.Namespace))
 		return nil
 	}
 
@@ -141,7 +142,7 @@ func (opts *WorkloadDeleteOptions) Exec(ctx context.Context, c *cli.Config) erro
 		if err := c.Delete(ctx, workload); err != nil {
 			return err
 		}
-		c.Successf("Deleted workload %q\n", name)
+		c.Emoji(cli.ThumbsUp, cliprinter.Ssuccessf("Deleted workload %q\n", name))
 		if opts.Wait {
 			c.Infof("Waiting for workload %q to be deleted...\n", name)
 			workers := []wait.Worker{

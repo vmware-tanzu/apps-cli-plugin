@@ -21,10 +21,12 @@ package suite_test
 
 import (
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
+	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 )
 
 func GetFileAsString(t *testing.T, file string) string {
@@ -42,4 +44,19 @@ func GetWorkloadFromFile(t *testing.T, file string) *cartov1alpha1.Workload {
 	workload := &cartov1alpha1.Workload{}
 	workload.Load(r)
 	return workload
+}
+
+func EmojisExistInOutput(output string, emojisList []cli.Icon) bool {
+	decodedString := strconv.QuoteToASCII(output)
+	decodedString = strings.Trim(decodedString, `"`)
+
+	for _, e := range emojisList {
+		decodedEmoji := strconv.QuoteToASCII(string(e))
+		decodedEmoji = strings.Trim(decodedEmoji, `"`)
+		if !strings.Contains(decodedString, decodedEmoji) {
+			return false
+		}
+	}
+
+	return true
 }

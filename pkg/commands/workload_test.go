@@ -1840,7 +1840,7 @@ func TestWorkloadOptionsPublishLocalSourcePrivateRegistry(t *testing.T) {
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
-Published source
+📥 Published source
 `,
 	}, {
 		name:     "local source to private registry with username and pass",
@@ -1849,7 +1849,7 @@ Published source
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
-Published source
+📥 Published source
 `,
 	}, {
 		name:     "local source to private registry with token",
@@ -1858,7 +1858,7 @@ Published source
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
-Published source
+📥 Published source
 `,
 	}}
 	for _, test := range tests {
@@ -1941,7 +1941,7 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 		expectedOutput: `
 The files and/or directories listed in the .tanzuignore file are being excluded from the uploaded source code.
 Publishing source in ` + fmt.Sprintf("%q", filepath.Join("testdata", "local-source-exclude-files")) + ` to "` + registryHost + `/hello:source"...
-Published source
+📥 Published source
 `,
 	}, {
 		name:     "local source include tanzu ignore with windows path",
@@ -1952,7 +1952,7 @@ Published source
 		expectedOutput: `
 The files and/or directories listed in the .tanzuignore file are being excluded from the uploaded source code.
 Publishing source in ` + fmt.Sprintf("%q", filepath.Join("testdata", "local-source-exclude-files-windows")) + ` to "` + registryHost + `/hello:source"...
-Published source
+📥 Published source
 `,
 	}, {
 		name:     "local source",
@@ -1961,7 +1961,7 @@ Published source
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
-Published source
+📥 Published source
 `,
 	}, {
 		name:     "jar file",
@@ -1970,7 +1970,7 @@ Published source
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registryHost + `/hello:source"...
-Published source
+📥 Published source
 `,
 	}, {
 		name:        "invalid file",
@@ -1984,7 +1984,7 @@ Published source
 		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
-Published source
+📥 Published source
 `,
 	}, {
 		name:     "when workload already has resolved image with digest",
@@ -2012,7 +2012,7 @@ No source code is changed
 		},
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registryHost + `/hello:source"...
-Published source
+📥 Published source
 `,
 	}, {
 		name:           "no local path",
@@ -2088,11 +2088,37 @@ func TestWorkloadOptionsCreate(t *testing.T) {
 		name           string
 		input          *cartov1alpha1.Workload
 		shouldError    bool
+		noColor        bool
 		expectedOutput string
 		withReactors   []clitesting.ReactionFunc
 	}{
 		{
 			name: "Create workload successfully",
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Image: "ubuntu:bionic",
+				},
+			},
+			shouldError: false,
+			expectedOutput: `
+🔎 Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  name: my-workload
+      6 + |  namespace: default
+      7 + |spec:
+      8 + |  image: ubuntu:bionic
+👍 Created workload "my-workload"`,
+		},
+		{
+			name:    "Create workload with no color",
+			noColor: true,
 			input: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
@@ -2113,7 +2139,6 @@ Create workload:
       6 + |  namespace: default
       7 + |spec:
       8 + |  image: ubuntu:bionic
-
 Created workload "my-workload"`,
 		},
 		{
@@ -2134,7 +2159,7 @@ Created workload "my-workload"`,
 			},
 			shouldError: false,
 			expectedOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -2148,8 +2173,7 @@ Create workload:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
      13 + |      version: 2.6.0
-
-Created workload "my-workload"`,
+👍 Created workload "my-workload"`,
 		},
 		{
 			name: "Create workload without source successfully",
@@ -2161,7 +2185,7 @@ Created workload "my-workload"`,
 			},
 			shouldError: false,
 			expectedOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -2169,10 +2193,8 @@ Create workload:
       5 + |  name: my-workload
       6 + |  namespace: default
       7 + |spec: {}
-
-NOTICE: no source code or image has been specified for this workload.
-
-Created workload "my-workload"`,
+❗ NOTICE: no source code or image has been specified for this workload.
+👍 Created workload "my-workload"`,
 		},
 		{
 			name: "Create workload error",
@@ -2200,6 +2222,7 @@ Created workload "my-workload"`,
 			output := &bytes.Buffer{}
 			c.Stdout = output
 			c.Stderr = output
+			c.NoColor = test.noColor
 			client := clitesting.NewFakeClient(scheme)
 			c.Client = clitesting.NewFakeCliClient(client)
 
@@ -2250,10 +2273,12 @@ func TestWorkloadOptionsUpdate(t *testing.T) {
 		shouldError    bool
 		expectedOutput string
 		withReactors   []clitesting.ReactionFunc
+		noColor        bool
 	}{
 		{
-			name: "Update workload successfully",
-			args: []string{flags.LabelFlagName, "NEW=value", flags.YesFlagName},
+			name:    "Update workload successfully with no emojis",
+			noColor: true,
+			args:    []string{flags.LabelFlagName, "NEW=value", flags.YesFlagName},
 			givenWorkload: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
@@ -2279,8 +2304,38 @@ Update workload:
   8,  9   |  namespace: default
   9, 10   |spec:
  10, 11   |  image: ubuntu
-
 Updated workload "my-workload"
+`,
+		},
+		{
+			name: "Update workload successfully",
+			args: []string{flags.LabelFlagName, "NEW=value", flags.YesFlagName},
+			givenWorkload: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+					Labels: map[string]string{
+						"FOO": "bar",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Image: "ubuntu",
+				},
+			},
+			shouldError: false,
+			expectedOutput: `
+🔎 Update workload:
+...
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  labels:
+  6,  6   |    FOO: bar
+      7 + |    NEW: value
+  7,  8   |  name: my-workload
+  8,  9   |  namespace: default
+  9, 10   |spec:
+ 10, 11   |  image: ubuntu
+👍 Updated workload "my-workload"
 `,
 		},
 		{
@@ -2297,7 +2352,7 @@ Updated workload "my-workload"
 			},
 			shouldError: false,
 			expectedOutput: `
-Update workload:
+🔎 Update workload:
 ...
   3,  3   |kind: Workload
   4,  4   |metadata:
@@ -2307,10 +2362,8 @@ Update workload:
   7,  8   |  name: my-workload
   8,  9   |  namespace: default
   9, 10   |spec: {}
-
-NOTICE: no source code or image has been specified for this workload.
-
-Updated workload "my-workload"
+❗ NOTICE: no source code or image has been specified for this workload.
+👍 Updated workload "my-workload"
 `,
 		},
 		{
@@ -2332,7 +2385,7 @@ Updated workload "my-workload"
 			},
 			shouldError: false,
 			expectedOutput: `
-Update workload:
+🔎 Update workload:
 ...
   7,  7   |spec:
   8,  8   |  params:
@@ -2343,8 +2396,7 @@ Update workload:
      13 + |      artifactId: spring-petclinic
      14 + |      groupId: org.springframework.samples
      15 + |      version: 2.6.0
-
-Updated workload "my-workload"`,
+👍 Updated workload "my-workload"`,
 		},
 		{
 			name: "Update workload error",
@@ -2407,6 +2459,7 @@ Updated workload "my-workload"`,
 			output := &bytes.Buffer{}
 			c.Stdout = output
 			c.Stderr = output
+			c.NoColor = test.noColor
 			fakeClient := clitesting.NewFakeClient(scheme, test.givenWorkload)
 
 			for i := range test.withReactors {

@@ -33,4 +33,5 @@ const (
 	Inbox           Icon = '📥'
 	Question        Icon = '❓'
 	ThumbsUp        Icon = '👍'
+	Exclamation     Icon = '❗'
 )

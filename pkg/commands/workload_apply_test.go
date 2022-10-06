@@ -171,7 +171,7 @@ status:
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -185,8 +185,7 @@ Create workload:
      11 + |        branch: main
      12 + |      url: https://example.com/repo.git
      13 + |    subPath: ./app
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -242,15 +241,14 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   9,  9   |    git:
  10, 10   |      ref:
  11, 11   |        branch: main
  12, 12   |      url: https://github.com/spring-projects/spring-petclinic.git
      13 + |    subPath: ./app
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -281,7 +279,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -295,8 +293,7 @@ Create workload:
      11 + |        branch: main
      12 + |      url: https://github.com/spring-projects/spring-petclinic.git
      13 + |    subPath: ./app
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -355,7 +352,7 @@ To get status: "tanzu apps workload get my-workload"
 			},
 			ShouldError: true,
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -368,8 +365,7 @@ Create workload:
      10 + |      ref:
      11 + |        branch: main
      12 + |      url: https://example.com/repo.git
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -423,7 +419,7 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -436,8 +432,7 @@ Create workload:
      10 + |      ref:
      11 + |        branch: main
      12 + |      url: https://example.com/repo.git
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -502,7 +497,7 @@ Workload "my-workload" is ready
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -515,8 +510,7 @@ Create workload:
      10 + |      ref:
      11 + |        branch: main
      12 + |      url: https://example.com/repo.git
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -632,7 +626,7 @@ Workload "my-workload" is ready
 			},
 			ShouldError: true,
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -645,8 +639,7 @@ Create workload:
      10 + |      ref:
      11 + |        branch: main
      12 + |      url: https://example.com/repo.git
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -698,7 +691,7 @@ Error: Failed to become ready: a hopefully informative message about what went w
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -724,8 +717,7 @@ Create workload:
      23 + |      ref:
      24 + |        branch: main
      25 + |      url: https://github.com/spring-projects/spring-petclinic.git
-
-Created workload "spring-petclinic"
+👍 Created workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -800,7 +792,7 @@ spec:
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -826,8 +818,7 @@ Create workload:
      23 + |      ref:
      24 + |        branch: main
      25 + |      url: https://github.com/spring-projects/spring-petclinic.git
-
-Created workload "spring-petclinic"
+👍 Created workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -924,7 +915,7 @@ spec:
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -954,8 +945,7 @@ Update workload:
      26 + |      ref:
      27 + |        branch: main
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
-
-Updated workload "spring-petclinic"
+👍 Updated workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -1053,7 +1043,7 @@ status:
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -1083,8 +1073,7 @@ Create workload:
      27 + |      ref:
      28 + |        branch: main
      29 + |      url: https://github.com/spring-projects/spring-petclinic.git
-
-Created workload "spring-petclinic"
+👍 Created workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -1222,7 +1211,7 @@ status:
 			},
 			ShouldError: true,
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   5,  5   |  name: my-workload
   6,  6   |  namespace: default
@@ -1231,7 +1220,6 @@ Update workload:
       9 + |  params:
      10 + |  - name: debug
      11 + |    value: "true"
-
 Error: conflict updating workload, the object was modified by another user; please run the update command again
 `,
 		},
@@ -1289,7 +1277,7 @@ Error: conflict updating workload, the object was modified by another user; plea
 			},
 			ShouldError: true,
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   5,  5   |  name: my-workload
   6,  6   |  namespace: default
@@ -1301,8 +1289,7 @@ Update workload:
      12 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
      13 + |      kind: PostgreSQL
      14 + |      name: my-prod-db
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -1367,7 +1354,7 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 			},
 			ShouldError: true,
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   5,  5   |  name: my-workload
   6,  6   |  namespace: default
@@ -1379,8 +1366,7 @@ Update workload:
      12 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
      13 + |      kind: PostgreSQL
      14 + |      name: my-prod-db
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -1441,7 +1427,7 @@ Error: Failed to become ready: a hopefully informative message about what went w
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   5,  5   |  name: my-workload
   6,  6   |  namespace: default
@@ -1453,8 +1439,7 @@ Update workload:
      12 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
      13 + |      kind: PostgreSQL
      14 + |      name: my-prod-db
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -1526,7 +1511,7 @@ Workload "my-workload" is ready
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   5,  5   |  name: my-workload
   6,  6   |  namespace: default
@@ -1538,8 +1523,7 @@ Update workload:
      12 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
      13 + |      kind: PostgreSQL
      14 + |      name: my-prod-db
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -1613,7 +1597,7 @@ Workload "my-workload" is ready
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -1644,8 +1628,7 @@ Update workload:
      27 + |        branch: main
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
      29 + |    subPath: ./cmd
-
-Updated workload "spring-petclinic"
+👍 Updated workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -1715,7 +1698,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -1745,8 +1728,7 @@ Update workload:
      26 + |      ref:
      27 + |        branch: main
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --namespace test-namespace"
 To get status: "tanzu apps workload get my-workload --namespace test-namespace"
@@ -1805,8 +1787,8 @@ To get status: "tanzu apps workload get my-workload --namespace test-namespace"
 				},
 			},
 			ExpectOutput: `
-WARNING: Cross namespace service claims are deprecated. Please use ` + "`tanzu service claim create`" + ` instead.
-Update workload:
+❗ WARNING: Cross namespace service claims are deprecated. Please use ` + "`tanzu service claim create`" + ` instead.
+🔎 Update workload:
   1,  1   |---
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -1823,8 +1805,7 @@ Update workload:
      14 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
      15 + |      kind: PostgreSQL
      16 + |      name: my-prod-db
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -1862,8 +1843,8 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-WARNING: Cross namespace service claims are deprecated. Please use ` + "`tanzu service claim create`" + ` instead.
-Create workload:
+❗ WARNING: Cross namespace service claims are deprecated. Please use ` + "`tanzu service claim create`" + ` instead.
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -1884,8 +1865,7 @@ Create workload:
      18 + |      ref:
      19 + |        branch: main
      20 + |      url: https://example.com/repo.git
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -1927,7 +1907,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -1946,8 +1926,7 @@ Update workload:
      15 + |      ref:
      16 + |        tag: tap-1.1
      17 + |      url: https://github.com/sample-accelerators/spring-petclinic
-
-Updated workload "spring-petclinic"
+👍 Updated workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -1991,7 +1970,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -2009,8 +1988,7 @@ Update workload:
      14 + |      ref:
      15 + |        tag: tap-1.1
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
-
-Updated workload "spring-petclinic"
+👍 Updated workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -2054,7 +2032,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -2073,8 +2051,7 @@ Update workload:
      15 + |      ref:
      16 + |        tag: tap-1.1
      17 + |      url: https://github.com/sample-accelerators/spring-petclinic
-
-Updated workload "spring-petclinic"
+👍 Updated workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -2117,7 +2094,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -2135,8 +2112,7 @@ Update workload:
      14 + |      ref:
      15 + |        tag: tap-1.1
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
-
-Updated workload "spring-petclinic"
+👍 Updated workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -2183,7 +2159,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   9,  9   |  source:
  10, 10   |    git:
@@ -2191,8 +2167,7 @@ Update workload:
  12, 12   |        branch: main
      13 + |        tag: tap-1.1
  13, 14   |      url: https://github.com/sample-accelerators/spring-petclinic
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -2238,7 +2213,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   4,  4   |metadata:
   5,  5   |  name: my-workload
@@ -2251,8 +2226,7 @@ Update workload:
  11, 11   |      ref:
  12, 12   |        branch: main
 ...
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -2298,7 +2272,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   4,  4   |metadata:
   5,  5   |  name: my-workload
@@ -2310,8 +2284,7 @@ Update workload:
  11, 10   |      ref:
  12, 11   |        branch: main
 ...
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -2346,7 +2319,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -2363,8 +2336,7 @@ Create workload:
      14 + |      ref:
      15 + |        tag: tap-1.1
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
-
-Created workload "spring-petclinic"
+👍 Created workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -2396,7 +2368,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -2410,8 +2382,7 @@ Create workload:
      11 + |      ref:
      12 + |        branch: main
      13 + |      url: https://example.com/repo.git
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -2446,7 +2417,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -2463,8 +2434,7 @@ Create workload:
      14 + |      ref:
      15 + |        tag: tap-1.1
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
-
-Created workload "spring-petclinic"
+👍 Created workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -2503,7 +2473,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -2525,8 +2495,7 @@ Create workload:
      19 + |    - deployment:
      20 + |        name: smtp
      21 + |        port: 1026
-
-Created workload "spring-petclinic"
+👍 Created workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -2555,7 +2524,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -2569,8 +2538,7 @@ Create workload:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
      13 + |      version: 2.6.0
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -2599,7 +2567,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -2613,8 +2581,7 @@ Create workload:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
      13 + |      version: 2.6.0
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -2644,7 +2611,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -2658,10 +2625,8 @@ Create workload:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
      13 + |      version: 2.6.0
-
-NOTICE: Maven configuration flags have overwritten values provided by "--params-yaml".
-
-Created workload "my-workload"
+❗ NOTICE: Maven configuration flags have overwritten values provided by "--params-yaml".
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -2699,7 +2664,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   7,  7   |spec:
   8,  8   |  params:
@@ -2711,10 +2676,8 @@ Update workload:
      11 + |      artifactId: spring-petclinic-test
      12 + |      groupId: org.springframework.samples.test
      13 + |      version: 2.6.1
-
-NOTICE: Maven configuration flags have overwritten values provided by "--params-yaml".
-
-Updated workload "my-workload"
+❗ NOTICE: Maven configuration flags have overwritten values provided by "--params-yaml".
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -2746,7 +2709,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   3,  3   |kind: Workload
   4,  4   |metadata:
@@ -2760,8 +2723,7 @@ Update workload:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
      13 + |      version: 2.6.0
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -2793,7 +2755,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   3,  3   |kind: Workload
   4,  4   |metadata:
@@ -2808,8 +2770,7 @@ Update workload:
      12 + |      groupId: org.springframework.samples
      13 + |      type: jar
      14 + |      version: 2.6.0
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -2846,7 +2807,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   9,  9   |  - name: maven
  10, 10   |    value:
@@ -2855,8 +2816,7 @@ Update workload:
  13     - |      version: 2.6.0
      13 + |      type: jar
      14 + |      version: 2.6.1
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -2893,7 +2853,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   7,  7   |spec:
   8,  8   |  params:
@@ -2906,8 +2866,7 @@ Update workload:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
      13 + |      version: 2.6.0
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -2936,7 +2895,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -2951,8 +2910,7 @@ Create workload:
      12 + |      groupId: org.springframework.samples
      13 + |      type: jar
      14 + |      version: 2.6.0
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -3005,7 +2963,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -3039,8 +2997,7 @@ Create workload:
      31 + |      ref:
      32 + |        branch: main
      33 + |      url: https://github.com/spring-projects/spring-petclinic.git
-
-Created workload "spring-petclinic"
+👍 Created workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -3078,7 +3035,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -3091,8 +3048,7 @@ Create workload:
      10 + |      ref:
      11 + |        branch: main
      12 + |      url: https://example.com/repo.git
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -3134,7 +3090,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -3149,8 +3105,7 @@ Create workload:
      12 + |      ref:
      13 + |        branch: main
      14 + |      url: https://example.com/repo.git
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -3190,7 +3145,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -3205,8 +3160,7 @@ Create workload:
      12 + |      ref:
      13 + |        branch: main
      14 + |      url: https://example.com/repo.git
-
-Created workload "my-workload"
+👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -3262,7 +3216,7 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -3275,8 +3229,7 @@ Update workload:
   9,  9   |spec:
  10, 10   |  source:
 ...
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -3290,8 +3243,66 @@ To get status: "tanzu apps workload get my-workload"
 			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
 				c.ExpectString(clitesting.ToInteractTerminal("Do you want to create this workload? [yN]: "))
 				c.Send(clitesting.InteractInputLine("y"))
-				c.ExpectString(clitesting.ToInteractOutput(`
-Created workload %q
+				c.ExpectString(clitesting.ToInteractOutput(`👍 Created workload %q
+
+To see logs:   "tanzu apps workload tail %s"
+To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
+			},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+🔎 Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
+%s
+
+👍 Created workload %q
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
+`, clitesting.ToInteractTerminal("❓ Do you want to create this workload? [yN]: y"), workloadName),
+		},
+		{
+			Name:         "create git source with terminal interaction no color",
+			Config:       &cli.Config{NoColor: true, Scheme: scheme},
+			GivenObjects: givenNamespaceDefault,
+			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.TypeFlagName, "web"},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("Do you want to create this workload? [yN]: "))
+				c.Send(clitesting.InteractInputLine("y"))
+				c.ExpectString(clitesting.ToInteractOutput(`Created workload %q
 
 To see logs:   "tanzu apps workload tail %s"
 To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
@@ -3333,7 +3344,6 @@ Create workload:
      12 + |      ref:
      13 + |        branch: main
      14 + |      url: https://example.com/repo.git
-
 %s
 
 Created workload %q
@@ -3353,7 +3363,7 @@ To get status: "tanzu apps workload get my-workload"
 				c.ExpectString(clitesting.ToInteractOutput("Skipping workload %q", workloadName))
 			},
 			ExpectOutput: fmt.Sprintf(`
-Create workload:
+🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
@@ -3368,10 +3378,9 @@ Create workload:
      12 + |      ref:
      13 + |        branch: main
      14 + |      url: https://example.com/repo.git
-
 %s
 
-Skipping workload %q`, clitesting.ToInteractTerminal("? Do you want to create this workload? [yN]: n"), workloadName),
+Skipping workload %q`, clitesting.ToInteractTerminal("❓ Do you want to create this workload? [yN]: n"), workloadName),
 		},
 		{
 			Name: "update - git source with terminal interaction",
@@ -3379,8 +3388,85 @@ Skipping workload %q`, clitesting.ToInteractTerminal("? Do you want to create th
 			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
 				c.ExpectString(clitesting.ToInteractTerminal("? Really update the workload %q? [yN]: ", workloadName))
 				c.Send(clitesting.InteractInputLine("y"))
-				c.ExpectString(clitesting.ToInteractOutput(`
-Updated workload %q
+				c.ExpectString(clitesting.ToInteractOutput(`👍 Updated workload %q
+
+To see logs:   "tanzu apps workload tail %s"
+To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
+			},
+			GivenObjects: func() []client.Object {
+				w := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				}
+				return append(givenNamespaceDefault, w)
+			}(),
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							"apps.tanzu.vmware.com/workload-type": "api",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+🔎 Update workload:
+...
+  2,  2   |apiVersion: carto.run/v1alpha1
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  labels:
+  6     - |    apps.tanzu.vmware.com/workload-type: web
+      6 + |    apps.tanzu.vmware.com/workload-type: api
+  7,  7   |  name: my-workload
+  8,  8   |  namespace: default
+  9,  9   |spec:
+ 10, 10   |  source:
+...
+%s
+
+👍 Updated workload %q
+
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
+`, clitesting.ToInteractTerminal("❓ Really update the workload %q? [yN]: y", workloadName), workloadName),
+		},
+		{
+			Name:   "update git source with terminal interaction no color",
+			Config: &cli.Config{NoColor: true, Scheme: scheme},
+			Args:   []string{workloadName, flags.TypeFlagName, "api"},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("? Really update the workload %q? [yN]: ", workloadName))
+				c.Send(clitesting.InteractInputLine("y"))
+				c.ExpectString(clitesting.ToInteractOutput(`Updated workload %q
 
 To see logs:   "tanzu apps workload tail %s"
 To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
@@ -3442,7 +3528,6 @@ Update workload:
   9,  9   |spec:
  10, 10   |  source:
 ...
-
 %s
 
 Updated workload %q
@@ -3483,7 +3568,7 @@ To get status: "tanzu apps workload get my-workload"
 				return append(givenNamespaceDefault, w)
 			}(),
 			ExpectOutput: fmt.Sprintf(`
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -3496,10 +3581,9 @@ Update workload:
   9,  9   |spec:
  10, 10   |  source:
 ...
-
 %s
 
-Skipping workload %q`, clitesting.ToInteractTerminal("? Really update the workload %q? [yN]: n", workloadName), workloadName),
+Skipping workload %q`, clitesting.ToInteractTerminal("❓ Really update the workload %q? [yN]: n", workloadName), workloadName),
 		},
 		{
 			Name: "update - git source with wrong answer terminal interaction",
@@ -3535,7 +3619,7 @@ Skipping workload %q`, clitesting.ToInteractTerminal("? Really update the worklo
 				return append(givenNamespaceDefault, w)
 			}(),
 			ExpectOutput: fmt.Sprintf(`
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -3548,15 +3632,14 @@ Update workload:
   9,  9   |spec:
  10, 10   |  source:
 ...
-
 %s
 
 invalid input (not y, n, yes, or no)
 %s
 
 Skipping workload %q`,
-				clitesting.ToInteractTerminal("? Really update the workload %q? [yN]: m", workloadName),
-				clitesting.ToInteractTerminal("? Really update the workload %q? [yN]: n", workloadName), workloadName),
+				clitesting.ToInteractTerminal("❓ Really update the workload %q? [yN]: m", workloadName),
+				clitesting.ToInteractTerminal("❓ Really update the workload %q? [yN]: n", workloadName), workloadName),
 		},
 	}
 
