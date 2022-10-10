@@ -23,7 +23,7 @@ require (
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-framework v0.25.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
-	gotest.tools/v3 v3.3.0
+	gotest.tools/v3 v3.4.0
 	k8s.io/api v0.25.2
 	k8s.io/apiextensions-apiserver v0.25.0
 	k8s.io/apimachinery v0.25.2
