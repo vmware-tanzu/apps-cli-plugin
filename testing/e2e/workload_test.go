@@ -28,7 +28,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"strconv"
 	"testing"
 
 	"github.com/creack/pty"
@@ -48,14 +47,74 @@ var (
 )
 
 var (
-	pattern       = "\\\\U000[a-zA-Z0-9]+"
-	regexEmoji    = regexp.MustCompile(pattern)
 	regexPod      = regexp.MustCompile("\\s*NAME\\s+READY\\s+STATUS\\s+RESTARTS\\s+AGE\\s*")
 	regexProgress = regexp.MustCompile(`[0-9]*\.*[0-9]*\s[a-zA-Z]+\s/\s[0-9]*[\.]*[0-9]*\s[a-zA-Z]+\s\[-+>*_*\]\s[0-9]*\.[0-9]+%.*`)
 )
 
 func TestCreateFromGitWithAnnotations(t *testing.T) {
 	testSuite := it.CommandLineIntegrationTestSuite{
+		{
+			Name:         "Create workload and show emojis",
+			Skip:         runtime.GOOS == "windows",
+			WorkloadName: "test-create-workload-show-emojis",
+			Command: func() it.CommandLine {
+				c := *it.NewTanzuAppsCommandLine(
+					"workload", "create", "test-create-workload-show-emojis",
+					"--annotation=min-instances=2", "--annotation=max-instances=4",
+					"--app=test-create-workload-show-emojis",
+					"--git-tag=tap-1.2",
+					"--git-repo=https://github.com/sample-accelerators/spring-petclinic",
+					namespaceFlag,
+					"--type=web",
+				)
+				c.SurveyAnswer("y")
+				return c
+			}(),
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				var err error
+				if ctx, err = createPtyTerminal(ctx); err != nil {
+					t.Fatalf("error while opening pty %v", err)
+				}
+
+				return ctx, nil
+			},
+			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-create-workload-show-emojis",
+					Namespace: it.TestingNamespace,
+					Labels: map[string]string{
+						"app.kubernetes.io/part-of":           "test-create-workload-show-emojis",
+						"apps.tanzu.vmware.com/workload-type": "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Params: []cartov1alpha1.Param{{
+						Name: "annotations",
+						Value: v1.JSON{
+							Raw: []byte(`{"max-instances":"4","min-instances":"2"}`),
+						},
+					}},
+					Source: &cartov1alpha1.Source{
+						Git: &cartov1alpha1.GitSource{
+							URL: "https://github.com/sample-accelerators/spring-petclinic",
+							Ref: cartov1alpha1.GitRef{
+								Tag: "tap-1.2",
+							},
+						},
+					},
+				},
+			},
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
+				if !it.EmojisExistInOutput(output, it.ApplyEmojis) {
+					t.Fatalf("expected emojis in create output %v", output)
+				}
+			},
+			CleanUp: func(ctx context.Context, t *testing.T) error {
+				os.Stdout = ctx.Value("stdout").(*os.File)
+				return nil
+			},
+		},
 		{
 			Name:         "Create workload with valid name from a git repo and annotations",
 			WorkloadName: "test-create-git-annotations-workload",
@@ -354,6 +413,57 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
+			Name:         "Update the created workload and show emojis",
+			Skip:         runtime.GOOS == "windows",
+			WorkloadName: "test-create-workload-show-emojis",
+			Command: *it.NewTanzuAppsCommandLine(
+				"workload", "apply", "test-create-workload-show-emojis", namespaceFlag, "--annotation=min-instances=3", "--annotation=max-instances=5", "-y"),
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				var err error
+				if ctx, err = createPtyTerminal(ctx); err != nil {
+					t.Fatalf("error while opening pty %v", err)
+				}
+
+				return ctx, nil
+			},
+			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-create-workload-show-emojis",
+					Namespace: it.TestingNamespace,
+					Labels: map[string]string{
+						"app.kubernetes.io/part-of":           "test-create-workload-show-emojis",
+						"apps.tanzu.vmware.com/workload-type": "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Params: []cartov1alpha1.Param{{
+						Name: "annotations",
+						Value: v1.JSON{
+							Raw: []byte(`{"max-instances":"5","min-instances":"3"}`),
+						},
+					}},
+					Source: &cartov1alpha1.Source{
+						Git: &cartov1alpha1.GitSource{
+							URL: "https://github.com/sample-accelerators/spring-petclinic",
+							Ref: cartov1alpha1.GitRef{
+								Tag: "tap-1.2",
+							},
+						},
+					},
+				},
+			},
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
+				if !it.EmojisExistInOutput(output, it.ApplyEmojis) {
+					t.Fatalf("expected emojis in update output %v", output)
+				}
+			},
+			CleanUp: func(ctx context.Context, t *testing.T) error {
+				os.Stdout = ctx.Value("stdout").(*os.File)
+				return nil
+			},
+		},
+		{
 			Name:         "Update the created workload",
 			WorkloadName: "test-create-git-annotations-workload",
 			Command: *it.NewTanzuAppsCommandLine(
@@ -393,16 +503,10 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Command: *it.NewTanzuAppsCommandLine(
 				"workload", "get", "test-create-git-annotations-workload", namespaceFlag),
 			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
-				r, w, err := pty.Open()
-				if err != nil {
+				var err error
+				if ctx, err = createPtyTerminal(ctx); err != nil {
 					t.Fatalf("error while opening pty %v", err)
 				}
-				originalStdout := os.Stdout
-				os.Stdout = w
-
-				ctx = context.WithValue(ctx, "reader", r)
-				ctx = context.WithValue(ctx, "writer", w)
-				ctx = context.WithValue(ctx, "stdout", originalStdout)
 
 				return ctx, nil
 			},
@@ -410,9 +514,8 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				if regexPod.FindString(output) == "" {
 					t.Fatalf("expected Pod results in output %v", output)
 				}
-				decodedString := strconv.QuoteToASCII(output)
-				if regexEmoji.FindString(decodedString) == "" {
-					t.Fatalf("output should have Emoji")
+				if !it.EmojisExistInOutput(output, it.GetEmojis) {
+					t.Fatalf("expected emojis in get output %v", output)
 				}
 			},
 			CleanUp: func(ctx context.Context, t *testing.T) error {
@@ -427,16 +530,10 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			Command: *it.NewTanzuAppsCommandLine(
 				"workload", "get", "test-create-git-annotations-workload", namespaceFlag, "--no-color"),
 			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
-				r, w, err := pty.Open()
-				if err != nil {
+				var err error
+				if ctx, err = createPtyTerminal(ctx); err != nil {
 					t.Fatalf("error while opening pty %v", err)
 				}
-				originalStdout := os.Stdout
-				os.Stdout = w
-
-				ctx = context.WithValue(ctx, "reader", r)
-				ctx = context.WithValue(ctx, "writer", w)
-				ctx = context.WithValue(ctx, "stdout", originalStdout)
 
 				return ctx, nil
 			},
@@ -444,9 +541,8 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				if regexPod.FindString(output) == "" {
 					t.Fatalf("expected Pod results in output %v", output)
 				}
-				decodedString := strconv.QuoteToASCII(output)
-				if regexEmoji.FindString(decodedString) != "" {
-					t.Fatalf("output should not have Emoji")
+				if it.EmojisExistInOutput(output, it.GetEmojis) {
+					t.Fatalf("did not expect emojis in get output with no color flag %v", output)
 				}
 			},
 			CleanUp: func(ctx context.Context, t *testing.T) error {
@@ -465,16 +561,10 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				return *c
 			}(),
 			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
-				r, w, err := pty.Open()
-				if err != nil {
+				var err error
+				if ctx, err = createPtyTerminal(ctx); err != nil {
 					t.Fatalf("error while opening pty %v", err)
 				}
-				originalStdout := os.Stdout
-				os.Stdout = w
-
-				ctx = context.WithValue(ctx, "reader", r)
-				ctx = context.WithValue(ctx, "writer", w)
-				ctx = context.WithValue(ctx, "stdout", originalStdout)
 
 				return ctx, nil
 			},
@@ -482,9 +572,31 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				if regexPod.FindString(output) == "" {
 					t.Fatalf("expected Pod results in output %v", output)
 				}
-				decodedString := strconv.QuoteToASCII(output)
-				if regexEmoji.FindString(decodedString) != "" {
-					t.Fatalf("output should not have Emoji")
+				if it.EmojisExistInOutput(output, it.GetEmojis) {
+					t.Fatalf("did not expect emojis in get output with no color envvar %v", output)
+				}
+			},
+			CleanUp: func(ctx context.Context, t *testing.T) error {
+				os.Stdout = ctx.Value("stdout").(*os.File)
+				return nil
+			},
+		},
+		{
+			Name:         "Delete the created workload and show emojis",
+			WorkloadName: "test-create-workload-show-emojis",
+			Command: *it.NewTanzuAppsCommandLine(
+				"workload", "delete", "test-create-workload-show-emojis", namespaceFlag, "-y"),
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				var err error
+				if ctx, err = createPtyTerminal(ctx); err != nil {
+					t.Fatalf("error while opening pty %v", err)
+				}
+
+				return ctx, nil
+			},
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
+				if !it.EmojisExistInOutput(output, it.DeleteEmojis) {
+					t.Fatalf("expected emojis in delete output %v", output)
 				}
 			},
 			CleanUp: func(ctx context.Context, t *testing.T) error {
@@ -506,4 +618,19 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 		},
 	}
 	testSuite.Run(t)
+}
+
+func createPtyTerminal(ctx context.Context) (context.Context, error) {
+	r, w, err := pty.Open()
+	if err != nil {
+		return ctx, err
+	}
+	originalStdout := os.Stdout
+	os.Stdout = w
+
+	ctx = context.WithValue(ctx, "reader", r)
+	ctx = context.WithValue(ctx, "writer", w)
+	ctx = context.WithValue(ctx, "stdout", originalStdout)
+
+	return ctx, err
 }

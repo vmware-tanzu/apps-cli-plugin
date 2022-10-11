@@ -55,7 +55,7 @@ func (opts *WorkloadUpdateOptions) Validate(ctx context.Context) validation.Fiel
 }
 
 func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) error {
-	c.Infof("WARNING: the update command has been deprecated and will be removed in a future update. Please use \"tanzu apps workload apply\" instead.\n\n")
+	c.Emoji(cli.Exclamation, fmt.Sprintf("WARNING: the update command has been deprecated and will be removed in a future update. Please use %q instead.\n\n", "tanzu apps workload apply"))
 
 	fileWorkload := &cartov1alpha1.Workload{}
 	if opts.FilePath != "" {

@@ -128,7 +128,7 @@ func TestWorkloadUpdateCommand(t *testing.T) {
 				),
 			},
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
 Workload is unchanged, skipping update
 `,
@@ -160,7 +160,7 @@ Workload is unchanged, skipping update
 			},
 			ShouldError: true,
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
 Workload "default/my-workload" not found
 `,
@@ -175,7 +175,7 @@ Workload "default/my-workload" not found
 			},
 			ShouldError: true,
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
 Error: namespace "foo" not found, it may not exist or user does not have permissions to read it.
 `,
@@ -198,7 +198,7 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 					}),
 			},
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
 ---
 apiVersion: carto.run/v1alpha1
@@ -388,9 +388,9 @@ status:
 			},
 			ShouldError: true,
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
-Update workload:
+🔎 Update workload:
 ...
   5,  5   |  name: my-workload
   6,  6   |  namespace: default
@@ -399,7 +399,6 @@ Update workload:
       9 + |  params:
      10 + |  - name: debug
      11 + |    value: "true"
-
 Error: conflict updating workload, the object was modified by another user; please run the update command again
 `,
 		},
@@ -457,9 +456,9 @@ Error: conflict updating workload, the object was modified by another user; plea
 			},
 			ShouldError: true,
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
-Update workload:
+🔎 Update workload:
 ...
   5,  5   |  name: my-workload
   6,  6   |  namespace: default
@@ -471,8 +470,7 @@ Update workload:
      12 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
      13 + |      kind: PostgreSQL
      14 + |      name: my-prod-db
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -536,9 +534,9 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 			},
 			ShouldError: true,
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
-Update workload:
+🔎 Update workload:
 ...
   5,  5   |  name: my-workload
   6,  6   |  namespace: default
@@ -550,8 +548,7 @@ Update workload:
      12 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
      13 + |      kind: PostgreSQL
      14 + |      name: my-prod-db
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -612,9 +609,9 @@ Error: Failed to become ready: a hopefully informative message about what went w
 				},
 			},
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
-Update workload:
+🔎 Update workload:
 ...
   5,  5   |  name: my-workload
   6,  6   |  namespace: default
@@ -626,8 +623,7 @@ Update workload:
      12 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
      13 + |      kind: PostgreSQL
      14 + |      name: my-prod-db
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -699,9 +695,9 @@ Workload "my-workload" is ready
 				},
 			},
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
-Update workload:
+🔎 Update workload:
 ...
   5,  5   |  name: my-workload
   6,  6   |  namespace: default
@@ -713,8 +709,7 @@ Update workload:
      12 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
      13 + |      kind: PostgreSQL
      14 + |      name: my-prod-db
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -788,9 +783,9 @@ Workload "my-workload" is ready
 				},
 			},
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
-Update workload:
+🔎 Update workload:
 ...
   5,  5   |  name: my-workload
   6,  6   |  namespace: default
@@ -802,8 +797,7 @@ Update workload:
      12 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
      13 + |      kind: PostgreSQL
      14 + |      name: my-prod-db
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"
 To get status: "tanzu apps workload get my-workload"
@@ -873,9 +867,9 @@ Workload "my-workload" is ready
 				},
 			},
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -905,8 +899,7 @@ Update workload:
      26 + |      ref:
      27 + |        branch: main
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
-
-Updated workload "spring-petclinic"
+👍 Updated workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -998,9 +991,9 @@ spec:
 				},
 			},
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -1030,8 +1023,7 @@ Update workload:
      26 + |      ref:
      27 + |        branch: main
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
-
-Updated workload "spring-petclinic"
+👍 Updated workload "spring-petclinic"
 
 To see logs:   "tanzu apps workload tail spring-petclinic"
 To get status: "tanzu apps workload get spring-petclinic"
@@ -1155,9 +1147,9 @@ spec:
 				},
 			},
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
-Update workload:
+🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
   3,  3   |kind: Workload
@@ -1187,8 +1179,7 @@ Update workload:
      26 + |      ref:
      27 + |        branch: main
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
-
-Updated workload "my-workload"
+👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --namespace test-namespace"
 To get status: "tanzu apps workload get my-workload --namespace test-namespace"
@@ -1365,9 +1356,9 @@ To get status: "tanzu apps workload get my-workload --namespace test-namespace"
 				},
 			},
 			ExpectOutput: `
-WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
 
-Update workload:
+🔎 Update workload:
 ...
   3,  3   |kind: Workload
   4,  4   |metadata:
@@ -1381,7 +1372,54 @@ Update workload:
      11 + |      artifactId: spring-petclinic
      12 + |      groupId: org.springframework.samples
      13 + |      version: 2.6.0
+👍 Updated workload "my-workload"
 
+To see logs:   "tanzu apps workload tail my-workload"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+
+		{
+			Name:   "update workload with no color",
+			Args:   []string{workloadName, flags.DebugFlagName, flags.YesFlagName},
+			Config: &cli.Config{NoColor: true, Scheme: scheme},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+						Params: []cartov1alpha1.Param{
+							{
+								Name:  "debug",
+								Value: apiextensionsv1.JSON{Raw: []byte(`"true"`)},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
+Update workload:
+...
+  5,  5   |  name: my-workload
+  6,  6   |  namespace: default
+  7,  7   |spec:
+  8,  8   |  image: ubuntu:bionic
+      9 + |  params:
+     10 + |  - name: debug
+     11 + |    value: "true"
 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload"

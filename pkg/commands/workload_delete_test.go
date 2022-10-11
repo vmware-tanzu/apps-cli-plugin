@@ -181,7 +181,7 @@ func TestWorkloadDeleteCommand(t *testing.T) {
 				Labels: labels.NewSelector(),
 			}},
 			ExpectOutput: `
-Deleted workloads in namespace "default"
+👍 Deleted workloads in namespace "default"
 `,
 		},
 		{
@@ -202,7 +202,7 @@ Deleted workloads in namespace "default"
 				if !strings.Contains(output, `Really delete all workloads in the namespace "default"?`) {
 					t.Errorf("expected output to contain delete prompt")
 				}
-				if !strings.Contains(output, `Deleted workloads in namespace "default"`) {
+				if !strings.Contains(output, `👍 Deleted workloads in namespace "default"`) {
 					t.Errorf("expected output to contain skip confirmation")
 				}
 			},
@@ -256,7 +256,7 @@ Deleted workloads in namespace "default"
 				Name:      workloadName,
 			}},
 			ExpectOutput: `
-Deleted workload "test-workload"
+👍 Deleted workload "test-workload"
 `,
 		},
 		{
@@ -278,7 +278,7 @@ Deleted workload "test-workload"
 				if !strings.Contains(output, `Really delete the workload "test-workload"?`) {
 					t.Errorf("expected output to contain delete prompt")
 				}
-				if !strings.Contains(output, `Deleted workload "test-workload"`) {
+				if !strings.Contains(output, `👍 Deleted workload "test-workload"`) {
 					t.Errorf("expected output to contain delete confirmation")
 				}
 			},
@@ -322,8 +322,8 @@ Deleted workload "test-workload"
 				Name:      workloadOtherName,
 			}},
 			ExpectOutput: `
-Deleted workload "test-workload"
-Deleted workload "test-other-workload"
+👍 Deleted workload "test-workload"
+👍 Deleted workload "test-other-workload"
 `,
 		},
 		{
@@ -363,7 +363,7 @@ Workload "test-workload" does not exist
 				Name:      workloadName,
 			}},
 			ExpectOutput: `
-Deleted workload "test-workload"
+👍 Deleted workload "test-workload"
 Waiting for workload "test-workload" to be deleted...
 Workload "test-workload" was deleted
 `,
@@ -400,7 +400,7 @@ Workload "test-workload" was deleted
 			},
 			ShouldError: true,
 			ExpectOutput: `
-Deleted workload "test-workload"
+👍 Deleted workload "test-workload"
 Waiting for workload "test-workload" to be deleted...
 Error: timeout after 1m0s waiting for "test-workload" to be deleted
 To view status run: tanzu apps workload get test-workload --namespace default
@@ -455,7 +455,7 @@ spec:
 				Name:      "spring-petclinic",
 			}},
 			ExpectOutput: `
-Deleted workload "spring-petclinic"
+👍 Deleted workload "spring-petclinic"
 `,
 		},
 		{
@@ -537,7 +537,7 @@ spec:
 				Name:      "spring-petclinic",
 			}},
 			ExpectOutput: `
-Deleted workload "spring-petclinic"
+👍 Deleted workload "spring-petclinic"
 `,
 		},
 		{
@@ -562,7 +562,7 @@ Deleted workload "spring-petclinic"
 				Name:      "spring-petclinic",
 			}},
 			ExpectOutput: `
-Deleted workload "spring-petclinic"
+👍 Deleted workload "spring-petclinic"
 `,
 		},
 		{
@@ -582,7 +582,7 @@ Deleted workload "spring-petclinic"
 				Name:      "spring-petclinic",
 			}},
 			ExpectOutput: `
-Deleted workload "spring-petclinic"
+👍 Deleted workload "spring-petclinic"
 `,
 		},
 		{
@@ -603,7 +603,7 @@ Deleted workload "spring-petclinic"
 			}},
 			ExpectOutput: `
 Workload "test-workload" does not exist
-Deleted workload "spring-petclinic"
+👍 Deleted workload "spring-petclinic"
 `,
 		},
 		{
@@ -633,12 +633,29 @@ Deleted workload "spring-petclinic"
 				},
 			},
 			ExpectOutput: `
-Deleted workload "test-workload"
-Deleted workload "spring-petclinic"
+👍 Deleted workload "test-workload"
+👍 Deleted workload "spring-petclinic"
 `,
 		},
 		{
 			Name:         "delete workload with console interaction",
+			Args:         []string{workloadName},
+			GivenObjects: []client.Object{parent},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("❓ Really delete the workload %q? [yN]: ", workloadName))
+				c.Send(clitesting.InteractInputLine("y"))
+				c.ExpectString(clitesting.ToInteractOutput("👍 Deleted workload %q", workloadName))
+			},
+			ExpectDeletes: []rtesting.DeleteRef{{
+				Group:     "carto.run",
+				Kind:      "Workload",
+				Namespace: defaultNamespace,
+				Name:      workloadName,
+			}},
+		},
+		{
+			Name:         "delete workload with console interaction with no color",
+			Config:       &cli.Config{NoColor: true},
 			Args:         []string{workloadName},
 			GivenObjects: []client.Object{parent},
 			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
@@ -668,10 +685,10 @@ Deleted workload "spring-petclinic"
 			Args:         []string{workloadName},
 			GivenObjects: []client.Object{parent},
 			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
-				c.ExpectString(clitesting.ToInteractTerminal("Really delete the workload %q? [yN]: ", workloadName))
+				c.ExpectString(clitesting.ToInteractTerminal("❓ Really delete the workload %q? [yN]: ", workloadName))
 				c.Send(clitesting.InteractInputLine("m"))
 				c.ExpectString(clitesting.ToInteractTerminal("invalid input (not y, n, yes, or no)"))
-				c.ExpectString(clitesting.ToInteractTerminal("Really delete the workload %q? [yN]: ", workloadName))
+				c.ExpectString(clitesting.ToInteractTerminal("❓ Really delete the workload %q? [yN]: ", workloadName))
 				c.Send(clitesting.InteractInputLine("n"))
 				c.ExpectString(clitesting.ToInteractOutput("Skipping workload %q", workloadName))
 			},

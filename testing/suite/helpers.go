@@ -21,6 +21,8 @@ package suite_test
 
 import (
 	"path/filepath"
+
+	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 )
 
 var (
@@ -28,4 +30,8 @@ var (
 	ExpectedBasePath   = filepath.Join("testdata", "expected")
 	SrcBasePath        = filepath.Join("testdata", "src")
 	namespaceFlag      = "--namespace=" + TestingNamespace
+	ApplyEmojis        = []cli.Icon{cli.Magnifying, cli.ThumbsUp}
+	UpdateEmojis       = []cli.Icon{cli.Exclamation, cli.Magnifying, cli.ThumbsUp, cli.Question}
+	GetEmojis          = []cli.Icon{cli.Antenna, cli.Delivery, cli.SpeechBalloon}
+	DeleteEmojis       = []cli.Icon{cli.ThumbsUp}
 )
