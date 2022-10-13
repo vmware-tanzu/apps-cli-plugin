@@ -74,9 +74,10 @@ jobs:
     strategy:
       matrix:
         k8s:
-        - 1.21.10
         - 1.22.7
         - 1.23.5
+        - 1.24.6
+        - 1.25.2
     env:
       REGISTRY_NAME: registry.local
       REGISTRY_USERNAME: ruser
@@ -177,7 +178,7 @@ jobs:
     - name: Install kind
       run: |
         cd $(mktemp -d -t kind.XXXX)
-        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-$(go env GOHOSTOS)-$(go env GOHOSTARCH)
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.16.0/kind-$(go env GOHOSTOS)-$(go env GOHOSTARCH)
         chmod +x ./kind
         sudo mv ./kind /usr/local/bin
         cd -
