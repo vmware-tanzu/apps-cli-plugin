@@ -187,10 +187,10 @@ func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldError
 
 func DisplayCommandNextSteps(c *cli.Config, workload *cartov1alpha1.Workload) {
 	if workload.Namespace != c.Client.DefaultNamespace() {
-		c.Infof("To see logs:   \"tanzu apps workload tail %s %s %s\"\n", workload.Name, flags.NamespaceFlagName, workload.Namespace)
+		c.Infof("To see logs:   \"tanzu apps workload tail %s %s %s %s %s 1h\"\n", workload.Name, flags.NamespaceFlagName, workload.Namespace, flags.TimestampFlagName, flags.SinceFlagName)
 		c.Infof("To get status: \"tanzu apps workload get %s %s %s\"\n", workload.Name, flags.NamespaceFlagName, workload.Namespace)
 	} else {
-		c.Infof("To see logs:   \"tanzu apps workload tail %s\"\n", workload.Name)
+		c.Infof("To see logs:   \"tanzu apps workload tail %s %s %s 1h\"\n", workload.Name, flags.TimestampFlagName, flags.SinceFlagName)
 		c.Infof("To get status: \"tanzu apps workload get %s\"\n", workload.Name)
 	}
 }

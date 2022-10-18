@@ -201,7 +201,7 @@ Supply Chain reference not found.
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -232,7 +232,7 @@ Supply Chain reference not found.
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload --namespace my-custom-namespace"
+To see logs: "tanzu apps workload tail my-workload --namespace my-custom-namespace --timestamp --since 1h"
 
 `,
 		}, {
@@ -268,7 +268,7 @@ To see logs: "tanzu apps workload tail my-workload --namespace my-custom-namespa
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -305,7 +305,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -360,7 +360,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -418,7 +418,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -459,7 +459,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -503,7 +503,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -545,7 +545,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -590,7 +590,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -634,7 +634,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -694,7 +694,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -757,7 +757,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -812,7 +812,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -860,7 +860,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -957,7 +957,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -1056,7 +1056,7 @@ To see logs: "tanzu apps workload tail my-workload"
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -1105,7 +1105,7 @@ To see logs: "tanzu apps workload tail my-workload"
    NAME   READY   STATUS   RESTARTS   AGE
    pod1   0/0              0          <unknown>
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -1153,7 +1153,7 @@ To see logs: "tanzu apps workload tail my-workload"
    NAME   READY   STATUS   RESTARTS   AGE
    pod1   0/0              0          <unknown>
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -1211,7 +1211,7 @@ To see logs: "tanzu apps workload tail my-workload"
    pod1   0/0              0          <unknown>
    pod2   0/0              0          <unknown>
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -1274,7 +1274,7 @@ No pods found for workload.
    ksvc1   Ready       https://example.com
    ksvc2   not-Ready   <empty>
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -1338,7 +1338,7 @@ To see logs: "tanzu apps workload tail my-workload"
    ksvc1   Ready       https://example.com
    ksvc2   not-Ready   <empty>
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -1425,7 +1425,7 @@ Supply Chain reference not found.
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -1456,7 +1456,7 @@ Supply Chain reference not found.
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -1715,7 +1715,7 @@ status:
 
 No pods found for workload.
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -1819,7 +1819,7 @@ To see logs: "tanzu apps workload tail my-workload"
    pod1   0/0              0          <unknown>
    pod2   0/0              0          <unknown>
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -1902,7 +1902,7 @@ To see logs: "tanzu apps workload tail my-workload"
    pod1   0/0              0          <unknown>
    pod2   0/0              0          <unknown>
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -1961,7 +1961,7 @@ To see logs: "tanzu apps workload tail my-workload"
    pod1   0/0              0          <unknown>
    pod2   0/0              0          <unknown>
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		}, {
@@ -2026,7 +2026,7 @@ Knative Services
    ksvc1   Ready       https://example.com
    ksvc2   not-Ready   <empty>
 
-To see logs: "tanzu apps workload tail my-workload"
+To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 
 `,
 		},

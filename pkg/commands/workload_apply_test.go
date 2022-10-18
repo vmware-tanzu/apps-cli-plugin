@@ -187,7 +187,7 @@ status:
      13 + |    subPath: ./app
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -250,7 +250,7 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
      13 + |    subPath: ./app
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -295,7 +295,7 @@ To get status: "tanzu apps workload get my-workload"
      13 + |    subPath: ./app
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -367,7 +367,7 @@ To get status: "tanzu apps workload get my-workload"
      12 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -434,7 +434,7 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
      12 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -512,7 +512,7 @@ Workload "my-workload" is ready
      12 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -641,7 +641,7 @@ Workload "my-workload" is ready
      12 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -719,7 +719,7 @@ Error: Failed to become ready: a hopefully informative message about what went w
      25 + |      url: https://github.com/spring-projects/spring-petclinic.git
 👍 Created workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -820,7 +820,7 @@ spec:
      25 + |      url: https://github.com/spring-projects/spring-petclinic.git
 👍 Created workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -947,7 +947,7 @@ spec:
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
 👍 Updated workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -1075,7 +1075,7 @@ status:
      29 + |      url: https://github.com/spring-projects/spring-petclinic.git
 👍 Created workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -1291,7 +1291,7 @@ Error: conflict updating workload, the object was modified by another user; plea
      14 + |      name: my-prod-db
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -1368,7 +1368,7 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
      14 + |      name: my-prod-db
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -1441,7 +1441,7 @@ Error: Failed to become ready: a hopefully informative message about what went w
      14 + |      name: my-prod-db
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -1525,7 +1525,7 @@ Workload "my-workload" is ready
      14 + |      name: my-prod-db
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -1630,7 +1630,7 @@ Workload "my-workload" is ready
      29 + |    subPath: ./cmd
 👍 Updated workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -1730,7 +1730,7 @@ To get status: "tanzu apps workload get spring-petclinic"
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload --namespace test-namespace"
+To see logs:   "tanzu apps workload tail my-workload --namespace test-namespace --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload --namespace test-namespace"
 
 `,
@@ -1807,7 +1807,7 @@ To get status: "tanzu apps workload get my-workload --namespace test-namespace"
      16 + |      name: my-prod-db
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -1867,7 +1867,7 @@ To get status: "tanzu apps workload get my-workload"
      20 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -1928,7 +1928,7 @@ To get status: "tanzu apps workload get my-workload"
      17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 👍 Updated workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -1990,7 +1990,7 @@ To get status: "tanzu apps workload get spring-petclinic"
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
 👍 Updated workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -2053,7 +2053,7 @@ To get status: "tanzu apps workload get spring-petclinic"
      17 + |      url: https://github.com/sample-accelerators/spring-petclinic
 👍 Updated workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -2114,7 +2114,7 @@ To get status: "tanzu apps workload get spring-petclinic"
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
 👍 Updated workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -2169,7 +2169,7 @@ To get status: "tanzu apps workload get spring-petclinic"
  13, 14   |      url: https://github.com/sample-accelerators/spring-petclinic
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2228,7 +2228,7 @@ To get status: "tanzu apps workload get my-workload"
 ...
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2286,7 +2286,7 @@ To get status: "tanzu apps workload get my-workload"
 ...
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2338,7 +2338,7 @@ To get status: "tanzu apps workload get my-workload"
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
 👍 Created workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -2384,7 +2384,7 @@ To get status: "tanzu apps workload get spring-petclinic"
      13 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2436,7 +2436,7 @@ To get status: "tanzu apps workload get my-workload"
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
 👍 Created workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -2497,7 +2497,7 @@ To get status: "tanzu apps workload get spring-petclinic"
      21 + |        port: 1026
 👍 Created workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -2540,7 +2540,7 @@ To get status: "tanzu apps workload get spring-petclinic"
      13 + |      version: 2.6.0
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2583,7 +2583,7 @@ To get status: "tanzu apps workload get my-workload"
      13 + |      version: 2.6.0
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2628,7 +2628,7 @@ To get status: "tanzu apps workload get my-workload"
 ❗ NOTICE: Maven configuration flags have overwritten values provided by "--params-yaml".
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2679,7 +2679,7 @@ To get status: "tanzu apps workload get my-workload"
 ❗ NOTICE: Maven configuration flags have overwritten values provided by "--params-yaml".
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2725,7 +2725,7 @@ To get status: "tanzu apps workload get my-workload"
      13 + |      version: 2.6.0
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2772,7 +2772,7 @@ To get status: "tanzu apps workload get my-workload"
      14 + |      version: 2.6.0
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2818,7 +2818,7 @@ To get status: "tanzu apps workload get my-workload"
      14 + |      version: 2.6.1
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2868,7 +2868,7 @@ To get status: "tanzu apps workload get my-workload"
      13 + |      version: 2.6.0
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2912,7 +2912,7 @@ To get status: "tanzu apps workload get my-workload"
      14 + |      version: 2.6.0
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -2999,7 +2999,7 @@ To get status: "tanzu apps workload get my-workload"
      33 + |      url: https://github.com/spring-projects/spring-petclinic.git
 👍 Created workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -3050,7 +3050,7 @@ To get status: "tanzu apps workload get spring-petclinic"
      12 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -3107,7 +3107,7 @@ To get status: "tanzu apps workload get my-workload"
      14 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -3162,7 +3162,7 @@ To get status: "tanzu apps workload get my-workload"
      14 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -3231,7 +3231,7 @@ To get status: "tanzu apps workload get my-workload"
 ...
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -3245,7 +3245,7 @@ To get status: "tanzu apps workload get my-workload"
 				c.Send(clitesting.InteractInputLine("y"))
 				c.ExpectString(clitesting.ToInteractOutput(`👍 Created workload %q
 
-To see logs:   "tanzu apps workload tail %s"
+To see logs:   "tanzu apps workload tail %s --timestamp --since 1h"
 To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
 			},
 			ExpectCreates: []client.Object{
@@ -3289,7 +3289,7 @@ To get status: "tanzu apps workload get %s"`, workloadName, workloadName, worklo
 
 👍 Created workload %q
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `, clitesting.ToInteractTerminal("❓ Do you want to create this workload? [yN]: y"), workloadName),
@@ -3304,7 +3304,7 @@ To get status: "tanzu apps workload get my-workload"
 				c.Send(clitesting.InteractInputLine("y"))
 				c.ExpectString(clitesting.ToInteractOutput(`Created workload %q
 
-To see logs:   "tanzu apps workload tail %s"
+To see logs:   "tanzu apps workload tail %s --timestamp --since 1h"
 To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
 			},
 			ExpectCreates: []client.Object{
@@ -3348,7 +3348,7 @@ Create workload:
 
 Created workload %q
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `, clitesting.ToInteractTerminal("? Do you want to create this workload? [yN]: y"), workloadName),
@@ -3390,7 +3390,7 @@ Skipping workload %q`, clitesting.ToInteractTerminal("❓ Do you want to create 
 				c.Send(clitesting.InteractInputLine("y"))
 				c.ExpectString(clitesting.ToInteractOutput(`👍 Updated workload %q
 
-To see logs:   "tanzu apps workload tail %s"
+To see logs:   "tanzu apps workload tail %s --timestamp --since 1h"
 To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
 			},
 			GivenObjects: func() []client.Object {
@@ -3454,7 +3454,7 @@ To get status: "tanzu apps workload get %s"`, workloadName, workloadName, worklo
 
 👍 Updated workload %q
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `, clitesting.ToInteractTerminal("❓ Really update the workload %q? [yN]: y", workloadName), workloadName),
@@ -3468,7 +3468,7 @@ To get status: "tanzu apps workload get my-workload"
 				c.Send(clitesting.InteractInputLine("y"))
 				c.ExpectString(clitesting.ToInteractOutput(`Updated workload %q
 
-To see logs:   "tanzu apps workload tail %s"
+To see logs:   "tanzu apps workload tail %s --timestamp --since 1h"
 To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
 			},
 			GivenObjects: func() []client.Object {
@@ -3532,7 +3532,7 @@ Update workload:
 
 Updated workload %q
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `, clitesting.ToInteractTerminal("? Really update the workload %q? [yN]: y", workloadName), workloadName),

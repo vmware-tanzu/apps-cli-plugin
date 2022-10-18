@@ -91,7 +91,7 @@ After the workload build process is complete, create a Knative service to run th
        NAME         READY   URL
        pet-clinic   Ready   http://pet-clinic.default.apps.34.133.168.14.nip.io
 
-    To see logs: "tanzu apps workload tail pet-clinic"
+    To see logs: "tanzu apps workload tail pet-clinic --timestamp --since 1h"
 
     ```
 
