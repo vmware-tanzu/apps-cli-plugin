@@ -250,9 +250,9 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 
 	c.Printf("\n")
 	if workload.Namespace != c.Client.DefaultNamespace() {
-		c.Infof("To see logs: \"tanzu apps workload tail %s %s %s\"\n", workload.Name, flags.NamespaceFlagName, workload.Namespace)
+		c.Infof("To see logs: \"tanzu apps workload tail %s %s %s %s %s 1h\"\n", workload.Name, flags.NamespaceFlagName, workload.Namespace, flags.TimestampFlagName, flags.SinceFlagName)
 	} else {
-		c.Infof("To see logs: \"tanzu apps workload tail %s\"\n", workload.Name)
+		c.Infof("To see logs: \"tanzu apps workload tail %s %s %s 1h\"\n", workload.Name, flags.TimestampFlagName, flags.SinceFlagName)
 	}
 	c.Printf("\n")
 

@@ -472,7 +472,7 @@ Error: conflict updating workload, the object was modified by another user; plea
      14 + |      name: my-prod-db
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -550,7 +550,7 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
      14 + |      name: my-prod-db
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -625,7 +625,7 @@ Error: Failed to become ready: a hopefully informative message about what went w
      14 + |      name: my-prod-db
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -711,7 +711,7 @@ Workload "my-workload" is ready
      14 + |      name: my-prod-db
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -799,7 +799,7 @@ Workload "my-workload" is ready
      14 + |      name: my-prod-db
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
@@ -901,7 +901,7 @@ Workload "my-workload" is ready
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
 👍 Updated workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -1025,7 +1025,7 @@ spec:
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
 👍 Updated workload "spring-petclinic"
 
-To see logs:   "tanzu apps workload tail spring-petclinic"
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
@@ -1181,7 +1181,7 @@ spec:
      28 + |      url: https://github.com/spring-projects/spring-petclinic.git
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload --namespace test-namespace"
+To see logs:   "tanzu apps workload tail my-workload --namespace test-namespace --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload --namespace test-namespace"
 
 `,
@@ -1374,7 +1374,7 @@ To get status: "tanzu apps workload get my-workload --namespace test-namespace"
      13 + |      version: 2.6.0
 👍 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
@@ -1422,7 +1422,7 @@ Update workload:
      11 + |    value: "true"
 Updated workload "my-workload"
 
-To see logs:   "tanzu apps workload tail my-workload"
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,

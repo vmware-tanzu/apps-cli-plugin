@@ -63,7 +63,7 @@ tanzu apps workload get rmq-sample-app
    NAME             READY   URL
    rmq-sample-app   Ready   http://rmq-sample-app.default.127.0.0.1.nip.io
 
-To see logs: "tanzu apps workload tail rmq-sample-app"
+To see logs: "tanzu apps workload tail rmq-sample-app --timestamp --since 1h"
 
 ```
 
@@ -265,6 +265,6 @@ tanzu apps workload get pet-clinic -n development
    NAME         READY   URL
    pet-clinic   Ready   http://pet-clinic.default.apps.34.133.168.14.nip.io
 
-To see logs: "tanzu apps workload tail pet-clinic"
+To see logs: "tanzu apps workload tail pet-clinic --timestamp --since 1h"
 
 ```

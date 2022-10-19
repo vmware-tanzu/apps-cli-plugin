@@ -30,7 +30,7 @@ Create workload:
 ? Do you want to create this workload? Yes
 Created workload "pet-clinic"
 
-To see logs:   "tanzu apps workload tail pet-clinic"
+To see logs:   "tanzu apps workload tail pet-clinic --timestamp --since 1h"
 To get status: "tanzu apps workload get pet-clinic"
 
 ```
@@ -120,7 +120,7 @@ Create workload:
 ? Do you want to create this workload? Yes
 Created workload "pet-clinic"
 
-To see logs:   "tanzu apps workload tail pet-clinic"
+To see logs:   "tanzu apps workload tail pet-clinic --timestamp --since 1h"
 To get status: "tanzu apps workload get pet-clinic"
 
 ```
@@ -578,7 +578,7 @@ Enables to deploy a workload once, save changes to the code and see those change
 
     Created workload "tanzu-java-web-app"
 
-    To see logs:   "tanzu apps workload tail tanzu-java-web-app"
+    To see logs:   "tanzu apps workload tail tanzu-java-web-app --timestamp --since 1h"
     To get status: "tanzu apps workload get tanzu-java-web-app"
 
     ```
@@ -1118,7 +1118,7 @@ Create workload:
 ? Do you want to create this workload? Yes
 Created workload "spring-pet-clinic"
 
-To see logs:   "tanzu apps workload tail spring-pet-clinic"
+To see logs:   "tanzu apps workload tail spring-pet-clinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-pet-clinic"
 
 Waiting for workload "spring-pet-clinic" to become ready...
@@ -1165,7 +1165,7 @@ Create workload:
 ? Do you want to create this workload? Yes
 Created workload "spring-pet-clinic"
 
-To see logs:   "tanzu apps workload tail spring-pet-clinic"
+To see logs:   "tanzu apps workload tail spring-pet-clinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-pet-clinic"
 
 Waiting for workload "spring-pet-clinic" to become ready...
@@ -1232,7 +1232,7 @@ Update workload:
 ? Really update the workload "spring-pet-clinic"? Yes
 Updated workload "spring-pet-clinic"
 
-To see logs:   "tanzu apps workload tail spring-pet-clinic"
+To see logs:   "tanzu apps workload tail spring-pet-clinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-pet-clinic"
 
 Waiting for workload "spring-pet-clinic" to become ready...
@@ -1260,7 +1260,7 @@ Update workload:
 ? Really update the workload "spring-pet-clinic"? Yes
 Updated workload "spring-pet-clinic"
 
-To see logs:   "tanzu apps workload tail spring-pet-clinic"
+To see logs:   "tanzu apps workload tail spring-pet-clinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-pet-clinic"
 
 Waiting for workload "spring-pet-clinic" to become ready...
@@ -1293,7 +1293,7 @@ Create workload:
 
 Created workload "spring-pet-clinic"
 
-To see logs:   "tanzu apps workload tail spring-pet-clinic"
+To see logs:   "tanzu apps workload tail spring-pet-clinic --timestamp --since 1h"
 To get status: "tanzu apps workload get spring-pet-clinic"
 
 ```
