@@ -46,7 +46,7 @@ install: publish-local ## Install the plugin binaries to the local machine
 
 .PHONY: build-local
 build-local: prepare test ## Build the plugin binaries locally for the host architecture
-	@echo BUILD_VERSION: $(BUILD_VERSION)
+	echo BUILD_VERSION: $(BUILD_VERSION)
 	tanzu builder cli compile --version $(BUILD_VERSION) --ldflags "$(LD_FLAGS)" --path ./cmd/plugin --target local --artifacts ${ARTIFACTS_DIR}/${GOHOSTOS}/${GOHOSTARCH}/cli
 
 .PHONY: build
@@ -91,7 +91,9 @@ prepare: generate fmt vet
 
 .PHONY: fmt
 fmt: ## Run go fmt against code
+ifneq ($(OS),Windows_NT)
 	$(GOIMPORTS) --local github.com/vmware-tanzu/apps-cli-plugin -w pkg/ cmd/
+endif 
 
 .PHONY: vet
 vet: ## Run go vet against code
@@ -102,9 +104,11 @@ generate: generate-internal fmt ## Generate code
 
 .PHONY: generate-internal
 generate-internal:
+ifneq ($(OS),Windows_NT)
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 	@echo "diegen die:headerFile=\"hack/boilerplate.go.txt\" paths=\"./...\""
 	@$(DIEGEN) die:headerFile="hack/boilerplate.go.txt" paths="./..."
+endif
 
 vendor: go.mod go.sum $(GO_SOURCES) ## Generate the vendor directory
 	go mod tidy
