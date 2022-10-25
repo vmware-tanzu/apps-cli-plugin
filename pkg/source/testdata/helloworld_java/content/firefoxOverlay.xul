@@ -2,7 +2,7 @@
 <?xml-stylesheet href="chrome://helloworld/skin/overlay.css" type="text/css"?>
 <!DOCTYPE overlay SYSTEM "chrome://helloworld/locale/helloworld.dtd">
 <overlay id="helloworld-overlay"
-         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> <!-- wokeignore:rule=master -->
   <script src="overlay.js"/>
   <stringbundleset id="stringbundleset">
     <stringbundle id="helloworld-strings" src="chrome://helloworld/locale/helloworld.properties"/>

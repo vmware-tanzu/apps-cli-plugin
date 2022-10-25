@@ -647,7 +647,7 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 							Git: &cartov1alpha1.GitSource{
 								URL: url,
 								Ref: cartov1alpha1.GitRef{
-									Branch: "master",
+									Branch: "main",
 									Tag:    "v1.0.0",
 									Commit: "abcdef",
 								},
@@ -676,7 +676,7 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 💾 Source
    type:     git
    url:      https://example.com
-   branch:   master
+   branch:   main
    tag:      v1.0.0
    commit:   abcdef
 
@@ -710,7 +710,7 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 							Git: &cartov1alpha1.GitSource{
 								URL: url,
 								Ref: cartov1alpha1.GitRef{
-									Branch: "master",
+									Branch: "main",
 									Tag:    "v1.0.0",
 									Commit: "abcdef",
 								},
@@ -739,7 +739,7 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 💾 Source
    type:     git
    url:      https://example.com
-   branch:   master
+   branch:   main
    tag:      v1.0.0
    commit:   abcdef
 
@@ -873,7 +873,7 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 							Git: &cartov1alpha1.GitSource{
 								URL: url,
 								Ref: cartov1alpha1.GitRef{
-									Branch: "master",
+									Branch: "main",
 									Tag:    "v1.0.0",
 									Commit: "abcdef",
 								},
@@ -937,7 +937,7 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 💾 Source
    type:     git
    url:      https://example.com
-   branch:   master
+   branch:   main
    tag:      v1.0.0
    commit:   abcdef
 
@@ -973,7 +973,7 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 							Git: &cartov1alpha1.GitSource{
 								URL: url,
 								Ref: cartov1alpha1.GitRef{
-									Branch: "master",
+									Branch: "main",
 									Tag:    "v1.0.0",
 									Commit: "abcdef",
 								},
@@ -1036,7 +1036,7 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 💾 Source
    type:     git
    url:      https://example.com
-   branch:   master
+   branch:   main
    tag:      v1.0.0
    commit:   abcdef
 

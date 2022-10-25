@@ -73,7 +73,7 @@ func NewDocsCommand(ctx context.Context, c *cli.Config) *cobra.Command {
 
 			root := &cobra.Command{
 				Use:               "tanzu",
-				DisableAutoGenTag: true,
+				DisableAutoGenTag: true, // wokeignore:rule=disable
 			}
 			root.AddCommand(cmd.Root())
 

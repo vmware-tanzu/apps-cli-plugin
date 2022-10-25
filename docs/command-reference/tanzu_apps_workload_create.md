@@ -30,7 +30,7 @@ tanzu apps workload create --file workload.yaml
       --annotation "key=value" pair    annotation is represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --app name                       application name the workload is a part of
       --build-env "key=value" pair     build environment variables represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
-      --debug                          put the workload in debug mode (--debug=false to disable)
+      --debug                          put the workload in debug mode (--debug=false to deactivate)
       --dry-run                        print kubernetes resources to stdout rather than apply them to the cluster, messages normally on stdout will be sent to stderr
       --env "key=value" pair           environment variables represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
   -f, --file file path                 file path containing the description of a single workload, other flags are layered on top of this resource. Use value "-" to read from stdin
@@ -43,7 +43,7 @@ tanzu apps workload create --file workload.yaml
       --label "key=value" pair         label is represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --limit-cpu cores                the maximum amount of cpu allowed, in CPU cores (500m = .5 cores)
       --limit-memory bytes             the maximum amount of memory allowed, in bytes (500Mi = 500MiB = 500 * 1024 * 1024)
-      --live-update                    put the workload in live update mode (--live-update=false to disable)
+      --live-update                    put the workload in live update mode (--live-update=false to deactivate)
       --local-path path                path to a directory, .zip, .jar or .war file containing workload source code
       --maven-artifact string          name of maven artifact
       --maven-group string             maven project to pull artifact from

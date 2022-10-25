@@ -602,7 +602,7 @@ func (d *DeliverableDie) Spec(v cartographerv1alpha1.DeliverableSpec) *Deliverab
 	})
 }
 
-// Status conforms to the Kubernetes conventions: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+// Status conforms to the Kubernetes conventions: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties wokeignore:rule=master
 func (d *DeliverableDie) Status(v cartographerv1alpha1.DeliverableStatus) *DeliverableDie {
 	return d.DieStamp(func(r *cartographerv1alpha1.Deliverable) {
 		r.Status = v
@@ -1224,7 +1224,7 @@ func (d *WorkloadStatusDie) ObservedGeneration(v int64) *WorkloadStatusDie {
 	})
 }
 
-// Conditions describing this resource's reconcile state. The top level condition is of type `Ready`, and follows these Kubernetes conventions: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+// Conditions describing this resource's reconcile state. The top level condition is of type `Ready`, and follows these Kubernetes conventions: # wokeignore:rule=master https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
 func (d *WorkloadStatusDie) Conditions(v ...metav1.Condition) *WorkloadStatusDie {
 	return d.DieStamp(func(r *cartographerv1alpha1.WorkloadStatus) {
 		r.Conditions = v
@@ -1364,7 +1364,7 @@ func (d *RealizedResourceDie) Outputs(v ...cartographerv1alpha1.Output) *Realize
 	})
 }
 
-// Conditions describing this resource's reconcile state. The top level condition is of type `Ready`, and follows these Kubernetes conventions: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+// Conditions describing this resource's reconcile state. The top level condition is of type `Ready`, and follows these Kubernetes conventions: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties wokeignore:rule=master
 func (d *RealizedResourceDie) Conditions(v ...metav1.Condition) *RealizedResourceDie {
 	return d.DieStamp(func(r *cartographerv1alpha1.RealizedResource) {
 		r.Conditions = v

@@ -1157,7 +1157,7 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 				Git: &GitSource{
 					URL: "a bad url to be replaced",
 					Ref: GitRef{
-						Branch: "master",
+						Branch: "main",
 						Tag:    "v1.0.0",
 					},
 				},

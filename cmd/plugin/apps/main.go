@@ -73,8 +73,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// disable default commands
-	p.Cmd.CompletionOptions.DisableDefaultCmd = true
+	// deactivate default commands
+	p.Cmd.CompletionOptions.DisableDefaultCmd = true // wokeignore:rule=disable
 
 	// setup logs.Tail() for all commands using stern
 	ctx = logs.StashTailer(ctx, &logs.SternTailer{})
@@ -97,7 +97,7 @@ func main() {
 	p.Cmd.PersistentFlags().Int32VarP(c.Verbose, cli.StripDash(flags.VerboseLevelFlagName), "v", 1, "number for the log level verbosity")
 
 	cobra.OnInitialize(func() {
-		// sync config and fatih to disable emojis printing
+		// sync config and fatih to deactivate emojis printing
 		c.NoColor = color.NoColor
 		// set the default logger
 		c.SetLogger(logger.NewSinkLogger(c.Name, c.Verbose, c.Stderr))

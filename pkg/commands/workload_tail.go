@@ -102,7 +102,7 @@ func NewWorkloadTailCommand(ctx context.Context, c *cli.Config) *cobra.Command {
 		Short: "Watch workload related logs",
 		Long: strings.TrimSpace(`
 Stream logs for a workload until canceled. To cancel, press Ctl-c in
-the shell or kill the process. As new workload pods are started, the logs
+the shell or stop the process. As new workload pods are started, the logs
 are displayed. To show historical logs use ` + flags.SinceFlagName + `.
 `),
 		Example: strings.Join([]string{

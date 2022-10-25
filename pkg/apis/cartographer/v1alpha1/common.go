@@ -91,7 +91,7 @@ type RealizedResource struct {
 
 	// Conditions describing this resource's reconcile state. The top level condition is
 	// of type `Ready`, and follows these Kubernetes conventions:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties wokeignore:rule=master
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
@@ -121,6 +121,6 @@ type OwnerStatus struct {
 
 	// Conditions describing this resource's reconcile state. The top level condition is
 	// of type `Ready`, and follows these Kubernetes conventions:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties wokeignore:rule=master
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
