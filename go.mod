@@ -16,7 +16,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.13.0
 	github.com/stern/stern v1.21.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/vito/go-interact v1.0.1
 	github.com/vmware-labs/reconciler-runtime v0.8.2
 	github.com/vmware-tanzu/carvel-imgpkg v0.33.0
@@ -187,7 +187,7 @@ require (
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
-	github.com/stretchr/objx v0.4.0 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/valyala/fastjson v1.6.3 // indirect
 	github.com/vbatts/tar-split v0.11.2 // indirect
