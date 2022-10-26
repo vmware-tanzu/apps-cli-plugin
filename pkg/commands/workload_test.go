@@ -2521,6 +2521,11 @@ func TestLoadInputWorkload(t *testing.T) {
 			stdin: c.Stdin,
 		},
 		{
+			name:  "loads workload from url",
+			file:  "https://raw.githubusercontent.com/vmware-tanzu/apps-cli-plugin/main/pkg/commands/testdata/workload.yaml",
+			stdin: c.Stdin,
+		},
+		{
 			name: "loads workload from stdin",
 			file: "-",
 			stdin: strings.NewReader(`
@@ -2553,6 +2558,18 @@ spec:
 		{
 			name:        "error loading non-existent file",
 			file:        "testdata/workload1.yaml",
+			stdin:       c.Stdin,
+			shouldError: true,
+		},
+		{
+			name:        "error loading non-accepted url file",
+			file:        "ftp://raw.githubusercontent.com/vmware-tanzu/apps-cli-plugin/main/pkg/commands/testdata/workload.yaml",
+			stdin:       c.Stdin,
+			shouldError: true,
+		},
+		{
+			name:        "error loading non-workload file",
+			file:        "https://raw.githubusercontent.com/vmware-tanzu/apps-cli-plugin/main/testing/e2e/testdata/prereq/cluster-supply-chain.yaml",
 			stdin:       c.Stdin,
 			shouldError: true,
 		},

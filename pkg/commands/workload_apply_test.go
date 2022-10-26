@@ -31,7 +31,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -90,6 +89,7 @@ func TestWorkloadApplyCommand(t *testing.T) {
 	gitBranch := "main"
 	serviceAccountName := "my-service-account"
 	serviceAccountNameUpdated := "my-service-account-updated"
+	fileFromUrl := "https://raw.githubusercontent.com/vmware-tanzu/apps-cli-plugin/main/pkg/commands/testdata/workload.yaml"
 
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
@@ -649,8 +649,94 @@ Error: Failed to become ready: a hopefully informative message about what went w
 `,
 		},
 		{
+			Name:         "filepath from url",
+			Args:         []string{flags.FilePathFlagName, fileFromUrl, flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							apis.AppPartOfLabelName:               "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name:  "SPRING_PROFILES_ACTIVE",
+								Value: "mysql",
+							},
+						},
+						Resources: &corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("500m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+🔎 Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    app.kubernetes.io/part-of: spring-petclinic
+      7 + |    apps.tanzu.vmware.com/workload-type: web
+      8 + |  name: spring-petclinic
+      9 + |  namespace: default
+     10 + |spec:
+     11 + |  env:
+     12 + |  - name: SPRING_PROFILES_ACTIVE
+     13 + |    value: mysql
+     14 + |  resources:
+     15 + |    limits:
+     16 + |      cpu: 500m
+     17 + |      memory: 1Gi
+     18 + |    requests:
+     19 + |      cpu: 100m
+     20 + |      memory: 1Gi
+     21 + |  source:
+     22 + |    git:
+     23 + |      ref:
+     24 + |        branch: main
+     25 + |      url: https://github.com/spring-projects/spring-petclinic.git
+👍 Created workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name:        "invalid url",
+			Args:        []string{flags.FilePathFlagName, "https://github.com/vmware-tanzu/apps-cli-plugin/blob/main/pkg/commands/testdata/workload.yaml", flags.YesFlagName},
+			ShouldError: true,
+		},
+		{
+			Name:        "not http/https url",
+			Args:        []string{flags.FilePathFlagName, "ftp://raw.githubusercontent.com/vmware-tanzu/apps-cli-plugin/main/pkg/commands/testdata/workload.yaml", flags.YesFlagName},
+			ShouldError: true,
+		},
+		{
 			Name:         "filepath",
-			Args:         []string{flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
+			Args:         []string{flags.FilePathFlagName, file, flags.YesFlagName},
 			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -1182,7 +1268,7 @@ status:
 			Args: []string{workloadName, flags.DebugFlagName, flags.YesFlagName},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("update", "Workload", clitesting.InduceFailureOpts{
-					Error: apierrs.NewConflict(schema.GroupResource{Group: "carto.run", Resource: "workloads"}, workloadName, fmt.Errorf("induced conflict")),
+					Error: apierrors.NewConflict(schema.GroupResource{Group: "carto.run", Resource: "workloads"}, workloadName, fmt.Errorf("induced conflict")),
 				}),
 			},
 			GivenObjects: []client.Object{
@@ -1307,7 +1393,6 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 						d.Image("ubuntu:bionic")
 					}),
 			},
-
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1535,7 +1620,109 @@ Workload "my-workload" is ready
 		},
 		{
 			Name: "update - filepath",
-			Args: []string{flags.FilePathFlagName, "testdata/workload.yaml", flags.SubPathFlagName, "./cmd", flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, file, flags.SubPathFlagName, "./cmd", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("preserve-me", "should-exist")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+						d.Env(
+							corev1.EnvVar{
+								Name:  "OVERRIDE_VAR",
+								Value: "doesnt matter",
+							},
+						)
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"preserve-me":                         "should-exist",
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+							Subpath: "./cmd",
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name:  "OVERRIDE_VAR",
+								Value: "doesnt matter",
+							},
+							{
+								Name:  "SPRING_PROFILES_ACTIVE",
+								Value: "mysql",
+							},
+						},
+						Resources: &corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("500m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+🔎 Update workload:
+...
+  2,  2   |apiVersion: carto.run/v1alpha1
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  labels:
+      6 + |    app.kubernetes.io/part-of: spring-petclinic
+      7 + |    apps.tanzu.vmware.com/workload-type: web
+  6,  8   |    preserve-me: should-exist
+  7,  9   |  name: spring-petclinic
+  8, 10   |  namespace: default
+  9, 11   |spec:
+ 10, 12   |  env:
+ 11, 13   |  - name: OVERRIDE_VAR
+ 12, 14   |    value: doesnt matter
+ 13     - |  image: ubuntu:bionic
+     15 + |  - name: SPRING_PROFILES_ACTIVE
+     16 + |    value: mysql
+     17 + |  resources:
+     18 + |    limits:
+     19 + |      cpu: 500m
+     20 + |      memory: 1Gi
+     21 + |    requests:
+     22 + |      cpu: 100m
+     23 + |      memory: 1Gi
+     24 + |  source:
+     25 + |    git:
+     26 + |      ref:
+     27 + |        branch: main
+     28 + |      url: https://github.com/spring-projects/spring-petclinic.git
+     29 + |    subPath: ./cmd
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update - filepath from url",
+			Args: []string{flags.FilePathFlagName, fileFromUrl, flags.SubPathFlagName, "./cmd", flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -1637,7 +1824,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 		},
 		{
 			Name: "update - filepath - custom namespace and name",
-			Args: []string{workloadName, flags.NamespaceFlagName, "test-namespace", flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
+			Args: []string{workloadName, flags.NamespaceFlagName, "test-namespace", flags.FilePathFlagName, file, flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
