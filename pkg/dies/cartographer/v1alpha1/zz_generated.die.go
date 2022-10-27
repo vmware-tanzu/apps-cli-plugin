@@ -1337,7 +1337,7 @@ func (d *RealizedResourceDie) Name(v string) *RealizedResourceDie {
 }
 
 // StampedRef is a reference to the object that was created by the resource
-func (d *RealizedResourceDie) StampedRef(v *corev1.ObjectReference) *RealizedResourceDie {
+func (d *RealizedResourceDie) StampedRef(v *cartographerv1alpha1.StampedRef) *RealizedResourceDie {
 	return d.DieStamp(func(r *cartographerv1alpha1.RealizedResource) {
 		r.StampedRef = v
 	})
