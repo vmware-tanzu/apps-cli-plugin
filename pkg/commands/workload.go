@@ -276,14 +276,14 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 	if opts.Debug {
 		workload.Spec.MergeParams("debug", "true")
 	} else if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.DebugFlagName)) {
-		// debug was actively disabled
+		// debug was actively deactivated
 		workload.Spec.RemoveParam("debug")
 	}
 
 	if opts.LiveUpdate {
 		workload.Spec.MergeParams("live-update", "true")
 	} else if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.LiveUpdateFlagName)) {
-		// live-update was actively disabled
+		// live-update was actively deactivated
 		workload.Spec.RemoveParam("live-update")
 	}
 
@@ -643,8 +643,8 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.Flags().StringSliceVar(&opts.Annotations, cli.StripDash(flags.AnnotationFlagName), []string{}, "annotation is represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
 	cmd.Flags().StringArrayVar(&opts.Params, cli.StripDash(flags.ParamFlagName), []string{}, "additional parameters represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
 	cmd.Flags().StringArrayVar(&opts.ParamsYaml, cli.StripDash(flags.ParamYamlFlagName), []string{}, "specify nested parameters using YAML or JSON formatted values represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
-	cmd.Flags().BoolVar(&opts.Debug, cli.StripDash(flags.DebugFlagName), false, "put the workload in debug mode ("+flags.DebugFlagName+"=false to disable)")
-	cmd.Flags().BoolVar(&opts.LiveUpdate, cli.StripDash(flags.LiveUpdateFlagName), false, "put the workload in live update mode ("+flags.LiveUpdateFlagName+"=false to disable)")
+	cmd.Flags().BoolVar(&opts.Debug, cli.StripDash(flags.DebugFlagName), false, "put the workload in debug mode ("+flags.DebugFlagName+"=false to deactivate)")
+	cmd.Flags().BoolVar(&opts.LiveUpdate, cli.StripDash(flags.LiveUpdateFlagName), false, "put the workload in live update mode ("+flags.LiveUpdateFlagName+"=false to deactivate)")
 	cmd.Flags().StringVar(&opts.GitRepo, cli.StripDash(flags.GitRepoFlagName), "", "git `url` to remote source code")
 	cmd.Flags().StringVar(&opts.GitBranch, cli.StripDash(flags.GitBranchFlagName), "", "`branch` within the git repo to checkout")
 	cmd.Flags().StringVar(&opts.GitCommit, cli.StripDash(flags.GitCommitFlagName), "", "commit `SHA` within the git repo to checkout")

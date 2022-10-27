@@ -24,6 +24,7 @@ endif
 CONTROLLER_GEN ?= go run -mod=mod -modfile hack/go.mod sigs.k8s.io/controller-tools/cmd/controller-gen
 DIEGEN ?= go run -modfile hack/go.mod -mod=mod dies.dev/diegen
 GOIMPORTS ?= go run -mod=mod -modfile hack/go.mod golang.org/x/tools/cmd/goimports
+WOKE ?= go run -mod=mod -modfile hack/go.mod github.com/get-woke/woke
 
 ARTIFACTS_DIR ?= ./artifacts
 TANZU_PLUGIN_PUBLISH_PATH ?= $(ARTIFACTS_DIR)/published
@@ -81,6 +82,11 @@ docs: $(GO_SOURCES) ## Generate the plugin documentation
 .PHONY: test
 test: generate fmt vet ## Run tests
 	go test ./... -coverprofile=coverage.txt -covermode=atomic -timeout 30s -race
+
+.PHONY: lint
+lint: ## Run lint tools to identfy stylistic errors
+	@echo "Scanning for inclusive terminology errors"
+	@$(WOKE) . -c https://via.vmw.com/its-woke-rules
 
 .PHONY: integration-test
 integration-test:  ## Run integration test

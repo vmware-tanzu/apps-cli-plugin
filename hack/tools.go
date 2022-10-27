@@ -6,6 +6,7 @@ package tools
 
 import (
 	_ "dies.dev/diegen"
+	_ "github.com/get-woke/woke"
 	_ "golang.org/x/tools/cmd/goimports"
 	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
 )

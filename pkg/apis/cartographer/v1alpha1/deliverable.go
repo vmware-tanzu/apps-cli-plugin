@@ -40,7 +40,7 @@ type Deliverable struct {
 	Spec DeliverableSpec `json:"spec"`
 
 	// Status conforms to the Kubernetes conventions:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties wokeignore:rule=master
 	Status DeliverableStatus `json:"status,omitempty"`
 }
 

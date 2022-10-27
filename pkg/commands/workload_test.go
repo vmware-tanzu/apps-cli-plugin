@@ -938,7 +938,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 			},
 		},
 		{
-			name: "workload debug disabled",
+			name: "workload debug deactivated",
 			args: []string{fmt.Sprintf("%s=%s", flags.DebugFlagName, "false")},
 			input: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1004,7 +1004,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 			},
 		},
 		{
-			name: "workload with live-update disabled",
+			name: "workload with live-update deactivated",
 			args: []string{fmt.Sprintf("%s=%s", flags.LiveUpdateFlagName, "false")},
 			input: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
