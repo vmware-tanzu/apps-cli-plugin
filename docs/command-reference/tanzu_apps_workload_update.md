@@ -30,19 +30,19 @@ tanzu apps workload update --file workload.yaml
 
 ```
       --annotation "key=value" pair    annotation is represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
-      --app name                       application name the workload is a part of
+  -a, --app name                       application name the workload is a part of
       --build-env "key=value" pair     build environment variables represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --debug                          put the workload in debug mode (--debug=false to deactivate)
       --dry-run                        print kubernetes resources to stdout rather than apply them to the cluster, messages normally on stdout will be sent to stderr
-      --env "key=value" pair           environment variables represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
+  -e, --env "key=value" pair           environment variables represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
   -f, --file file path                 file path containing the description of a single workload, other flags are layered on top of this resource. Use value "-" to read from stdin
       --git-branch branch              branch within the git repo to checkout
       --git-commit SHA                 commit SHA within the git repo to checkout
       --git-repo url                   git url to remote source code
       --git-tag tag                    tag within the git repo to checkout
   -h, --help                           help for update
-      --image image                    pre-built image, skips the source resolution and build phases of the supply chain
-      --label "key=value" pair         label is represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
+  -i, --image image                    pre-built image, skips the source resolution and build phases of the supply chain
+  -l, --label "key=value" pair         label is represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --limit-cpu cores                the maximum amount of cpu allowed, in CPU cores (500m = .5 cores)
       --limit-memory bytes             the maximum amount of memory allowed, in bytes (500Mi = 500MiB = 500 * 1024 * 1024)
       --live-update                    put the workload in live update mode (--live-update=false to deactivate)
@@ -52,7 +52,7 @@ tanzu apps workload update --file workload.yaml
       --maven-type string              maven packaging type, defaults to jar
       --maven-version string           version number of maven artifact
   -n, --namespace name                 kubernetes namespace (defaulted from kube config)
-      --param "key=value" pair         additional parameters represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
+  -p, --param "key=value" pair         additional parameters represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --param-yaml "key=value" pair    specify nested parameters using YAML or JSON formatted values represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --registry-ca-cert stringArray   file path to CA certificate used to authenticate with registry, flag can be used multiple times
       --registry-password string       username for authenticating with registry
@@ -66,7 +66,7 @@ tanzu apps workload update --file workload.yaml
       --sub-path path                  relative path inside the repo or image to treat as application root (to unset, pass empty string "")
       --tail                           show logs while waiting for workload to become ready
       --tail-timestamp                 show logs and add timestamp to each log line while waiting for workload to become ready
-      --type type                      distinguish workload type
+  -t, --type type                      distinguish workload type
       --wait                           waits for workload to become ready
       --wait-timeout duration          timeout for workload to become ready when waiting (default 10m0s)
   -y, --yes                            accept all prompts

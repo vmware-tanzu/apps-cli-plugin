@@ -1224,7 +1224,7 @@ func (d *WorkloadStatusDie) ObservedGeneration(v int64) *WorkloadStatusDie {
 	})
 }
 
-// Conditions describing this resource's reconcile state. The top level condition is of type `Ready`, and follows these Kubernetes conventions: # wokeignore:rule=master https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+// Conditions describing this resource's reconcile state. The top level condition is of type `Ready`, and follows these Kubernetes conventions: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties wokeignore:rule=master
 func (d *WorkloadStatusDie) Conditions(v ...metav1.Condition) *WorkloadStatusDie {
 	return d.DieStamp(func(r *cartographerv1alpha1.WorkloadStatus) {
 		r.Conditions = v

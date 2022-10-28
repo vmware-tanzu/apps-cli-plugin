@@ -92,7 +92,7 @@ Update workload:
 ```
 </details>
 
-### `--app`
+### `--app`, `-a`
 The app of which the workload is part of. This will be part of the workload metadata section.
 
 <details><summary>Example</summary>
@@ -249,7 +249,7 @@ status:
 ```
 </details>
 
- ### `--env`
+ ### `--env`, `-e`
  Set the environment variables to the workload so the supply chain resources can used it to properly deploy the workload application
  
  <details><summary>Example</summary>
@@ -397,7 +397,7 @@ Create workload:
 ```
 </details>
 
-### `--image`
+### `--image`, `-i`
 Sets the OSI image to be used as the workload application source instead of a git repository
  
  <details><summary>Example</summary>
@@ -433,7 +433,7 @@ Create workload:
 ```
 </details>
 
-### `--label`
+### `--label`, `-l`
 Set the label to be applied to the workload, to specify more than one label set the flag multiple times
 
 <details><summary>Example</summary>
@@ -685,7 +685,7 @@ Create workload:
 ```
 </details>
 
-### `--param`
+### `--param`, `-p`
 Additional parameters to be send to the supply chain, the value is send as a string, for complex yaml/json objects use `--param-yaml`
 
 <details><summary>Example</summary>
@@ -1186,7 +1186,7 @@ spring-pet-clinic-build-1-build-pod[prepare] 2022-06-15T11:28:01.365372427-05:00
 ```
 </details>
 
-### `--type`
+### `--type`, `-t`
 Sets the type of the workload by adding the label `apps.tanzu.vmware.com/workload-type`, which is very common to be used as a matcher by supply chains.
 
 [environment variable](../working-with-workloads.md#env-vars) supported to set it for all commands (`TANZU_APPS_TYPE`)
