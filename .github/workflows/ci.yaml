@@ -135,8 +135,61 @@ jobs:
         git diff --exit-code docs
       continue-on-error: true
 
+  unit-macos:
+    env:
+      TKG_CUSTOM_IMAGE_REPOSITORY: projects-stg.registry.vmware.com/tkg
+      TANZU_CLI_NO_INIT: true
+      TANZU_HOME: $HOME/tanzu
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: 1.19.x
+    - name: Grype scan
+      run: |
+        echo "##[group]Install grype"
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+        echo "##[endgroup]"
+        echo "##[group]Scan source ."
+          grype dir:. --exclude ./hack,./vendor --exclude '**/testdata/**'
+
+    - name: Install tanzu cli
+      run: |
+        TANZU_VERSION=$(cat TANZU_VERSION)
+        TANZU_HOME=$HOME/tanzu
+        mkdir -p $HOME/tanzu
+        curl -Lo tanzu-framework.tar.gz https://github.com/vmware-tanzu/tanzu-framework/releases/download/${TANZU_VERSION}/tanzu-framework-darwin-amd64.tar.gz
+        tar -xzf tanzu-framework.tar.gz -C ${TANZU_HOME}
+        sudo mv ${TANZU_HOME}/cli/core/${TANZU_VERSION}/tanzu-core-darwin_amd64 /usr/local/bin/tanzu
+        chmod +x /usr/local/bin/tanzu
+        tanzu init
+        tanzu plugin repo add -b tanzu-cli-admin-plugins -n admin -p artifacts-admin
+        curl -Lo admin-plugins.tar.gz https://github.com/vmware-tanzu/tanzu-framework/releases/download/${TANZU_VERSION}/tanzu-framework-plugins-admin-darwin-amd64.tar.gz
+        tar -xzf admin-plugins.tar.gz -C ${TANZU_HOME}
+        tanzu plugin install builder --local ${TANZU_HOME}/admin-plugins
+        tanzu builder version
+        tanzu plugin install test --local ${TANZU_HOME}/admin-plugins
+        tanzu plugin list
+    - name: Test
+      run: make test
+    - name: Build Version
+      run: echo "BUILD_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+      if: startsWith(github.ref, 'refs/tags/')
+    - name: Build
+      run: |
+        make publish
+    - name: Install
+      run: make install
+    - name: Verify docs
+      run: |
+        rm -rf docs/command-reference
+        tanzu apps docs --directory docs/command-reference
+        git diff --exit-code docs
+      continue-on-error: true
+
   acceptance:
-    needs: [unit-ubuntu, unit-windows]
+    needs: [unit-ubuntu, unit-windows, unit-macos]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -333,6 +386,7 @@ jobs:
     needs:
     - unit-ubuntu
     - unit-windows
+    - unit-macos
     - acceptance
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
