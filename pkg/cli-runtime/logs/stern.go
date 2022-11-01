@@ -33,7 +33,10 @@ import (
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 )
 
+const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
+
 var _ Tailer = &SternTailer{}
+var re = regexp.MustCompile(ansi)
 
 type SternTailer struct{}
 
@@ -46,7 +49,7 @@ func (s *SternTailer) Tail(ctx context.Context, c *cli.Config, namespace string,
 		}
 		containerQuery = regexp.MustCompile(fmt.Sprintf("^(%s)$", strings.Join(escapedContainers, "|")))
 	}
-	t := "{{color .ContainerColor .PodName}}{{color .PodColor \"[\"}}{{color .PodColor .ContainerName}}{{color .PodColor \"]\"}} {{.Message}}\n"
+	t := "{{color .ContainerColor .PodName}}{{color .PodColor \"[\"}}{{color .PodColor .ContainerName}}{{color .PodColor \"]\"}} {{format .Message}}\n"
 	funs := map[string]interface{}{
 		"json": func(in interface{}) (string, error) {
 			b, err := json.Marshal(in)
@@ -54,6 +57,9 @@ func (s *SternTailer) Tail(ctx context.Context, c *cli.Config, namespace string,
 				return "", err
 			}
 			return string(b), nil
+		},
+		"format": func(in string) (string, error) {
+			return stripANSI(in), nil
 		},
 		"color": func(color color.Color, text string) string {
 			return color.SprintFunc()(text)
@@ -90,4 +96,12 @@ func (s *SternTailer) Tail(ctx context.Context, c *cli.Config, namespace string,
 	}
 
 	return stern.Run(ctx, &configStern)
+}
+
+func stripANSI(str string) string {
+	if color.NoColor {
+		return re.ReplaceAllString(str, "")
+	} else {
+		return str
+	}
 }

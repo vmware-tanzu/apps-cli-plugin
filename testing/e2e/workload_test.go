@@ -54,6 +54,7 @@ var (
 )
 
 func TestCreateFromGitWithAnnotations(t *testing.T) {
+
 	testSuite := it.CommandLineIntegrationTestSuite{
 		{
 			Name:         "Create workload and show emojis",
@@ -68,6 +69,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					"--git-repo=https://github.com/sample-accelerators/spring-petclinic",
 					namespaceFlag,
 					"--type=web",
+					"--tail",
 				)
 				c.SurveyAnswer("y")
 				return c
@@ -77,6 +79,8 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				if ctx, err = createPtyTerminal(ctx); err != nil {
 					t.Fatalf("error while opening pty %v", err)
 				}
+				// ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+				// ctx = context.WithValue(ctx, ContextCancelStashKey{}, "tail")
 
 				return ctx, nil
 			},
@@ -114,6 +118,8 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 			CleanUp: func(ctx context.Context, t *testing.T) error {
 				os.Stdout = ctx.Value("stdout").(*os.File)
+				// cancel := ctx.Value(contextCancelStashKey{}).(context.CancelFunc)
+				// defer cancel()
 				return nil
 			},
 		},
