@@ -86,6 +86,7 @@ func (s *SternTailer) Tail(ctx context.Context, c *cli.Config, namespace string,
 		Template: template,
 		Out:      c.Stdout,
 		ErrOut:   c.Stderr,
+		Follow:   true,
 	}
 
 	return stern.Run(ctx, &configStern)
