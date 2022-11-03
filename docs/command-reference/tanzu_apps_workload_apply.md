@@ -63,6 +63,7 @@ tanzu apps workload apply --file workload.yaml
       --tail                           show logs while waiting for workload to become ready
       --tail-timestamp                 show logs and add timestamp to each log line while waiting for workload to become ready
   -t, --type type                      distinguish workload type
+      --update-strategy string         specify configuration file update strategy (supported strategies: merge, replace) (default "replace")
       --wait                           waits for workload to become ready
       --wait-timeout duration          timeout for workload to become ready when waiting (default 10m0s)
   -y, --yes                            accept all prompts

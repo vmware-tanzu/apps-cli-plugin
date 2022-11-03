@@ -241,6 +241,8 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   9,  9   |    git:
@@ -279,6 +281,8 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -777,6 +781,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -878,6 +884,8 @@ spec:
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -1001,6 +1009,8 @@ spec:
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -1129,6 +1139,8 @@ status:
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -1784,6 +1796,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -1885,6 +1899,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -2094,6 +2110,8 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -2157,6 +2175,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -2219,6 +2239,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -2281,6 +2303,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -2506,6 +2530,8 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -2604,6 +2630,8 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -2660,6 +2688,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -3150,6 +3180,8 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1

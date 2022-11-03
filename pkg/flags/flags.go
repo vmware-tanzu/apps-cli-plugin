@@ -70,6 +70,7 @@ const (
 	TimestampFlagName        = "--timestamp"
 	TailTimestampFlagName    = "--tail-timestamp"
 	TypeFlagName             = "--type"
+	UpdateStrategyFlagName   = "--update-strategy"
 	VerboseLevelFlagName     = "--verbose"
 	WaitFlagName             = "--wait"
 	WaitTimeoutFlagName      = "--wait-timeout"

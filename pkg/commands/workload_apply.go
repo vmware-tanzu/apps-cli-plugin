@@ -41,6 +41,7 @@ import (
 
 type WorkloadApplyOptions struct {
 	WorkloadOptions
+	UpdateStrategy string
 }
 
 var (
@@ -61,6 +62,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 
 	fileWorkload := &cartov1alpha1.Workload{}
 	if opts.FilePath != "" {
+		c.Emoji(cli.Exclamation, fmt.Sprintf("WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use %q to control strategy explicitly).\n\n", flags.UpdateStrategyFlagName))
 		if err := opts.WorkloadOptions.LoadInputWorkload(c.Stdin, fileWorkload); err != nil {
 			return err
 		}
@@ -234,6 +236,10 @@ Workload configuration options include:
 
 	// Define common flags
 	opts.DefineFlags(ctx, c, cmd)
+	cmd.Flags().StringVar(&opts.UpdateStrategy, cli.StripDash(flags.UpdateStrategyFlagName), "replace", "specify configuration file update strategy (supported strategies: merge, replace)")
+	cmd.RegisterFlagCompletionFunc(cli.StripDash(flags.UpdateStrategyFlagName), func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"replace", "merge"}, cobra.ShellCompDirectiveNoFileComp
+	})
 
 	// Bind flags to environment variables
 	opts.DefineEnvVars(ctx, c, cmd)
