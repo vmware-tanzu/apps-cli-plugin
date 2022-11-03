@@ -34,7 +34,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	it "github.com/vmware-tanzu/apps-cli-plugin/testing/suite"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -113,6 +115,57 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			CleanUp: func(ctx context.Context, t *testing.T) error {
 				os.Stdout = ctx.Value("stdout").(*os.File)
 				return nil
+			},
+		},
+		{
+			Name:         "Create workload with valid name from url filepath",
+			WorkloadName: "spring-petclinic",
+			Command: func() it.CommandLine {
+				c := *it.NewTanzuAppsCommandLine(
+					"workload", "create", "spring-petclinic",
+					"--file=https://raw.githubusercontent.com/vmware-tanzu/apps-cli-plugin/main/pkg/commands/testdata/workload.yaml",
+					namespaceFlag,
+					"--type=web",
+				)
+				c.SurveyAnswer("y")
+				return c
+			}(),
+			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "spring-petclinic",
+					Namespace: it.TestingNamespace,
+					Labels: map[string]string{
+						"app.kubernetes.io/part-of":           "spring-petclinic",
+						"apps.tanzu.vmware.com/workload-type": "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Env: []corev1.EnvVar{
+						{
+							Name:  "SPRING_PROFILES_ACTIVE",
+							Value: "mysql",
+						},
+					},
+					Resources: &corev1.ResourceRequirements{
+						Limits: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("500m"),
+							corev1.ResourceMemory: resource.MustParse("1Gi"),
+						},
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("100m"),
+							corev1.ResourceMemory: resource.MustParse("1Gi"),
+						},
+					},
+					Source: &cartov1alpha1.Source{
+						Git: &cartov1alpha1.GitSource{
+							URL: "https://github.com/spring-projects/spring-petclinic.git",
+							Ref: cartov1alpha1.GitRef{
+								Branch: "main",
+							},
+						},
+					},
+				},
 			},
 		},
 		{

@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -616,19 +618,59 @@ func (opts *WorkloadOptions) Create(ctx context.Context, c *cli.Config, workload
 func (opts *WorkloadOptions) LoadInputWorkload(input io.Reader, workload *cartov1alpha1.Workload) error {
 	var in io.Reader
 
-	f, err := os.Open(opts.FilePath)
-	in = f
-	if f == nil && opts.FilePath == "-" {
-		in = input
-	} else if err != nil {
-		return fmt.Errorf("unable to open file %q: %w", opts.FilePath, err)
+	isURL, err := isUrl(opts.FilePath)
+	if err != nil {
+		return fmt.Errorf("unable to check if filepath %q is a valid url: %w", opts.FilePath, err)
 	}
-	defer f.Close()
+
+	if isURL {
+		in, err = opts.getUrlFileContent()
+		if err != nil {
+			return fmt.Errorf("unable to read from url %q: %w", opts.FilePath, err)
+		}
+	} else if opts.FilePath == "-" {
+		in = input
+	} else {
+		f, err := os.Open(opts.FilePath)
+		if err != nil {
+			return fmt.Errorf("unable to open file %q: %w", opts.FilePath, err)
+		}
+		in = f
+		defer f.Close()
+	}
 
 	if err := workload.Load(in); err != nil {
 		return fmt.Errorf("unable to load file %q: %w", opts.FilePath, err)
 	}
 	return nil
+}
+
+func (opts *WorkloadOptions) getUrlFileContent() (io.Reader, error) {
+	resp, err := http.Get(opts.FilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	r := strings.NewReader(string(body))
+
+	return r, err
+}
+
+func isUrl(str string) (bool, error) {
+	if u, err := url.Parse(str); err != nil {
+		return false, err
+	} else {
+		if u.Scheme != "" && (u.Scheme == "http" || u.Scheme == "https") && u.Host != "" {
+			return true, nil
+		}
+		return false, nil
+	}
 }
 
 func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd *cobra.Command) {
