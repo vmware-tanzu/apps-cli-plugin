@@ -97,7 +97,7 @@ func TestDeliverableResourcesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   RESOURCE          READY     HEALTHY   TIME        OUTPUT
+   NAME              READY     HEALTHY   UPDATED     RESOURCE
    source-provider   True      True      <unknown>   not found
    deployer          Unknown   Unknown   <unknown>   not found
    image-builder     False     False     <unknown>   not found
@@ -111,7 +111,7 @@ func TestDeliverableResourcesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   RESOURCE   READY   HEALTHY   TIME   OUTPUT
+   NAME   READY   HEALTHY   UPDATED   RESOURCE
 `,
 	}, {
 		name: "no ready condition inside resource",
@@ -165,7 +165,7 @@ func TestDeliverableResourcesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   NAME              READY   HEALTHY   UPDATED     RESOURCE
    source-provider           True                  not found
    deployer                  Unknown               not found
    image-builder     False   False     <unknown>   not found
@@ -222,7 +222,7 @@ func TestDeliverableResourcesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   RESOURCE          READY     HEALTHY   TIME        OUTPUT
+   NAME              READY     HEALTHY   UPDATED     RESOURCE
    source-provider   True                <unknown>   not found
    deployer          Unknown             <unknown>   not found
    image-builder     False     False     <unknown>   not found
@@ -247,7 +247,10 @@ func TestDeliverableResourcesPrinter(t *testing.T) {
 							Status: metav1.ConditionTrue,
 						},
 					},
-					StampedRef: &corev1.ObjectReference{Kind: "GitRepository", Name: "pet-clinic"},
+					StampedRef: &cartov1alpha1.StampedRef{
+						Resource:        "imagerepositories.source.apps.tanzu.vmware.com",
+						ObjectReference: &corev1.ObjectReference{Kind: "GitRepository", Name: "pet-clinic"},
+					},
 				}, {
 					Name: "deployer",
 					Conditions: []metav1.Condition{
@@ -260,7 +263,9 @@ func TestDeliverableResourcesPrinter(t *testing.T) {
 							Status: metav1.ConditionUnknown,
 						},
 					},
-					StampedRef: &corev1.ObjectReference{Kind: "App", Name: "pet-clinic"},
+					StampedRef: &cartov1alpha1.StampedRef{
+						ObjectReference: &corev1.ObjectReference{Kind: "App", Name: "pet-clinic"},
+					},
 				}, {
 					Name: "image-builder",
 					Conditions: []metav1.Condition{
@@ -277,7 +282,7 @@ func TestDeliverableResourcesPrinter(t *testing.T) {
 							Status: metav1.ConditionFalse,
 						},
 					},
-					StampedRef: &corev1.ObjectReference{},
+					StampedRef: &cartov1alpha1.StampedRef{ObjectReference: &corev1.ObjectReference{}},
 				}, {
 					Name: "config-provider",
 					Conditions: []metav1.Condition{
@@ -294,7 +299,9 @@ func TestDeliverableResourcesPrinter(t *testing.T) {
 							Status: metav1.ConditionFalse,
 						},
 					},
-					StampedRef: &corev1.ObjectReference{Kind: "", Name: "pet-clinic"},
+					StampedRef: &cartov1alpha1.StampedRef{
+						ObjectReference: &corev1.ObjectReference{Kind: "", Name: "pet-clinic"},
+					},
 				}, {
 					Name: "app-config",
 					Conditions: []metav1.Condition{
@@ -311,17 +318,20 @@ func TestDeliverableResourcesPrinter(t *testing.T) {
 							Status: metav1.ConditionFalse,
 						},
 					},
-					StampedRef: &corev1.ObjectReference{Kind: "ConfigMap", Name: ""},
+					StampedRef: &cartov1alpha1.StampedRef{
+						Resource:        "configmaps",
+						ObjectReference: &corev1.ObjectReference{Kind: "ConfigMap", Name: ""},
+					},
 				}},
 			},
 		},
 		expectedOutput: `
-   RESOURCE          READY     HEALTHY   TIME        OUTPUT
-   source-provider   True                <unknown>   GitRepository/pet-clinic
+   NAME              READY     HEALTHY   UPDATED     RESOURCE
+   source-provider   True                <unknown>   imagerepositories.source.apps.tanzu.vmware.com/pet-clinic
    deployer          Unknown             <unknown>   App/pet-clinic
    image-builder     False     False     <unknown>   not found
-   config-provider   False     False     <unknown>   /pet-clinic
-   app-config        False     False     <unknown>   ConfigMap/
+   config-provider   False     False     <unknown>   not found
+   app-config        False     False     <unknown>   not found
 `,
 	}, {
 		name: "resource without conditions",
@@ -339,9 +349,9 @@ func TestDeliverableResourcesPrinter(t *testing.T) {
 			},
 		},
 		expectedOutput: `
-   RESOURCE          READY   HEALTHY   TIME   OUTPUT
-   source-provider                            not found
-   deployer                                   not found
+   NAME              READY   HEALTHY   UPDATED   RESOURCE
+   source-provider                               not found
+   deployer                                      not found
 `,
 	}}
 

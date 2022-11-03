@@ -234,19 +234,19 @@ tanzu apps workload get pet-clinic -n development
 📦 Supply Chain
    name:          source-to-url
 
-   RESOURCE          READY   HEALTHY   TIME    OUTPUT
-   source-provider   True    True      3m51s   ImageRepository/pet-clinic
-   image-builder     True    True      101s    Image/pet-clinic
-   config-provider   True    True      94s     PodIntent/pet-clinic
-   app-config        True    True      94s     ConfigMap/pet-clinic
-   config-writer     True    True      94s     Runnable/pet-clinic-config-writer
+   NAME              READY   HEALTHY   UPDATED   RESOURCE
+   source-provider   True    True      3m51s     gitrepositories.source.toolkit.fluxcd.io/pet-clinic
+   image-builder     True    True      101s      images.kpack.io/pet-clinic
+   config-provider   True    True      94s       podintents.conventions.carto.run/pet-clinic
+   app-config        True    True      94s       configmaps/pet-clinic
+   config-writer     True    True      94s       runnables.carto.run/pet-clinic-config-writer
 
 🚚 Delivery
    name:   delivery-basic
 
    RESOURCE          READY   HEALTHY   TIME   OUTPUT
-   source-provider   True    True      6d     ImageRepository/pet-clinic-delivery
-   deployer          True    True      21h    App/pet-clinic
+   source-provider   True    True      6d     imagerepositories.source.apps.tanzu.vmware.com/pet-clinic-delivery
+   deployer          True    True      21h    apps.kappctrl.k14s.io/pet-clinic
 
 💬 Messages
    No messages found.

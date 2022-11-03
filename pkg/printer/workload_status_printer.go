@@ -72,11 +72,11 @@ func WorkloadResourcesPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 
 	tablePrinter := table.NewTablePrinter(table.PrintOptions{PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
 		columns := []metav1beta1.TableColumnDefinition{
-			{Name: "Resource", Type: "string"},
+			{Name: "Name", Type: "string"},
 			{Name: "Ready", Type: "string"},
 			{Name: "Healthy", Type: "string"},
-			{Name: "Time", Type: "string"},
-			{Name: "Output", Type: "string"},
+			{Name: "Updated", Type: "string"},
+			{Name: "Resource", Type: "string"},
 		}
 		h.TableHandler(columns, printResourceInfoList)
 		h.TableHandler(columns, printResourceInfoRow)
@@ -167,8 +167,10 @@ func findConditionReady(conditions []metav1.Condition, strReadyCondition string)
 func getOutputRef(resource *cartov1alpha1.RealizedResource) string {
 	ref := printer.Sfaintf("not found")
 	if resource != nil && resource.StampedRef != nil {
-		if resource.StampedRef.Kind != "" || resource.StampedRef.Name != "" {
-			ref = fmt.Sprintf("%s%s%s", resource.StampedRef.Kind, "/", resource.StampedRef.Name)
+		if resource.StampedRef.Resource != "" && resource.StampedRef.Name != "" {
+			ref = fmt.Sprintf("%s/%s", resource.StampedRef.Resource, resource.StampedRef.Name)
+		} else if resource.StampedRef.Kind != "" && resource.StampedRef.Name != "" {
+			ref = fmt.Sprintf("%s/%s", resource.StampedRef.Kind, resource.StampedRef.Name)
 		}
 	}
 	return ref

@@ -904,9 +904,10 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 								).DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
-								StampedRef(&corev1.ObjectReference{
-									Kind: cartov1alpha1.DeliverableKind,
-								}).
+								StampedRef(&cartov1alpha1.StampedRef{
+									ObjectReference: &corev1.ObjectReference{
+										Kind: cartov1alpha1.DeliverableKind,
+									}}).
 								ConditionsDie(
 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
 										Status(metav1.ConditionUnknown),
@@ -944,7 +945,7 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 📦 Supply Chain
    name:   my-supply-chain
 
-   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   NAME              READY   HEALTHY   UPDATED     RESOURCE
    source-provider   True    True      <unknown>   not found
    image-builder     False   False     <unknown>   not found
 
@@ -1004,9 +1005,10 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 								).DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
-								StampedRef(&corev1.ObjectReference{
-									Kind: cartov1alpha1.DeliverableKind,
-								}).
+								StampedRef(&cartov1alpha1.StampedRef{
+									ObjectReference: &corev1.ObjectReference{
+										Kind: cartov1alpha1.DeliverableKind,
+									}}).
 								ConditionsDie(
 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
 										Status(metav1.ConditionUnknown),
@@ -1016,7 +1018,7 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 										Status(metav1.ConditionUnknown),
 								).DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
-								Name("image-builder").
+								Name("image-provider").
 								ConditionsDie(
 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
 										Status(metav1.ConditionFalse),
@@ -1024,7 +1026,11 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 										Status(metav1.ConditionFalse),
 									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
 										Status(metav1.ConditionFalse),
-								).StampedRef(&corev1.ObjectReference{Kind: "image", Name: "petclinic"}).DieRelease())
+								).
+								StampedRef(&cartov1alpha1.StampedRef{
+									Resource:        "images.kpack.io",
+									ObjectReference: &corev1.ObjectReference{Kind: "Image", Name: "petclinic"},
+								}).DieRelease())
 					}),
 			},
 			ExpectOutput: `
@@ -1043,9 +1049,9 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 📦 Supply Chain
    name:   my-supply-chain
 
-   RESOURCE          READY   HEALTHY   TIME        OUTPUT
+   NAME              READY   HEALTHY   UPDATED     RESOURCE
    source-provider   True    True      <unknown>   not found
-   image-builder     False   False     <unknown>   image/petclinic
+   image-provider    False   False     <unknown>   images.kpack.io/petclinic
 
 🚚 Delivery
 
@@ -1618,22 +1624,44 @@ status:
 						d.Resources(
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("source-provider").
-								StampedRef(
-									&corev1.ObjectReference{
+								StampedRef(&cartov1alpha1.StampedRef{
+									Resource: "gitrepositories.source.toolkit.fluxcd.io",
+									ObjectReference: &corev1.ObjectReference{
 										Kind:      "ImageRepository",
 										Namespace: defaultNamespace,
 										Name:      workloadName,
-									}).
+									}}).
+								ConditionsResourceHealthyReadyTrueDie().
+								DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("image-provider").
+								StampedRef(&cartov1alpha1.StampedRef{
+									ObjectReference: &corev1.ObjectReference{
+										Kind:      "Image",
+										Namespace: defaultNamespace,
+										Name:      workloadName,
+									}}).
+								ConditionsResourceHealthyReadyTrueDie().
+								DieRelease(),
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("config-provider").
+								StampedRef(&cartov1alpha1.StampedRef{
+									Resource: "podintents.conventions.carto.run",
+									ObjectReference: &corev1.ObjectReference{
+										Kind:      "PodIntent",
+										Namespace: defaultNamespace,
+									}}).
 								ConditionsResourceHealthyReadyTrueDie().
 								DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
-								StampedRef(
-									&corev1.ObjectReference{
+								StampedRef(&cartov1alpha1.StampedRef{
+									ObjectReference: &corev1.ObjectReference{
 										Kind:      cartov1alpha1.DeliverableKind,
 										Namespace: defaultNamespace,
 										Name:      workloadName,
-									}).ConditionsDie(
+									},
+								}).ConditionsDie(
 								diecartov1alpha1.CreateConditionResourceReadyTrue("", ""),
 								diecartov1alpha1.CreateConditionResourceHealthyFalse(
 									"OopsieDoodle Resource",
@@ -1665,12 +1693,13 @@ status:
 										"OopsieDoodle Resource",
 										"a hopefully informative message about what went wrong"),
 								).
-								StampedRef(
-									&corev1.ObjectReference{
+								StampedRef(&cartov1alpha1.StampedRef{
+									Resource: "imagerepositories.source.apps.tanzu.vmware.com",
+									ObjectReference: &corev1.ObjectReference{
 										Kind:      "ImageRepository",
 										Namespace: defaultNamespace,
 										Name:      workloadName + "-delivery",
-									}).
+									}}).
 								DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("deployer").
@@ -1678,12 +1707,12 @@ status:
 									diecartov1alpha1.CreateConditionResourceReadyTrue("", ""),
 									diecartov1alpha1.CreateConditionResourceHealthyUnknown("", ""),
 								).
-								StampedRef(
-									&corev1.ObjectReference{
+								StampedRef(&cartov1alpha1.StampedRef{
+									ObjectReference: &corev1.ObjectReference{
 										Kind:      "App",
 										Namespace: defaultNamespace,
 										Name:      workloadName,
-									}).
+									}}).
 								DieRelease(),
 						)
 					}),
@@ -1697,14 +1726,16 @@ status:
 📦 Supply Chain
    name:   <none>
 
-   RESOURCE          READY   HEALTHY   TIME        OUTPUT
-   source-provider   True    True      <unknown>   ImageRepository/my-workload
+   NAME              READY   HEALTHY   UPDATED     RESOURCE
+   source-provider   True    True      <unknown>   gitrepositories.source.toolkit.fluxcd.io/my-workload
+   image-provider    True    True      <unknown>   Image/my-workload
+   config-provider   True    True      <unknown>   not found
 
 🚚 Delivery
    name:   delivery-basic
 
-   RESOURCE          READY   HEALTHY   TIME        OUTPUT
-   source-provider   True    False     <unknown>   ImageRepository/my-workload-delivery
+   NAME              READY   HEALTHY   UPDATED     RESOURCE
+   source-provider   True    False     <unknown>   imagerepositories.source.apps.tanzu.vmware.com/my-workload-delivery
    deployer          True    Unknown   <unknown>   App/my-workload
 
 💬 Messages
@@ -1731,22 +1762,23 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 						d.Resources(
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("source-provider").
-								StampedRef(
-									&corev1.ObjectReference{
+								StampedRef(&cartov1alpha1.StampedRef{
+									Resource: "gitrepositories.source.toolkit.fluxcd.io",
+									ObjectReference: &corev1.ObjectReference{
 										Kind:      "ImageRepository",
 										Namespace: defaultNamespace,
 										Name:      workloadName,
-									}).
+									}}).
 								ConditionsResourceHealthyReadyTrueDie().
 								DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
-								StampedRef(
-									&corev1.ObjectReference{
+								StampedRef(&cartov1alpha1.StampedRef{
+									ObjectReference: &corev1.ObjectReference{
 										Kind:      cartov1alpha1.DeliverableKind,
 										Namespace: defaultNamespace,
 										Name:      workloadName,
-									}).
+									}}).
 								ConditionsResourceHealthyReadyTrueDie().
 								DieRelease(),
 						)
@@ -1771,22 +1803,23 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("source-provider").
 								ConditionsResourceHealthyReadyTrueDie().
-								StampedRef(
-									&corev1.ObjectReference{
+								StampedRef(&cartov1alpha1.StampedRef{
+									Resource: "imagerepositories.source.apps.tanzu.vmware.com",
+									ObjectReference: &corev1.ObjectReference{
 										Kind:      "ImageRepository",
 										Namespace: defaultNamespace,
 										Name:      workloadName + "-delivery",
-									}).
+									}}).
 								DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("deployer").
 								ConditionsResourceHealthyReadyTrueDie().
-								StampedRef(
-									&corev1.ObjectReference{
+								StampedRef(&cartov1alpha1.StampedRef{
+									ObjectReference: &corev1.ObjectReference{
 										Kind:      "App",
 										Namespace: defaultNamespace,
 										Name:      workloadName,
-									}).
+									}}).
 								DieRelease(),
 						)
 					}),
@@ -1801,14 +1834,14 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 📦 Supply Chain
    name:   <none>
 
-   RESOURCE          READY   HEALTHY   TIME        OUTPUT
-   source-provider   True    True      <unknown>   ImageRepository/my-workload
+   NAME              READY   HEALTHY   UPDATED     RESOURCE
+   source-provider   True    True      <unknown>   gitrepositories.source.toolkit.fluxcd.io/my-workload
 
 🚚 Delivery
    name:   delivery-basic
 
-   RESOURCE          READY   HEALTHY   TIME        OUTPUT
-   source-provider   True    True      <unknown>   ImageRepository/my-workload-delivery
+   NAME              READY   HEALTHY   UPDATED     RESOURCE
+   source-provider   True    True      <unknown>   imagerepositories.source.apps.tanzu.vmware.com/my-workload-delivery
    deployer          True    True      <unknown>   App/my-workload
 
 💬 Messages
@@ -1838,22 +1871,23 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 						d.Resources(
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("source-provider").
-								StampedRef(
-									&corev1.ObjectReference{
+								StampedRef(&cartov1alpha1.StampedRef{
+									Resource: "gitrepositories.source.toolkit.fluxcd.io",
+									ObjectReference: &corev1.ObjectReference{
 										Kind:      "ImageRepository",
 										Namespace: defaultNamespace,
 										Name:      workloadName,
-									}).
+									}}).
 								ConditionsResourceHealthyReadyTrueDie().
 								DieRelease(),
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("deliverable").
-								StampedRef(
-									&corev1.ObjectReference{
+								StampedRef(&cartov1alpha1.StampedRef{
+									ObjectReference: &corev1.ObjectReference{
 										Kind:      cartov1alpha1.DeliverableKind,
 										Namespace: defaultNamespace,
 										Name:      workloadName,
-									}).
+									}}).
 								ConditionsResourceHealthyReadyTrueDie().
 								DieRelease(),
 						)
@@ -1886,8 +1920,8 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 📦 Supply Chain
    name:   <none>
 
-   RESOURCE          READY   HEALTHY   TIME        OUTPUT
-   source-provider   True    True      <unknown>   ImageRepository/my-workload
+   NAME              READY   HEALTHY   UPDATED     RESOURCE
+   source-provider   True    True      <unknown>   gitrepositories.source.toolkit.fluxcd.io/my-workload
 
 🚚 Delivery
    name:   delivery-basic

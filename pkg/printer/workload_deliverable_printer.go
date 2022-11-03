@@ -64,11 +64,11 @@ func DeliverableResourcesPrinter(w io.Writer, deliverable *cartov1alpha1.Deliver
 
 	tablePrinter := table.NewTablePrinter(table.PrintOptions{PaddingStart: paddingStart}).With(func(h table.PrintHandler) {
 		columns := []metav1beta1.TableColumnDefinition{
-			{Name: "Resource", Type: "string"},
+			{Name: "Name", Type: "string"},
 			{Name: "Ready", Type: "string"},
 			{Name: "Healthy", Type: "string"},
-			{Name: "Time", Type: "string"},
-			{Name: "Output", Type: "string"},
+			{Name: "Updated", Type: "string"},
+			{Name: "Resource", Type: "string"},
 		}
 		h.TableHandler(columns, printResourceInfoList)
 		h.TableHandler(columns, printResourceInfoRow)
