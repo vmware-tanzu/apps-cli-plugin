@@ -33,7 +33,7 @@ import (
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 )
 
-const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
+const ansi = "[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]"
 
 var _ Tailer = &SternTailer{}
 var re = regexp.MustCompile(ansi)
@@ -58,8 +58,8 @@ func (s *SternTailer) Tail(ctx context.Context, c *cli.Config, namespace string,
 			}
 			return string(b), nil
 		},
-		"format": func(in string) (string, error) {
-			return stripANSI(in), nil
+		"format": func(in string) string {
+			return stripANSIColor(in)
 		},
 		"color": func(color color.Color, text string) string {
 			return color.SprintFunc()(text)
@@ -98,10 +98,10 @@ func (s *SternTailer) Tail(ctx context.Context, c *cli.Config, namespace string,
 	return stern.Run(ctx, &configStern)
 }
 
-func stripANSI(str string) string {
+func stripANSIColor(message string) string {
 	if color.NoColor {
-		return re.ReplaceAllString(str, "")
+		return re.ReplaceAllString(message, "")
 	} else {
-		return str
+		return message
 	}
 }

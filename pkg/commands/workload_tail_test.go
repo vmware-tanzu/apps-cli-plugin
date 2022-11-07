@@ -180,6 +180,31 @@ Workload "default/test-workload" not found
 `,
 		},
 		{
+			Name: "show logs for workload with since time in seconds",
+			Args: []string{flags.NamespaceFlagName, defaultNamespace, flags.SinceFlagName, "1s", workloadName},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				tailer := &logs.FakeTailer{}
+				selector, _ := labels.Parse(fmt.Sprintf("%s=%s", cartov1alpha1.WorkloadLabelName, workloadName))
+				tailer.On("Tail", mock.Anything, "default", selector, []string{}, time.Second, false).Return(nil).Once()
+				ctx = logs.StashTailer(ctx, tailer)
+				// simulate a user exit after 10ms
+				ctx, cancel := context.WithTimeout(ctx, 10*time.Millisecond)
+				_ = cancel
+				return ctx, nil
+			},
+			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
+				tailer := logs.RetrieveTailer(ctx).(*logs.FakeTailer)
+				tailer.AssertExpectations(t)
+				return nil
+			},
+			GivenObjects: []client.Object{
+				parent,
+			},
+			ExpectOutput: `
+...tail output...
+`,
+		},
+		{
 			Name: "show logs for workload with since flag in seconds with nocolor set as false",
 			Args: []string{flags.NamespaceFlagName, defaultNamespace, flags.SinceFlagName, "1s", workloadName},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {

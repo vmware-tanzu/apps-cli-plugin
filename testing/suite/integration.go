@@ -26,11 +26,9 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/stern/stern/stern"
 	"gotest.tools/v3/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
@@ -164,21 +162,11 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 
 		w, okWriter := ctx.Value("writer").(*os.File)
 		r, okReader := ctx.Value("reader").(*os.File)
-		tail := stern.NewTail(appsclient, "", TestingNamespace, "", "", nil, w, w, &TailOptions{
-			Timestamps:   false,
-			Location:     time.Now().Location(),
-			SinceSeconds: int64(time.Second),
-			Exclude:      nil,
-			Include:      nil,
-			Namespace:    true,
-			TailLines:    nil,
-			Follow:       true,
-		})
 
 		var err error
 
 		if okWriter && okReader {
-			err = cl.Command.ExecWithCustomPipe(tail, ctx, w, r)
+			err = cl.Command.ExecWithCustomPipe(w, r)
 			if err != nil && !cl.ShouldError {
 				t.Fatalf("unexpected error in exec with custom pipe: %v: %v, ", err, cl.Command.GetOutput())
 			}

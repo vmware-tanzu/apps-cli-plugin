@@ -21,14 +21,10 @@ package suite_test
 
 import (
 	"bytes"
-	"context"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
-
-	"github.com/stern/stern/stern"
 )
 
 type CommandLine struct {
@@ -114,7 +110,7 @@ func (c *CommandLine) Exec() error {
 	return nil
 }
 
-func (c *CommandLine) ExecWithCustomPipe(tail *stern.Tail, ctx context.Context, w, r *os.File) error {
+func (c *CommandLine) ExecWithCustomPipe(w, r *os.File) error {
 	outC := make(chan string)
 	// copy the output in a separate goroutine so it won't block indefinitely
 	go func() {
@@ -124,7 +120,7 @@ func (c *CommandLine) ExecWithCustomPipe(tail *stern.Tail, ctx context.Context, 
 	}()
 
 	// use command stdin
-	cmd := exec.CommandContext(ctx, c.cmd, c.args...)
+	cmd := exec.Command(c.cmd, c.args...)
 	cmd.Env = append(os.Environ(), c.env...)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -144,16 +140,10 @@ func (c *CommandLine) ExecWithCustomPipe(tail *stern.Tail, ctx context.Context, 
 	cmd.Stderr = cmd.Stdout
 	err = cmd.Run()
 	if err != nil {
-		if ctx.Err() == context.DeadlineExceeded {
-			return nil
-		}
 		c.err = err.Error()
 		return err
 	}
 
-	// simulate a process that takes 2 second to complete
-	time.Sleep(5 * time.Minute)
-	tail.Close()
 	// close pipe writer
 	go func() {
 		_ = cmd.Wait()
