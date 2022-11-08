@@ -98,7 +98,13 @@ func TestWorkloadListCommand(t *testing.T) {
 	scheme := runtime.NewScheme()
 	_ = cartov1alpha1.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
-	objTimeStamp := metav1.NewTime(time.Now().AddDate(-2, 0, 0))
+	//timezone differences and daylight savings are causing issues
+	//and when comparing against time.now, the output is not always 2Y as expected.
+	//for example; when creating timestamp in time.Now will be in Central Standard Time,
+	// but that same date 2 years in the future is Central Daylight Time. setting a default location(with no day light savings)
+	// to mitiage this problem.
+	loc, _ := time.LoadLocation("America/Puerto_Rico")
+	objTimeStamp := metav1.NewTime(time.Now().In(loc).AddDate(-2, 0, 0))
 
 	parent := diecartov1alpha1.WorkloadBlank.
 		MetadataDie(func(d *diemetav1.ObjectMetaDie) {
