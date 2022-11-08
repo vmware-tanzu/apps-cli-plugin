@@ -466,7 +466,7 @@ Workload "my-workload" is ready
 
 				tailer := &logs.FakeTailer{}
 				selector, _ := labels.Parse(fmt.Sprintf("%s=%s", cartov1alpha1.WorkloadLabelName, workloadName))
-				tailer.On("Tail", mock.Anything, "default", selector, []string{}, time.Second, false).Return(nil).Once()
+				tailer.On("Tail", mock.Anything, "default", selector, []string{}, time.Minute, false).Return(nil).Once()
 				ctx = logs.StashTailer(ctx, tailer)
 
 				return ctx, nil
@@ -1558,7 +1558,7 @@ Workload "my-workload" is ready
 
 				tailer := &logs.FakeTailer{}
 				selector, _ := labels.Parse(fmt.Sprintf("%s=%s", cartov1alpha1.WorkloadLabelName, workloadName))
-				tailer.On("Tail", mock.Anything, "default", selector, []string{}, time.Second, true).Return(nil).Once()
+				tailer.On("Tail", mock.Anything, "default", selector, []string{}, time.Minute, true).Return(nil).Once()
 				ctx = logs.StashTailer(ctx, tailer)
 
 				return ctx, nil
