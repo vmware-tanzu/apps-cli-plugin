@@ -20,6 +20,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/stretchr/testify/mock"
 	"k8s.io/apimachinery/pkg/labels"
 
@@ -34,7 +35,7 @@ type FakeTailer struct {
 
 func (f *FakeTailer) Tail(ctx context.Context, c *cli.Config, namespace string, selector labels.Selector, containers []string, since time.Duration, timestamps bool) error {
 	args := f.Called(ctx, namespace, selector, containers, since, timestamps)
-	c.Printf("...tail output...\n")
+	c.Printf(color.CyanString("...tail output...\n"))
 	if err := args.Error(0); err != nil {
 		return err
 	}
