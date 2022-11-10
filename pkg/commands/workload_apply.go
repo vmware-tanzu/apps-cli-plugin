@@ -50,8 +50,23 @@ var (
 	_ cli.DryRunable         = (*WorkloadApplyOptions)(nil)
 )
 
+const (
+	MergeUpdateStrategy   = "merge"
+	ReplaceUpdateStrategy = "replace"
+)
+
 func (opts *WorkloadApplyOptions) Validate(ctx context.Context) validation.FieldErrors {
-	return opts.WorkloadOptions.Validate(ctx)
+	errs := validation.FieldErrors{}
+	errs = errs.Also(opts.WorkloadOptions.Validate(ctx))
+
+	if opts.UpdateStrategy != "" && cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.UpdateStrategyFlagName)) {
+		if opts.FilePath == "" {
+			errs = errs.Also(validation.ErrMissingField(flags.FilePathFlagName))
+		}
+		errs = errs.Also(validation.Enum(opts.UpdateStrategy, flags.UpdateStrategyFlagName, []string{MergeUpdateStrategy, ReplaceUpdateStrategy}))
+	}
+
+	return errs
 }
 
 func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error {
@@ -103,8 +118,6 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 		}
 	}
 
-	workload.Name = opts.Name
-	workload.Namespace = opts.Namespace
 	if opts.FilePath != "" {
 		var serviceAccountCopy string
 		// avoid passing a nil pointer to MergeServiceAccountName func
@@ -114,9 +127,16 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 
 		workload.Spec.MergeServiceAccountName(serviceAccountCopy)
 	}
+	if opts.UpdateStrategy == MergeUpdateStrategy {
+		workload.Merge(fileWorkload)
+	}
 
-	workload.Merge(fileWorkload)
+	if opts.UpdateStrategy == ReplaceUpdateStrategy {
+		workload = fileWorkload
+	}
 
+	workload.Name = opts.Name
+	workload.Namespace = opts.Namespace
 	ctx = opts.ApplyOptionsToWorkload(ctx, workload)
 
 	// validate complex flag interactions with existing state
@@ -236,7 +256,7 @@ Workload configuration options include:
 
 	// Define common flags
 	opts.DefineFlags(ctx, c, cmd)
-	cmd.Flags().StringVar(&opts.UpdateStrategy, cli.StripDash(flags.UpdateStrategyFlagName), "replace", "specify configuration file update strategy (supported strategies: merge, replace)")
+	cmd.Flags().StringVar(&opts.UpdateStrategy, cli.StripDash(flags.UpdateStrategyFlagName), "merge", "specify configuration file update strategy (supported strategies: merge, replace)")
 	cmd.RegisterFlagCompletionFunc(cli.StripDash(flags.UpdateStrategyFlagName), func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"replace", "merge"}, cobra.ShellCompDirectiveNoFileComp
 	})

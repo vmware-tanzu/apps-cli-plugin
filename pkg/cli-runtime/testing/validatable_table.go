@@ -49,9 +49,21 @@ type ValidatableTestCase struct {
 
 	// ShouldValidate is true if the validatable object is valid
 	ShouldValidate bool
+
+	// lifecycle
+
+	// Prepare is called before the command is executed. It is intended to prepare that broader
+	// environment before the specific table record is executed. For example, changing the working
+	// directory or setting mock expectations.
+	Prepare func(context.Context, *testing.T) (context.Context, error)
+	// CleanUp is called after the table record is finished and all defined assertions complete.
+	// It is intended to clean up any state created in the Prepare step or during the test
+	// execution, or to make assertions for mocks.
+	CleanUp func(context.Context, *testing.T) error
 }
 
 func (ts ValidatableTestSuite) Run(t *testing.T) {
+	ctx := context.Background()
 	focused := ValidatableTestSuite{}
 	for _, tc := range ts {
 		if tc.Focus && !tc.Skip {
@@ -60,24 +72,31 @@ func (ts ValidatableTestSuite) Run(t *testing.T) {
 	}
 	if len(focused) != 0 {
 		for _, tc := range focused {
-			tc.Run(t)
+			tc.Run(t, ctx)
 		}
 		t.Errorf("test run focused on %d record(s), skipped %d record(s)", len(focused), len(ts)-len(focused))
 		return
 	}
 
 	for _, tc := range ts {
-		tc.Run(t)
+		tc.Run(t, ctx)
 	}
 }
 
-func (tc ValidatableTestCase) Run(t *testing.T) {
+func (tc ValidatableTestCase) Run(t *testing.T, ctx context.Context) {
 	t.Run(tc.Name, func(t *testing.T) {
 		if tc.Skip {
 			t.SkipNow()
 		}
 
-		errs := tc.Validatable.Validate(context.Background())
+		if tc.Prepare != nil {
+			var err error
+			if ctx, err = tc.Prepare(ctx, t); err != nil {
+				t.Errorf("unexpected error in prepare: %v", err)
+			}
+		}
+
+		errs := tc.Validatable.Validate(ctx)
 
 		if tc.ExpectFieldErrors != nil {
 			actual := errs
@@ -97,6 +116,13 @@ func (tc ValidatableTestCase) Run(t *testing.T) {
 
 		if !tc.ShouldValidate && len(tc.ExpectFieldErrors) == 0 {
 			t.Error("one of ShouldValidate=true or ExpectFieldErrors is required")
+		}
+
+		if tc.CleanUp != nil {
+			var err error
+			if err = tc.CleanUp(ctx, t); err != nil {
+				t.Errorf("unexpected error in clean up: %v", err)
+			}
 		}
 	})
 }

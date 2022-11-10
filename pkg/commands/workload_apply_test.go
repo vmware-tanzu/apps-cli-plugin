@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -53,6 +53,9 @@ import (
 )
 
 func TestWorkloadApplyOptionsValidate(t *testing.T) {
+	scheme := runtime.NewScheme()
+	_ = cartov1alpha1.AddToScheme(scheme)
+	_ = corev1.AddToScheme(scheme)
 	table := clitesting.ValidatableTestSuite{
 		{
 			Name: "valid options",
@@ -75,6 +78,65 @@ func TestWorkloadApplyOptionsValidate(t *testing.T) {
 				},
 			},
 			ExpectFieldErrors: validation.ErrInvalidArrayValue("FOO", flags.EnvFlagName, 0),
+		},
+		{
+			Name: "update strategy without filepath",
+			Validatable: &commands.WorkloadApplyOptions{
+				WorkloadOptions: commands.WorkloadOptions{
+					Namespace: "default",
+					Name:      "my-resource",
+				},
+				UpdateStrategy: commands.ReplaceUpdateStrategy,
+			},
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				cmd := commands.NewWorkloadApplyCommand(ctx, cli.NewDefaultConfig("test", scheme))
+				if err := cmd.Flags().Set(cli.StripDash(flags.UpdateStrategyFlagName), commands.ReplaceUpdateStrategy); err != nil {
+					return ctx, err
+				}
+				ctx = cli.WithCommand(ctx, cmd)
+				return ctx, nil
+			},
+			ExpectFieldErrors: validation.ErrMissingField(flags.FilePathFlagName),
+		},
+		{
+			Name: "filepath with update strategy",
+			Validatable: &commands.WorkloadApplyOptions{
+				WorkloadOptions: commands.WorkloadOptions{
+					Namespace: "default",
+					Name:      "my-resource",
+					FilePath:  "my-folder/my-filepath.yaml",
+				},
+				UpdateStrategy: commands.MergeUpdateStrategy,
+			},
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				cmd := commands.NewWorkloadApplyCommand(ctx, cli.NewDefaultConfig("test", scheme))
+				if err := cmd.Flags().Set(cli.StripDash(flags.UpdateStrategyFlagName), commands.MergeUpdateStrategy); err != nil {
+					return ctx, err
+				}
+				ctx = cli.WithCommand(ctx, cmd)
+				return ctx, nil
+			},
+			ShouldValidate: true,
+		},
+		{
+			Name: "filepath with invalid value for update strategy",
+			Validatable: &commands.WorkloadApplyOptions{
+				WorkloadOptions: commands.WorkloadOptions{
+					Namespace: "default",
+					Name:      "my-resource",
+					FilePath:  "my-folder/my-filepath.yaml",
+				},
+				UpdateStrategy: "invalid",
+			},
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				cmd := commands.NewWorkloadApplyCommand(ctx, cli.NewDefaultConfig("test", scheme))
+				if err := cmd.Flags().Set(cli.StripDash(flags.UpdateStrategyFlagName), "invalid"); err != nil {
+					return ctx, err
+				}
+				ctx = cli.WithCommand(ctx, cmd)
+				return ctx, nil
+			},
+			ExpectFieldErrors: validation.EnumInvalidValue("invalid", flags.UpdateStrategyFlagName, []string{commands.MergeUpdateStrategy, commands.ReplaceUpdateStrategy}),
 		},
 	}
 
@@ -197,7 +259,7 @@ To get status: "tanzu apps workload get my-workload"
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.NamespaceFlagName, "foo", flags.YesFlagName},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("get", "Namespace", clitesting.InduceFailureOpts{
-					Error: apierrors.NewNotFound(corev1.Resource("Namespace"), "foo"),
+					Error: apierrs.NewNotFound(corev1.Resource("Namespace"), "foo"),
 				}),
 			},
 			ShouldError: true,
@@ -695,6 +757,8 @@ Error: Failed to become ready: a hopefully informative message about what went w
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -1280,7 +1344,7 @@ status:
 			Args: []string{workloadName, flags.DebugFlagName, flags.YesFlagName},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("update", "Workload", clitesting.InduceFailureOpts{
-					Error: apierrors.NewConflict(schema.GroupResource{Group: "carto.run", Resource: "workloads"}, workloadName, fmt.Errorf("induced conflict")),
+					Error: apierrs.NewConflict(schema.GroupResource{Group: "carto.run", Resource: "workloads"}, workloadName, fmt.Errorf("induced conflict")),
 				}),
 			},
 			GivenObjects: []client.Object{
@@ -1694,6 +1758,8 @@ Workload "my-workload" is ready
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1

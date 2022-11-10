@@ -157,7 +157,6 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 			if ctx, err = cl.Prepare(ctx, t); err != nil {
 				t.Fatalf("unexpected error in prepare: %v", err)
 			}
-
 		}
 
 		w, okWriter := ctx.Value("writer").(*os.File)
