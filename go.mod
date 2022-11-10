@@ -22,7 +22,7 @@ require (
 	github.com/vmware-tanzu/carvel-imgpkg v0.33.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-framework v0.25.0
-	golang.org/x/crypto v0.1.0
+	golang.org/x/crypto v0.2.0
 	gotest.tools/v3 v3.4.0
 	k8s.io/api v0.25.3
 	k8s.io/apiextensions-apiserver v0.25.0
@@ -202,11 +202,11 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/mod v0.6.0 // indirect
-	golang.org/x/net v0.1.0 // indirect
+	golang.org/x/net v0.2.0 // indirect
 	golang.org/x/oauth2 v0.1.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.1.0 // indirect
-	golang.org/x/term v0.1.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
+	golang.org/x/term v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.1.0 // indirect
 	golang.org/x/tools v0.1.12 // indirect
