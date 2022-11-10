@@ -150,7 +150,7 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 					panic(err)
 				}
 				containers := []string{}
-				return logs.Tail(ctx, c, opts.Namespace, selector, containers, time.Second, opts.TailTimestamps)
+				return logs.Tail(ctx, c, opts.Namespace, selector, containers, time.Minute, opts.TailTimestamps)
 			})
 		}
 

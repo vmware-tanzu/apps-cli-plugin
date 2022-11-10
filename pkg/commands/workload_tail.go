@@ -122,7 +122,7 @@ are displayed. To show historical logs use ` + flags.SinceFlagName + `.
 	cmd.Flags().StringVar(&opts.Component, cli.StripDash(flags.ComponentFlagName), "", "workload component `name` (e.g. build)")
 	cmd.RegisterFlagCompletionFunc(cli.StripDash(flags.ComponentFlagName), completion.SuggestComponentNames(ctx, c))
 	cmd.Flags().BoolVarP(&opts.Timestamps, cli.StripDash(flags.TimestampFlagName), "t", false, "print timestamp for each log line")
-	cmd.Flags().DurationVar(&opts.Since, cli.StripDash(flags.SinceFlagName), time.Second, "time `duration` to start reading logs from")
+	cmd.Flags().DurationVar(&opts.Since, cli.StripDash(flags.SinceFlagName), time.Minute, "time `duration` to start reading logs from")
 	cmd.RegisterFlagCompletionFunc(cli.StripDash(flags.SinceFlagName), completion.SuggestDurationUnits(ctx, completion.CommonDurationUnits))
 	return cmd
 }
