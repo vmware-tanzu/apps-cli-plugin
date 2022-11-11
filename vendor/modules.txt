@@ -1228,7 +1228,7 @@ gotest.tools/v3/internal/assert
 gotest.tools/v3/internal/difflib
 gotest.tools/v3/internal/format
 gotest.tools/v3/internal/source
-# k8s.io/api v0.25.3
+# k8s.io/api v0.25.4
 ## explicit; go 1.19
 k8s.io/api/admission/v1
 k8s.io/api/admission/v1beta1
@@ -1291,7 +1291,7 @@ k8s.io/apiextensions-apiserver/pkg/apiserver/schema/objectmeta
 k8s.io/apiextensions-apiserver/pkg/apiserver/schema/pruning
 k8s.io/apiextensions-apiserver/pkg/apiserver/validation
 k8s.io/apiextensions-apiserver/third_party/forked/celopenapi/model
-# k8s.io/apimachinery v0.25.3
+# k8s.io/apimachinery v0.25.4
 ## explicit; go 1.19
 k8s.io/apimachinery/pkg/api/apitesting
 k8s.io/apimachinery/pkg/api/apitesting/fuzzer
