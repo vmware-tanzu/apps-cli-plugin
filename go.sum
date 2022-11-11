@@ -536,8 +536,8 @@ github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeN
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/go-containerregistry v0.5.1/go.mod h1:Ct15B4yir3PLOP5jsy0GNeYVaIZs/MK/Jz5any1wFW0=
-github.com/google/go-containerregistry v0.12.0 h1:nidOEtFYlgPCRqxCKj/4c/js940HVWplCWc5ftdfdUA=
-github.com/google/go-containerregistry v0.12.0/go.mod h1:sdIK+oHQO7B93xI8UweYdl887YhuIwg9vz8BSLH3+8k=
+github.com/google/go-containerregistry v0.12.1 h1:W1mzdNUTx4Zla4JaixCRLhORcR7G6KxE5hHl5fkPsp8=
+github.com/google/go-containerregistry v0.12.1/go.mod h1:sdIK+oHQO7B93xI8UweYdl887YhuIwg9vz8BSLH3+8k=
 github.com/google/go-github/v33 v33.0.0 h1:qAf9yP0qc54ufQxzwv+u9H0tiVOnPJxo0lI/JXqw3ZM=
 github.com/google/go-github/v33 v33.0.0/go.mod h1:GMdDnVZY/2TsWgp/lkYnpSAh6TrzhANBBwm6k6TTEXg=
 github.com/google/go-querystring v1.0.0/go.mod h1:odCYkC5MyYFN7vkCjXpyrEuKhc/BUO6wN/zVPAxq5ck=
