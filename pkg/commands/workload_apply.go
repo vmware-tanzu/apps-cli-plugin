@@ -19,11 +19,13 @@ package commands
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -132,7 +134,14 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 	}
 
 	if opts.UpdateStrategy == ReplaceUpdateStrategy {
-		workload = fileWorkload
+		if currentWorkload != nil && !reflect.DeepEqual(currentWorkload.ObjectMeta, (metav1.ObjectMeta{})) {
+			workload.ObjectMeta = *currentWorkload.ObjectMeta.DeepCopy()
+		}
+		workload.ReplaceMetadata(fileWorkload)
+
+		workload.TypeMeta = fileWorkload.TypeMeta
+		workload.Spec = *fileWorkload.Spec.DeepCopy()
+		workload.Status = *fileWorkload.Status.DeepCopy()
 	}
 
 	workload.Name = opts.Name
