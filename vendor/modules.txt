@@ -1355,7 +1355,7 @@ k8s.io/apiserver/pkg/storage/names
 # k8s.io/cli-runtime v0.25.3
 ## explicit; go 1.19
 k8s.io/cli-runtime/pkg/resource
-# k8s.io/client-go v0.25.3
+# k8s.io/client-go v0.25.4
 ## explicit; go 1.19
 k8s.io/client-go/applyconfigurations/admissionregistration/v1
 k8s.io/client-go/applyconfigurations/admissionregistration/v1beta1
