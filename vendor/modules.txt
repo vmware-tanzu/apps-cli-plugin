@@ -683,7 +683,7 @@ github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/prometheus/client_golang v1.12.1
+# github.com/prometheus/client_golang v1.12.2
 ## explicit; go 1.13
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/collectors
@@ -1608,7 +1608,7 @@ sigs.k8s.io/cluster-api-provider-vsphere/apis/v1beta1
 # sigs.k8s.io/cluster-api/test v1.1.5
 ## explicit; go 1.17
 sigs.k8s.io/cluster-api/test/infrastructure/docker/api/v1beta1
-# sigs.k8s.io/controller-runtime v0.12.3
+# sigs.k8s.io/controller-runtime v0.13.1
 ## explicit; go 1.17
 sigs.k8s.io/controller-runtime
 sigs.k8s.io/controller-runtime/pkg/builder
