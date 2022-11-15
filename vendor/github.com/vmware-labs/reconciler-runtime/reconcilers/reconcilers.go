@@ -76,14 +76,14 @@ func (c Config) WithCluster(cluster cluster.Cluster) Config {
 // TrackAndGet tracks the resources for changes and returns the current value. The track is
 // registered even when the resource does not exists so that its creation can be tracked.
 //
-// Equivlent to calling both `c.Tracker.Track(...)` and `c.Client.Get(...)`
-func (c Config) TrackAndGet(ctx context.Context, key types.NamespacedName, obj client.Object) error {
+// Equivalent to calling both `c.Tracker.Track(...)` and `c.Client.Get(...)`
+func (c Config) TrackAndGet(ctx context.Context, key types.NamespacedName, obj client.Object, opts ...client.GetOption) error {
 	c.Tracker.Track(
 		ctx,
 		tracker.NewKey(gvk(obj, c.Scheme()), key),
 		RetrieveRequest(ctx).NamespacedName,
 	)
-	return c.Get(ctx, key, obj)
+	return c.Get(ctx, key, obj, opts...)
 }
 
 // NewConfig creates a Config for a specific API type. Typically passed into a
@@ -603,7 +603,7 @@ func (r *AggregateReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
-	if !resource.GetDeletionTimestamp().IsZero() {
+	if resource.GetDeletionTimestamp() != nil {
 		// resource is being deleted, nothing to do
 		return ctrl.Result{}, nil
 	}
@@ -1847,13 +1847,16 @@ func (r *ResourceManager) Manage(ctx context.Context, resource, actual, desired 
 		r.mutationCache = cache.NewExpiring()
 	})
 
-	if actual == nil && desired == nil {
+	if (actual == nil || actual.GetCreationTimestamp().Time.IsZero()) && desired == nil {
+		if err := ClearFinalizer(ctx, resource, r.Finalizer); err != nil {
+			return nil, err
+		}
 		return nil, nil
 	}
 
 	// delete resource if no longer needed
 	if desired == nil {
-		if !actual.GetCreationTimestamp().Time.IsZero() {
+		if !actual.GetCreationTimestamp().Time.IsZero() && actual.GetDeletionTimestamp() == nil {
 			log.Info("deleting unwanted resource", "resource", namespaceName(actual))
 			if err := c.Delete(ctx, actual); err != nil {
 				log.Error(err, "unable to delete unwanted resource", "resource", namespaceName(actual))
@@ -1864,9 +1867,6 @@ func (r *ResourceManager) Manage(ctx context.Context, resource, actual, desired 
 			pc.Recorder.Eventf(resource, corev1.EventTypeNormal, "Deleted",
 				"Deleted %s %q", typeName(actual), actual.GetName())
 
-			if err := ClearFinalizer(ctx, resource, r.Finalizer); err != nil {
-				return nil, err
-			}
 		}
 		return nil, nil
 	}
