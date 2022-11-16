@@ -134,18 +134,22 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 	}
 
 	if opts.UpdateStrategy == ReplaceUpdateStrategy {
-		// if there's a workload in the cluster, and this is going to be an update process, let's assign
-		// the current workload metadata to the new workload so the system populated fields are not deleted/overwritten
-		if currentWorkload != nil && !reflect.DeepEqual(currentWorkload.ObjectMeta, (metav1.ObjectMeta{})) {
-			workload.ObjectMeta = *currentWorkload.ObjectMeta.DeepCopy()
-		}
-		// replace other fields that the user specifically modified
-		workload.ReplaceMetadata(fileWorkload)
+		// assign all the file workload fields to the workload in the cluster
+		workload = fileWorkload
 
-		// copy each file workload section into the workload that's in the cluster
-		workload.TypeMeta = fileWorkload.TypeMeta
-		workload.Spec = *fileWorkload.Spec.DeepCopy()
-		workload.Status = *fileWorkload.Status.DeepCopy()
+		// if there is a workload in the cluster with all metadata populated
+		// re assign the system populated fields so we won't find an error because of some missing fields
+		if currentWorkload != nil && !reflect.DeepEqual(currentWorkload.ObjectMeta, (metav1.ObjectMeta{})) {
+			wldMeta := workload.GetObjectMeta()
+			currentWldMeta := currentWorkload.GetObjectMeta()
+
+			// assign the system populated fields to the new workload
+			wldMeta.SetResourceVersion(currentWldMeta.GetResourceVersion())
+			wldMeta.SetUID(currentWldMeta.GetUID())
+			wldMeta.SetGeneration(currentWldMeta.GetGeneration())
+			wldMeta.SetCreationTimestamp(currentWldMeta.GetCreationTimestamp())
+			wldMeta.SetDeletionTimestamp(currentWldMeta.GetDeletionTimestamp())
+		}
 	}
 
 	workload.Name = opts.Name

@@ -97,33 +97,6 @@ func (w *WorkloadSpec) MergeServiceAccountName(serviceAccountName string) {
 	w.ServiceAccountName = serviceAccountNamePtr
 }
 
-func (w *Workload) ReplaceMetadata(updates *Workload) {
-	w.ReplaceAnnotations(updates)
-	w.ReplaceLabels(updates)
-}
-
-func (w *Workload) ReplaceAnnotations(updates *Workload) {
-	for k, v := range updates.Annotations {
-		w.MergeAnnotations(k, v)
-	}
-	for k := range w.Annotations {
-		if _, ok := updates.Annotations[k]; !ok {
-			delete(w.Annotations, k)
-		}
-	}
-}
-
-func (w *Workload) ReplaceLabels(updates *Workload) {
-	for k, v := range updates.Labels {
-		w.MergeLabels(k, v)
-	}
-	for k := range w.Labels {
-		if _, ok := updates.Labels[k]; !ok {
-			delete(w.Labels, k)
-		}
-	}
-}
-
 func (w *Workload) Merge(updates *Workload) {
 	for k, v := range updates.Annotations {
 		w.MergeAnnotations(k, v)
