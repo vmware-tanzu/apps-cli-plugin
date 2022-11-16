@@ -49,8 +49,9 @@ var (
 )
 
 var (
-	regexPod      = regexp.MustCompile("\\s*NAME\\s+READY\\s+STATUS\\s+RESTARTS\\s+AGE\\s*")
-	regexProgress = regexp.MustCompile(`[0-9]*\.*[0-9]*\s[a-zA-Z]+\s/\s[0-9]*[\.]*[0-9]*\s[a-zA-Z]+\s\[-+>*_*\]\s[0-9]*\.[0-9]+%.*`)
+	regexPod           = regexp.MustCompile("\\s*NAME\\s+READY\\s+STATUS\\s+RESTARTS\\s+AGE\\s*")
+	regexProgress      = regexp.MustCompile(`[0-9]*\.*[0-9]*\s[a-zA-Z]+\s/\s[0-9]*[\.]*[0-9]*\s[a-zA-Z]+\s\[-+>*_*\]\s[0-9]*\.[0-9]+%.*`)
+	serviceAccountName = "my-service-account"
 )
 
 func TestCreateFromGitWithAnnotations(t *testing.T) {
@@ -514,6 +515,94 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			CleanUp: func(ctx context.Context, t *testing.T) error {
 				os.Stdout = ctx.Value("stdout").(*os.File)
 				return nil
+			},
+		},
+		{
+			Name:         "Update the created workload with `replace` update strategy",
+			WorkloadName: "spring-petclinic",
+			Command: func() it.CommandLine {
+				c := *it.NewTanzuAppsCommandLine(
+					"workload", "apply", "spring-petclinic",
+					"--file=testdata/replace-workload.yaml",
+					namespaceFlag,
+					"--annotation=min-instances=3",
+					"--annotation=max-instances=5",
+					"--request-memory=2Gi",
+					"--limit-cpu=400m",
+					"--type=my-type",
+					"--update-strategy=replace",
+				)
+				c.SurveyAnswer("y")
+				return c
+			}(),
+			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: it.TestingNamespace,
+					Name:      "spring-petclinic",
+					Labels: map[string]string{
+						"apps.tanzu.vmware.com/workload-type": "my-type",
+					},
+					Annotations: map[string]string{
+						"controller-gen.kubebuilder.io/version": "v0.7.0",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					ServiceAccountName: &serviceAccountName,
+					Source: &cartov1alpha1.Source{
+						Git: &cartov1alpha1.GitSource{
+							URL: "https://github.com/spring-projects/spring-petclinic.git",
+							Ref: cartov1alpha1.GitRef{
+								Branch: "main",
+							},
+						},
+						Subpath: "./app",
+					},
+					Build: &cartov1alpha1.WorkloadBuild{
+						Env: []corev1.EnvVar{
+							{
+								Name:  "BP_MAVEN_POM_FILE",
+								Value: "skip-pom.xml",
+							},
+						},
+					},
+					Env: []corev1.EnvVar{
+						{
+							Name:  "SPRING_PROFILES_ACTIVE",
+							Value: "mysql",
+						},
+					},
+					Resources: &corev1.ResourceRequirements{
+						Limits: corev1.ResourceList{
+							corev1.ResourceCPU: resource.MustParse("400m"),
+						},
+						Requests: corev1.ResourceList{
+							corev1.ResourceMemory: resource.MustParse("2Gi"),
+						},
+					},
+					ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+						{
+							Name: "database",
+							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+								APIVersion: "services.tanzu.vmware.com/v1alpha1",
+								Kind:       "Secret",
+								Name:       "stub-db",
+							},
+						},
+					},
+					Params: []cartov1alpha1.Param{
+						{
+							Name:  "services",
+							Value: v1.JSON{Raw: []byte(`[{"image":"mysql:5.7","name":"mysql"},{"image":"postgres:9.6","name":"postgres"}]`)},
+						},
+						{
+							Name: "annotations",
+							Value: v1.JSON{
+								Raw: []byte(`{"max-instances":"5","min-instances":"3"}`),
+							},
+						},
+					},
+				},
 			},
 		},
 		{
