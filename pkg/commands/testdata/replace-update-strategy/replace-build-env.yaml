@@ -22,6 +22,8 @@ metadata:
 spec:
   build:
     env:
+    - name: my-new-build-env
+      value: my-value
     - name: BP_MAVEN_POM_FILE
       value: skip-pom.xml
     - name: my-build-env

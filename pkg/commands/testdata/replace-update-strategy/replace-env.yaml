@@ -25,6 +25,8 @@ spec:
     value: mysql
   - name: my-envvar
     value: my-envvar-updated-value
+  - name: my-new-envvar
+    value: my-value
   - name: preserve-me
     value: should-exist
   source:

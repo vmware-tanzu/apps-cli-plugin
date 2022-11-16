@@ -18,6 +18,7 @@ metadata:
   name: spring-petclinic
   labels:
     preserve-me: should-exist
+    my-label: my-value
     app.kubernetes.io/part-of: spring-petclinic
     apps.tanzu.vmware.com/workload-type: web
 spec:

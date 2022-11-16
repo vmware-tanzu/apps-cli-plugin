@@ -3928,7 +3928,9 @@ Skipping workload %q`,
 		},
 		{
 			Name: "update - replace update strategy",
-			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/all-fields-workload.yaml", flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/all-fields-workload.yaml",
+				flags.TypeFlagName, "my-type",
+				flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -3951,7 +3953,7 @@ Skipping workload %q`,
 						Name:      "spring-petclinic",
 						Labels: map[string]string{
 							"app.kubernetes.io/part-of":           "spring-petclinic",
-							"apps.tanzu.vmware.com/workload-type": "web",
+							"apps.tanzu.vmware.com/workload-type": "my-type",
 						},
 						Annotations: map[string]string{
 							"controller-gen.kubebuilder.io/version": "v0.7.0",
@@ -4023,7 +4025,7 @@ Skipping workload %q`,
       6 + |    controller-gen.kubebuilder.io/version: v0.7.0
       7 + |  labels:
       8 + |    app.kubernetes.io/part-of: spring-petclinic
-      9 + |    apps.tanzu.vmware.com/workload-type: web
+      9 + |    apps.tanzu.vmware.com/workload-type: my-type
   5, 10   |  name: spring-petclinic
   6, 11   |  namespace: default
   7, 12   |spec:
@@ -4143,7 +4145,9 @@ To get status: "tanzu apps workload get spring-petclinic"
 		},
 		{
 			Name: "update - replace labels",
-			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-labels.yaml", flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-labels.yaml",
+				flags.LabelFlagName, "my-label=my-updated-value",
+				flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -4171,6 +4175,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 						Labels: map[string]string{
 							"app.kubernetes.io/part-of":           "spring-petclinic",
 							"preserve-me":                         "should-exist",
+							"my-label":                            "my-updated-value",
 							"apps.tanzu.vmware.com/workload-type": "web",
 						},
 					},
@@ -4199,10 +4204,11 @@ To get status: "tanzu apps workload get spring-petclinic"
   7     - |    dont-preserve-me: should-not-exist
       6 + |    app.kubernetes.io/part-of: spring-petclinic
       7 + |    apps.tanzu.vmware.com/workload-type: web
-  8,  8   |    preserve-me: should-exist
-  9,  9   |  name: spring-petclinic
- 10, 10   |  namespace: default
- 11, 11   |spec:
+      8 + |    my-label: my-updated-value
+  8,  9   |    preserve-me: should-exist
+  9, 10   |  name: spring-petclinic
+ 10, 11   |  namespace: default
+ 11, 12   |spec:
 ...
 👍 Updated workload "spring-petclinic"
 
@@ -4414,7 +4420,9 @@ To get status: "tanzu apps workload get spring-petclinic"
 		},
 		{
 			Name: "update - replace buildenv",
-			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-build-env.yaml", flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-build-env.yaml",
+				flags.BuildEnvFlagName, "my-new-build-env=my-new-value",
+				flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -4463,6 +4471,10 @@ To get status: "tanzu apps workload get spring-petclinic"
 						Build: &cartov1alpha1.WorkloadBuild{
 							Env: []corev1.EnvVar{
 								{
+									Name:  "my-new-build-env",
+									Value: "my-new-value",
+								},
+								{
 									Name:  "BP_MAVEN_POM_FILE",
 									Value: "skip-pom.xml",
 								},
@@ -4496,17 +4508,19 @@ To get status: "tanzu apps workload get spring-petclinic"
  10, 10   |spec:
  11, 11   |  build:
  12, 12   |    env:
-     13 + |    - name: BP_MAVEN_POM_FILE
-     14 + |      value: skip-pom.xml
- 13, 15   |    - name: my-build-env
+     13 + |    - name: my-new-build-env
+     14 + |      value: my-new-value
+     15 + |    - name: BP_MAVEN_POM_FILE
+     16 + |      value: skip-pom.xml
+ 13, 17   |    - name: my-build-env
  14     - |      value: my-build-env-value
  15     - |    - name: preserve-me
  16     - |      value: should-not-exist
-     16 + |      value: my-build-env-updated-value
- 17, 17   |    - name: do-preserve-me
- 18, 18   |      value: should-exist
- 19, 19   |  source:
- 20, 20   |    git:
+     18 + |      value: my-build-env-updated-value
+ 17, 19   |    - name: do-preserve-me
+ 18, 20   |      value: should-exist
+ 19, 21   |  source:
+ 20, 22   |    git:
 ...
 👍 Updated workload "spring-petclinic"
 
@@ -4517,7 +4531,9 @@ To get status: "tanzu apps workload get spring-petclinic"
 		},
 		{
 			Name: "update - replace env",
-			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-env.yaml", flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-env.yaml",
+				flags.EnvFlagName, "my-new-envvar=my-new-value",
+				flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -4571,6 +4587,10 @@ To get status: "tanzu apps workload get spring-petclinic"
 								Value: "my-envvar-updated-value",
 							},
 							{
+								Name:  "my-new-envvar",
+								Value: "my-new-value",
+							},
+							{
 								Name:  "preserve-me",
 								Value: "should-exist",
 							},
@@ -4602,10 +4622,12 @@ To get status: "tanzu apps workload get spring-petclinic"
  14     - |  - name: dont-preserve-me
  15     - |    value: should-not-exist
      15 + |    value: my-envvar-updated-value
- 16, 16   |  - name: preserve-me
- 17, 17   |    value: should-exist
- 18, 18   |  source:
- 19, 19   |    git:
+     16 + |  - name: my-new-envvar
+     17 + |    value: my-new-value
+ 16, 18   |  - name: preserve-me
+ 17, 19   |    value: should-exist
+ 18, 20   |  source:
+ 19, 21   |    git:
 ...
 👍 Updated workload "spring-petclinic"
 
@@ -4616,7 +4638,9 @@ To get status: "tanzu apps workload get spring-petclinic"
 		},
 		{
 			Name: "update - replace resources",
-			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-resources.yaml", flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-resources.yaml",
+				flags.LimitCPUFlagName, "400m",
+				flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -4657,7 +4681,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 					Spec: cartov1alpha1.WorkloadSpec{
 						Resources: &corev1.ResourceRequirements{
 							Limits: corev1.ResourceList{
-								corev1.ResourceCPU:    resource.MustParse("500m"),
+								corev1.ResourceCPU:    resource.MustParse("400m"),
 								corev1.ResourceMemory: resource.MustParse("1Gi"),
 							},
 							Requests: corev1.ResourceList{
@@ -4680,11 +4704,13 @@ To get status: "tanzu apps workload get spring-petclinic"
 
 🔎 Update workload:
 ...
+  9,  9   |  namespace: default
  10, 10   |spec:
  11, 11   |  resources:
  12, 12   |    limits:
- 13, 13   |      cpu: 500m
+ 13     - |      cpu: 500m
  14     - |      memory: 2Gi
+     13 + |      cpu: 400m
      14 + |      memory: 1Gi
  15, 15   |    requests:
  16     - |      cpu: 500m
@@ -4703,7 +4729,9 @@ To get status: "tanzu apps workload get spring-petclinic"
 		},
 		{
 			Name: "update - replace service claims",
-			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-service-claims.yaml", flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-service-claims.yaml",
+				flags.ServiceRefFlagName, "my-new-svc-claim=my.api/v1:my-new-db-manager:my-new-db",
+				flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -4777,6 +4805,13 @@ To get status: "tanzu apps workload get spring-petclinic"
 									Kind:       "mysql",
 									Name:       "my-sql-db",
 								},
+							}, {
+								Name: "my-new-svc-claim",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "my.api/v1",
+									Kind:       "my-new-db-manager",
+									Name:       "my-new-db",
+								},
 							},
 						},
 						Source: &cartov1alpha1.Source{
@@ -4816,14 +4851,18 @@ To get status: "tanzu apps workload get spring-petclinic"
  20, 25   |      kind: mysql
  21, 26   |      name: my-sql-db
  22     - |  - name: should-delete
- 23     - |    ref:
+     27 + |  - name: my-new-svc-claim
+ 23, 28   |    ref:
  24     - |      apiVersion: services.tanzu.vmware.com/v1
  25     - |      kind: my-kind
  26     - |      name: my-db
- 27, 27   |  source:
- 28, 28   |    git:
- 29, 29   |      ref:
- 30, 30   |        tag: tap-1.1
+     29 + |      apiVersion: my.api/v1
+     30 + |      kind: my-new-db-manager
+     31 + |      name: my-new-db
+ 27, 32   |  source:
+ 28, 33   |    git:
+ 29, 34   |      ref:
+ 30, 35   |        tag: tap-1.1
 ...
 👍 Updated workload "spring-petclinic"
 
@@ -5193,6 +5232,29 @@ To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
+		},
+		{
+			Name: "update/replace - missing fields",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/invalid.yaml", flags.UpdateStrategyFlagName, commands.ReplaceUpdateStrategy, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ShouldError: true,
 		},
 	}
 
