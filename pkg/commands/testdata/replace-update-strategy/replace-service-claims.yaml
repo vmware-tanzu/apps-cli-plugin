@@ -20,4 +20,24 @@ metadata:
     app.kubernetes.io/part-of: spring-petclinic
     apps.tanzu.vmware.com/workload-type: web
 spec:
-  image: my-reponame/my-image:my-tag
+  serviceClaims:
+    - name: database
+      ref:
+        apiVersion: services.tanzu.vmware.com/v1alpha1
+        kind: Secret
+        name: stub-db
+    - name: my-service-claim
+      ref:
+        apiVersion: services.tanzu.vmware.com/v1alpha1
+        kind: PostgreSQL
+        name: my-prod-db-updated
+    - name: my-second-service-claim
+      ref:
+        apiVersion: services.tanzu.vmware.com/v1alpha1
+        kind: mysql
+        name: my-sql-db
+  source:
+    git:
+      url: https://github.com/sample-accelerators/spring-petclinic
+      ref:
+        tag: tap-1.1

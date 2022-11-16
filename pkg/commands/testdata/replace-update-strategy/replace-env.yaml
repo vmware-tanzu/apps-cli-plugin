@@ -20,4 +20,15 @@ metadata:
     app.kubernetes.io/part-of: spring-petclinic
     apps.tanzu.vmware.com/workload-type: web
 spec:
-  image: my-reponame/my-image:my-tag
+  env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: mysql
+  - name: my-envvar
+    value: my-envvar-updated-value
+  - name: preserve-me
+    value: should-exist
+  source:
+    git:
+      url: https://github.com/sample-accelerators/spring-petclinic
+      ref:
+        tag: tap-1.1

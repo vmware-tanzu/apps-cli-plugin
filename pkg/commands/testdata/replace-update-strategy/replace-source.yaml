@@ -20,4 +20,9 @@ metadata:
     app.kubernetes.io/part-of: spring-petclinic
     apps.tanzu.vmware.com/workload-type: web
 spec:
-  image: my-reponame/my-image:my-tag
+  source:
+    git:
+      url: https://github.com/sample-accelerators/spring-petclinic
+      ref:
+        tag: tap-1.1
+        commit: abcd123

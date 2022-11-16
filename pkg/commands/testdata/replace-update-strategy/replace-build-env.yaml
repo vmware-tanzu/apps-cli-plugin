@@ -20,4 +20,16 @@ metadata:
     app.kubernetes.io/part-of: spring-petclinic
     apps.tanzu.vmware.com/workload-type: web
 spec:
-  image: my-reponame/my-image:my-tag
+  build:
+    env:
+    - name: BP_MAVEN_POM_FILE
+      value: skip-pom.xml
+    - name: my-build-env
+      value: my-build-env-updated-value
+    - name: do-preserve-me
+      value: should-exist
+  source:
+    git:
+      url: https://github.com/sample-accelerators/spring-petclinic
+      ref:
+        tag: tap-1.1

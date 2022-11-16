@@ -16,8 +16,13 @@ apiVersion: carto.run/v1alpha1
 kind: Workload
 metadata:
   name: spring-petclinic
-  labels:
-    app.kubernetes.io/part-of: spring-petclinic
-    apps.tanzu.vmware.com/workload-type: web
+  annotations:
+    preserve-me: should-exist
+    controller-gen.kubebuilder.io/version: v0.7.0
+    my-annotation: my-updated-value
 spec:
-  image: my-reponame/my-image:my-tag
+  source:
+    git:
+      url: https://github.com/sample-accelerators/spring-petclinic
+      ref:
+        tag: tap-1.1

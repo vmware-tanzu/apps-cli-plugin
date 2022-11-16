@@ -120,25 +120,29 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 		}
 	}
 
-	if opts.FilePath != "" {
-		var serviceAccountCopy string
-		// avoid passing a nil pointer to MergeServiceAccountName func
-		if fileWorkload.Spec.ServiceAccountName != nil {
-			serviceAccountCopy = *fileWorkload.Spec.ServiceAccountName
-		}
-
-		workload.Spec.MergeServiceAccountName(serviceAccountCopy)
-	}
 	if opts.UpdateStrategy == MergeUpdateStrategy {
+		if opts.FilePath != "" {
+			var serviceAccountCopy string
+			// avoid passing a nil pointer to MergeServiceAccountName func
+			if fileWorkload.Spec.ServiceAccountName != nil {
+				serviceAccountCopy = *fileWorkload.Spec.ServiceAccountName
+			}
+
+			workload.Spec.MergeServiceAccountName(serviceAccountCopy)
+		}
 		workload.Merge(fileWorkload)
 	}
 
 	if opts.UpdateStrategy == ReplaceUpdateStrategy {
+		// if there's a workload in the cluster, and this is going to be an update process, let's assign
+		// the current workload metadata to the new workload so the system populated fields are not deleted/overwritten
 		if currentWorkload != nil && !reflect.DeepEqual(currentWorkload.ObjectMeta, (metav1.ObjectMeta{})) {
 			workload.ObjectMeta = *currentWorkload.ObjectMeta.DeepCopy()
 		}
+		// replace other fields that the user specifically modified
 		workload.ReplaceMetadata(fileWorkload)
 
+		// copy each file workload section into the workload that's in the cluster
 		workload.TypeMeta = fileWorkload.TypeMeta
 		workload.Spec = *fileWorkload.Spec.DeepCopy()
 		workload.Status = *fileWorkload.Status.DeepCopy()
