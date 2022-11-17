@@ -22,7 +22,7 @@ require (
 	github.com/vmware-tanzu/carvel-imgpkg v0.33.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-framework v0.25.0
-	golang.org/x/crypto v0.2.0
+	golang.org/x/crypto v0.3.0
 	gotest.tools/v3 v3.4.0
 	k8s.io/api v0.25.4
 	k8s.io/apiextensions-apiserver v0.25.0
