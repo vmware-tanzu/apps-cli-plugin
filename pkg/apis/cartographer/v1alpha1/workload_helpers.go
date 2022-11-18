@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -95,6 +96,20 @@ func (w *WorkloadSpec) MergeServiceAccountName(serviceAccountName string) {
 		serviceAccountNamePtr = &serviceAccountName
 	}
 	w.ServiceAccountName = serviceAccountNamePtr
+}
+
+func (w *Workload) ReplaceMetadata(updates *Workload) {
+	if updates != nil && !reflect.DeepEqual(updates.ObjectMeta, (metav1.ObjectMeta{})) {
+		wldMeta := w.GetObjectMeta()
+		updatesMeta := updates.GetObjectMeta()
+
+		// assign the system populated fields to the new workload
+		wldMeta.SetResourceVersion(updatesMeta.GetResourceVersion())
+		wldMeta.SetUID(updatesMeta.GetUID())
+		wldMeta.SetGeneration(updatesMeta.GetGeneration())
+		wldMeta.SetCreationTimestamp(updatesMeta.GetCreationTimestamp())
+		wldMeta.SetDeletionTimestamp(updatesMeta.GetDeletionTimestamp())
+	}
 }
 
 func (w *Workload) Merge(updates *Workload) {

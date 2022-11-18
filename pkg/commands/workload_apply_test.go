@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -53,6 +53,9 @@ import (
 )
 
 func TestWorkloadApplyOptionsValidate(t *testing.T) {
+	scheme := runtime.NewScheme()
+	_ = cartov1alpha1.AddToScheme(scheme)
+	_ = corev1.AddToScheme(scheme)
 	table := clitesting.ValidatableTestSuite{
 		{
 			Name: "valid options",
@@ -75,6 +78,65 @@ func TestWorkloadApplyOptionsValidate(t *testing.T) {
 				},
 			},
 			ExpectFieldErrors: validation.ErrInvalidArrayValue("FOO", flags.EnvFlagName, 0),
+		},
+		{
+			Name: "update strategy without filepath",
+			Validatable: &commands.WorkloadApplyOptions{
+				WorkloadOptions: commands.WorkloadOptions{
+					Namespace: "default",
+					Name:      "my-resource",
+				},
+				UpdateStrategy: "replace",
+			},
+			Prepare: func(t *testing.T, ctx context.Context) (context.Context, error) {
+				cmd := commands.NewWorkloadApplyCommand(ctx, cli.NewDefaultConfig("test", scheme))
+				if err := cmd.Flags().Set(cli.StripDash(flags.UpdateStrategyFlagName), "replace"); err != nil {
+					return ctx, err
+				}
+				ctx = cli.WithCommand(ctx, cmd)
+				return ctx, nil
+			},
+			ExpectFieldErrors: validation.ErrMissingField(flags.FilePathFlagName),
+		},
+		{
+			Name: "filepath with update strategy",
+			Validatable: &commands.WorkloadApplyOptions{
+				WorkloadOptions: commands.WorkloadOptions{
+					Namespace: "default",
+					Name:      "my-resource",
+					FilePath:  "my-folder/my-filepath.yaml",
+				},
+				UpdateStrategy: "merge",
+			},
+			Prepare: func(t *testing.T, ctx context.Context) (context.Context, error) {
+				cmd := commands.NewWorkloadApplyCommand(ctx, cli.NewDefaultConfig("test", scheme))
+				if err := cmd.Flags().Set(cli.StripDash(flags.UpdateStrategyFlagName), "merge"); err != nil {
+					return ctx, err
+				}
+				ctx = cli.WithCommand(ctx, cmd)
+				return ctx, nil
+			},
+			ShouldValidate: true,
+		},
+		{
+			Name: "filepath with invalid value for update strategy",
+			Validatable: &commands.WorkloadApplyOptions{
+				WorkloadOptions: commands.WorkloadOptions{
+					Namespace: "default",
+					Name:      "my-resource",
+					FilePath:  "my-folder/my-filepath.yaml",
+				},
+				UpdateStrategy: "invalid",
+			},
+			Prepare: func(t *testing.T, ctx context.Context) (context.Context, error) {
+				cmd := commands.NewWorkloadApplyCommand(ctx, cli.NewDefaultConfig("test", scheme))
+				if err := cmd.Flags().Set(cli.StripDash(flags.UpdateStrategyFlagName), "invalid"); err != nil {
+					return ctx, err
+				}
+				ctx = cli.WithCommand(ctx, cmd)
+				return ctx, nil
+			},
+			ExpectFieldErrors: validation.EnumInvalidValue("invalid", flags.UpdateStrategyFlagName, []string{"merge", "replace"}),
 		},
 	}
 
@@ -197,7 +259,7 @@ To get status: "tanzu apps workload get my-workload"
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.NamespaceFlagName, "foo", flags.YesFlagName},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("get", "Namespace", clitesting.InduceFailureOpts{
-					Error: apierrors.NewNotFound(corev1.Resource("Namespace"), "foo"),
+					Error: apierrs.NewNotFound(corev1.Resource("Namespace"), "foo"),
 				}),
 			},
 			ShouldError: true,
@@ -241,6 +303,8 @@ Error: namespace "foo" not found, it may not exist or user does not have permiss
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   9,  9   |    git:
@@ -279,6 +343,8 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -691,6 +757,8 @@ Error: Failed to become ready: a hopefully informative message about what went w
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -777,6 +845,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -878,6 +948,8 @@ spec:
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -1001,6 +1073,8 @@ spec:
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -1129,6 +1203,8 @@ status:
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -1268,7 +1344,7 @@ status:
 			Args: []string{workloadName, flags.DebugFlagName, flags.YesFlagName},
 			WithReactors: []clitesting.ReactionFunc{
 				clitesting.InduceFailure("update", "Workload", clitesting.InduceFailureOpts{
-					Error: apierrors.NewConflict(schema.GroupResource{Group: "carto.run", Resource: "workloads"}, workloadName, fmt.Errorf("induced conflict")),
+					Error: apierrs.NewConflict(schema.GroupResource{Group: "carto.run", Resource: "workloads"}, workloadName, fmt.Errorf("induced conflict")),
 				}),
 			},
 			GivenObjects: []client.Object{
@@ -1682,6 +1758,8 @@ Workload "my-workload" is ready
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -1784,6 +1862,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -1885,6 +1965,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -2094,6 +2176,8 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -2157,6 +2241,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -2219,6 +2305,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -2281,6 +2369,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Update workload:
 ...
   2,  2   |apiVersion: carto.run/v1alpha1
@@ -2506,6 +2596,8 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -2604,6 +2696,8 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -2660,6 +2754,8 @@ To get status: "tanzu apps workload get spring-petclinic"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -3150,6 +3246,8 @@ To get status: "tanzu apps workload get my-workload"
 				},
 			},
 			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -3827,6 +3925,1419 @@ invalid input (not y, n, yes, or no)
 Skipping workload %q`,
 				clitesting.ToInteractTerminal("❓ Really update the workload %q? [yN]: m", workloadName),
 				clitesting.ToInteractTerminal("❓ Really update the workload %q? [yN]: n", workloadName), workloadName),
+		},
+		{
+			Name: "update - replace update strategy",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/all-fields-workload.yaml",
+				flags.TypeFlagName, "my-type",
+				flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+						d.Env(
+							corev1.EnvVar{
+								Name:  "OVERRIDE_VAR",
+								Value: "doesnt matter",
+							},
+						)
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "my-type",
+						},
+						Annotations: map[string]string{
+							"controller-gen.kubebuilder.io/version": "v0.7.0",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: &serviceAccountName,
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+							Subpath: "./app",
+						},
+						Build: &cartov1alpha1.WorkloadBuild{
+							Env: []corev1.EnvVar{
+								{
+									Name:  "BP_MAVEN_POM_FILE",
+									Value: "skip-pom.xml",
+								},
+							},
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name:  "SPRING_PROFILES_ACTIVE",
+								Value: "mysql",
+							},
+						},
+						Resources: &corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("500m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+						},
+						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+							{
+								Name: "database",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "Secret",
+									Name:       "stub-db",
+								},
+							},
+						},
+						Params: []cartov1alpha1.Param{
+							{
+								Name:  "services",
+								Value: apiextensionsv1.JSON{Raw: []byte(`[{"image":"mysql:5.7","name":"mysql"},{"image":"postgres:9.6","name":"postgres"}]`)},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+  1,  1   |---
+  2,  2   |apiVersion: carto.run/v1alpha1
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+      5 + |  annotations:
+      6 + |    controller-gen.kubebuilder.io/version: v0.7.0
+      7 + |  labels:
+      8 + |    app.kubernetes.io/part-of: spring-petclinic
+      9 + |    apps.tanzu.vmware.com/workload-type: my-type
+  5, 10   |  name: spring-petclinic
+  6, 11   |  namespace: default
+  7, 12   |spec:
+     13 + |  build:
+     14 + |    env:
+     15 + |    - name: BP_MAVEN_POM_FILE
+     16 + |      value: skip-pom.xml
+  8, 17   |  env:
+  9     - |  - name: OVERRIDE_VAR
+ 10     - |    value: doesnt matter
+ 11     - |  image: ubuntu:bionic
+     18 + |  - name: SPRING_PROFILES_ACTIVE
+     19 + |    value: mysql
+     20 + |  params:
+     21 + |  - name: services
+     22 + |    value:
+     23 + |    - image: mysql:5.7
+     24 + |      name: mysql
+     25 + |    - image: postgres:9.6
+     26 + |      name: postgres
+     27 + |  resources:
+     28 + |    limits:
+     29 + |      cpu: 500m
+     30 + |      memory: 1Gi
+     31 + |    requests:
+     32 + |      cpu: 100m
+     33 + |      memory: 1Gi
+     34 + |  serviceAccountName: my-service-account
+     35 + |  serviceClaims:
+     36 + |  - name: database
+     37 + |    ref:
+     38 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
+     39 + |      kind: Secret
+     40 + |      name: stub-db
+     41 + |  source:
+     42 + |    git:
+     43 + |      ref:
+     44 + |        branch: main
+     45 + |      url: https://github.com/spring-projects/spring-petclinic.git
+     46 + |    subPath: ./app
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update - replace annotations",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-annotations.yaml", flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddAnnotation("preserve-me", "should-exist")
+						d.AddAnnotation("dont-preserve-me", "should-not-exist")
+						d.AddAnnotation("my-annotation", "my-value")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Annotations: map[string]string{
+							"controller-gen.kubebuilder.io/version": "v0.7.0",
+							"preserve-me":                           "should-exist",
+							"my-annotation":                         "my-updated-value",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+  2,  2   |apiVersion: carto.run/v1alpha1
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  annotations:
+  6     - |    dont-preserve-me: should-not-exist
+  7     - |    my-annotation: my-value
+      6 + |    controller-gen.kubebuilder.io/version: v0.7.0
+      7 + |    my-annotation: my-updated-value
+  8,  8   |    preserve-me: should-exist
+  9,  9   |  name: spring-petclinic
+ 10, 10   |  namespace: default
+ 11, 11   |spec:
+...
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update - replace labels",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-labels.yaml",
+				flags.LabelFlagName, "my-label=my-updated-value",
+				flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("preserve-me", "should-exist")
+						d.AddLabel("dont-preserve-me", "should-not-exist")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "should-overwrite")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"preserve-me":                         "should-exist",
+							"my-label":                            "my-updated-value",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+  2,  2   |apiVersion: carto.run/v1alpha1
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  labels:
+  6     - |    apps.tanzu.vmware.com/workload-type: should-overwrite
+  7     - |    dont-preserve-me: should-not-exist
+      6 + |    app.kubernetes.io/part-of: spring-petclinic
+      7 + |    apps.tanzu.vmware.com/workload-type: web
+      8 + |    my-label: my-updated-value
+  8,  9   |    preserve-me: should-exist
+  9, 10   |  name: spring-petclinic
+ 10, 11   |  namespace: default
+ 11, 12   |spec:
+...
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update - replace labels with no color",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-labels.yaml",
+				flags.LabelFlagName, "my-label=my-updated-value",
+				flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			Config: &cli.Config{NoColor: true, Scheme: scheme},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("preserve-me", "should-exist")
+						d.AddLabel("dont-preserve-me", "should-not-exist")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "should-overwrite")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"preserve-me":                         "should-exist",
+							"my-label":                            "my-updated-value",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+Update workload:
+...
+  2,  2   |apiVersion: carto.run/v1alpha1
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  labels:
+  6     - |    apps.tanzu.vmware.com/workload-type: should-overwrite
+  7     - |    dont-preserve-me: should-not-exist
+      6 + |    app.kubernetes.io/part-of: spring-petclinic
+      7 + |    apps.tanzu.vmware.com/workload-type: web
+      8 + |    my-label: my-updated-value
+  8,  9   |    preserve-me: should-exist
+  9, 10   |  name: spring-petclinic
+ 10, 11   |  namespace: default
+ 11, 12   |spec:
+...
+Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update/replace - add serviceAccountName",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-service-account-name.yaml", flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: &serviceAccountName,
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+  7,  7   |    apps.tanzu.vmware.com/workload-type: web
+  8,  8   |  name: spring-petclinic
+  9,  9   |  namespace: default
+ 10, 10   |spec:
+     11 + |  serviceAccountName: my-service-account
+ 11, 12   |  source:
+ 12, 13   |    git:
+ 13, 14   |      ref:
+ 14, 15   |        tag: tap-1.1
+...
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update/replace - delete serviceAccountName",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-no-service-account-name.yaml", flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.ServiceAccountName(&serviceAccountName)
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: nil,
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+  7,  7   |    apps.tanzu.vmware.com/workload-type: web
+  8,  8   |  name: spring-petclinic
+  9,  9   |  namespace: default
+ 10, 10   |spec:
+ 11     - |  serviceAccountName: my-service-account
+ 12, 11   |  source:
+ 13, 12   |    git:
+ 14, 13   |      ref:
+ 15, 14   |        tag: tap-1.1
+...
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update/replace - change serviceAccountName",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-service-account-name.yaml", flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.ServiceAccountName(&serviceAccountNameUpdated)
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceAccountName: &serviceAccountName,
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+  7,  7   |    apps.tanzu.vmware.com/workload-type: web
+  8,  8   |  name: spring-petclinic
+  9,  9   |  namespace: default
+ 10, 10   |spec:
+ 11     - |  serviceAccountName: my-service-account-updated
+     11 + |  serviceAccountName: my-service-account
+ 12, 12   |  source:
+ 13, 13   |    git:
+ 14, 14   |      ref:
+ 15, 15   |        tag: tap-1.1
+...
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update - replace buildenv",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-build-env.yaml",
+				flags.BuildEnvFlagName, "my-new-build-env=my-new-value",
+				flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Build(&cartov1alpha1.WorkloadBuild{
+							Env: []corev1.EnvVar{
+								{
+									Name:  "my-build-env",
+									Value: "my-build-env-value",
+								},
+								{
+									Name:  "preserve-me",
+									Value: "should-not-exist",
+								},
+								{
+									Name:  "do-preserve-me",
+									Value: "should-exist",
+								},
+							},
+						})
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Build: &cartov1alpha1.WorkloadBuild{
+							Env: []corev1.EnvVar{
+								{
+									Name:  "my-new-build-env",
+									Value: "my-new-value",
+								},
+								{
+									Name:  "BP_MAVEN_POM_FILE",
+									Value: "skip-pom.xml",
+								},
+								{
+									Name:  "my-build-env",
+									Value: "my-build-env-updated-value",
+								},
+								{
+									Name:  "do-preserve-me",
+									Value: "should-exist",
+								},
+							},
+						},
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+  9,  9   |  namespace: default
+ 10, 10   |spec:
+ 11, 11   |  build:
+ 12, 12   |    env:
+     13 + |    - name: my-new-build-env
+     14 + |      value: my-new-value
+     15 + |    - name: BP_MAVEN_POM_FILE
+     16 + |      value: skip-pom.xml
+ 13, 17   |    - name: my-build-env
+ 14     - |      value: my-build-env-value
+ 15     - |    - name: preserve-me
+ 16     - |      value: should-not-exist
+     18 + |      value: my-build-env-updated-value
+ 17, 19   |    - name: do-preserve-me
+ 18, 20   |      value: should-exist
+ 19, 21   |  source:
+ 20, 22   |    git:
+...
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update - replace env",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-env.yaml",
+				flags.EnvFlagName, "my-new-envvar=my-new-value",
+				flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Env(
+							corev1.EnvVar{
+								Name:  "my-envvar",
+								Value: "my-envvar-value",
+							},
+							corev1.EnvVar{
+								Name:  "dont-preserve-me",
+								Value: "should-not-exist",
+							},
+							corev1.EnvVar{
+								Name:  "preserve-me",
+								Value: "should-exist",
+							},
+						)
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Env: []corev1.EnvVar{
+							{
+								Name:  "SPRING_PROFILES_ACTIVE",
+								Value: "mysql",
+							},
+							{
+								Name:  "my-envvar",
+								Value: "my-envvar-updated-value",
+							},
+							{
+								Name:  "my-new-envvar",
+								Value: "my-new-value",
+							},
+							{
+								Name:  "preserve-me",
+								Value: "should-exist",
+							},
+						},
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+  8,  8   |  name: spring-petclinic
+  9,  9   |  namespace: default
+ 10, 10   |spec:
+ 11, 11   |  env:
+     12 + |  - name: SPRING_PROFILES_ACTIVE
+     13 + |    value: mysql
+ 12, 14   |  - name: my-envvar
+ 13     - |    value: my-envvar-value
+ 14     - |  - name: dont-preserve-me
+ 15     - |    value: should-not-exist
+     15 + |    value: my-envvar-updated-value
+     16 + |  - name: my-new-envvar
+     17 + |    value: my-new-value
+ 16, 18   |  - name: preserve-me
+ 17, 19   |    value: should-exist
+ 18, 20   |  source:
+ 19, 21   |    git:
+...
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update - replace resources",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-resources.yaml",
+				flags.LimitCPUFlagName, "400m",
+				flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Resources(&corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("500m"),
+								corev1.ResourceMemory: resource.MustParse("2Gi"),
+							},
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU: resource.MustParse("500m"),
+							},
+						})
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Resources: &corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("400m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+							Requests: corev1.ResourceList{
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+						},
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+  9,  9   |  namespace: default
+ 10, 10   |spec:
+ 11, 11   |  resources:
+ 12, 12   |    limits:
+ 13     - |      cpu: 500m
+ 14     - |      memory: 2Gi
+     13 + |      cpu: 400m
+     14 + |      memory: 1Gi
+ 15, 15   |    requests:
+ 16     - |      cpu: 500m
+     16 + |      memory: 1Gi
+ 17, 17   |  source:
+ 18, 18   |    git:
+ 19, 19   |      ref:
+ 20, 20   |        tag: tap-1.1
+...
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update - replace service claims",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-service-claims.yaml",
+				flags.ServiceRefFlagName, "my-new-svc-claim=my.api/v1:my-new-db-manager:my-new-db",
+				flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.ServiceClaims(cartov1alpha1.WorkloadServiceClaim{
+							Name: "my-service-claim",
+							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+								APIVersion: "services.tanzu.vmware.com/v1alpha1",
+								Kind:       "PostgreSQL",
+								Name:       "my-prod-db",
+							},
+						}, cartov1alpha1.WorkloadServiceClaim{
+							Name: "my-second-service-claim",
+							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+								APIVersion: "services.tanzu.vmware.com/v1alpha1",
+								Kind:       "mysql",
+								Name:       "my-sql-db",
+							},
+						}, cartov1alpha1.WorkloadServiceClaim{
+							Name: "should-delete",
+							Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+								APIVersion: "services.tanzu.vmware.com/v1",
+								Kind:       "my-kind",
+								Name:       "my-db",
+							},
+						})
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+							{
+								Name: "database",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "Secret",
+									Name:       "stub-db",
+								},
+							}, {
+								Name: "my-service-claim",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "PostgreSQL",
+									Name:       "my-prod-db-updated",
+								},
+							}, {
+								Name: "my-second-service-claim",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "mysql",
+									Name:       "my-sql-db",
+								},
+							}, {
+								Name: "my-new-svc-claim",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "my.api/v1",
+									Kind:       "my-new-db-manager",
+									Name:       "my-new-db",
+								},
+							},
+						},
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+  8,  8   |  name: spring-petclinic
+  9,  9   |  namespace: default
+ 10, 10   |spec:
+ 11, 11   |  serviceClaims:
+     12 + |  - name: database
+     13 + |    ref:
+     14 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
+     15 + |      kind: Secret
+     16 + |      name: stub-db
+ 12, 17   |  - name: my-service-claim
+ 13, 18   |    ref:
+ 14, 19   |      apiVersion: services.tanzu.vmware.com/v1alpha1
+ 15, 20   |      kind: PostgreSQL
+ 16     - |      name: my-prod-db
+     21 + |      name: my-prod-db-updated
+ 17, 22   |  - name: my-second-service-claim
+ 18, 23   |    ref:
+ 19, 24   |      apiVersion: services.tanzu.vmware.com/v1alpha1
+ 20, 25   |      kind: mysql
+ 21, 26   |      name: my-sql-db
+ 22     - |  - name: should-delete
+     27 + |  - name: my-new-svc-claim
+ 23, 28   |    ref:
+ 24     - |      apiVersion: services.tanzu.vmware.com/v1
+ 25     - |      kind: my-kind
+ 26     - |      name: my-db
+     29 + |      apiVersion: my.api/v1
+     30 + |      kind: my-new-db-manager
+     31 + |      name: my-new-db
+ 27, 32   |  source:
+ 28, 33   |    git:
+ 29, 34   |      ref:
+ 30, 35   |        tag: tap-1.1
+...
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update/replace - add subpath",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-subpath.yaml", flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Subpath: "./app",
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+ 12, 12   |    git:
+ 13, 13   |      ref:
+ 14, 14   |        tag: tap-1.1
+ 15, 15   |      url: https://github.com/sample-accelerators/spring-petclinic
+     16 + |    subPath: ./app
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update/replace - delete subpath",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-no-subpath.yaml", flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Subpath: "./app",
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+ 12, 12   |    git:
+ 13, 13   |      ref:
+ 14, 14   |        tag: tap-1.1
+ 15, 15   |      url: https://github.com/sample-accelerators/spring-petclinic
+ 16     - |    subPath: ./app
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update/replace - change subpath",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-subpath.yaml", flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Subpath: "./cmd",
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Subpath: "./app",
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+ 12, 12   |    git:
+ 13, 13   |      ref:
+ 14, 14   |        tag: tap-1.1
+ 15, 15   |      url: https://github.com/sample-accelerators/spring-petclinic
+ 16     - |    subPath: ./cmd
+     16 + |    subPath: ./app
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update - replace source",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-source.yaml", flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag:    "tap-1.1",
+									Commit: "abcd123",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+ 10, 10   |spec:
+ 11, 11   |  source:
+ 12, 12   |    git:
+ 13, 13   |      ref:
+ 14     - |        branch: main
+ 15     - |      url: https://github.com/spring-projects/spring-petclinic.git
+     14 + |        commit: abcd123
+     15 + |        tag: tap-1.1
+     16 + |      url: https://github.com/sample-accelerators/spring-petclinic
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update - replace params",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-params.yaml",
+				flags.AnnotationFlagName, "autoscaling.knative.dev/max-scale=4",
+				flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Params(cartov1alpha1.Param{
+							Name:  "https-ports",
+							Value: apiextensionsv1.JSON{Raw: []byte(`{"ports":[{"name":"https","port":8443,"protocol":"TCP","targetPort":8443}]}`)},
+						}, cartov1alpha1.Param{
+							Name:  "services",
+							Value: apiextensionsv1.JSON{Raw: []byte(`[{"image":"mysql:5.7","name":"mysql"},{"image":"postgres:9.6","name":"postgres"}]`)},
+						}, cartov1alpha1.Param{
+							Name:  "should-delete",
+							Value: apiextensionsv1.JSON{Raw: []byte(`[{"image":"mysql:5.7","name":"mysql"}]`)},
+						})
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "spring-petclinic",
+						Labels: map[string]string{
+							"app.kubernetes.io/part-of":           "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						},
+						Params: []cartov1alpha1.Param{
+							{
+								Name:  "ports",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"ports":[{"name":"http","port":8080,"protocol":"TCP","targetPort":8080}]}`)},
+							}, {
+								Name:  "https-ports",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"ports":[{"name":"https","port":8553,"protocol":"TCP","targetPort":8553}]}`)},
+							}, {
+								Name:  "services",
+								Value: apiextensionsv1.JSON{Raw: []byte(`[{"image":"mysql:5.7","name":"mysql"},{"image":"postgres:9.6","name":"postgres"}]`)},
+							}, {
+								Name:  "annotations",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"autoscaling.knative.dev/max-scale":"4","autoscaling.knative.dev/min-scale":"2"}`)},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+  8,  8   |  name: spring-petclinic
+  9,  9   |  namespace: default
+ 10, 10   |spec:
+ 11, 11   |  params:
+     12 + |  - name: ports
+     13 + |    value:
+     14 + |      ports:
+     15 + |      - name: http
+     16 + |        port: 8080
+     17 + |        protocol: TCP
+     18 + |        targetPort: 8080
+ 12, 19   |  - name: https-ports
+ 13, 20   |    value:
+ 14, 21   |      ports:
+ 15, 22   |      - name: https
+ 16     - |        port: 8443
+     23 + |        port: 8553
+ 17, 24   |        protocol: TCP
+ 18     - |        targetPort: 8443
+     25 + |        targetPort: 8553
+ 19, 26   |  - name: services
+ 20, 27   |    value:
+ 21, 28   |    - image: mysql:5.7
+ 22, 29   |      name: mysql
+ 23, 30   |    - image: postgres:9.6
+ 24, 31   |      name: postgres
+ 25     - |  - name: should-delete
+     32 + |  - name: annotations
+ 26, 33   |    value:
+ 27     - |    - image: mysql:5.7
+ 28     - |      name: mysql
+     34 + |      autoscaling.knative.dev/max-scale: "4"
+     35 + |      autoscaling.knative.dev/min-scale: "2"
+ 29, 36   |  source:
+ 30, 37   |    git:
+ 31, 38   |      ref:
+ 32, 39   |        tag: tap-1.1
+...
+👍 Updated workload "spring-petclinic"
+
+To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h"
+To get status: "tanzu apps workload get spring-petclinic"
+
+`,
+		},
+		{
+			Name: "update/replace - missing fields",
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/invalid.yaml", flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name("spring-petclinic")
+						d.AddLabel("apps.tanzu.vmware.com/workload-type", "web")
+						d.AddLabel("app.kubernetes.io/part-of", "spring-petclinic")
+					}).
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Source(&cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "tap-1.1",
+								},
+							},
+						})
+					}),
+			},
+			ShouldError: true,
 		},
 	}
 

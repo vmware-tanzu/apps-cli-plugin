@@ -35,7 +35,7 @@ func Enum(input string, field string, validOptions []string) FieldErrors {
 
 func EnumInvalidValue(input interface{}, field string, validOptions []string) FieldErrors {
 	return FieldErrors{
-		k8sfield.Invalid(k8sfield.NewPath(field), input, fmt.Sprintf("Supported formats are %v", strings.Join(validOptions, ", "))),
+		k8sfield.Invalid(k8sfield.NewPath(field), input, fmt.Sprintf("supported values are %v", strings.Join(validOptions, ", "))),
 	}
 }
 

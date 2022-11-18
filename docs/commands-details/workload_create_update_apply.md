@@ -398,36 +398,23 @@ Create workload:
 </details>
 
 ### `--image`, `-i`
-Sets the OSI image to be used as the workload application source instead of a git repository
+Sets the OCI image to be used as the workload application source instead of a git repository
  
  <details><summary>Example</summary>
 
 ```bash
 tanzu apps workload apply spring-pet-clinic --image private.repo.domain.com/spring-pet-clinic --type web
 Create workload:
-       1 + |---
-       2 + |apiVersion: carto.run/v1alpha1
-       3 + |kind: Workload
-       4 + |metadata:
-       5 + |  labels:
-       6 + |    apps.tanzu.vmware.com/workload-type: web
-       7 + |  name: spring-pet-clinic
-       8 + |  namespace: default
-       9 + |spec:
-      10 + |  build:
-      11 + |    env:
-      12 + |    - name: JAVA_VERSION
-      13 + |      value: "1.8"
-      14 + |  params:
-      15 + |  - name: server
-      16 + |    value:
-      17 + |      management-port: 9190
-      18 + |      port: 9090
-      19 + |  source:
-      20 + |    git:
-      21 + |      ref:
-      22 + |        tag: tap-1.1
-      23 + |      url: https://github.com/sample-accelerators/spring-petclinic
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: spring-pet-clinic
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  image: private.repo.domain.com/spring-pet-clinic
 
 ? Do you want to create this workload? [yN]
 ```

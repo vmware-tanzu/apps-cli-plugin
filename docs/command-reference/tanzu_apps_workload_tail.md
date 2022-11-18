@@ -25,7 +25,7 @@ tanzu apps workload tail my-workload --since 1h
       --component name   workload component name (e.g. build)
   -h, --help             help for tail
   -n, --namespace name   kubernetes namespace (defaulted from kube config)
-      --since duration   time duration to start reading logs from (default 1s)
+      --since duration   time duration to start reading logs from (default 1m0s)
   -t, --timestamp        print timestamp for each log line
 ```
 

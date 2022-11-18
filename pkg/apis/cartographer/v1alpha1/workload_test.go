@@ -21,12 +21,14 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
@@ -185,6 +187,255 @@ func TestWorkload_MergeServiceAccountName(t *testing.T) {
 			got.Spec.MergeServiceAccountName(test.update)
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("MergeServiceAccountName() (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestWorkload_ReplaceMetadata(t *testing.T) {
+	tests := []struct {
+		name   string
+		seed   *Workload
+		update *Workload
+		want   *Workload
+	}{{
+		name:   "empty",
+		seed:   &Workload{},
+		update: &Workload{},
+		want:   &Workload{},
+	}, {
+		name: "add all metadata to new workload",
+		seed: &Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+				Annotations: map[string]string{
+					"name": "value",
+				},
+				Labels: map[string]string{
+					"name": "value",
+				},
+				Finalizers:                 []string{"my.finalizer"},
+				DeletionGracePeriodSeconds: &[]int64{5}[0],
+				ManagedFields: []metav1.ManagedFieldsEntry{
+					{Manager: "tanzu"},
+				},
+				SelfLink: "/default/my-workload",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "v1",
+						Kind:       "Pod",
+						Name:       "workload-owner",
+					},
+				},
+			},
+		},
+		update: &Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				UID:               types.UID("uid-xyz"),
+				ResourceVersion:   "999",
+				Generation:        1,
+				CreationTimestamp: metav1.Date(2019, time.September, 10, 15, 00, 00, 00, time.UTC),
+				DeletionTimestamp: &metav1.Time{Time: time.Date(2021, 6, 29, 01, 44, 05, 0, time.UTC)},
+			},
+		},
+		want: &Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+				Annotations: map[string]string{
+					"name": "value",
+				},
+				Labels: map[string]string{
+					"name": "value",
+				},
+				UID:                        types.UID("uid-xyz"),
+				ResourceVersion:            "999",
+				Generation:                 1,
+				CreationTimestamp:          metav1.Date(2019, time.September, 10, 15, 00, 00, 00, time.UTC),
+				DeletionTimestamp:          &metav1.Time{Time: time.Date(2021, 6, 29, 01, 44, 05, 0, time.UTC)},
+				Finalizers:                 []string{"my.finalizer"},
+				DeletionGracePeriodSeconds: &[]int64{5}[0],
+				ManagedFields: []metav1.ManagedFieldsEntry{
+					{Manager: "tanzu"},
+				},
+				SelfLink: "/default/my-workload",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "v1",
+						Kind:       "Pod",
+						Name:       "workload-owner",
+					},
+				},
+			},
+		},
+	}, {
+		name: "overwrite workload metadata",
+		seed: &Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+				Annotations: map[string]string{
+					"name": "value",
+				},
+				Labels: map[string]string{
+					"name": "value",
+				},
+				UID:                        types.UID("uid-xyz"),
+				ResourceVersion:            "111",
+				Generation:                 1,
+				CreationTimestamp:          metav1.Date(2018, time.September, 10, 15, 00, 00, 00, time.UTC),
+				DeletionTimestamp:          &metav1.Time{Time: time.Date(2020, 6, 29, 01, 44, 05, 0, time.UTC)},
+				Finalizers:                 []string{"my.finalizer"},
+				DeletionGracePeriodSeconds: &[]int64{5}[0],
+				ManagedFields: []metav1.ManagedFieldsEntry{
+					{Manager: "tanzu"},
+				},
+				SelfLink: "/default/my-workload",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "v1",
+						Kind:       "Pod",
+						Name:       "workload-owner",
+					},
+				},
+			},
+		},
+		update: &Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				UID:               types.UID("uid-xyz"),
+				ResourceVersion:   "999",
+				Generation:        1,
+				CreationTimestamp: metav1.Date(2019, time.September, 10, 15, 00, 00, 00, time.UTC),
+				DeletionTimestamp: &metav1.Time{Time: time.Date(2021, 6, 29, 01, 44, 05, 0, time.UTC)},
+			},
+		},
+		want: &Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+				Annotations: map[string]string{
+					"name": "value",
+				},
+				Labels: map[string]string{
+					"name": "value",
+				},
+				UID:                        types.UID("uid-xyz"),
+				ResourceVersion:            "999",
+				Generation:                 1,
+				CreationTimestamp:          metav1.Date(2019, time.September, 10, 15, 00, 00, 00, time.UTC),
+				DeletionTimestamp:          &metav1.Time{Time: time.Date(2021, 6, 29, 01, 44, 05, 0, time.UTC)},
+				Finalizers:                 []string{"my.finalizer"},
+				DeletionGracePeriodSeconds: &[]int64{5}[0],
+				ManagedFields: []metav1.ManagedFieldsEntry{
+					{Manager: "tanzu"},
+				},
+				SelfLink: "/default/my-workload",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "v1",
+						Kind:       "Pod",
+						Name:       "workload-owner",
+					},
+				},
+			},
+		},
+	}, {
+		name: "do not update to empty metadata",
+		seed: &Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+				Annotations: map[string]string{
+					"name": "value",
+				},
+				Labels: map[string]string{
+					"name": "value",
+				},
+				UID:                        types.UID("uid-xyz"),
+				ResourceVersion:            "999",
+				Generation:                 1,
+				CreationTimestamp:          metav1.Date(2019, time.September, 10, 15, 00, 00, 00, time.UTC),
+				DeletionTimestamp:          &metav1.Time{Time: time.Date(2021, 6, 29, 01, 44, 05, 0, time.UTC)},
+				Finalizers:                 []string{"my.finalizer"},
+				DeletionGracePeriodSeconds: &[]int64{5}[0],
+				ManagedFields: []metav1.ManagedFieldsEntry{
+					{Manager: "tanzu"},
+				},
+				SelfLink: "/default/my-workload",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "v1",
+						Kind:       "Pod",
+						Name:       "workload-owner",
+					},
+				},
+			},
+		},
+		update: &Workload{
+			ObjectMeta: metav1.ObjectMeta{},
+		},
+		want: &Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+				Annotations: map[string]string{
+					"name": "value",
+				},
+				Labels: map[string]string{
+					"name": "value",
+				},
+				UID:                        types.UID("uid-xyz"),
+				ResourceVersion:            "999",
+				Generation:                 1,
+				CreationTimestamp:          metav1.Date(2019, time.September, 10, 15, 00, 00, 00, time.UTC),
+				DeletionTimestamp:          &metav1.Time{Time: time.Date(2021, 6, 29, 01, 44, 05, 0, time.UTC)},
+				Finalizers:                 []string{"my.finalizer"},
+				DeletionGracePeriodSeconds: &[]int64{5}[0],
+				ManagedFields: []metav1.ManagedFieldsEntry{
+					{Manager: "tanzu"},
+				},
+				SelfLink: "/default/my-workload",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "v1",
+						Kind:       "Pod",
+						Name:       "workload-owner",
+					},
+				},
+			},
+		},
+	}, {
+		name: "return only updated system populated fields",
+		seed: &Workload{
+			ObjectMeta: metav1.ObjectMeta{},
+		},
+		update: &Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				UID:               types.UID("uid-xyz"),
+				ResourceVersion:   "999",
+				Generation:        1,
+				CreationTimestamp: metav1.Date(2019, time.September, 10, 15, 00, 00, 00, time.UTC),
+				DeletionTimestamp: &metav1.Time{Time: time.Date(2021, 6, 29, 01, 44, 05, 0, time.UTC)},
+			},
+		},
+		want: &Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				UID:               types.UID("uid-xyz"),
+				ResourceVersion:   "999",
+				Generation:        1,
+				CreationTimestamp: metav1.Date(2019, time.September, 10, 15, 00, 00, 00, time.UTC),
+				DeletionTimestamp: &metav1.Time{Time: time.Date(2021, 6, 29, 01, 44, 05, 0, time.UTC)},
+			},
+		},
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.seed.DeepCopy()
+			got.ReplaceMetadata(test.update)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("Merge() (-want, +got) = %v", diff)
 			}
 		})
 	}

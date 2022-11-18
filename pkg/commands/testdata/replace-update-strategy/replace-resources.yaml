@@ -20,4 +20,14 @@ metadata:
     app.kubernetes.io/part-of: spring-petclinic
     apps.tanzu.vmware.com/workload-type: web
 spec:
-  image: my-reponame/my-image:my-tag
+  resources:
+    requests:
+      memory: 1Gi
+    limits:
+      memory: 1Gi
+      cpu: 500m
+  source:
+    git:
+      url: https://github.com/sample-accelerators/spring-petclinic
+      ref:
+        tag: tap-1.1

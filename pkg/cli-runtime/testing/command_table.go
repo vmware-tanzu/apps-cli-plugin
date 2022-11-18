@@ -163,11 +163,11 @@ type CommandTestCase struct {
 	// lifecycle
 
 	// Prepare is called before the command is executed. It is intended to prepare that broader
-	// environment before the specific table record is executed. For example, chaning the working
+	// environment before the specific table record is executed. For example, changing the working
 	// directory or setting mock expectations.
 	Prepare func(t *testing.T, ctx context.Context, config *cli.Config, tc *CommandTestCase) (context.Context, error)
 	// CleanUp is called after the table record is finished and all defined assertions complete.
-	// It is indended to clean up any state created in the Prepare step or during the test
+	// It is intended to clean up any state created in the Prepare step or during the test
 	// execution, or to make assertions for mocks.
 	CleanUp func(t *testing.T, ctx context.Context, config *cli.Config, tc *CommandTestCase) error
 	// WithConsoleInteractions receives function with an expect.Console that can be used to send characters and verify the output send to a fake console.

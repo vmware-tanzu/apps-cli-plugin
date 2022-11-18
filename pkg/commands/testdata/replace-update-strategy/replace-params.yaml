@@ -20,4 +20,33 @@ metadata:
     app.kubernetes.io/part-of: spring-petclinic
     apps.tanzu.vmware.com/workload-type: web
 spec:
-  image: my-reponame/my-image:my-tag
+  source:
+    git:
+      url: https://github.com/sample-accelerators/spring-petclinic
+      ref:
+        tag: tap-1.1
+  params:
+  - name: ports
+    value:
+      ports:
+      - name: http
+        protocol: TCP
+        port: 8080
+        targetPort: 8080
+  - name: https-ports
+    value:
+      ports:
+      - name: https
+        protocol: TCP
+        port: 8553
+        targetPort: 8553
+  - name: services
+    value:
+    - name: mysql
+      image: mysql:5.7
+    - name: postgres
+      image: postgres:9.6
+  - name: annotations
+    value:
+      autoscaling.knative.dev/max-scale: "5"
+      autoscaling.knative.dev/min-scale: "2"

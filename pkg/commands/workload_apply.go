@@ -41,6 +41,7 @@ import (
 
 type WorkloadApplyOptions struct {
 	WorkloadOptions
+	UpdateStrategy string
 }
 
 var (
@@ -49,8 +50,23 @@ var (
 	_ cli.DryRunable         = (*WorkloadApplyOptions)(nil)
 )
 
+const (
+	mergeUpdateStrategy   = "merge"
+	replaceUpdateStrategy = "replace"
+)
+
 func (opts *WorkloadApplyOptions) Validate(ctx context.Context) validation.FieldErrors {
-	return opts.WorkloadOptions.Validate(ctx)
+	errs := validation.FieldErrors{}
+	errs = errs.Also(opts.WorkloadOptions.Validate(ctx))
+
+	if opts.UpdateStrategy != "" && cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.UpdateStrategyFlagName)) {
+		if opts.FilePath == "" {
+			errs = errs.Also(validation.ErrMissingField(flags.FilePathFlagName))
+		}
+		errs = errs.Also(validation.Enum(opts.UpdateStrategy, flags.UpdateStrategyFlagName, []string{mergeUpdateStrategy, replaceUpdateStrategy}))
+	}
+
+	return errs
 }
 
 func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error {
@@ -61,6 +77,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 
 	fileWorkload := &cartov1alpha1.Workload{}
 	if opts.FilePath != "" {
+		c.Emoji(cli.Exclamation, fmt.Sprintf("WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use %q to control strategy explicitly).\n\n", flags.UpdateStrategyFlagName))
 		if err := opts.WorkloadOptions.LoadInputWorkload(c.Stdin, fileWorkload); err != nil {
 			return err
 		}
@@ -101,20 +118,30 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 		}
 	}
 
-	workload.Name = opts.Name
-	workload.Namespace = opts.Namespace
-	if opts.FilePath != "" {
-		var serviceAccountCopy string
-		// avoid passing a nil pointer to MergeServiceAccountName func
-		if fileWorkload.Spec.ServiceAccountName != nil {
-			serviceAccountCopy = *fileWorkload.Spec.ServiceAccountName
-		}
+	if opts.UpdateStrategy == mergeUpdateStrategy {
+		if opts.FilePath != "" {
+			var serviceAccountCopy string
+			// avoid passing a nil pointer to MergeServiceAccountName func
+			if fileWorkload.Spec.ServiceAccountName != nil {
+				serviceAccountCopy = *fileWorkload.Spec.ServiceAccountName
+			}
 
-		workload.Spec.MergeServiceAccountName(serviceAccountCopy)
+			workload.Spec.MergeServiceAccountName(serviceAccountCopy)
+		}
+		workload.Merge(fileWorkload)
 	}
 
-	workload.Merge(fileWorkload)
+	if opts.UpdateStrategy == replaceUpdateStrategy {
+		// assign all the file workload fields to the workload in the cluster
+		workload = fileWorkload
 
+		// if there is a workload in the cluster with all metadata populated
+		// re assign the system populated fields so we won't find an error because of some missing fields
+		workload.ReplaceMetadata(currentWorkload)
+	}
+
+	workload.Name = opts.Name
+	workload.Namespace = opts.Namespace
 	ctx = opts.ApplyOptionsToWorkload(ctx, workload)
 
 	// validate complex flag interactions with existing state
@@ -234,6 +261,10 @@ Workload configuration options include:
 
 	// Define common flags
 	opts.DefineFlags(ctx, c, cmd)
+	cmd.Flags().StringVar(&opts.UpdateStrategy, cli.StripDash(flags.UpdateStrategyFlagName), mergeUpdateStrategy, fmt.Sprintf("specify configuration file update strategy (supported strategies: %s, %s)", mergeUpdateStrategy, replaceUpdateStrategy))
+	cmd.RegisterFlagCompletionFunc(cli.StripDash(flags.UpdateStrategyFlagName), func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{replaceUpdateStrategy, mergeUpdateStrategy}, cobra.ShellCompDirectiveNoFileComp
+	})
 
 	// Bind flags to environment variables
 	opts.DefineEnvVars(ctx, c, cmd)

@@ -16,13 +16,40 @@ apiVersion: carto.run/v1alpha1
 kind: Workload
 metadata:
   name: spring-petclinic
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.7.0
   labels:
-    app.kubernetes.io/part-of: spring-petclinic
     apps.tanzu.vmware.com/workload-type: web
 spec:
-  serviceAccountName: ""
-  source:
-    git:
-      url: https://github.com/sample-accelerators/spring-petclinic
+  serviceAccountName: my-service-account
+  build:
+    env:
+    - name: BP_MAVEN_POM_FILE
+      value: skip-pom.xml
+  env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: mysql
+  resources:
+    requests:
+      memory: 1Gi
+    limits:
+      cpu: 500m
+  serviceClaims:
+    - name: database
       ref:
-        tag: tap-1.1
+        apiVersion: services.tanzu.vmware.com/v1alpha1
+        kind: Secret
+        name: stub-db
+  source:
+    subPath: ./app
+    git:
+      url: https://github.com/spring-projects/spring-petclinic.git
+      ref:
+        branch: main
+  params:
+  - name: services
+    value:
+    - name: mysql
+      image: mysql:5.7
+    - name: postgres
+      image: postgres:9.6
