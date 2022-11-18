@@ -53,8 +53,8 @@ var (
 )
 
 const (
-	MergeUpdateStrategy   = "merge"
-	ReplaceUpdateStrategy = "replace"
+	mergeUpdateStrategy   = "merge"
+	replaceUpdateStrategy = "replace"
 )
 
 func (opts *WorkloadApplyOptions) Validate(ctx context.Context) validation.FieldErrors {
@@ -65,7 +65,7 @@ func (opts *WorkloadApplyOptions) Validate(ctx context.Context) validation.Field
 		if opts.FilePath == "" {
 			errs = errs.Also(validation.ErrMissingField(flags.FilePathFlagName))
 		}
-		errs = errs.Also(validation.Enum(opts.UpdateStrategy, flags.UpdateStrategyFlagName, []string{MergeUpdateStrategy, ReplaceUpdateStrategy}))
+		errs = errs.Also(validation.Enum(opts.UpdateStrategy, flags.UpdateStrategyFlagName, []string{mergeUpdateStrategy, replaceUpdateStrategy}))
 	}
 
 	return errs
@@ -120,7 +120,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 		}
 	}
 
-	if opts.UpdateStrategy == MergeUpdateStrategy {
+	if opts.UpdateStrategy == mergeUpdateStrategy {
 		if opts.FilePath != "" {
 			var serviceAccountCopy string
 			// avoid passing a nil pointer to MergeServiceAccountName func
@@ -133,7 +133,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 		workload.Merge(fileWorkload)
 	}
 
-	if opts.UpdateStrategy == ReplaceUpdateStrategy {
+	if opts.UpdateStrategy == replaceUpdateStrategy {
 		// assign all the file workload fields to the workload in the cluster
 		workload = fileWorkload
 
@@ -273,9 +273,9 @@ Workload configuration options include:
 
 	// Define common flags
 	opts.DefineFlags(ctx, c, cmd)
-	cmd.Flags().StringVar(&opts.UpdateStrategy, cli.StripDash(flags.UpdateStrategyFlagName), "merge", "specify configuration file update strategy (supported strategies: merge, replace)")
+	cmd.Flags().StringVar(&opts.UpdateStrategy, cli.StripDash(flags.UpdateStrategyFlagName), mergeUpdateStrategy, "specify configuration file update strategy (supported strategies: merge, replace)")
 	cmd.RegisterFlagCompletionFunc(cli.StripDash(flags.UpdateStrategyFlagName), func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"replace", "merge"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{replaceUpdateStrategy, mergeUpdateStrategy}, cobra.ShellCompDirectiveNoFileComp
 	})
 
 	// Bind flags to environment variables

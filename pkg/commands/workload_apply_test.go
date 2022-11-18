@@ -106,11 +106,11 @@ func TestWorkloadApplyOptionsValidate(t *testing.T) {
 					Name:      "my-resource",
 					FilePath:  "my-folder/my-filepath.yaml",
 				},
-				UpdateStrategy: commands.MergeUpdateStrategy,
+				UpdateStrategy: "merge",
 			},
 			Prepare: func(t *testing.T, ctx context.Context) (context.Context, error) {
 				cmd := commands.NewWorkloadApplyCommand(ctx, cli.NewDefaultConfig("test", scheme))
-				if err := cmd.Flags().Set(cli.StripDash(flags.UpdateStrategyFlagName), commands.MergeUpdateStrategy); err != nil {
+				if err := cmd.Flags().Set(cli.StripDash(flags.UpdateStrategyFlagName), "merge"); err != nil {
 					return ctx, err
 				}
 				ctx = cli.WithCommand(ctx, cmd)
@@ -136,7 +136,7 @@ func TestWorkloadApplyOptionsValidate(t *testing.T) {
 				ctx = cli.WithCommand(ctx, cmd)
 				return ctx, nil
 			},
-			ExpectFieldErrors: validation.EnumInvalidValue("invalid", flags.UpdateStrategyFlagName, []string{commands.MergeUpdateStrategy, "replace"}),
+			ExpectFieldErrors: validation.EnumInvalidValue("invalid", flags.UpdateStrategyFlagName, []string{"merge", "replace"}),
 		},
 	}
 
