@@ -518,6 +518,57 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
+			Name:         "Do not update the created workload with `merge` update strategy",
+			WorkloadName: "spring-petclinic",
+			Command: func() it.CommandLine {
+				c := *it.NewTanzuAppsCommandLine(
+					"workload", "apply", "spring-petclinic",
+					"--file=testdata/do-not-replace-workload.yaml",
+					namespaceFlag,
+					"--update-strategy=merge",
+				)
+				c.SurveyAnswer("y")
+				return c
+			}(),
+			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "spring-petclinic",
+					Namespace: it.TestingNamespace,
+					Labels: map[string]string{
+						"app.kubernetes.io/part-of":           "spring-petclinic",
+						"apps.tanzu.vmware.com/workload-type": "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Env: []corev1.EnvVar{
+						{
+							Name:  "SPRING_PROFILES_ACTIVE",
+							Value: "mysql",
+						},
+					},
+					Resources: &corev1.ResourceRequirements{
+						Limits: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("500m"),
+							corev1.ResourceMemory: resource.MustParse("1Gi"),
+						},
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:    resource.MustParse("100m"),
+							corev1.ResourceMemory: resource.MustParse("1Gi"),
+						},
+					},
+					Source: &cartov1alpha1.Source{
+						Git: &cartov1alpha1.GitSource{
+							URL: "https://github.com/spring-projects/spring-petclinic.git",
+							Ref: cartov1alpha1.GitRef{
+								Branch: "main",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			Name:         "Update the created workload with `replace` update strategy",
 			WorkloadName: "spring-petclinic",
 			Command: func() it.CommandLine {

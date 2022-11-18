@@ -55,11 +55,11 @@ type ValidatableTestCase struct {
 	// Prepare is called before the command is executed. It is intended to prepare that broader
 	// environment before the specific table record is executed. For example, changing the working
 	// directory or setting mock expectations.
-	Prepare func(context.Context, *testing.T) (context.Context, error)
+	Prepare func(*testing.T, context.Context) (context.Context, error)
 	// CleanUp is called after the table record is finished and all defined assertions complete.
 	// It is intended to clean up any state created in the Prepare step or during the test
 	// execution, or to make assertions for mocks.
-	CleanUp func(context.Context, *testing.T) error
+	CleanUp func(*testing.T, context.Context) error
 }
 
 func (ts ValidatableTestSuite) Run(t *testing.T) {
@@ -91,8 +91,8 @@ func (tc ValidatableTestCase) Run(t *testing.T, ctx context.Context) {
 
 		if tc.Prepare != nil {
 			var err error
-			if ctx, err = tc.Prepare(ctx, t); err != nil {
-				t.Errorf("unexpected error in prepare: %v", err)
+			if ctx, err = tc.Prepare(t, ctx); err != nil {
+				t.Errorf("error during prepare %v", err)
 			}
 		}
 
@@ -119,8 +119,7 @@ func (tc ValidatableTestCase) Run(t *testing.T, ctx context.Context) {
 		}
 
 		if tc.CleanUp != nil {
-			var err error
-			if err = tc.CleanUp(ctx, t); err != nil {
+			if err := tc.CleanUp(t, ctx); err != nil {
 				t.Errorf("unexpected error in clean up: %v", err)
 			}
 		}
