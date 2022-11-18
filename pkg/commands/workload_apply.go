@@ -19,13 +19,11 @@ package commands
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -139,17 +137,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 
 		// if there is a workload in the cluster with all metadata populated
 		// re assign the system populated fields so we won't find an error because of some missing fields
-		if currentWorkload != nil && !reflect.DeepEqual(currentWorkload.ObjectMeta, (metav1.ObjectMeta{})) {
-			wldMeta := workload.GetObjectMeta()
-			currentWldMeta := currentWorkload.GetObjectMeta()
-
-			// assign the system populated fields to the new workload
-			wldMeta.SetResourceVersion(currentWldMeta.GetResourceVersion())
-			wldMeta.SetUID(currentWldMeta.GetUID())
-			wldMeta.SetGeneration(currentWldMeta.GetGeneration())
-			wldMeta.SetCreationTimestamp(currentWldMeta.GetCreationTimestamp())
-			wldMeta.SetDeletionTimestamp(currentWldMeta.GetDeletionTimestamp())
-		}
+		workload.ReplaceMetadata(currentWorkload)
 	}
 
 	workload.Name = opts.Name
@@ -273,7 +261,7 @@ Workload configuration options include:
 
 	// Define common flags
 	opts.DefineFlags(ctx, c, cmd)
-	cmd.Flags().StringVar(&opts.UpdateStrategy, cli.StripDash(flags.UpdateStrategyFlagName), mergeUpdateStrategy, "specify configuration file update strategy (supported strategies: merge, replace)")
+	cmd.Flags().StringVar(&opts.UpdateStrategy, cli.StripDash(flags.UpdateStrategyFlagName), mergeUpdateStrategy, fmt.Sprintf("specify configuration file update strategy (supported strategies: %s, %s)", mergeUpdateStrategy, replaceUpdateStrategy))
 	cmd.RegisterFlagCompletionFunc(cli.StripDash(flags.UpdateStrategyFlagName), func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{replaceUpdateStrategy, mergeUpdateStrategy}, cobra.ShellCompDirectiveNoFileComp
 	})

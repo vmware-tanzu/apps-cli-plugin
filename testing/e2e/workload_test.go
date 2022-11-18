@@ -518,7 +518,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
-			Name:         "Do not update the created workload with `merge` update strategy",
+			Name:         "Do not update workload from file using `merge` update strategy",
 			WorkloadName: "spring-petclinic",
 			Command: func() it.CommandLine {
 				c := *it.NewTanzuAppsCommandLine(

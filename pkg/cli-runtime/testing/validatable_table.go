@@ -63,7 +63,6 @@ type ValidatableTestCase struct {
 }
 
 func (ts ValidatableTestSuite) Run(t *testing.T) {
-	ctx := context.Background()
 	focused := ValidatableTestSuite{}
 	for _, tc := range ts {
 		if tc.Focus && !tc.Skip {
@@ -72,22 +71,23 @@ func (ts ValidatableTestSuite) Run(t *testing.T) {
 	}
 	if len(focused) != 0 {
 		for _, tc := range focused {
-			tc.Run(t, ctx)
+			tc.Run(t)
 		}
 		t.Errorf("test run focused on %d record(s), skipped %d record(s)", len(focused), len(ts)-len(focused))
 		return
 	}
 
 	for _, tc := range ts {
-		tc.Run(t, ctx)
+		tc.Run(t)
 	}
 }
 
-func (tc ValidatableTestCase) Run(t *testing.T, ctx context.Context) {
+func (tc ValidatableTestCase) Run(t *testing.T) {
 	t.Run(tc.Name, func(t *testing.T) {
 		if tc.Skip {
 			t.SkipNow()
 		}
+		ctx := context.Background()
 
 		if tc.Prepare != nil {
 			var err error
@@ -120,7 +120,7 @@ func (tc ValidatableTestCase) Run(t *testing.T, ctx context.Context) {
 
 		if tc.CleanUp != nil {
 			if err := tc.CleanUp(t, ctx); err != nil {
-				t.Errorf("unexpected error in clean up: %v", err)
+				t.Errorf("error during cleanup: %v", err)
 			}
 		}
 	})
