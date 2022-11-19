@@ -1,5 +1,5 @@
 BUILD_SHA_SHORT := $(shell git rev-parse --short HEAD)
-BUILD_VERSION := $(shell cat APPS_PLUGIN_VERSION)+dev-$(BUILD_SHA_SHORT)
+BUILD_VERSION ?= $(shell cat APPS_PLUGIN_VERSION)+dev-$(BUILD_SHA_SHORT)
 BUILD_DIRTY = $(shell git diff --quiet HEAD || echo "-dirty")
 BUILD_DATE ?= $$(date -u +"%Y-%m-%d")
 BUILD_SHA = $(shell git rev-parse HEAD)
