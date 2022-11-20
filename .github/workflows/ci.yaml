@@ -84,15 +84,6 @@ jobs:
     - uses: actions/setup-go@v3
       with:
         go-version: 1.19.x
-    - name: Grype scan
-      run: |
-        bash -c '
-        echo "##[group]Install grype"
-          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
-        echo "##[endgroup]"
-        echo "##[group]Scan source ."
-          grype dir:. --exclude ./hack,./vendor --exclude '**/testdata/**'
-        '
     - name: Install tanzu cli
       run: |
         $TANZU_VERSION = type .\TANZU_VERSION
@@ -113,12 +104,8 @@ jobs:
         tanzu plugin install builder --local $TANZU_HOME/admin-plugins
         tanzu plugin install test --local $TANZU_HOME/admin-plugins
         tanzu plugin list
-
     - name: Test
       run: make test
-    - name: Build Version
-      run: echo "BUILD_VERSION=${env:GITHUB_REF/refs\/tags\//}" >> $env:GITHUB_ENV
-      if: startsWith(github.ref, 'refs/tags/')
     - name: Build
       run: |
         $Env:PATH += ";C:\Program Files\tanzu"
@@ -146,14 +133,6 @@ jobs:
     - uses: actions/setup-go@v3
       with:
         go-version: 1.19.x
-    - name: Grype scan
-      run: |
-        echo "##[group]Install grype"
-          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
-        echo "##[endgroup]"
-        echo "##[group]Scan source ."
-          grype dir:. --exclude ./hack,./vendor --exclude '**/testdata/**'
-
     - name: Install tanzu cli
       run: |
         TANZU_VERSION=$(cat TANZU_VERSION)
