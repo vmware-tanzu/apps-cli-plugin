@@ -257,8 +257,8 @@ github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7
 github.com/coreos/go-systemd/v22 v22.3.2/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
 github.com/cppforlife/cobrautil v0.0.0-20200514214827-bb86e6965d72/go.mod h1:2w+qxVu2KSGW78Ex/XaIqfh/OvBgjEsmN53S4T8vEyA=
-github.com/cppforlife/cobrautil v0.0.0-20220411122935-c28a9f274a4e h1:4AxO89dwbgA957M8DX5AV/KsOmxDyAB1BES0INY+A/0=
-github.com/cppforlife/cobrautil v0.0.0-20220411122935-c28a9f274a4e/go.mod h1:2w+qxVu2KSGW78Ex/XaIqfh/OvBgjEsmN53S4T8vEyA=
+github.com/cppforlife/cobrautil v0.0.0-20221021151949-d60711905d65 h1:+3J1K6yQFRPKDEl5Py68c1q0FjaCkeMcB1nb7uzmpSw=
+github.com/cppforlife/cobrautil v0.0.0-20221021151949-d60711905d65/go.mod h1:2w+qxVu2KSGW78Ex/XaIqfh/OvBgjEsmN53S4T8vEyA=
 github.com/cppforlife/color v1.9.1-0.20200716202919-6706ac40b835 h1:mYQweUIBD+TBRjIeQnJmXr0GSVMpI6O0takyb/aaOgo=
 github.com/cppforlife/color v1.9.1-0.20200716202919-6706ac40b835/go.mod h1:dYeVsKp1vvK8XjdTPR1gF+uk+9doxKeO3hqQTOCr7T4=
 github.com/cppforlife/go-cli-ui v0.0.0-20200506005011-4268990983cc/go.mod h1:I0qrzCmuPWYI6kAOvkllYjaW2aovclWbJ96+v+YyHb0=
@@ -986,8 +986,8 @@ github.com/vito/go-interact v1.0.1 h1:O8xi8c93bRUv2Tb/v6HdiuGc+WnWt+AQzF74MOOdlB
 github.com/vito/go-interact v1.0.1/go.mod h1:HrdHSJXD2yn1MhlTwSIMeFgQ5WftiIorszVGd3S/DAA=
 github.com/vmware-labs/reconciler-runtime v0.8.2 h1:HhzvMTb25hswGzHcr+35W1joOBkBAyclPwumzAO7xRI=
 github.com/vmware-labs/reconciler-runtime v0.8.2/go.mod h1:+Q4oBEd//FGjRBmt3m7gydDg7xqlxFJv9+Ik8oc4kzk=
-github.com/vmware-tanzu/carvel-imgpkg v0.33.0 h1:ZfMeJ+PKXJkkxcRSRiI/N9Vzxgyqj7YWktY3BEgQC84=
-github.com/vmware-tanzu/carvel-imgpkg v0.33.0/go.mod h1:9J2sqH4lTws2fPhiloEWTc7tKvdsmmOxRqEWgMokTXM=
+github.com/vmware-tanzu/carvel-imgpkg v0.34.0 h1:RhUKOhwl6qWLd716KPfHPT2sTEJw/UEGPWVeLJLe6Ps=
+github.com/vmware-tanzu/carvel-imgpkg v0.34.0/go.mod h1:1F0gouxyV7Eu36ZRwB0fN8SYU0x7xtRmnxujvFh5NLo=
 github.com/vmware-tanzu/carvel-kapp-controller v0.35.0 h1:zgWNumjhN+0CCiq1Wo4lVTmO89eOA6HuPXgv1sVhE4k=
 github.com/vmware-tanzu/carvel-kapp-controller v0.35.0/go.mod h1:Hldrv7kPAD3THS1yUYZPFIaHmPE0ENO0ljzbJrpftiE=
 github.com/vmware-tanzu/carvel-secretgen-controller v0.5.0 h1:3mSDyzhf52Y0jdvHrhJUf4Sk97CILBOkQt/WUaD8G/8=

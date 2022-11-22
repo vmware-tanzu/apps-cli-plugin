@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/vito/go-interact v1.0.1
 	github.com/vmware-labs/reconciler-runtime v0.8.2
-	github.com/vmware-tanzu/carvel-imgpkg v0.33.0
+	github.com/vmware-tanzu/carvel-imgpkg v0.34.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-framework v0.25.0
 	golang.org/x/crypto v0.3.0
@@ -86,7 +86,7 @@ require (
 	github.com/containerd/stargz-snapshotter/estargz v0.12.1 // indirect
 	github.com/coredns/caddy v1.1.1 // indirect
 	github.com/coredns/corefile-migration v1.0.17 // indirect
-	github.com/cppforlife/cobrautil v0.0.0-20220411122935-c28a9f274a4e // indirect
+	github.com/cppforlife/cobrautil v0.0.0-20221021151949-d60711905d65 // indirect
 	github.com/cppforlife/color v1.9.1-0.20200716202919-6706ac40b835 // indirect
 	github.com/cppforlife/go-cli-ui v0.0.0-20220425131040-94f26b16bc14 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
