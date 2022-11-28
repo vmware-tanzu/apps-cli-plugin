@@ -492,6 +492,25 @@ func TestWorkload_Validate(t *testing.T) {
 		},
 		want: validation.FieldErrors{},
 	}, {
+		name: "valid git using --git-commit",
+		workload: Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+			},
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Git: &GitSource{
+						URL: "git@github.com/example/repo.git",
+						Ref: GitRef{
+							Commit: "abcd123",
+						},
+					},
+				},
+			},
+		},
+		want: validation.FieldErrors{},
+	}, {
 		name: "valid git using --git-tag with subPath",
 		workload: Workload{
 			ObjectMeta: metav1.ObjectMeta{
@@ -526,7 +545,7 @@ func TestWorkload_Validate(t *testing.T) {
 		},
 		want: validation.FieldErrors{}.Also(
 			validation.ErrMissingField(flags.GitRepoFlagName),
-			validation.ErrMissingOneOf(flags.GitBranchFlagName, flags.GitTagFlagName),
+			validation.ErrMissingOneOf(flags.GitBranchFlagName, flags.GitTagFlagName, flags.GitCommitFlagName),
 		),
 	}, {
 		name: "valid source image",
@@ -1402,7 +1421,7 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 			},
 		},
 	}, {
-		name: "update",
+		name: "update url",
 		seed: &WorkloadSpec{
 			Source: &Source{
 				Git: &GitSource{
@@ -1416,9 +1435,6 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 		},
 		git: GitSource{
 			URL: "git@github.com:example/repo.git",
-			Ref: GitRef{
-				Branch: "main",
-			},
 		},
 		want: &WorkloadSpec{
 			Source: &Source{
@@ -1426,6 +1442,7 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 					URL: "git@github.com:example/repo.git",
 					Ref: GitRef{
 						Branch: "main",
+						Tag:    "v1.0.0",
 					},
 				},
 			},
@@ -1460,6 +1477,103 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 			},
 		},
 	}, {
+		name: "update commit",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
+						Tag:    "v1.0.0",
+						Commit: "abcd1234",
+					},
+				},
+			},
+		},
+		git: GitSource{
+			Ref: GitRef{
+				Commit: "efgh5678",
+			},
+		},
+		want: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
+						Tag:    "v1.0.0",
+						Commit: "efgh5678",
+					},
+				},
+			},
+		},
+	}, {
+		name: "update branch",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
+						Tag:    "v1.0.0",
+						Commit: "abcd1234",
+					},
+				},
+			},
+		},
+		git: GitSource{
+			URL: "git@github.com:example/repo.git",
+			Ref: GitRef{
+				Branch: "my-new-branch",
+			},
+		},
+		want: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "my-new-branch",
+						Tag:    "v1.0.0",
+						Commit: "abcd1234",
+					},
+				},
+			},
+		},
+	}, {
+		name: "update all git ref",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
+						Tag:    "v1.0.0",
+						Commit: "abcd1234",
+					},
+				},
+			},
+		},
+		git: GitSource{
+			URL: "git@github.com:example/repo.git",
+			Ref: GitRef{
+				Branch: "my-new-branch",
+				Tag:    "v1.1",
+				Commit: "efgh5678",
+			},
+		},
+		want: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "my-new-branch",
+						Tag:    "v1.1",
+						Commit: "efgh5678",
+					},
+				},
+			},
+		},
+	}, {
 		name: "update git source without deleting subpath",
 		seed: &WorkloadSpec{
 			Source: &Source{
@@ -1482,6 +1596,7 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 				Git: &GitSource{
 					URL: "git@github.com:example/repo.git",
 					Ref: GitRef{
+						Tag:    "v1.0.0",
 						Branch: "main",
 					},
 				},

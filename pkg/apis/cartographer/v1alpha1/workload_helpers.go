@@ -208,8 +208,8 @@ func (w *GitSource) Validate() validation.FieldErrors {
 		errs = errs.Also(validation.ErrMissingField(flags.GitRepoFlagName))
 	}
 
-	if w.Ref.Branch == "" && w.Ref.Tag == "" {
-		errs = errs.Also(validation.ErrMissingOneOf(flags.GitBranchFlagName, flags.GitTagFlagName))
+	if w.Ref.Branch == "" && w.Ref.Tag == "" && w.Ref.Commit == "" {
+		errs = errs.Also(validation.ErrMissingOneOf(flags.GitBranchFlagName, flags.GitTagFlagName, flags.GitCommitFlagName))
 	}
 
 	return errs
@@ -339,6 +339,12 @@ func (w *WorkloadSpec) MergeGit(git GitSource) {
 		}
 		if w.Source.Git.Ref.Branch == "" {
 			w.Source.Git.Ref.Branch = stash.Git.Ref.Branch
+		}
+		if w.Source.Git.Ref.Tag == "" {
+			w.Source.Git.Ref.Tag = stash.Git.Ref.Tag
+		}
+		if w.Source.Git.Ref.Commit == "" {
+			w.Source.Git.Ref.Commit = stash.Git.Ref.Commit
 		}
 	}
 }
