@@ -776,7 +776,7 @@ github.com/vmware-labs/reconciler-runtime/reconcilers
 github.com/vmware-labs/reconciler-runtime/testing
 github.com/vmware-labs/reconciler-runtime/tracker
 github.com/vmware-labs/reconciler-runtime/validation
-# github.com/vmware-tanzu/carvel-imgpkg v0.34.0
+# github.com/vmware-tanzu/carvel-imgpkg v0.34.1
 ## explicit; go 1.19
 github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/image
 github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/imagedigest
@@ -992,7 +992,7 @@ golang.org/x/oauth2/jwt
 # golang.org/x/sync v0.1.0
 ## explicit
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.2.0
+# golang.org/x/sys v0.3.0
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/execabs
