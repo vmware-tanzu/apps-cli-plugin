@@ -46,26 +46,33 @@ jobs:
         tanzu plugin install builder --local ${TANZU_HOME}/admin-plugins
         tanzu plugin install test --local ${TANZU_HOME}/admin-plugins
         tanzu plugin list
-    - name: Test
-      run: make test
     - name: Scan Inclusive Terminology
       uses: get-woke/woke-action@v0
       with: 
         fail-on-error: true
         woke-args: -c https://via.vmw.com/its-woke-rules
+    - name: Test
+      run: make test
     - name: Build Version
       run: echo "BUILD_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       if: startsWith(github.ref, 'refs/tags/')
     - name: Build
-      run: |
-        make publish
+      run: make build
+    - name: Publish
+      run: make publish
     - uses: actions/upload-artifact@v3
       with:
         name: tanzu-apps-plugin.tar.gz
         path: tanzu-apps-plugin*.tar.gz
         retention-days: 1
     - name: Install
-      run: make install
+      run: |
+        if [[ -z ${BUILD_VERSION} ]]; then      
+          BUILD_SHA_SHORT=$(git rev-parse --short HEAD)
+          BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)+dev-$BUILD_SHA_SHORT         
+        fi
+        echo $BUILD_VERSION
+        tanzu plugin install apps --version $BUILD_VERSION --local ./artifacts/published/linux-amd64
     - name: Verify docs
       run: |
         rm -rf docs/command-reference
@@ -105,22 +112,24 @@ jobs:
         tanzu plugin install test --local $TANZU_HOME/admin-plugins
         tanzu plugin list
     - name: Test
-      run: make test
+      run: |
+        $Env:PATH += ";C:\Program Files\tanzu"      
+        make test
     - name: Build
+      run: |
+        $Env:PATH += ";C:\Program Files\tanzu"
+        make build
+    - name: Publish
       run: |
         $Env:PATH += ";C:\Program Files\tanzu"
         make publish
     - name: Install
       run: |
         $Env:PATH += ";C:\Program Files\tanzu"
-        make install
-    - name: Verify docs
-      run: |
-        $Env:PATH += ";C:\Program Files\tanzu"
-        Remove-Item docs/command-reference -Recurse
-        tanzu apps docs --directory docs/command-reference
-        git diff --exit-code docs
-      continue-on-error: true
+        $BUILD_SHA_SHORT=git rev-parse --short HEAD
+        $APP_PLUGIN_VERSION=type .\APPS_PLUGIN_VERSION
+        $BUILD_VERSION=$APP_PLUGIN_VERSION+'+dev-'+$BUILD_SHA_SHORT
+        tanzu plugin install apps --version $BUILD_VERSION --local ./artifacts/published/windows-amd64
 
   unit-macos:
     env:
@@ -156,16 +165,17 @@ jobs:
       run: echo "BUILD_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       if: startsWith(github.ref, 'refs/tags/')
     - name: Build
-      run: |
-        make publish
+      run: make build
+    - name: Publish
+      run: make publish
     - name: Install
-      run: make install
-    - name: Verify docs
       run: |
-        rm -rf docs/command-reference
-        tanzu apps docs --directory docs/command-reference
-        git diff --exit-code docs
-      continue-on-error: true
+        if [[ -z ${BUILD_VERSION} ]]; then       
+          BUILD_SHA_SHORT=$(git rev-parse --short HEAD)
+          BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)+dev-$BUILD_SHA_SHORT    
+        fi
+        echo $BUILD_VERSION
+        tanzu plugin install apps --version $BUILD_VERSION --local ./artifacts/published/darwin-amd64
 
   acceptance:
     needs: [unit-ubuntu, unit-windows, unit-macos]
@@ -198,6 +208,24 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: tanzu-apps-plugin.tar.gz
+    - name: Install tanzu cli
+      run: |
+        TANZU_VERSION=$(cat TANZU_VERSION)
+        mkdir -p ${TANZU_HOME}
+        curl -Lo tanzu-framework.tar.gz https://github.com/vmware-tanzu/tanzu-framework/releases/download/${TANZU_VERSION}/tanzu-framework-linux-amd64.tar.gz
+          tar -xzf tanzu-framework.tar.gz -C ${TANZU_HOME}
+          sudo mv ${TANZU_HOME}/cli/core/${TANZU_VERSION}/tanzu-core-linux_amd64 /usr/local/bin/tanzu
+          chmod +x /usr/local/bin/tanzu
+        env
+        tanzu init
+    - name: Install apps plugin
+      run: |
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+
+        tar -xvf tanzu-apps-plugin.tar.gz
+        tanzu plugin install apps --local ./${OS_ARCH} --version ${BUILD_VERSION:-v0.0.0-dev}
     - name: Generate certs
       run: |
         set -o errexit
@@ -253,27 +281,9 @@ jobs:
           registry:2
         # Make the $REGISTRY_NAME -> local-registry
         echo "$(hostname -I | cut -d' ' -f1) $REGISTRY_NAME" | sudo tee -a /etc/hosts
-    - name: Install tanzu cli
-      run: |
-        TANZU_VERSION=$(cat TANZU_VERSION)
-        mkdir -p ${TANZU_HOME}
-        curl -Lo tanzu-framework.tar.gz https://github.com/vmware-tanzu/tanzu-framework/releases/download/${TANZU_VERSION}/tanzu-framework-linux-amd64.tar.gz
-          tar -xzf tanzu-framework.tar.gz -C ${TANZU_HOME}
-          sudo mv ${TANZU_HOME}/cli/core/${TANZU_VERSION}/tanzu-core-linux_amd64 /usr/local/bin/tanzu
-          chmod +x /usr/local/bin/tanzu
-        env
-        tanzu init
     - name: Build Version
       run: echo "BUILD_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       if: startsWith(github.ref, 'refs/tags/')
-    - name: Install CLI
-      run: |
-        set -o errexit
-        set -o nounset
-        set -o pipefail
-
-        tar -xvf tanzu-apps-plugin.tar.gz
-        tanzu plugin install apps --local ./${OS_ARCH} --version ${BUILD_VERSION:-v0.0.0-dev}
     - name: Install kind
       run: |
         cd $(mktemp -d -t kind.XXXX)
@@ -333,7 +343,7 @@ jobs:
           kubectl create namespace cartographer-system
           kapp deploy -y -a cartographer -n kube-system -f ./acceptance/vendor/cartographer/
         echo "##[endgroup]"
-    - name: Test CLI commands
+    - name: Integration test
       run: |
         set -o errexit
         set -o nounset
