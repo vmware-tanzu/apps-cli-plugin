@@ -1459,6 +1459,59 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 				},
 			},
 		},
+	}, {
+		name: "update git source without deleting subpath",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Tag: "v1.0.0",
+					},
+				},
+				Subpath: "my-subpath",
+			},
+		},
+		git: GitSource{
+			Ref: GitRef{
+				Branch: "main",
+			},
+		},
+		want: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
+					},
+				},
+				Subpath: "my-subpath",
+			},
+		},
+	}, {
+		name: "update to git source deleting subpath",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Image:   "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+				Subpath: "my-subpath",
+			},
+		},
+		git: GitSource{
+			URL: "git@github.com:example/repo.git",
+			Ref: GitRef{
+				Branch: "main",
+			},
+		},
+		want: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
+					},
+				},
+			},
+		},
 	}}
 
 	for _, test := range tests {
@@ -1467,6 +1520,101 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 			got.MergeGit(test.git)
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("MergeGit() (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestWorkloadSpec_MergeSourceImage(t *testing.T) {
+	tests := []struct {
+		name        string
+		seed        *WorkloadSpec
+		sourceImage string
+		want        *WorkloadSpec
+	}{{
+		name: "set",
+		seed: &WorkloadSpec{
+			Source: &Source{},
+		},
+		sourceImage: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+		want: &WorkloadSpec{
+			Source: &Source{
+				Image: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+			},
+		},
+	}, {
+		name: "update",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Image: "my-registry.nip.io/my-folder/my-old-image:latest@sha:my-sha1234567890",
+			},
+		},
+		sourceImage: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+		want: &WorkloadSpec{
+			Source: &Source{
+				Image: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+			},
+		},
+	}, {
+		name: "change",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Tag: "v1.0.0",
+					},
+				},
+			},
+		},
+		sourceImage: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+		want: &WorkloadSpec{
+			Source: &Source{
+				Image: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+			},
+		},
+	}, {
+		name: "update without deleting subpath",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Image:   "my-registry.nip.io/my-folder/my-old-image:latest@sha:my-sha1234567890",
+				Subpath: "my-subpath",
+			},
+		},
+		sourceImage: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+		want: &WorkloadSpec{
+			Source: &Source{
+				Image:   "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+				Subpath: "my-subpath",
+			},
+		},
+	}, {
+		name: "update deleting subpath",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
+					},
+				},
+				Subpath: "my-subpath",
+			},
+		},
+		sourceImage: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+		want: &WorkloadSpec{
+			Source: &Source{
+				Image: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+			},
+		},
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.seed
+			got.MergeSourceImage(test.sourceImage)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("MergeImage() (-want, +got) = %v", diff)
 			}
 		})
 	}
