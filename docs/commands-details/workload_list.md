@@ -1,6 +1,6 @@
 # tanzu apps workload list
 
-`tanzu apps workload list` is used to get the workloads present in the cluster, either in the current namespace, in another namespace or in all namespaces.
+`tanzu apps workload list` gets the workloads present in the cluster, either in the current namespace, in another namespace or in all namespaces.
 
 ## Default view
 
@@ -10,64 +10,70 @@ For example, in the default namespace
 ```bash
 tanzu apps workload list
 
-NAME                APP                READY                   AGE
-nginx4              <empty>            Ready                   7d9h
-petclinic2          <empty>            Ready                   29h
-rmq-sample-app      <empty>            Ready                   164m
-rmq-sample-app4     <empty>            WorkloadLabelsMissing   29d
-spring-pet-clinic   <empty>            Unknown                 166m
-spring-petclinic2   spring-petclinic   Unknown                 29d
-spring-petclinic3   spring-petclinic   Ready                   29d
+NAME                  TYPE      APP                  READY                   AGE
+nginx4                web       <empty>              Ready                   7d9h
+petclinic2            web       <empty>              Ready                   29h
+rmq-sample-app        web       <empty>              Ready                   164m
+rmq-sample-app4       web       <empty>              WorkloadLabelsMissing   29d
+spring-pet-clinic     web       <empty>              Unknown                 166m
+spring-petclinic2     web       spring-petclinic     Unknown                 29d
+spring-petclinic3     <empty>   spring-petclinic     Ready                   29d
+tanzu-java-web-app    web       tanzu-java-web-app   Ready                   40m
+tanzu-java-web-app2   web       tanzu-java-web-app   Ready                   20m
 ```
 
 ## >Workload List flags
 
-### `--all-namespaces`, `-A`
+### <a id="list-all-namespaces"></a> `--all-namespaces`, `-A`
 
-Shows workloads in all namespaces in cluster. 
+Shows workloads in all namespaces in cluster.
+
 ```bash
 tanzu apps workload list -A
 
-NAMESPACE   NAME                APP                READY                         AGE
-default     nginx4              <empty>            Ready                         7d9h
-default     petclinic2          <empty>            Ready                         30h
-default     rmq-sample-app      <empty>            Ready                         179m
-default     rmq-sample-app4     <empty>            WorkloadLabelsMissing         29d
-default     spring-pet-clinic   <empty>            Unknown                       3h1m
-default     spring-petclinic2   spring-petclinic   Unknown                       29d
-default     spring-petclinic3   spring-petclinic   Ready                         29d
-nginx-ns    nginx2              <empty>            TemplateRejectedByAPIServer   8d
-nginx-ns    nginx4              <empty>            TemplateRejectedByAPIServer   8d
+NAMESPACE   TYPE   NAME                  APP                  READY                         AGE
+default     web    nginx4                <empty>              Ready                         7d9h
+default     web    petclinic2            <empty>              Ready                         30h
+default     web    rmq-sample-app        <empty>              Ready                         179m
+default     web    rmq-sample-app4       <empty>              WorkloadLabelsMissing         29d
+default     web    spring-pet-clinic     <empty>              Unknown                       3h1m
+default     web    spring-petclinic2     spring-petclinic     Unknown                       29d
+default     web    spring-petclinic3     spring-petclinic     Ready                         29d
+default     web    tanzu-java-web-app    tanzu-java-web-app   Ready                         40m
+default     web    tanzu-java-web-app2   tanzu-java-web-app   Ready                         20m
+nginx-ns    web    nginx2                <empty>              TemplateRejectedByAPIServer   8d
+nginx-ns    web    nginx4                <empty>              TemplateRejectedByAPIServer   8d
 ```
 
-### `--app`
+### <a id="list-app"></a> `--app`
 
 Shows workloads which app is the one specified in the command.
 
 ```bash
 tanzu apps workload list --app spring-petclinic
 
-NAME                READY     AGE
-spring-petclinic2   Unknown   29d
-spring-petclinic3   Ready     29d
+NAME                TYPE   READY     AGE
+spring-petclinic2   web    Unknown   29d
+spring-petclinic3   web    Ready     29d
 ```
 
-### `--namespace`, `-n`
+### <a id="list-namespace"></a> `--namespace`, `-n`
 
 Lists all the workloads present in the specified namespace.
 
 ```bash
 tanzu apps workload list -n my-namespace
 
-NAME     APP       READY                         AGE
-app1     <empty>   TemplateRejectedByAPIServer   8d
-app2     <empty>   Ready                         8d
-app3     <empty>   Unknown                       8d
+NAME   TYPE   APP       READY                         AGE
+app1   web    <empty>   TemplateRejectedByAPIServer   8d
+app2   web    <empty>   Ready                         8d
+app3   web    <empty>   Unknown                       8d
 ```
 
-### `--output`, `-o`
+### <a id="list-output"></a> `--output`, `-o`
 
 Allows to list all workloads in the specified namespace in yaml, yml or json format.
+
 - yaml/yml
     ```yaml
     ---
@@ -77,7 +83,7 @@ Allows to list all workloads in the specified namespace in yaml, yml or json for
         creationTimestamp: "2022-05-17T22:06:49Z"
         generation: 1
         labels:
-        app.kubernetes.io/part-of: spring-petclinic
+        app.kubernetes.io/part-of: tanzu-java-web-app
         apps.tanzu.vmware.com/workload-type: web
         managedFields:
         ...
@@ -85,16 +91,17 @@ Allows to list all workloads in the specified namespace in yaml, yml or json for
         manager: cartographer
         operation: Update
         time: "2022-05-17T22:06:52Z"
-    name: spring-petclinic3
+    name: tanzu-java-web-app2
     namespace: default
-    resourceVersion: "106252670"
-    uid: fcca2d4b-c713-43a5-9a53-9f1ebb214726
+    resourceVersion: "6071972"
+    uid: 7fbcd40d-4eb3-41dc-a1db-657b64148708
     spec:
         source:
             git:
                 ref:
-                    tag: tap-1.1
-                url: https://github.com/sample-accelerators/spring-petclinic
+                  tag: tap-1.3
+                url: https://github.com/vmware-tanzu/application-accelerator-samples
+            subPath: tanzu-java-web-app
     ...
     ...
     ---
@@ -104,7 +111,7 @@ Allows to list all workloads in the specified namespace in yaml, yml or json for
         creationTimestamp: "2022-05-17T22:06:49Z"
         generation: 1
         labels:
-        app.kubernetes.io/part-of: spring-petclinic
+        app.kubernetes.io/part-of: tanzu-java-web-app
         apps.tanzu.vmware.com/workload-type: web
         managedFields:
         ...
@@ -112,16 +119,17 @@ Allows to list all workloads in the specified namespace in yaml, yml or json for
         manager: cartographer
         operation: Update
         time: "2022-05-17T22:06:52Z"
-    name: spring-petclinic2
+    name: tanzu-java-web-app
     namespace: default
-    resourceVersion: "106252670"
-    uid: fcca2d4b-c713-43a5-9a53-9f1ebb214726
+    resourceVersion: "6071972"
+    uid: 7fbcd40d-4eb3-41dc-a1db-657b64148708
     spec:
         source:
             git:
                 ref:
-                    tag: tap-1.1
-                url: https://github.com/sample-accelerators/spring-petclinic
+                  tag: tap-1.3
+                url: https://github.com/vmware-tanzu/application-accelerator-samples
+            subPath: tanzu-java-web-app
     ...
     ...
     ```
@@ -133,14 +141,14 @@ Allows to list all workloads in the specified namespace in yaml, yml or json for
             "kind": "Workload",
             "apiVersion": "carto.run/v1alpha1",
             "metadata": {
-                "name": "spring-petclinic3",
+                "name": "tanzu-java-web-app2",
                 "namespace": "default",
-                "uid": "fcca2d4b-c713-43a5-9a53-9f1ebb214726",
-                "resourceVersion": "106252670",
+                "uid": "7fbcd40d-4eb3-41dc-a1db-657b64148708",
+                "resourceVersion": "6071972",
                 "generation": 1,
                 "creationTimestamp": "2022-05-17T22:06:49Z",
                 "labels": {
-                    "app.kubernetes.io/part-of": "spring-petclinic",
+                    "app.kubernetes.io/part-of": "tanzu-java-web-app",
                     "apps.tanzu.vmware.com/workload-type": "web"
                 },
             ...
@@ -151,14 +159,14 @@ Allows to list all workloads in the specified namespace in yaml, yml or json for
             "kind": "Workload",
             "apiVersion": "carto.run/v1alpha1",
             "metadata": {
-                "name": "spring-petclinic2",
+                "name": "tanzu-java-web-app",
                 "namespace": "default",
-                "uid": "fcca2d4b-c713-43a5-9a53-9f1ebb214726",
-                "resourceVersion": "106252670",
+                "uid": "7fbcd40d-4eb3-41dc-a1db-657b64148708",
+                "resourceVersion": "6071972",
                 "generation": 1,
                 "creationTimestamp": "2022-05-17T22:06:49Z",
                 "labels": {
-                    "app.kubernetes.io/part-of": "spring-petclinic",
+                    "app.kubernetes.io/part-of": "tanzu-java-web-app",
                     "apps.tanzu.vmware.com/workload-type": "web"
                 },
             ...
@@ -169,4 +177,3 @@ Allows to list all workloads in the specified namespace in yaml, yml or json for
     ...
     ]
     ```
-

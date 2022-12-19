@@ -2,29 +2,12 @@
 
 ## <a id="check-build-logs"></a> Check build logs
 
-Once the workload is created, you can tail the workload to view the build and runtime logs. For more info about `tail` command, refer to [workload tail](command-reference/tanzu-apps-workload-tail.md) in command reference section and to check in more detail flag usage (with examples), go to [workload tail examples](./commands-details/workload_tail.md).
+Once the workload is created, you can tail the workload to view the build and runtime logs.
 
 - Check logs by running:
 
     ```bash
     tanzu apps workload tail pet-clinic --since 10m --timestamp
-    ```
-    
-    For Example
-
-    ```bash
-    tanzu apps workload tail pet-clinic
-
-    pet-clinic-00004-deployment-6445565f7b-ts8l5[workload] 2022-06-14 16:28:52.684  INFO 1 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.63]
-    + pet-clinic-build-3-build-pod › export
-    pet-clinic-00004-deployment-6445565f7b-ts8l5[workload] 2022-06-14 16:28:52.699  INFO 1 --- [           main] o.a.c.c.C.[Tomcat-1].[localhost].[/]     : Initializing Spring embedded WebApplicationContext
-    pet-clinic-00004-deployment-6445565f7b-ts8l5[workload] 2022-06-14 16:28:52.699  INFO 1 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 131 ms
-    pet-clinic-00004-deployment-6445565f7b-ts8l5[workload] 2022-06-14 16:28:52.755  INFO 1 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 13 endpoint(s) beneath base path '/actuator'
-    pet-clinic-00004-deployment-6445565f7b-ts8l5[workload] 2022-06-14 16:28:53.059  INFO 1 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8081 (http) with context path ''
-    pet-clinic-00004-deployment-6445565f7b-ts8l5[workload] 2022-06-14 16:28:53.074  INFO 1 --- [           main] o.s.s.petclinic.PetClinicApplication     : Started PetClinicApplication in 8.373 seconds (JVM running for 8.993)
-    pet-clinic-00004-deployment-6445565f7b-ts8l5[workload] 2022-06-14 16:28:53.229  INFO 1 --- [nio-8081-exec-1] o.a.c.c.C.[Tomcat-1].[localhost].[/]     : Initializing Spring DispatcherServlet 'dispatcherServlet'
-    pet-clinic-00004-deployment-6445565f7b-ts8l5[workload] 2022-06-14 16:28:53.229  INFO 1 --- [nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-    pet-clinic-00004-deployment-6445565f7b-ts8l5[workload] 2022-06-14 16:28:53.231  INFO 1 --- [nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
     ```
 
     Where:
@@ -35,70 +18,121 @@ Once the workload is created, you can tail the workload to view the build and ru
 
 ## <a id="workload-status"></a> Get the workload status and details
 
-When the apps plugin is used to create or update a workload, it submits the changes to the platform and the CLI command is completed successfully. This does not necessarily mean that the change has been realized on the platform. The time it takes for the change to be executed on the backend will depend on the nature of the change requested.
-
 After the workload build process is complete, create a Knative service to run the workload.
+You can view workload details at anytime in the process. Some details, such as the workload URL, are only available after the workload is running.
 
 1. To check the workload details, run:
-    ```bash
-   tanzu apps workload get pet-clinic
-   ```
-    For example:
 
     ```bash
-   tanzu apps workload get pet-clinic
-
-    ---
-    # pet-clinic: Ready
-    ---
-    Overview
-       type:   web
-
-    Source
-       type:   git
-       url:    https://github.com/sample-accelerators/spring-petclinic
-       tag:    tap-1.2
-
-    Supply Chain
-       name:          source-to-url
-
-
-        RESOURCE          READY   HEALTHY   TIME   OUTPUT
-        source-provider
-        deliverable
-        image-builder
-        config-provider
-        app-config
-        config-writer
-
-    Delivery
-       name:   delivery-basic
-
-       RESOURCE          READY   HEALTHY   TIME   OUTPUT
-       source-provider   True    True      6d     ImageRepository/pet-clinic-delivery
-       deployer          True    True      21h    App/pet-clinic
-
-    Messages
-       No messages found.
-
-    Pods
-       NAME                                           STATUS      RESTARTS   AGE
-       pet-clinic-00001-deployment-6445565f7b-ts8l5   Running     0          102s
-       pet-clinic-build-1-build-pod                   Succeeded   0          102s
-       pet-clinic-config-writer-8c9zv-pod             Succeeded   0          2m7s
-
-    Knative Services
-       NAME         READY   URL
-       pet-clinic   Ready   http://pet-clinic.default.apps.34.133.168.14.nip.io
-
-    To see logs: "tanzu apps workload tail pet-clinic --timestamp --since 1h"
-
+    tanzu apps workload get pet-clinic
     ```
 
     Where:
 
     - `pet-clinic` is the name of the workload you want details about.
 
-Refer to a more detailed info about the command and its flags usage in [workload get examples](./commands-details/workload_get.md)
-
 2. You can now see the running workload. When the workload is created, `tanzu apps workload get` includes the URL for the running workload. Some terminals allow you to `ctrl`+click the URL to view it. You can also copy and paste the URL into your web browser to see the workload.
+
+## <a id="common-workload-errors"></a> Common workload errors
+
+A workload can either be ready, on error or with an unknown status.
+
+There are known errors that will make the workload enter in an error or unknown status. The most common are:
+
+- *Local Path Development Error Cases*
+	- *Message*: Writing `registry/project/repo/workload:latest`: Writing image: Unexpected status code *401 Unauthorized* (HEAD responses have no body, use GET for details)
+		- *Cause*: Apps plugin cannot talk to the registry because the registry credentials are missing or invalid.
+		- *Resolution*:
+			- Run  `docker logout registry` and `docker login registry` commands and specify the valid credentials for the registry.
+	- *Message*: Writing `registry/project/workload:latest`: Writing image: HEAD Unexpected status code *400 Bad Request* (HEAD responses have no body, use GET for details)
+		- *Cause*: Certain registries like Harbor or GCR have a concept of `Project`. 400 Bad request is sent when either the project does not exists, the user does not have access to it, or the path in the `—source-image` flag is missing either project or repo.
+		- *Resolution*:
+			- Fix the path in the `—source-image` flag value to point to a valid repo path.
+
+- *WorkloadLabelsMissing* / *SupplyChainNotFound*
+	- *Message*: No supply chain found where full selector is satisfied by `labels: map[app.kubernetes.io/part-of:spring-petclinic]`
+		- *Cause*: The labels and attributes in the workload object did not fully satisfy any installed supply chain on the cluster.
+		- *Resolution*: Use the `tanzu apps cluster-supply-chain list` (alias `csc`) and `tanzu apps csc get <supply-chain-name>` commands to see the workload selection criteria for the supply chain(s) available on the cluster. You can apply any missing labels to a workload by using `tanzu apps workload apply --label required-label-name=required-label-value`
+		- e.g. `tanzu apps workload apply workload-name —-type web`
+		- e.g. `tanzu apps workload apply workload-name --label apps.tanzu.vmware.com/workload-type=web`
+
+- *MissingValueAtPath*
+	- *Message*: Waiting to read value `[.status.artifact.url]` from resource gitrepository.source.toolkit.fluxcd.io  in namespace `[ns]`
+	- *Possible Causes*:
+		- The git `url/tag/branch/commit` params passed in the workload are not valid.
+			- *Resolution*: Fix the invalid git param by using *tanzu apps workload apply*
+		- The git repo is not accessible from the cluster
+			- *Resolution*: Configure your cluster networking or your Git repo networking so that they can communicate with each other.
+		- The namespace is missing the git secret for communicating with the private repository
+			- *Resolution*: Checkout this page on how to setup Git Authentication for Private repositories [Link to [Git authentication](https://docs.vmware.com/en/VMware-Tanzu-Application-Platform/1.3/tap/GUID-scc-git-auth.html)]
+
+- *TemplateRejectedByAPIServer*
+	- *Message*: Unable to apply object `[ns/workload-name]` for resource `[source-provider]` in supply chain `[source-to-url]`: failed to get unstructured `[ns/workload-name]` from api server: imagerepositories.source.apps.tanzu.vmware.com "workload-name" is forbidden: User "system:serviceaccount:ns:default" cannot get resource "imagerepositories" in API group "source.apps.tanzu.vmware.com" in the namespace "ns"
+	- *Cause*: This error happens when the service account in the workload object does not have permissions to create objects that are stamped out by the supply chain.
+		- *Resolution*: This can be fixed by [setting up developer namespaces](https://docs.vmware.com/en/VMware-Tanzu-Application-Platform/1.3/tap/GUID-set-up-namespaces.html) to use installed packages with the required service account and permissions.
+
+## <a id="steps-failure"></a> Supply Chain steps
+
+After a workload is created via `tanzu apps workload create (or) apply`, the supply chain steps that it goes through, and the current condition of each, can be reviewed in the output from `tanzu apps workload get`.
+
+The output looks like the following:
+
+```bash
+...
+📦 Supply Chain
+   name:   source-to-url
+
+   NAME               READY   HEALTHY   UPDATED   RESOURCE
+   source-provider    True    True      71m       gitrepositories.source.toolkit.fluxcd.io/spring-petclinic
+   image-provider     True    True      70m       images.kpack.io/spring-petclinic
+   config-provider    True    True      69m       podintents.conventions.carto.run/spring-petclinic
+   app-config         True    True      69m       configmaps/spring-petclinic
+   service-bindings   True    True      69m       configmaps/spring-petclinic-with-claims
+   api-descriptors    True    True      69m       configmaps/spring-petclinic-with-api-descriptors
+   config-writer      True    True      69m       runnables.carto.run/spring-petclinic-config-writer
+
+🚚 Delivery
+   name:   delivery-basic
+
+   NAME              READY   HEALTHY   UPDATED   RESOURCE
+   source-provider   True    True      69m       imagerepositories.source.apps.tanzu.vmware.com/spring-petclinic-delivery
+   deployer          True    True      69m       apps.kappctrl.k14s.io/spring-petclinic
+
+💬 Messages
+   No messages found.
+...
+```
+
+In the `Supply Chain` section, the supply chain steps associated with the workload are displayed in a table, alongside their reconcile state. In the event there's a failure for a given step, the `READY` column value will be `Unknown` or `False`, and the `HEALTHY` column value will be `False`.
+
+In case there is a resource in `Unknown` or `False` status, it can be inspected with:
+
+```bash
+kubectl describe <resource-name>
+```
+
+Where `resource-name` refers to the name of the stamped out resource, displayed in `RESOURCE` column.
+
+For example, if something like this is retrieved in `tanzu apps workload get` command:
+
+```bash
+NAME               READY   HEALTHY   UPDATED   RESOURCE
+source-provider    False   False     3h12m     gitrepositories.source.toolkit.fluxcd.io/spring-petclinic
+```
+
+Whatever is going on with this resource can be checked with:
+
+```bash
+kubectl describe gitrepositories.source.toolkit.fluxcd.io/spring-petclinic
+```
+
+In addition, the `Messages` section of the `tanzu apps workload get` command output notifies could give a hint as to what went wrong in the process.
+
+For example, a message like this could be shown:
+
+```bash
+💬 Messages
+   Workload [HealthyConditionRule]:   failed to checkout and determine revision: failed to resolve commit object for '425ae9a2a2f84d195a9f3862668e8b2abf81418a': object not found
+```
+
+This could mean that the given commit does not belong to the specified branch or does not exist in the repo.
