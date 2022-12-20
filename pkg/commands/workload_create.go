@@ -189,7 +189,7 @@ Workload configuration options include:
 - services to bind
 `),
 		Example: strings.Join([]string{
-			fmt.Sprintf("%s workload create my-workload %s https://example.com/my-workload.git", c.Name, flags.GitRepoFlagName),
+			fmt.Sprintf("%s workload create my-workload %s https://example.com/my-workload.git %s my-branch", c.Name, flags.GitRepoFlagName, flags.GitBranchFlagName),
 			fmt.Sprintf("%s workload create my-workload %s . %s registry.example/repository:tag", c.Name, flags.LocalPathFlagName, flags.SourceImageFlagName),
 			fmt.Sprintf("%s workload create %s workload.yaml", c.Name, flags.FilePathFlagName),
 		}, "\n"),
