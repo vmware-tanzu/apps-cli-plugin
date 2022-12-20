@@ -333,6 +333,7 @@ func (w *WorkloadSpec) MergeGit(git GitSource) {
 		Git: &git,
 	}
 	if stash != nil && stash.Git != nil {
+		w.Source.Subpath = stash.Subpath
 		if w.Source.Git.URL == "" {
 			w.Source.Git.URL = stash.Git.URL
 		}
@@ -343,10 +344,14 @@ func (w *WorkloadSpec) MergeGit(git GitSource) {
 }
 
 func (w *WorkloadSpec) MergeSourceImage(image string) {
+	stash := w.Source
 	w.ResetSource()
 
 	w.Source = &Source{
 		Image: image,
+	}
+	if stash != nil && stash.Image != "" {
+		w.Source.Subpath = stash.Subpath
 	}
 }
 
