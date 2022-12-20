@@ -19,7 +19,7 @@ tanzu apps workload create [name] [flags]
 ### Examples
 
 ```
-tanzu apps workload create my-workload --git-repo https://example.com/my-workload.git
+tanzu apps workload create my-workload --git-repo https://example.com/my-workload.git --git-branch my-branch
 tanzu apps workload create my-workload --local-path . --source-image registry.example/repository:tag
 tanzu apps workload create --file workload.yaml
 ```
