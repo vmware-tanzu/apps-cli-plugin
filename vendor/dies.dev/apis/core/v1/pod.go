@@ -168,6 +168,41 @@ func (d *PodSpecDie) OSDie(fn func(d *PodOSDie)) *PodSpecDie {
 	})
 }
 
+func (d *PodSpecDie) SchedulingGatesDie(gates ...*PodSchedulingGateDie) *PodSpecDie {
+	return d.DieStamp(func(r *corev1.PodSpec) {
+		r.SchedulingGates = make([]corev1.PodSchedulingGate, len(gates))
+		for i := range gates {
+			r.SchedulingGates[i] = gates[i].DieRelease()
+		}
+	})
+}
+
+func (d *PodSpecDie) ResourceClaimsDie(gates ...*PodResourceClaimDie) *PodSpecDie {
+	return d.DieStamp(func(r *corev1.PodSpec) {
+		r.ResourceClaims = make([]corev1.PodResourceClaim, len(gates))
+		for i := range gates {
+			r.ResourceClaims[i] = gates[i].DieRelease()
+		}
+	})
+}
+
+// +die
+type _ = corev1.PodSchedulingGate
+
+// +die
+type _ = corev1.PodResourceClaim
+
+func (d *PodResourceClaimDie) SourceDie(fn func(d *ClaimSourceDie)) *PodResourceClaimDie {
+	return d.DieStamp(func(r *corev1.PodResourceClaim) {
+		d := ClaimSourceBlank.DieImmutable(false).DieFeed(r.Source)
+		fn(d)
+		r.Source = d.DieRelease()
+	})
+}
+
+// +die
+type _ = corev1.ClaimSource
+
 // +die
 type _ = corev1.PodSecurityContext
 
