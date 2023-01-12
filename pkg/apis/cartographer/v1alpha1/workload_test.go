@@ -1435,6 +1435,10 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 		},
 		git: GitSource{
 			URL: "git@github.com:example/repo.git",
+			Ref: GitRef{
+				Branch: "main",
+				Tag:    "v1.0.0",
+			},
 		},
 		want: &WorkloadSpec{
 			Source: &Source{
@@ -1461,6 +1465,7 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 			},
 		},
 		git: GitSource{
+			URL: "git@github.com:example/repo.git",
 			Ref: GitRef{
 				Tag: "v1.0.1",
 			},
@@ -1470,8 +1475,7 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 				Git: &GitSource{
 					URL: "git@github.com:example/repo.git",
 					Ref: GitRef{
-						Branch: "main",
-						Tag:    "v1.0.1",
+						Tag: "v1.0.1",
 					},
 				},
 			},
@@ -1491,7 +1495,10 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 			},
 		},
 		git: GitSource{
+			URL: "git@github.com:example/repo.git",
 			Ref: GitRef{
+				Branch: "main",
+				Tag:    "v1.0.0",
 				Commit: "efgh5678",
 			},
 		},
@@ -1525,6 +1532,8 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 			URL: "git@github.com:example/repo.git",
 			Ref: GitRef{
 				Branch: "my-new-branch",
+				Tag:    "v1.0.0",
+				Commit: "abcd1234",
 			},
 		},
 		want: &WorkloadSpec{
@@ -1580,13 +1589,15 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 				Git: &GitSource{
 					URL: "git@github.com:example/repo.git",
 					Ref: GitRef{
-						Tag: "v1.0.0",
+						Branch: "my-bad-branch",
+						Tag:    "v1.0.0",
 					},
 				},
 				Subpath: "my-subpath",
 			},
 		},
 		git: GitSource{
+			URL: "git@github.com:example/repo.git",
 			Ref: GitRef{
 				Branch: "main",
 			},
@@ -1596,7 +1607,6 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 				Git: &GitSource{
 					URL: "git@github.com:example/repo.git",
 					Ref: GitRef{
-						Tag:    "v1.0.0",
 						Branch: "main",
 					},
 				},
@@ -1627,6 +1637,23 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 				},
 			},
 		},
+	}, {
+		name: "delete source when setting repo to empty string",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
+					},
+				},
+				Subpath: "my-subpath",
+			},
+		},
+		git: GitSource{
+			URL: "",
+		},
+		want: &WorkloadSpec{},
 	}}
 
 	for _, test := range tests {

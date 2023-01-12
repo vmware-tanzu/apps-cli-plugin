@@ -289,16 +289,7 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 		workload.Spec.RemoveParam("live-update")
 	}
 
-	if opts.GitRepo != "" || opts.GitBranch != "" || opts.GitCommit != "" || opts.GitTag != "" {
-		workload.Spec.MergeGit(cartov1alpha1.GitSource{
-			URL: opts.GitRepo,
-			Ref: cartov1alpha1.GitRef{
-				Branch: opts.GitBranch,
-				Commit: opts.GitCommit,
-				Tag:    opts.GitTag,
-			},
-		})
-	}
+	opts.checkGitValues(ctx, workload)
 
 	if opts.SourceImage != "" {
 		workload.Spec.MergeSourceImage(opts.SourceImage)
@@ -389,6 +380,46 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 	}
 
 	return ctx
+}
+
+func (opts *WorkloadOptions) checkGitValues(ctx context.Context, workload *cartov1alpha1.Workload) {
+	isGitSource := false
+	var gitRepo, gitBranch, gitCommit, gitTag string
+
+	if workload != nil && workload.Spec.Source != nil && workload.Spec.Source.Git != nil {
+		gitRepo = workload.Spec.Source.Git.URL
+		gitBranch = workload.Spec.Source.Git.Ref.Branch
+		gitCommit = workload.Spec.Source.Git.Ref.Commit
+		gitTag = workload.Spec.Source.Git.Ref.Tag
+	}
+
+	if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.GitRepoFlagName)) {
+		isGitSource = true
+		gitRepo = opts.GitRepo
+	}
+	if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.GitBranchFlagName)) {
+		isGitSource = true
+		gitBranch = opts.GitBranch
+	}
+	if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.GitCommitFlagName)) {
+		isGitSource = true
+		gitCommit = opts.GitCommit
+	}
+	if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.GitTagFlagName)) {
+		isGitSource = true
+		gitTag = opts.GitTag
+	}
+
+	if isGitSource {
+		workload.Spec.MergeGit(cartov1alpha1.GitSource{
+			URL: gitRepo,
+			Ref: cartov1alpha1.GitRef{
+				Branch: gitBranch,
+				Commit: gitCommit,
+				Tag:    gitTag,
+			},
+		})
+	}
 }
 
 // PublishLocalSource packages the specified source code in the --local-path flag and creates an image

@@ -327,24 +327,22 @@ func (w *WorkloadSpec) ResetSource() {
 
 func (w *WorkloadSpec) MergeGit(git GitSource) {
 	stash := w.Source
+	image := w.Image
 	w.ResetSource()
 
-	w.Source = &Source{
-		Git: &git,
-	}
-	if stash != nil && stash.Git != nil {
-		w.Source.Subpath = stash.Subpath
-		if w.Source.Git.URL == "" {
-			w.Source.Git.URL = stash.Git.URL
+	// if workload already has a source, when changing to git source it needs to be validated
+	// that there's a git url
+	sourceExists := (stash != nil && stash.Image != "") || image != ""
+	// if workload is brand new, to set git source it needs to be validated that
+	// git repo was set
+	isNewWorkload := git.URL == "" && stash == nil
+
+	if git.URL != "" || sourceExists || isNewWorkload {
+		w.Source = &Source{
+			Git: &git,
 		}
-		if w.Source.Git.Ref.Branch == "" {
-			w.Source.Git.Ref.Branch = stash.Git.Ref.Branch
-		}
-		if w.Source.Git.Ref.Tag == "" {
-			w.Source.Git.Ref.Tag = stash.Git.Ref.Tag
-		}
-		if w.Source.Git.Ref.Commit == "" {
-			w.Source.Git.Ref.Commit = stash.Git.Ref.Commit
+		if stash != nil && stash.Git != nil {
+			w.Source.Subpath = stash.Subpath
 		}
 	}
 }
