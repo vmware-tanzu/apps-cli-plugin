@@ -26,7 +26,6 @@ import (
 	"github.com/spf13/cobra"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -34,7 +33,6 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/logs"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/wait"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/printer"
 )
@@ -111,37 +109,60 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		return nil
 	}
 
-	// If user answers yes to survey prompt about publishing source, continue with workload creation
-	if okToPush, err := opts.PublishLocalSource(ctx, c, nil, workload); err != nil {
-		return err
-	} else if !okToPush {
+	var okToCreate bool
+	shouldPrint := opts.Output == "" || (opts.Output != "" && !opts.Yes)
+	if shouldPrint {
+		// If user answers yes to survey prompt about publishing source, continue with workload creation
+		if okToPush, err := opts.PublishLocalSource(ctx, c, nil, workload, shouldPrint); err != nil {
+			return err
+		} else if !okToPush {
+			return nil
+		}
+
+		var err error
+		okToCreate, err = opts.Create(ctx, c, workload)
+		if err != nil {
+			return err
+		}
+
+		if okToCreate {
+			c.Printf("\n")
+			DisplayCommandNextSteps(c, workload)
+			c.Printf("\n")
+		}
+	} else if opts.Output != "" && opts.Yes {
+		// since there are no prompts, set okToApply to true (accepted through --yes)
+		okToCreate = true
+		if _, err := opts.PublishLocalSource(ctx, c, workload, workload, shouldPrint); err != nil {
+			return err
+		}
+		if err := c.Create(ctx, workload); err != nil {
+			return err
+		}
+	}
+
+	var workers []wait.Worker
+	if opts.Output != "" && okToCreate {
+		workers = opts.WaitToBeReady(c, workload)
+		if err := opts.WaitError(ctx, c, workload, workers); err != nil {
+			return err
+		}
+		// once the workload is ready, get it as is in the cluster
+		if err := c.Get(ctx, client.ObjectKey{Namespace: opts.Namespace, Name: opts.Name}, workload); err != nil {
+			return err
+		}
+		if err := opts.OutputWorkload(c, workload); err != nil {
+			return err
+		}
+
 		return nil
-	}
-
-	okToCreate, err := opts.Create(ctx, c, workload)
-	if err != nil {
-		return err
-	}
-
-	if okToCreate {
-		c.Printf("\n")
-		DisplayCommandNextSteps(c, workload)
-		c.Printf("\n")
 	}
 
 	anyTail := opts.Tail || opts.TailTimestamps
 	if okToCreate && (opts.Wait || anyTail) {
 		c.Infof("Waiting for workload %q to become ready...\n", opts.Name)
 
-		workers := []wait.Worker{
-			func(ctx context.Context) error {
-				clientWithWatch, err := watch.GetWatcher(ctx, c)
-				if err != nil {
-					panic(err)
-				}
-				return wait.UntilCondition(ctx, clientWithWatch, types.NamespacedName{Name: workload.Name, Namespace: workload.Namespace}, &cartov1alpha1.WorkloadList{}, cartov1alpha1.WorkloadReadyConditionFunc)
-			},
-		}
+		workers = opts.WaitToBeReady(c, workload)
 
 		if anyTail {
 			workers = append(workers, func(ctx context.Context) error {
@@ -154,17 +175,13 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 			})
 		}
 
-		if err := wait.Race(ctx, opts.WaitTimeout, workers); err != nil {
-			if err == context.DeadlineExceeded {
-				c.Printf("%s timeout after %s waiting for %q to become ready\n", printer.Serrorf("Error:"), opts.WaitTimeout, opts.Name)
-				return cli.SilenceError(err)
-			}
-			c.Eprintf("%s %s\n", printer.Serrorf("Error:"), err)
-			return cli.SilenceError(err)
+		if err := opts.WaitError(ctx, c, workload, workers); err != nil {
+			return err
 		}
 
-		c.Infof("Workload %q is ready\n", opts.Name)
+		c.Infof("Workload %q is ready\n\n", workload.Name)
 	}
+
 	return nil
 }
 

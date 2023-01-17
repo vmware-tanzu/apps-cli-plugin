@@ -131,7 +131,7 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	}
 
 	// If user answers yes to survey prompt about publishing source, continue with workload update
-	if okToPush, err := opts.PublishLocalSource(ctx, c, currentWorkload, workload); err != nil {
+	if okToPush, err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, true); err != nil {
 		return err
 	} else if !okToPush {
 		return nil

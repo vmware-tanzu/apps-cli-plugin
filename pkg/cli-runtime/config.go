@@ -120,6 +120,18 @@ func (c *Config) Eboldf(format string, a ...interface{}) (n int, err error) {
 	return printer.BoldColor.Fprintf(c.Stderr, format, a...)
 }
 
+func PrintPrompt(shouldPrint bool, printer func(string, ...interface{}) (int, error), format string, a ...interface{}) {
+	if shouldPrint {
+		printer(format, a...)
+	}
+}
+
+func PrintPromptWithEmoji(shouldPrint bool, printer func(Icon, string, ...interface{}) (int, error), icon Icon, format string, a ...interface{}) {
+	if shouldPrint {
+		printer(icon, format, a...)
+	}
+}
+
 func Initialize(name string, scheme *runtime.Scheme) *Config {
 	c := NewDefaultConfig(name, scheme)
 

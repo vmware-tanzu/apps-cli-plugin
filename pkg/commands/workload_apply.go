@@ -25,7 +25,6 @@ import (
 	"github.com/spf13/cobra"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
@@ -33,10 +32,8 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/logs"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/wait"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/printer"
 )
 
 type WorkloadApplyOptions struct {
@@ -70,14 +67,12 @@ func (opts *WorkloadApplyOptions) Validate(ctx context.Context) validation.Field
 }
 
 func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error {
-	var createError error
-	var updateError error
-	okToCreate := false
-	okToUpdate := false
+	var okToApply bool
+	shouldPrint := opts.Output == "" || (opts.Output != "" && !opts.Yes)
 
 	fileWorkload := &cartov1alpha1.Workload{}
 	if opts.FilePath != "" {
-		c.Emoji(cli.Exclamation, fmt.Sprintf("WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use %q to control strategy explicitly).\n\n", flags.UpdateStrategyFlagName))
+		cli.PrintPromptWithEmoji(shouldPrint, c.Emoji, cli.Exclamation, fmt.Sprintf("WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use %q to control strategy explicitly).\n\n", flags.UpdateStrategyFlagName))
 		if err := opts.WorkloadOptions.LoadInputWorkload(c.Stdin, fileWorkload); err != nil {
 			return err
 		}
@@ -163,45 +158,76 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 		return nil
 	}
 
-	// If user answers yes to survey prompt about publishing source, continue with creation or update
-	if okToPush, err := opts.PublishLocalSource(ctx, c, currentWorkload, workload); err != nil {
-		return err
-	} else if !okToPush {
+	// if output flag was not set or it was not used with yes flag, then proceed to show
+	// surveys and all other output
+	if shouldPrint {
+		// If user answers yes to survey prompt about publishing source, continue with creation or update
+		if okToPush, err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
+			return err
+		} else if !okToPush {
+			return nil
+		}
+
+		var okToCreate, okToUpdate bool
+		var createError, updateError error
+		// If there is no workload, create a new one
+		if currentWorkload == nil {
+			okToCreate, createError = opts.Create(ctx, c, workload)
+			if createError != nil {
+				return createError
+			}
+		} else {
+			okToUpdate, updateError = opts.Update(ctx, c, currentWorkload, workload)
+			if updateError != nil {
+				return updateError
+			}
+		}
+
+		okToApply = okToCreate || okToUpdate
+		if okToApply {
+			c.Printf("\n")
+			DisplayCommandNextSteps(c, workload)
+			c.Printf("\n")
+		}
+	} else if opts.Output != "" && opts.Yes {
+		// since there are no prompts, set okToApply to true (accepted through --yes)
+		okToApply = true
+		if _, err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
+			return err
+		}
+		if currentWorkload == nil {
+			if err := c.Create(ctx, workload); err != nil {
+				return err
+			}
+		} else {
+			if err := c.Update(ctx, workload); err != nil {
+				return err
+			}
+		}
+	}
+
+	var workers []wait.Worker
+	if opts.Output != "" && okToApply {
+		workers = opts.WaitToBeReady(c, workload)
+		if err := opts.WaitError(ctx, c, workload, workers); err != nil {
+			return err
+		}
+		// once the workload is ready, get it as is in the cluster
+		if err := c.Get(ctx, client.ObjectKey{Namespace: opts.Namespace, Name: opts.Name}, workload); err != nil {
+			return err
+		}
+		if err := opts.OutputWorkload(c, workload); err != nil {
+			return err
+		}
+
 		return nil
 	}
 
-	// If there is no workload, create a new one
-	if currentWorkload == nil {
-		okToCreate, createError = opts.Create(ctx, c, workload)
-		if createError != nil {
-			return createError
-		}
-	} else {
-		okToUpdate, updateError = opts.Update(ctx, c, currentWorkload, workload)
-		if updateError != nil {
-			return updateError
-		}
-	}
-
-	if okToCreate || okToUpdate {
-		c.Printf("\n")
-		DisplayCommandNextSteps(c, workload)
-		c.Printf("\n")
-	}
-
 	anyTail := opts.Tail || opts.TailTimestamps
-	if (okToCreate || okToUpdate) && (opts.Wait || anyTail) {
+	if okToApply && (opts.Wait || anyTail) {
 		c.Infof("Waiting for workload %q to become ready...\n", opts.Name)
 
-		workers := []wait.Worker{
-			func(ctx context.Context) error {
-				clientWithWatch, err := watch.GetWatcher(ctx, c)
-				if err != nil {
-					panic(err)
-				}
-				return wait.UntilCondition(ctx, clientWithWatch, types.NamespacedName{Name: workload.Name, Namespace: workload.Namespace}, &cartov1alpha1.WorkloadList{}, cartov1alpha1.WorkloadReadyConditionFunc)
-			},
-		}
+		workers = opts.WaitToBeReady(c, workload)
 
 		if anyTail {
 			workers = append(workers, func(ctx context.Context) error {
@@ -214,16 +240,13 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 			})
 		}
 
-		if err := wait.Race(ctx, opts.WaitTimeout, workers); err != nil {
-			if err == context.DeadlineExceeded {
-				c.Printf("%s timeout after %s waiting for %q to become ready\n", printer.Serrorf("Error:"), opts.WaitTimeout, workload.Name)
-				return cli.SilenceError(err)
-			}
-			c.Eprintf("%s %s\n", printer.Serrorf("Error:"), err)
-			return cli.SilenceError(err)
+		if err := opts.WaitError(ctx, c, workload, workers); err != nil {
+			return err
 		}
-		c.Infof("Workload %q is ready\n", workload.Name)
+
+		c.Infof("Workload %q is ready\n\n", workload.Name)
 	}
+
 	return nil
 }
 

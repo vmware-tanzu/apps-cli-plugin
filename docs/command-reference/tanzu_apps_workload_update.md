@@ -52,6 +52,7 @@ tanzu apps workload update --file workload.yaml
       --maven-type string              maven packaging type, defaults to jar
       --maven-version string           version number of maven artifact
   -n, --namespace name                 kubernetes namespace (defaulted from kube config)
+  -o, --output string                  output the Workload formatted. Supported formats: "json", "yaml", "yml"
   -p, --param "key=value" pair         additional parameters represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --param-yaml "key=value" pair    specify nested parameters using YAML or JSON formatted values represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --registry-ca-cert stringArray   file path to CA certificate used to authenticate with registry, flag can be used multiple times
