@@ -3288,7 +3288,66 @@ To see logs:   "tanzu apps workload tail spring-petclinic --timestamp --since 1h
 To get status: "tanzu apps workload get spring-petclinic"
 
 `,
-		}, {
+		},
+		{
+			Name: "update git fields",
+			Args: []string{workloadName, flags.GitBranchFlagName, "accelerator", flags.GitCommitFlagName, "abcd1234", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
+							d.Source(&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/sample-accelerators/spring-petclinic",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+										Tag:    "tap-1.1",
+									},
+								},
+							})
+						}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "accelerator",
+									Tag:    "tap-1.1",
+									Commit: "abcd1234",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+🔎 Update workload:
+...
+  7,  7   |spec:
+  8,  8   |  source:
+  9,  9   |    git:
+ 10, 10   |      ref:
+ 11     - |        branch: main
+     11 + |        branch: accelerator
+     12 + |        commit: abcd1234
+ 12, 13   |        tag: tap-1.1
+ 13, 14   |      url: https://github.com/sample-accelerators/spring-petclinic
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+		{
 			Name: "git source with non-allowed env var",
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				os.Setenv("TANZU_APPS_LABEL", "foo=var")
@@ -5133,7 +5192,9 @@ To get status: "tanzu apps workload get spring-petclinic"
 		},
 		{
 			Name: "update - replace source",
-			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-source.yaml", flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
+			Args: []string{flags.FilePathFlagName, "testdata/replace-update-strategy/replace-source.yaml",
+				flags.GitCommitFlagName, "efgh456",
+				flags.UpdateStrategyFlagName, "replace", flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -5168,7 +5229,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 								URL: "https://github.com/sample-accelerators/spring-petclinic",
 								Ref: cartov1alpha1.GitRef{
 									Tag:    "tap-1.1",
-									Commit: "abcd123",
+									Commit: "efgh456",
 								},
 							},
 						},
@@ -5186,7 +5247,7 @@ To get status: "tanzu apps workload get spring-petclinic"
  13, 13   |      ref:
  14     - |        branch: main
  15     - |      url: https://github.com/spring-projects/spring-petclinic.git
-     14 + |        commit: abcd123
+     14 + |        commit: efgh456
      15 + |        tag: tap-1.1
      16 + |      url: https://github.com/sample-accelerators/spring-petclinic
 👍 Updated workload "spring-petclinic"
