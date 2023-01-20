@@ -22,7 +22,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -30,8 +29,8 @@ import (
 )
 
 const ImageTag = "source"
-const SourceRegistryService = "source-registry"
-const SourceRegistryNamespace = "tap-source-storage"
+const SourceRegistryService = "local-source-proxy"
+const SourceRegistryNamespace = "tap-local-source-assistant"
 
 func LocalRegsitryTransport(ctx context.Context, cl *kubernetes.Clientset,
 	kubeconfig *rest.Config) (http.RoundTripper, error) {
@@ -41,7 +40,7 @@ func LocalRegsitryTransport(ctx context.Context, cl *kubernetes.Clientset,
 		return nil, err
 	}
 
-	r := cl.CoreV1().RESTClient().Get().Namespace(SourceRegistryNamespace).Resource("services").SubResource("proxy").Name(net.JoinSchemeNamePort("https", SourceRegistryService, "443"))
+	r := cl.CoreV1().RESTClient().Get().Namespace(SourceRegistryNamespace).Resource("services").SubResource("proxy").Name(net.JoinSchemeNamePort("http", SourceRegistryService, "5001"))
 
 	gv := corev1.SchemeGroupVersion
 	kubeconfig.GroupVersion = &gv
@@ -59,10 +58,10 @@ func LocalRegsitryTransport(ctx context.Context, cl *kubernetes.Clientset,
 	}, nil
 }
 
-func GetNamespacedName() (*types.NamespacedName, error) {
-	svcNamespacedName := &types.NamespacedName{}
-	svcNamespacedName.Name = "source-registry"
-	svcNamespacedName.Namespace = "tap-source-storage"
+// func GetNamespacedName() (*types.NamespacedName, error) {
+// 	svcNamespacedName := &types.NamespacedName{}
+// 	svcNamespacedName.Name = "source-registry"
+// 	svcNamespacedName.Namespace = "tap-source-storage"
 
-	return svcNamespacedName, nil
-}
+// 	return svcNamespacedName, nil
+// }
