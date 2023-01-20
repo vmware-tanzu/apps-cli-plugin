@@ -1062,6 +1062,73 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 			},
 		},
 		{
+			name: "set git flags to empty",
+			args: []string{flags.GitBranchFlagName, "", flags.GitCommitFlagName, ""},
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Git: &cartov1alpha1.GitSource{
+							URL: gitRepo,
+							Ref: cartov1alpha1.GitRef{
+								Branch: gitBranch,
+								Tag:    gitTag,
+								Commit: gitCommit,
+							},
+						},
+					},
+				},
+			},
+			expected: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Git: &cartov1alpha1.GitSource{
+							URL: gitRepo,
+							Ref: cartov1alpha1.GitRef{
+								Tag: gitTag,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "set git repo to empty",
+			args: []string{flags.GitRepoFlagName, ""},
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Git: &cartov1alpha1.GitSource{
+							URL: gitRepo,
+							Ref: cartov1alpha1.GitRef{
+								Branch: gitBranch,
+								Tag:    gitTag,
+								Commit: gitCommit,
+							},
+						},
+					},
+				},
+			},
+			expected: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+				},
+				Spec: cartov1alpha1.WorkloadSpec{},
+			},
+		},
+		{
 			name: "subPath update with image source",
 			args: []string{flags.SubPathFlagName, subPath},
 			input: &cartov1alpha1.Workload{

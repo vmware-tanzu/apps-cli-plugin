@@ -255,6 +255,12 @@ To get status: "tanzu apps workload get my-workload"
 `,
 		},
 		{
+			Name:         "git source without git repo",
+			Args:         []string{workloadName, flags.GitRepoFlagName, "", flags.GitBranchFlagName, gitBranch, flags.SubPathFlagName, "./app", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
+			ShouldError:  true,
+		},
+		{
 			Name: "create git source with invalid namespace",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.NamespaceFlagName, "foo", flags.YesFlagName},
 			WithReactors: []clitesting.ReactionFunc{
@@ -3573,6 +3579,293 @@ To get status: "tanzu apps workload get my-workload"
   9,  9   |spec:
  10, 10   |  source:
 ...
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+		{
+			Name: "update - remove git tag by setting to empty in flags",
+			Args: []string{workloadName, flags.GitTagFlagName, "", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
+							d.Source(&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/sample-accelerators/spring-petclinic",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+										Tag:    "v0.1.0",
+									},
+								},
+							})
+						}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+🔎 Update workload:
+...
+  8,  8   |  source:
+  9,  9   |    git:
+ 10, 10   |      ref:
+ 11, 11   |        branch: main
+ 12     - |        tag: v0.1.0
+ 13, 12   |      url: https://github.com/sample-accelerators/spring-petclinic
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+		{
+			Name: "update - remove git branch by setting to empty in flags",
+			Args: []string{workloadName, flags.GitBranchFlagName, "", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
+							d.Source(&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/sample-accelerators/spring-petclinic",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+										Tag:    "v0.1.0",
+									},
+								},
+							})
+						}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Tag: "v0.1.0",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+🔎 Update workload:
+...
+  7,  7   |spec:
+  8,  8   |  source:
+  9,  9   |    git:
+ 10, 10   |      ref:
+ 11     - |        branch: main
+ 12, 11   |        tag: v0.1.0
+ 13, 12   |      url: https://github.com/sample-accelerators/spring-petclinic
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+		{
+			Name: "update - remove git commit by setting to empty in flags",
+			Args: []string{workloadName, flags.GitCommitFlagName, "", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
+							d.Source(&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/sample-accelerators/spring-petclinic",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+										Commit: "abc1234",
+									},
+								},
+							})
+						}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+🔎 Update workload:
+...
+  8,  8   |  source:
+  9,  9   |    git:
+ 10, 10   |      ref:
+ 11, 11   |        branch: main
+ 12     - |        commit: abc1234
+ 13, 12   |      url: https://github.com/sample-accelerators/spring-petclinic
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+		{
+			Name: "update - change from image to git source",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
+							d.Image("private.repo.domain.com/spring-pet-clinic")
+						}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://example.com/repo.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "main",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+🔎 Update workload:
+...
+  4,  4   |metadata:
+  5,  5   |  name: my-workload
+  6,  6   |  namespace: default
+  7,  7   |spec:
+  8     - |  image: private.repo.domain.com/spring-pet-clinic
+      8 + |  source:
+      9 + |    git:
+     10 + |      ref:
+     11 + |        branch: main
+     12 + |      url: https://example.com/repo.git
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+		{
+			Name: "update - change from image to git source with error",
+			Args: []string{workloadName, flags.GitBranchFlagName, gitBranch, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
+							d.Image("private.repo.domain.com/spring-pet-clinic")
+						}),
+			},
+			ShouldError: true,
+		},
+		{
+			Name: "update - set all git.ref fields to empty",
+			Args: []string{workloadName, flags.GitBranchFlagName, "", flags.GitCommitFlagName, "", flags.GitTagFlagName, "", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
+							d.Source(&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/sample-accelerators/spring-petclinic",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+										Commit: "abc1234",
+										Tag:    "v0.1.0",
+									},
+								},
+							})
+						}),
+			},
+			ShouldError: true,
+		},
+		{
+			Name: "update - unset source by setting git repo to empty",
+			Args: []string{workloadName, flags.GitRepoFlagName, "", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
+							d.Source(&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/sample-accelerators/spring-petclinic",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+										Commit: "abc1234",
+									},
+								},
+							})
+						}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+				},
+			},
+			ExpectOutput: `
+🔎 Update workload:
+...
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  name: my-workload
+  6,  6   |  namespace: default
+  7     - |spec:
+  8     - |  source:
+  9     - |    git:
+ 10     - |      ref:
+ 11     - |        branch: main
+ 12     - |        commit: abc1234
+ 13     - |      url: https://github.com/sample-accelerators/spring-petclinic
+      7 + |spec: {}
+❗ NOTICE: no source code or image has been specified for this workload.
 👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
