@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/vito/go-interact v1.0.1
 	github.com/vmware-labs/reconciler-runtime v0.8.2
-	github.com/vmware-tanzu/carvel-imgpkg v0.34.1
+	github.com/vmware-tanzu/carvel-imgpkg v0.35.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-framework v0.25.0
 	golang.org/x/crypto v0.5.0
@@ -153,7 +153,7 @@ require (
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
