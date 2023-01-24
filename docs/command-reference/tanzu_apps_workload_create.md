@@ -34,10 +34,10 @@ tanzu apps workload create --file workload.yaml
       --dry-run                        print kubernetes resources to stdout rather than apply them to the cluster, messages normally on stdout will be sent to stderr
   -e, --env "key=value" pair           environment variables represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
   -f, --file file path                 file path containing the description of a single workload, other flags are layered on top of this resource. Use value "-" to read from stdin
-      --git-branch branch              branch within the git repo to checkout
-      --git-commit SHA                 commit SHA within the git repo to checkout
-      --git-repo url                   git url to remote source code
-      --git-tag tag                    tag within the git repo to checkout
+      --git-branch branch              branch within the git repo to checkout (to unset, pass empty string "")
+      --git-commit SHA                 commit SHA within the git repo to checkout (to unset, pass empty string "")
+      --git-repo url                   git url to remote source code (to unset, pass empty string "")
+      --git-tag tag                    tag within the git repo to checkout (to unset, pass empty string "")
   -h, --help                           help for create
   -i, --image image                    pre-built image, skips the source resolution and build phases of the supply chain
   -l, --label "key=value" pair         label is represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
