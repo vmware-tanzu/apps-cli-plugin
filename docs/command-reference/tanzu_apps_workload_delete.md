@@ -37,7 +37,7 @@ tanzu apps workload delete --all
 ```
       --context name      name of the kubeconfig context to use (default is current-context defined by kubeconfig)
       --kubeconfig file   kubeconfig file (default is $HOME/.kube/config)
-      --no-color          deactivate color, bold, and emoji output
+      --no-color          deactivate color, bold, animations, and emoji output
   -v, --verbose int32     number for the log level verbosity (default 1)
 ```
 

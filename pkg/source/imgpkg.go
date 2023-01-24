@@ -29,7 +29,6 @@ import (
 )
 
 func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, reg plainimage.ImagesWriter, image string) (string, error) {
-
 	uploadRef, err := regname.NewTag(image, regname.WeakValidation)
 	if err != nil {
 		return "", fmt.Errorf("parsing '%s': %s", image, err)

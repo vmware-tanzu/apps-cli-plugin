@@ -39,8 +39,7 @@ func (n NoopLogger) Logf(string, ...interface{}) {}
 type sourceImageloggerkey struct{}
 
 func RetrieveSourceImageLogger(ctx context.Context) plainimage.Logger {
-	val, ok := ctx.Value(sourceImageloggerkey{}).(plainimage.Logger)
-	if ok {
+	if val, ok := ctx.Value(sourceImageloggerkey{}).(plainimage.Logger); ok {
 		return val
 	}
 	return nil

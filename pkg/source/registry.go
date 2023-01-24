@@ -36,6 +36,18 @@ type RegistryOpts struct {
 // NewRegistryWithProgress creates new registry instance that provides
 // progress updates to the logger
 func NewRegistryWithProgress(ctx context.Context, registryOpts *RegistryOpts) (*registry.WithProgress, error) {
+	reg, err := NewRegistry(ctx, registryOpts)
+	progressBar := logger.RetrieveProgressBarLogger(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create a registry with provided options: %v", err)
+	}
+	if progressBar == nil {
+		progressBar = logger.NewProgressBar()
+	}
+	return registry.NewRegistryWithProgress(reg, progressBar), nil
+}
+
+func NewRegistry(ctx context.Context, registryOpts *RegistryOpts) (registry.Registry, error) {
 	options := registry.Opts{
 		CACertPaths:           registryOpts.CACertPaths,
 		Username:              registryOpts.RegistryUsername,
@@ -56,9 +68,5 @@ func NewRegistryWithProgress(ctx context.Context, registryOpts *RegistryOpts) (*
 	if err != nil {
 		return nil, fmt.Errorf("unable to create a registry with provided options: %v", err)
 	}
-	progressBar := logger.RetrieveProgressBarLogger(ctx)
-	if progressBar == nil {
-		progressBar = logger.NewProgressBar()
-	}
-	return registry.NewRegistryWithProgress(reg, progressBar), nil
+	return reg, err
 }
