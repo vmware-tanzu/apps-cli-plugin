@@ -307,6 +307,11 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 						t.Fatalf("unexpected error while trying to update registry certs %v ", err)
 					}
 				}
+
+				var err error
+				if ctx, err = createPtyTerminal(ctx); err != nil {
+					t.Fatalf("error while opening pty %v", err)
+				}
 				return ctx, nil
 			},
 			ExpectedObject: &cartov1alpha1.Workload{
@@ -343,12 +348,98 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
-				excepted, err := os.ReadFile("./testdata/hello.go")
+				expected, err := os.ReadFile("./testdata/hello.go")
 				if err != nil {
 					t.Fatalf("unexpected error reading file %v ", err)
 				}
 
-				if diff := cmp.Diff(string(excepted), string(got)); diff != "" {
+				if diff := cmp.Diff(string(expected), string(got)); diff != "" {
+					t.Fatalf("(-expected, +actual)\n%s", diff)
+				}
+			},
+			CleanUp: func(ctx context.Context, t *testing.T) error {
+				if _, ok := os.LookupEnv("CERT_DIR"); ok {
+					if err := it.NewCommandLine("sudo", "rm", "-f", "/usr/local/share/ca-certificates/ca.crt").Exec(); err != nil {
+						t.Fatalf("unexpected error while trying to delete registry certs %v ", err)
+					}
+					if err := it.NewCommandLine("sudo", "update-ca-certificates").Exec(); err != nil {
+						t.Fatalf("unexpected error while trying to update registry certs %v ", err)
+					}
+				}
+				return nil
+			},
+		},
+		{
+			Name:         "Create workload with valid name from local source code without color",
+			WorkloadName: "test-local-registry-no-color",
+			RequireEnvs:  []string{"BUNDLE"},
+			Command: func() it.CommandLine {
+				c := *it.NewTanzuAppsCommandLine(
+					"workload", "create", "test-local-registry-no-color",
+					"--local-path=./testdata/hello.go.jar",
+					"--source-image", os.Getenv("BUNDLE"),
+					namespaceFlag,
+					"--type=web",
+					"--no-color",
+					"--yes",
+				)
+				return c
+			}(),
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				if v, ok := os.LookupEnv("CERT_DIR"); ok {
+					if err := it.NewCommandLine("sudo", "cp", v+"/ca.pem", "/usr/local/share/ca-certificates/ca.crt").Exec(); err != nil {
+						t.Fatalf("unexpected error while trying to copy registry certs %v ", err)
+					}
+					if err := it.NewCommandLine("sudo", "update-ca-certificates").Exec(); err != nil {
+						t.Fatalf("unexpected error while trying to update registry certs %v ", err)
+					}
+				}
+				return ctx, nil
+			},
+			ExpectedObject: &cartov1alpha1.Workload{
+				TypeMeta: workloadTypeMeta,
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-local-registry-no-color",
+					Namespace: it.TestingNamespace,
+					Labels: map[string]string{
+						"apps.tanzu.vmware.com/workload-type": "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image: fmt.Sprintf("%v@sha256:f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be", os.Getenv("BUNDLE")),
+					},
+				},
+			},
+			Verify: func(ctx context.Context, t *testing.T, output string, err error) {
+				if _, err := exec.LookPath("imgpkg"); err != nil {
+					t.Fatalf("expected imgpkg in PATH: %v", err)
+				}
+				dir, _ := ioutil.TempDir("", "")
+				defer os.RemoveAll(dir)
+
+				if regexProgress.FindString(output) != "" {
+					t.Fatalf("expected progressbar not to be in output %v", output)
+				}
+				if err := it.NewCommandLine("imgpkg", "pull", "-i", os.Getenv("BUNDLE"), "-o", dir).Exec(); err != nil {
+					t.Fatalf("unexpected error %v", err)
+				}
+				// compare files
+				got, err := os.ReadFile(filepath.Join(dir, "hello.go"))
+				if err != nil {
+					t.Fatalf("unexpected error reading file %v ", err)
+				}
+
+				expected, err := os.ReadFile("./testdata/hello.go")
+				if err != nil {
+					t.Fatalf("unexpected error reading file %v ", err)
+				}
+
+				if it.EmojisExistInOutput(output, it.ApplyEmojis) {
+					t.Fatalf("did not expect emojis in create output with no color flag %v", output)
+				}
+
+				if diff := cmp.Diff(string(expected), string(got)); diff != "" {
 					t.Fatalf("(-expected, +actual)\n%s", diff)
 				}
 			},
@@ -382,6 +473,14 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				)
 				return c
 			}(),
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				var err error
+				if ctx, err = createPtyTerminal(ctx); err != nil {
+					t.Fatalf("error while opening pty %v", err)
+				}
+
+				return ctx, nil
+			},
 			ExpectedObject: &cartov1alpha1.Workload{
 				TypeMeta: workloadTypeMeta,
 				ObjectMeta: metav1.ObjectMeta{
@@ -452,6 +551,14 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				)
 				return c
 			}(),
+			Prepare: func(ctx context.Context, t *testing.T) (context.Context, error) {
+				var err error
+				if ctx, err = createPtyTerminal(ctx); err != nil {
+					t.Fatalf("error while opening pty %v", err)
+				}
+
+				return ctx, nil
+			},
 			ExpectedObject: &cartov1alpha1.Workload{
 				TypeMeta: workloadTypeMeta,
 				ObjectMeta: metav1.ObjectMeta{

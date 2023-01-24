@@ -38,6 +38,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry"
+
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
@@ -462,14 +464,22 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	}
 
 	currentRegistryOpts := source.RegistryOpts{CACertPaths: opts.CACertPaths, RegistryUsername: opts.RegistryUsername, RegistryPassword: opts.RegistryPassword, RegistryToken: opts.RegistryToken}
-	registryWithProgress, err := source.NewRegistryWithProgress(ctx, &currentRegistryOpts)
+	var reg registry.Registry
+	var err error
+
+	if c.NoColor {
+		reg, err = source.NewRegistry(ctx, &currentRegistryOpts)
+	} else {
+		reg, err = source.NewRegistryWithProgress(ctx, &currentRegistryOpts)
+	}
 	if err != nil {
 		return okToPush, err
 	}
 	ctx = logger.StashSourceImageLogger(ctx, logger.NewNoopLogger())
+
 	c.Infof("Publishing source in %q to %q...\n", opts.LocalPath, taggedImage)
 
-	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, registryWithProgress, taggedImage)
+	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, reg, taggedImage)
 	if err != nil {
 		return okToPush, err
 	}
