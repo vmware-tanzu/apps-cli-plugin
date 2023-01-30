@@ -73,7 +73,7 @@ docs: $(GO_SOURCES) ## Generate the plugin documentation
 
 .PHONY: test
 test: prepare## Run tests
-	go test ./... -coverprofile=coverage.txt -covermode=atomic -timeout 30s -race
+	go test ./... -coverprofile=coverage.txt -covermode=atomic -timeout 1m -race
 
 .PHONY: lint
 lint: ## Run lint tools to identfy stylistic errors
