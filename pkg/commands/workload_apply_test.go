@@ -50,6 +50,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
 	diecartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/dies/cartographer/v1alpha1"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/printer"
 )
 
 func TestWorkloadApplyOptionsValidate(t *testing.T) {
@@ -255,10 +256,401 @@ To get status: "tanzu apps workload get my-workload"
 `,
 		},
 		{
-			Name:         "git source without git repo",
-			Args:         []string{workloadName, flags.GitRepoFlagName, "", flags.GitBranchFlagName, gitBranch, flags.SubPathFlagName, "./app", flags.YesFlagName},
+			Name: "successful wait to create with ready cond - output yaml ",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch,
+				flags.OutputFlagName, printer.OutputFormatYaml, flags.YesFlagName},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
 			GivenObjects: givenNamespaceDefault,
-			ShouldError:  true,
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  creationTimestamp: null
+  name: my-workload
+  namespace: default
+  resourceVersion: "1"
+spec:
+  source:
+    git:
+      ref:
+        branch: main
+      url: https://example.com/repo.git
+status:
+  supplyChainRef: {}
+`,
+		},
+		{
+			Name: "wait error on create - output yaml ",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch,
+				flags.OutputFlagName, printer.OutputFormatYaml, flags.YesFlagName},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:    cartov1alpha1.WorkloadConditionReady,
+								Status:  metav1.ConditionFalse,
+								Reason:  "OopsieDoodle",
+								Message: "a hopefully informative message about what went wrong",
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			GivenObjects: givenNamespaceDefault,
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ShouldError: true,
+		},
+		{
+			Name: "successful wait to create with ready cond - output json ",
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch,
+				flags.OutputFlagName, printer.OutputFormatJson, flags.YesFlagName},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			GivenObjects: givenNamespaceDefault,
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels:    map[string]string{},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+{
+	"kind": "Workload",
+	"apiVersion": "carto.run/v1alpha1",
+	"metadata": {
+		"name": "my-workload",
+		"namespace": "default",
+		"resourceVersion": "1",
+		"creationTimestamp": null
+	},
+	"spec": {
+		"source": {
+			"git": {
+				"url": "https://example.com/repo.git",
+				"ref": {
+					"branch": "main"
+				}
+			}
+		}
+	},
+	"status": {
+		"supplyChainRef": {}
+	}
+}
+`,
+		},
+		{
+			Name: "wait error on update - output yaml",
+			Args: []string{workloadName, flags.ServiceRefFlagName,
+				"database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db",
+				flags.OutputFlagName, printer.OutputFormatYaml, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
+			},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:    cartov1alpha1.WorkloadConditionReady,
+								Status:  metav1.ConditionFalse,
+								Reason:  "OopsieDoodle",
+								Message: "a hopefully informative message about what went wrong",
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+							{
+								Name: "database",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "PostgreSQL",
+									Name:       "my-prod-db",
+								},
+							},
+						},
+					},
+				},
+			},
+			ShouldError: true,
+		},
+		{
+			Name: "successful wait to update with ready condition - output yaml",
+			Args: []string{workloadName, flags.ServiceRefFlagName,
+				"database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db",
+				flags.OutputFlagName, printer.OutputFormatYaml, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
+			},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+							{
+								Name: "database",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "PostgreSQL",
+									Name:       "my-prod-db",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  creationTimestamp: "1970-01-01T00:00:01Z"
+  name: my-workload
+  namespace: default
+  resourceVersion: "1000"
+spec:
+  image: ubuntu:bionic
+  serviceClaims:
+  - name: database
+    ref:
+      apiVersion: services.tanzu.vmware.com/v1alpha1
+      kind: PostgreSQL
+      name: my-prod-db
+status:
+  supplyChainRef: {}
+`,
+		},
+		{
+			Name: "successful wait to update with ready condition - output json",
+			Args: []string{workloadName, flags.ServiceRefFlagName,
+				"database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db",
+				flags.OutputFlagName, printer.OutputFormatJson, flags.WaitFlagName, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
+			},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+							{
+								Name: "database",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "PostgreSQL",
+									Name:       "my-prod-db",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+{
+	"kind": "Workload",
+	"apiVersion": "carto.run/v1alpha1",
+	"metadata": {
+		"name": "my-workload",
+		"namespace": "default",
+		"resourceVersion": "1000",
+		"creationTimestamp": "1970-01-01T00:00:01Z"
+	},
+	"spec": {
+		"image": "ubuntu:bionic",
+		"serviceClaims": [
+			{
+				"name": "database",
+				"ref": {
+					"apiVersion": "services.tanzu.vmware.com/v1alpha1",
+					"kind": "PostgreSQL",
+					"name": "my-prod-db"
+				}
+			}
+		]
+	},
+	"status": {
+		"supplyChainRef": {}
+	}
+}
+`,
 		},
 		{
 			Name: "create git source with invalid namespace",
@@ -511,6 +903,7 @@ To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
 Workload "my-workload" is ready
+
 `,
 		},
 		{
@@ -590,6 +983,7 @@ To get status: "tanzu apps workload get my-workload"
 Waiting for workload "my-workload" to become ready...
 ...tail output...
 Workload "my-workload" is ready
+
 `,
 		},
 		{
@@ -1613,6 +2007,7 @@ To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
 Workload "my-workload" is ready
+
 `,
 		},
 		{
@@ -1698,6 +2093,7 @@ To get status: "tanzu apps workload get my-workload"
 Waiting for workload "my-workload" to become ready...
 ...tail output...
 Workload "my-workload" is ready
+
 `,
 		},
 		{
@@ -3872,6 +4268,591 @@ To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
+		},
+		{
+			Name: "output workload after update in json format",
+			Args: []string{workloadName, flags.ServiceRefFlagName,
+				"database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db",
+				flags.OutputFlagName, printer.OutputFormatJson},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
+			},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("? Really update the workload %q? [yN]: ", workloadName))
+				c.Send(clitesting.InteractInputLine("y"))
+				c.ExpectString(clitesting.ToInteractOutput(`👍 Updated workload %q
+
+To see logs:   "tanzu apps workload tail %s --timestamp --since 1h"
+To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
+			},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+							{
+								Name: "database",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "PostgreSQL",
+									Name:       "my-prod-db",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+🔎 Update workload:
+...
+  5,  5   |  name: my-workload
+  6,  6   |  namespace: default
+  7,  7   |spec:
+  8,  8   |  image: ubuntu:bionic
+      9 + |  serviceClaims:
+     10 + |  - name: database
+     11 + |    ref:
+     12 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
+     13 + |      kind: PostgreSQL
+     14 + |      name: my-prod-db
+%s
+
+👍 Updated workload %q
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+{
+	"kind": "Workload",
+	"apiVersion": "carto.run/v1alpha1",
+	"metadata": {
+		"name": "my-workload",
+		"namespace": "default",
+		"resourceVersion": "1000",
+		"creationTimestamp": "1970-01-01T00:00:01Z"
+	},
+	"spec": {
+		"image": "ubuntu:bionic",
+		"serviceClaims": [
+			{
+				"name": "database",
+				"ref": {
+					"apiVersion": "services.tanzu.vmware.com/v1alpha1",
+					"kind": "PostgreSQL",
+					"name": "my-prod-db"
+				}
+			}
+		]
+	},
+	"status": {
+		"supplyChainRef": {}
+	}
+}
+`, clitesting.ToInteractTerminal("❓ Really update the workload %q? [yN]: y", workloadName), workloadName),
+		},
+		{
+			Name: "wait error - output workload after update in json format",
+			Args: []string{workloadName, flags.ServiceRefFlagName,
+				"database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db",
+				flags.OutputFlagName, printer.OutputFormatJson},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
+			},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("? Really update the workload %q? [yN]: ", workloadName))
+				c.Send(clitesting.InteractInputLine("y"))
+				c.ExpectString(clitesting.ToInteractOutput(`👍 Updated workload %q
+
+To see logs:   "tanzu apps workload tail %s --timestamp --since 1h"
+To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
+			},
+			ShouldError: true,
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:    cartov1alpha1.WorkloadConditionReady,
+								Status:  metav1.ConditionFalse,
+								Reason:  "OopsieDoodle",
+								Message: "a hopefully informative message about what went wrong",
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+							{
+								Name: "database",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "PostgreSQL",
+									Name:       "my-prod-db",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+🔎 Update workload:
+...
+  5,  5   |  name: my-workload
+  6,  6   |  namespace: default
+  7,  7   |spec:
+  8,  8   |  image: ubuntu:bionic
+      9 + |  serviceClaims:
+     10 + |  - name: database
+     11 + |    ref:
+     12 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
+     13 + |      kind: PostgreSQL
+     14 + |      name: my-prod-db
+%s
+
+👍 Updated workload %q
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+Error: Failed to become ready: a hopefully informative message about what went wrong
+`, clitesting.ToInteractTerminal("❓ Really update the workload %q? [yN]: y", workloadName), workloadName),
+		},
+		{
+			Name: "output workload after update in yaml format",
+			Args: []string{workloadName, flags.ServiceRefFlagName,
+				"database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db",
+				flags.OutputFlagName, printer.OutputFormatYml},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}),
+			},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("? Really update the workload %q? [yN]: ", workloadName))
+				c.Send(clitesting.InteractInputLine("y"))
+				c.ExpectString(clitesting.ToInteractOutput(`👍 Updated workload %q
+
+To see logs:   "tanzu apps workload tail %s --timestamp --since 1h"
+To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
+			},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+							{
+								Name: "database",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "PostgreSQL",
+									Name:       "my-prod-db",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+🔎 Update workload:
+...
+  5,  5   |  name: my-workload
+  6,  6   |  namespace: default
+  7,  7   |spec:
+  8,  8   |  image: ubuntu:bionic
+      9 + |  serviceClaims:
+     10 + |  - name: database
+     11 + |    ref:
+     12 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
+     13 + |      kind: PostgreSQL
+     14 + |      name: my-prod-db
+%s
+
+👍 Updated workload %q
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  creationTimestamp: "1970-01-01T00:00:01Z"
+  name: my-workload
+  namespace: default
+  resourceVersion: "1000"
+spec:
+  image: ubuntu:bionic
+  serviceClaims:
+  - name: database
+    ref:
+      apiVersion: services.tanzu.vmware.com/v1alpha1
+      kind: PostgreSQL
+      name: my-prod-db
+status:
+  supplyChainRef: {}
+`, clitesting.ToInteractTerminal("❓ Really update the workload %q? [yN]: y", workloadName), workloadName),
+		},
+		{
+			Name:         "output workload after create in yaml format",
+			GivenObjects: givenNamespaceDefault,
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch,
+				flags.TypeFlagName, "web", flags.OutputFlagName, printer.OutputFormatYaml},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("Do you want to create this workload? [yN]: "))
+				c.Send(clitesting.InteractInputLine("y"))
+				c.ExpectString(clitesting.ToInteractOutput(`👍 Created workload %q
+
+To see logs:   "tanzu apps workload tail %s --timestamp --since 1h"
+To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
+			},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+🔎 Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
+%s
+
+👍 Created workload %q
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  creationTimestamp: null
+  labels:
+    apps.tanzu.vmware.com/workload-type: web
+  name: my-workload
+  namespace: default
+  resourceVersion: "1"
+spec:
+  source:
+    git:
+      ref:
+        branch: main
+      url: https://example.com/repo.git
+status:
+  supplyChainRef: {}
+`, clitesting.ToInteractTerminal("❓ Do you want to create this workload? [yN]: y"), workloadName),
+		},
+		{
+			Name:         "output workload after create in yaml format",
+			GivenObjects: givenNamespaceDefault,
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch,
+				flags.TypeFlagName, "web", flags.OutputFlagName, printer.OutputFormatJson},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("Do you want to create this workload? [yN]: "))
+				c.Send(clitesting.InteractInputLine("y"))
+				c.ExpectString(clitesting.ToInteractOutput(`👍 Created workload %q
+
+To see logs:   "tanzu apps workload tail %s --timestamp --since 1h"
+To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
+			},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+🔎 Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
+%s
+
+👍 Created workload %q
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+{
+	"kind": "Workload",
+	"apiVersion": "carto.run/v1alpha1",
+	"metadata": {
+		"name": "my-workload",
+		"namespace": "default",
+		"resourceVersion": "1",
+		"creationTimestamp": null,
+		"labels": {
+			"apps.tanzu.vmware.com/workload-type": "web"
+		}
+	},
+	"spec": {
+		"source": {
+			"git": {
+				"url": "https://example.com/repo.git",
+				"ref": {
+					"branch": "main"
+				}
+			}
+		}
+	},
+	"status": {
+		"supplyChainRef": {}
+	}
+}
+`, clitesting.ToInteractTerminal("❓ Do you want to create this workload? [yN]: y"), workloadName),
+		},
+		{
+			Name:         "wait error - output workload after create in yaml format",
+			GivenObjects: givenNamespaceDefault,
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch,
+				flags.TypeFlagName, "web", flags.OutputFlagName, printer.OutputFormatJson},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("Do you want to create this workload? [yN]: "))
+				c.Send(clitesting.InteractInputLine("y"))
+				c.ExpectString(clitesting.ToInteractOutput(`👍 Created workload %q
+
+To see logs:   "tanzu apps workload tail %s --timestamp --since 1h"
+To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
+			},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:    cartov1alpha1.WorkloadConditionReady,
+								Status:  metav1.ConditionFalse,
+								Reason:  "OopsieDoodle",
+								Message: "a hopefully informative message about what went wrong",
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			ShouldError: true,
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: gitRepo,
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+🔎 Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
+%s
+
+👍 Created workload %q
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+Error: Failed to become ready: a hopefully informative message about what went wrong
+`, clitesting.ToInteractTerminal("❓ Do you want to create this workload? [yN]: y"), workloadName),
 		},
 		{
 			Name:         "create - git source with terminal interaction",

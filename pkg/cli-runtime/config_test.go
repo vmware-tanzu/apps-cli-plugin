@@ -198,3 +198,219 @@ func TestConfig_Emoji(t *testing.T) {
 		})
 	}
 }
+
+func TestConfig_PrintPromptWithEmoji(t *testing.T) {
+	scheme := runtime.NewScheme()
+	config := cli.NewDefaultConfig("test", scheme)
+
+	tests := []struct {
+		name        string
+		icon        cli.Icon
+		shouldPrint bool
+		input       string
+		output      string
+	}{{
+		name:        "Text with emoji",
+		shouldPrint: true,
+		icon:        cli.FloppyDisk,
+		input:       "Source",
+		output:      `💾 Source`,
+	}, {
+		name:  "Do not print emoji",
+		icon:  cli.FloppyDisk,
+		input: `Source`,
+	}}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			stdout := &bytes.Buffer{}
+			stderr := &bytes.Buffer{}
+			config.Stdout = stdout
+			config.Stderr = stderr
+
+			cli.PrintPromptWithEmoji(test.shouldPrint, config.Emoji, test.icon, test.input)
+			if expected, actual := test.output, stdout.String(); expected != actual {
+				t.Errorf("Expected stdout to be %q, actually %q", expected, actual)
+			}
+		})
+	}
+}
+
+func TestConfig_PrintPrompt(t *testing.T) {
+	noColor := color.NoColor
+	color.NoColor = false
+	defer func() { color.NoColor = noColor }()
+
+	scheme := runtime.NewScheme()
+	config := cli.NewDefaultConfig("test", scheme)
+
+	tests := []struct {
+		name        string
+		format      string
+		shouldPrint bool
+		args        []interface{}
+		printer     func(format string, a ...interface{}) (n int, err error)
+		stdout      string
+		stderr      string
+	}{{
+		name:        "Printf",
+		shouldPrint: true,
+		format:      "%s",
+		args:        []interface{}{"hello"},
+		printer:     config.Printf,
+		stdout:      "hello",
+	}, {
+		name:        "Eprintf",
+		shouldPrint: true,
+		format:      "%s",
+		args:        []interface{}{"hello"},
+		printer:     config.Eprintf,
+		stderr:      "hello",
+	}, {
+		name:        "Infof",
+		shouldPrint: true,
+		format:      "%s",
+		args:        []interface{}{"hello"},
+		printer:     config.Infof,
+		stdout:      printer.InfoColor.Sprint("hello"),
+	}, {
+		name:        "Einfof",
+		shouldPrint: true,
+		format:      "%s",
+		args:        []interface{}{"hello"},
+		printer:     config.Einfof,
+		stderr:      printer.InfoColor.Sprint("hello"),
+	}, {
+		name:        "Successf",
+		shouldPrint: true,
+		format:      "%s",
+		args:        []interface{}{"hello"},
+		printer:     config.Successf,
+		stdout:      printer.SuccessColor.Sprint("hello"),
+	}, {
+		name:        "Esuccessf",
+		shouldPrint: true,
+		format:      "%s",
+		args:        []interface{}{"hello"},
+		printer:     config.Esuccessf,
+		stderr:      printer.SuccessColor.Sprint("hello"),
+	}, {
+		name:        "Faintf",
+		shouldPrint: true,
+		format:      "%s",
+		args:        []interface{}{"hello"},
+		printer:     config.Faintf,
+		stdout:      printer.FaintColor.Sprint("hello"),
+	}, {
+		name:        "Efaintf",
+		shouldPrint: true,
+		format:      "%s",
+		args:        []interface{}{"hello"},
+		printer:     config.Efaintf,
+		stderr:      printer.FaintColor.Sprint("hello"),
+	}, {
+		name:        "Errorf",
+		shouldPrint: true,
+		format:      "%s",
+		args:        []interface{}{"hello"},
+		printer:     config.Errorf,
+		stdout:      printer.ErrorColor.Sprint("hello"),
+	}, {
+		name:        "Eerrorf",
+		shouldPrint: true,
+		format:      "%s",
+		args:        []interface{}{"hello"},
+		printer:     config.Eerrorf,
+		stderr:      printer.ErrorColor.Sprint("hello"),
+	}, {
+		name:        "Boldf",
+		shouldPrint: true,
+		format:      "%s",
+		args:        []interface{}{"hello"},
+		printer:     config.Boldf,
+		stdout:      printer.BoldColor.Sprint("hello"),
+	}, {
+		name:        "Eboldf",
+		shouldPrint: true,
+		format:      "%s",
+		args:        []interface{}{"hello"},
+		printer:     config.Eboldf,
+		stderr:      printer.BoldColor.Sprint("hello"),
+	}, {
+		name:    "Printf",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Printf,
+	}, {
+		name:    "Eprintf",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Eprintf,
+	}, {
+		name:    "Infof",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Infof,
+	}, {
+		name:    "Einfof",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Einfof,
+	}, {
+		name:    "Successf",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Successf,
+	}, {
+		name:    "Esuccessf",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Esuccessf,
+	}, {
+		name:    "Faintf",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Faintf,
+	}, {
+		name:    "Efaintf",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Efaintf,
+	}, {
+		name:    "Errorf",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Errorf,
+	}, {
+		name:    "Eerrorf",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Eerrorf,
+	}, {
+		name:    "Boldf",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Boldf,
+	}, {
+		name:    "Eboldf",
+		format:  "%s",
+		args:    []interface{}{"hello"},
+		printer: config.Eboldf,
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			stdout := &bytes.Buffer{}
+			stderr := &bytes.Buffer{}
+			config.Stdout = stdout
+			config.Stderr = stderr
+
+			cli.PrintPrompt(test.shouldPrint, test.printer, test.format, test.args...)
+			if expected, actual := test.stdout, stdout.String(); expected != actual {
+				t.Errorf("Expected stdout to be %q, actually %q", expected, actual)
+			}
+			if expected, actual := test.stderr, stderr.String(); expected != actual {
+				t.Errorf("Expected stderr to be %q, actually %q", expected, actual)
+			}
+		})
+	}
+}

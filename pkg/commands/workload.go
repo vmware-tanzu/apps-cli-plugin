@@ -46,6 +46,8 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/parsers"
 	cliprinter "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/wait"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/logger"
@@ -137,6 +139,7 @@ type WorkloadOptions struct {
 	TailTimestamps bool
 	DryRun         bool
 	Yes            bool
+	Output         string
 }
 
 var _ validation.Validatable = (*WorkloadUpdateOptions)(nil)
@@ -186,7 +189,22 @@ func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldError
 		}
 	}
 
+	if opts.Output != "" {
+		errs = errs.Also(validation.Enum(opts.Output, flags.OutputFlagName, []string{printer.OutputFormatJson, printer.OutputFormatYaml, printer.OutputFormatYml}))
+	}
+
 	return errs
+}
+
+func (opts *WorkloadOptions) OutputWorkload(c *cli.Config, workload *cartov1alpha1.Workload) error {
+	export, err := printer.OutputResource(workload, printer.OutputFormat(opts.Output), c.Scheme)
+	if err != nil {
+		c.Eprintf("%s %s\n", printer.Serrorf("Failed to output workload:"), err)
+		return cli.SilenceError(err)
+	}
+	c.Printf("%s\n", export)
+
+	return nil
 }
 
 func DisplayCommandNextSteps(c *cli.Config, workload *cartov1alpha1.Workload) {
@@ -427,22 +445,30 @@ func (opts *WorkloadOptions) checkGitValues(ctx context.Context, workload *carto
 // PublishLocalSource packages the specified source code in the --local-path flag and creates an image
 // that will be eventually published to the registry specified in the --source-image flag.
 // Returns a boolean that indicates if user does actually want to publish the image and an error in case of failure
-func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Config, currentWorkload, workload *cartov1alpha1.Workload) (bool, error) {
+func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Config, currentWorkload, workload *cartov1alpha1.Workload, shouldPrint bool) (bool, error) {
 	if opts.LocalPath == "" {
 		return true, nil
 	}
+	// showPrompts is the opposite to c.NoColor
+	// to determine whether there should be prompts or not
 
+	var okToPush bool
 	taggedImage := strings.Split(workload.Spec.Source.Image, "@sha")[0]
-	okToPush := opts.checkToPublishLocalSource(taggedImage, c, workload)
-	if !okToPush {
-		return okToPush, nil
+	if shouldPrint {
+		// display survey to publish local source if user
+		okToPush = opts.checkToPublishLocalSource(taggedImage, c, workload)
+		if !okToPush {
+			return okToPush, nil
+		}
+	} else {
+		okToPush = true
 	}
 
 	var contentDir string
 	var fileExclusions []string
 	if source.IsDir(opts.LocalPath) {
 		contentDir = opts.LocalPath
-		fileExclusions = opts.loadExcludedPaths(c)
+		fileExclusions = opts.loadExcludedPaths(c, shouldPrint)
 	} else if source.IsZip(opts.LocalPath) {
 		zipContentsDir, err := ioutil.TempDir("", "")
 		defer os.RemoveAll(zipContentsDir)
@@ -458,7 +484,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 			LocalPath:       zipContentsDir,
 			ExcludePathFile: opts.ExcludePathFile,
 		}
-		fileExclusions = tmpOpts.loadExcludedPaths(c)
+		fileExclusions = tmpOpts.loadExcludedPaths(c, shouldPrint)
 	} else {
 		return false, fmt.Errorf("unsupported file format %q", opts.LocalPath)
 	}
@@ -466,8 +492,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	currentRegistryOpts := source.RegistryOpts{CACertPaths: opts.CACertPaths, RegistryUsername: opts.RegistryUsername, RegistryPassword: opts.RegistryPassword, RegistryToken: opts.RegistryToken}
 	var reg registry.Registry
 	var err error
-
-	if c.NoColor {
+	if c.NoColor || !shouldPrint {
 		reg, err = source.NewRegistry(ctx, &currentRegistryOpts)
 	} else {
 		reg, err = source.NewRegistryWithProgress(ctx, &currentRegistryOpts)
@@ -477,7 +502,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	}
 	ctx = logger.StashSourceImageLogger(ctx, logger.NewNoopLogger())
 
-	c.Infof("Publishing source in %q to %q...\n", opts.LocalPath, taggedImage)
+	cli.PrintPrompt(shouldPrint, c.Infof, "Publishing source in %q to %q...\n", opts.LocalPath, taggedImage)
 
 	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, reg, taggedImage)
 	if err != nil {
@@ -486,11 +511,11 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	workload.Spec.Source.Image = digestedImage
 
 	if currentWorkload != nil && currentWorkload.Spec.Source != nil && currentWorkload.Spec.Source.Image == workload.Spec.Source.Image {
-		c.Infof("No source code is changed\n\n")
+		cli.PrintPrompt(shouldPrint, c.Infof, "No source code is changed\n\n")
 		return okToPush, nil
 	}
 
-	c.Emoji(cli.Inbox, cliprinter.Ssuccessf("Published source\n\n"))
+	cli.PrintPromptWithEmoji(shouldPrint, c.Emoji, cli.Inbox, cliprinter.Ssuccessf("Published source\n\n"))
 	return okToPush, nil
 }
 
@@ -506,7 +531,7 @@ func (opts *WorkloadOptions) checkToPublishLocalSource(taggedImage string, c *cl
 	return okToPush
 }
 
-func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config) []string {
+func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config, displayInfo bool) []string {
 	exclude := []string{}
 	if opts.ExcludePathFile != "" {
 		p := filepath.Join(opts.LocalPath, opts.ExcludePathFile)
@@ -535,7 +560,9 @@ func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config) []string {
 			}
 			exclude = append(exclude, p)
 		}
-		c.Infof("The files and/or directories listed in the %s file are being excluded from the uploaded source code.\n", opts.ExcludePathFile)
+		if displayInfo {
+			c.Infof("The files and/or directories listed in the %s file are being excluded from the uploaded source code.\n", opts.ExcludePathFile)
+		}
 	}
 	return exclude
 }
@@ -714,6 +741,32 @@ func isUrl(str string) (bool, error) {
 	}
 }
 
+func (opts *WorkloadOptions) WaitToBeReady(c *cli.Config, workload *cartov1alpha1.Workload) []wait.Worker {
+	workers := []wait.Worker{
+		func(ctx context.Context) error {
+			clientWithWatch, err := watch.GetWatcher(ctx, c)
+			if err != nil {
+				panic(err)
+			}
+			return wait.UntilCondition(ctx, clientWithWatch, types.NamespacedName{Name: workload.Name, Namespace: workload.Namespace}, &cartov1alpha1.WorkloadList{}, cartov1alpha1.WorkloadReadyConditionFunc)
+		},
+	}
+	return workers
+}
+
+func (opts *WorkloadOptions) WaitError(ctx context.Context, c *cli.Config, workload *cartov1alpha1.Workload, workers []wait.Worker) error {
+	if err := wait.Race(ctx, opts.WaitTimeout, workers); err != nil {
+		if err == context.DeadlineExceeded {
+			c.Printf("%s timeout after %s waiting for %q to become ready\n", printer.Serrorf("Error:"), opts.WaitTimeout, workload.Name)
+			return cli.SilenceError(err)
+		}
+		c.Eprintf("%s %s\n", printer.Serrorf("Error:"), err)
+		return cli.SilenceError(err)
+	}
+
+	return nil
+}
+
 func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd *cobra.Command) {
 	cli.NamespaceFlag(ctx, cmd, c, &opts.Namespace)
 	cmd.Flags().StringVarP(&opts.FilePath, cli.StripDash(flags.FilePathFlagName), "f", "", "`file path` containing the description of a single workload, other flags are layered on top of this resource. Use value \"-\" to read from stdin")
@@ -747,6 +800,7 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.Flags().StringVar(&opts.MavenGroup, cli.StripDash(flags.MavenGroupFlagName), "", "maven project to pull artifact from")
 	cmd.Flags().StringVar(&opts.MavenVersion, cli.StripDash(flags.MavenVersionFlagName), "", "version number of maven artifact")
 	cmd.Flags().StringVar(&opts.MavenType, cli.StripDash(flags.MavenTypeFlagName), "", "maven packaging type, defaults to jar")
+	cmd.Flags().StringVarP(&opts.Output, cli.StripDash(flags.OutputFlagName), "o", "", "output the Workload formatted. Supported formats: \"json\", \"yaml\", \"yml\"")
 	cmd.Flags().StringArrayVar(&opts.CACertPaths, cli.StripDash(flags.RegistryCertFlagName), []string{}, "file path to CA certificate used to authenticate with registry, flag can be used multiple times")
 	cmd.Flags().StringVar(&opts.RegistryPassword, cli.StripDash(flags.RegistryPasswordFlagName), "", "username for authenticating with registry")
 	cmd.Flags().StringVar(&opts.RegistryUsername, cli.StripDash(flags.RegistryUsernameFlagName), "", "password for authenticating with registry")

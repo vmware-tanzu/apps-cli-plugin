@@ -349,6 +349,7 @@ To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
 Workload "my-workload" is ready
+
 `,
 		},
 		{
@@ -428,6 +429,7 @@ To get status: "tanzu apps workload get my-workload"
 Waiting for workload "my-workload" to become ready...
 ...tail output...
 Workload "my-workload" is ready
+
 `,
 		},
 		{
@@ -507,6 +509,7 @@ To get status: "tanzu apps workload get my-workload"
 Waiting for workload "my-workload" to become ready...
 ...tail output...
 Workload "my-workload" is ready
+
 `,
 		},
 		{

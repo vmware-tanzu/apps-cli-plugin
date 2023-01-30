@@ -40,12 +40,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands"
@@ -636,9 +638,255 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			},
 			ShouldValidate: true,
 		},
+		{
+			Name: "valid output format",
+			Validatable: &commands.WorkloadGetOptions{
+				Namespace: "default",
+				Name:      "my-workload",
+				Output:    "json",
+			},
+			ShouldValidate: true,
+		},
+		{
+			Name: "invalid output format",
+			Validatable: &commands.WorkloadGetOptions{
+				Namespace: "default",
+				Name:      "my-workload",
+				Output:    "myFormat",
+			},
+			ExpectFieldErrors: validation.EnumInvalidValue("myFormat", flags.OutputFlagName, []string{"json", "yaml", "yml"}),
+		},
 	}
 
 	table.Run(t)
+}
+
+func TestOutputWorkload(t *testing.T) {
+	tests := []struct {
+		name        string
+		args        []string
+		input       *cartov1alpha1.Workload
+		expected    string
+		shouldError bool
+	}{{
+		name: "print output with yaml",
+		args: []string{flags.OutputFlagName, printer.OutputFormatYaml},
+		input: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+				Annotations: map[string]string{
+					"name": "value",
+				},
+				Labels: map[string]string{
+					"name": "value",
+				},
+				UID:                        types.UID("uid-xyz"),
+				ResourceVersion:            "999",
+				Generation:                 1,
+				CreationTimestamp:          metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
+				DeletionTimestamp:          &metav1.Time{Time: time.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC)},
+				Finalizers:                 []string{"my.finalizer"},
+				DeletionGracePeriodSeconds: &[]int64{5}[0],
+				ManagedFields: []metav1.ManagedFieldsEntry{
+					{Manager: "tanzu"},
+				},
+				SelfLink: "/default/my-workload",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "v1",
+						Kind:       "Pod",
+						Name:       "workload-owner",
+					},
+				},
+			},
+			Status: cartov1alpha1.WorkloadStatus{
+				Conditions: []metav1.Condition{
+					{
+						Type:    cartov1alpha1.WorkloadConditionReady,
+						Status:  metav1.ConditionTrue,
+						Reason:  "No printing status",
+						Message: "a hopefully informative message about what went wrong",
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					},
+				},
+			},
+		},
+		expected: `
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  annotations:
+    name: value
+  creationTimestamp: "2021-09-10T15:00:00Z"
+  deletionGracePeriodSeconds: 5
+  deletionTimestamp: "2021-09-10T15:00:00Z"
+  finalizers:
+  - my.finalizer
+  generation: 1
+  labels:
+    name: value
+  managedFields:
+  - manager: tanzu
+  name: my-workload
+  namespace: default
+  ownerReferences:
+  - apiVersion: v1
+    kind: Pod
+    name: workload-owner
+    uid: ""
+  resourceVersion: "999"
+  selfLink: /default/my-workload
+  uid: uid-xyz
+spec: {}
+status:
+  conditions:
+  - lastTransitionTime: "2019-06-29T01:44:05Z"
+    message: a hopefully informative message about what went wrong
+    reason: No printing status
+    status: "True"
+    type: Ready
+  supplyChainRef: {}
+`,
+	}, {
+		name: "print output with json",
+		args: []string{flags.OutputFlagName, printer.OutputFormatJson},
+		input: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-workload",
+				Namespace: "default",
+				Annotations: map[string]string{
+					"name": "value",
+				},
+				Labels: map[string]string{
+					"name": "value",
+				},
+				UID:                        types.UID("uid-xyz"),
+				ResourceVersion:            "999",
+				Generation:                 1,
+				CreationTimestamp:          metav1.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC),
+				DeletionTimestamp:          &metav1.Time{Time: time.Date(2021, time.September, 10, 15, 00, 00, 00, time.UTC)},
+				Finalizers:                 []string{"my.finalizer"},
+				DeletionGracePeriodSeconds: &[]int64{5}[0],
+				ManagedFields: []metav1.ManagedFieldsEntry{
+					{Manager: "tanzu"},
+				},
+				SelfLink: "/default/my-workload",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "v1",
+						Kind:       "Pod",
+						Name:       "workload-owner",
+					},
+				},
+			},
+			Status: cartov1alpha1.WorkloadStatus{
+				Conditions: []metav1.Condition{
+					{
+						Type:    cartov1alpha1.WorkloadConditionReady,
+						Status:  metav1.ConditionTrue,
+						Reason:  "No printing status",
+						Message: "a hopefully informative message about what went wrong",
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					},
+				},
+			},
+		},
+		expected: `
+{
+	"kind": "Workload",
+	"apiVersion": "carto.run/v1alpha1",
+	"metadata": {
+		"name": "my-workload",
+		"namespace": "default",
+		"selfLink": "/default/my-workload",
+		"uid": "uid-xyz",
+		"resourceVersion": "999",
+		"generation": 1,
+		"creationTimestamp": "2021-09-10T15:00:00Z",
+		"deletionTimestamp": "2021-09-10T15:00:00Z",
+		"deletionGracePeriodSeconds": 5,
+		"labels": {
+			"name": "value"
+		},
+		"annotations": {
+			"name": "value"
+		},
+		"ownerReferences": [
+			{
+				"apiVersion": "v1",
+				"kind": "Pod",
+				"name": "workload-owner",
+				"uid": ""
+			}
+		],
+		"finalizers": [
+			"my.finalizer"
+		],
+		"managedFields": [
+			{
+				"manager": "tanzu"
+			}
+		]
+	},
+	"spec": {},
+	"status": {
+		"conditions": [
+			{
+				"type": "Ready",
+				"status": "True",
+				"lastTransitionTime": "2019-06-29T01:44:05Z",
+				"reason": "No printing status",
+				"message": "a hopefully informative message about what went wrong"
+			}
+		],
+		"supplyChainRef": {}
+	}
+}
+`,
+	}, {
+		name:        "not valid output",
+		args:        []string{flags.OutputFlagName, "myBadFormat"},
+		input:       &cartov1alpha1.Workload{},
+		shouldError: true,
+	}}
+
+	for _, test := range tests {
+		scheme := k8sruntime.NewScheme()
+		_ = cartov1alpha1.AddToScheme(scheme)
+		c := cli.NewDefaultConfig("test", scheme)
+		output := &bytes.Buffer{}
+		c.Stdout = output
+		c.Stderr = output
+
+		cmd := &cobra.Command{}
+		ctx := cli.WithCommand(context.Background(), cmd)
+
+		opts := &commands.WorkloadOptions{}
+		opts.DefineFlags(ctx, c, cmd)
+		cmd.ParseFlags(test.args)
+
+		actual := test.input.DeepCopy()
+		err := opts.OutputWorkload(c, actual)
+		if err != nil && !test.shouldError {
+			t.Errorf("OutputWorkload() errored %v", err)
+		}
+		if err == nil && test.shouldError {
+			t.Errorf("OutputWorkload() expected error")
+		}
+		if test.shouldError {
+			return
+		}
+
+		if diff := cmp.Diff(strings.TrimSpace(test.expected), strings.TrimSpace(output.String())); diff != "" {
+			t.Errorf("OutputWorkload() (-want, +got) = %s", diff)
+		}
+	}
 }
 
 func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
@@ -1896,37 +2144,47 @@ func TestWorkloadOptionsPublishLocalSourcePrivateRegistry(t *testing.T) {
 	tests := []struct {
 		name           string
 		args           []string
+		shouldPrint    bool
 		input          string
 		expected       string
 		shouldError    bool
 		expectedOutput string
 	}{{
-		name:     "local source to private registry",
-		args:     []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.YesFlagName},
-		input:    fmt.Sprintf("%s/hello:source", registryHost),
-		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		name:        "local source to private registry",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source", registryHost),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
 `,
 	}, {
-		name:     "local source to private registry with username and pass",
-		args:     []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.RegistryUsernameFlagName, "admin", flags.RegistryPasswordFlagName, "password", flags.YesFlagName},
-		input:    fmt.Sprintf("%s/hello:source", registryHost),
-		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		name:        "local source to private registry with username and pass",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.RegistryUsernameFlagName, "admin", flags.RegistryPasswordFlagName, "password", flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source", registryHost),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
 `,
 	}, {
-		name:     "local source to private registry with token",
-		args:     []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.RegistryTokenFlagName, "myToken123", flags.YesFlagName},
-		input:    fmt.Sprintf("%s/hello:source", registryHost),
-		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		name:        "local source to private registry with token",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.RegistryTokenFlagName, "myToken123", flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source", registryHost),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
 `,
+	}, {
+		name:           "local source to private registry without prompts",
+		args:           []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.YesFlagName},
+		input:          fmt.Sprintf("%s/hello:source", registryHost),
+		expected:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expectedOutput: "",
 	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -1954,7 +2212,7 @@ Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost
 				},
 			}
 
-			_, err := opts.PublishLocalSource(ctx, c, nil, workload)
+			_, err := opts.PublishLocalSource(ctx, c, nil, workload, test.shouldPrint)
 			if err != nil && !test.shouldError {
 				t.Errorf("PublishLocalSource() errored %v", err)
 			}
@@ -1997,44 +2255,49 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 		input            string
 		expected         string
 		shouldError      bool
+		shouldPrint      bool
 		expectedOutput   string
 		skip             bool
 		existingWorkload *cartov1alpha1.Workload
 	}{{
-		name:     "local source with excluded files",
-		args:     []string{flags.LocalPathFlagName, filepath.Join("testdata", "local-source-exclude-files"), flags.YesFlagName},
-		input:    fmt.Sprintf("%s/hello:source", registryHost),
-		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, expectedImageDigest),
+		name:        "local source with excluded files",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, filepath.Join("testdata", "local-source-exclude-files"), flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source", registryHost),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, expectedImageDigest),
 		expectedOutput: `
 The files and/or directories listed in the .tanzuignore file are being excluded from the uploaded source code.
 Publishing source in ` + fmt.Sprintf("%q", filepath.Join("testdata", "local-source-exclude-files")) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
 `,
 	}, {
-		name:     "local source include tanzu ignore with windows path",
-		skip:     runtime.GOOS != "windows",
-		args:     []string{flags.LocalPathFlagName, filepath.Join("testdata", "local-source-exclude-files-windows"), flags.YesFlagName},
-		input:    fmt.Sprintf("%s/hello:source", registryHost),
-		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "8ce661d3fc7f94de72d76ec32f3ab6befc159fc263977e5b80564bf9e97a4509"),
+		name:        "local source include tanzu ignore with windows path",
+		shouldPrint: true,
+		skip:        runtime.GOOS != "windows",
+		args:        []string{flags.LocalPathFlagName, filepath.Join("testdata", "local-source-exclude-files-windows"), flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source", registryHost),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "8ce661d3fc7f94de72d76ec32f3ab6befc159fc263977e5b80564bf9e97a4509"),
 		expectedOutput: `
 The files and/or directories listed in the .tanzuignore file are being excluded from the uploaded source code.
 Publishing source in ` + fmt.Sprintf("%q", filepath.Join("testdata", "local-source-exclude-files-windows")) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
 `,
 	}, {
-		name:     "local source",
-		args:     []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
-		input:    fmt.Sprintf("%s/hello:source", registryHost),
-		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		name:        "local source",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source", registryHost),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
 `,
 	}, {
-		name:     "jar file",
-		args:     []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
-		input:    fmt.Sprintf("%s/hello:source", registryHost),
-		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		name:        "jar file",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source", registryHost),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
@@ -2045,19 +2308,21 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registr
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
 		shouldError: true,
 	}, {
-		name:     "with digest",
-		args:     []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
-		input:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
-		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		name:        "with digest",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
 `,
 	}, {
-		name:     "when workload already has resolved image with digest",
-		args:     []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
-		input:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
-		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		name:        "when workload already has resolved image with digest",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
 		existingWorkload: &cartov1alpha1.Workload{
 			Spec: cartov1alpha1.WorkloadSpec{
 				Source: &cartov1alpha1.Source{
@@ -2070,10 +2335,11 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registr
 No source code is changed
 `,
 	}, {
-		name:     "when workload already has resolved image with digest and no source",
-		args:     []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
-		input:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
-		expected: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		name:        "when workload already has resolved image with digest and no source",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
 		existingWorkload: &cartov1alpha1.Workload{
 			Spec: cartov1alpha1.WorkloadSpec{},
 		},
@@ -2081,6 +2347,18 @@ No source code is changed
 Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
 `,
+	}, {
+		name:           "local source without prompts",
+		args:           []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
+		input:          fmt.Sprintf("%s/hello:source", registryHost),
+		expected:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expectedOutput: "",
+	}, {
+		name:           "jar file without prompts",
+		args:           []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		input:          fmt.Sprintf("%s/hello:source", registryHost),
+		expected:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		expectedOutput: "",
 	}, {
 		name:           "no local path",
 		args:           []string{},
@@ -2123,7 +2401,7 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registr
 				},
 			}
 
-			_, err := opts.PublishLocalSource(ctx, c, test.existingWorkload, workload)
+			_, err := opts.PublishLocalSource(ctx, c, test.existingWorkload, workload, test.shouldPrint)
 			if err != nil && !test.shouldError {
 				t.Errorf("PublishLocalSource() errored %v", err)
 			}
