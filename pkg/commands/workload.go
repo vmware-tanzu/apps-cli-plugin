@@ -449,13 +449,12 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	if opts.LocalPath == "" {
 		return true, nil
 	}
-	// showPrompts is the opposite to c.NoColor
-	// to determine whether there should be prompts or not
 
 	var okToPush bool
 	taggedImage := strings.Split(workload.Spec.Source.Image, "@sha")[0]
 	if shouldPrint {
-		// display survey to publish local source if user
+		// display survey to publish local source if user did not use
+		// --yes flag to accept workload create/update
 		okToPush = opts.checkToPublishLocalSource(taggedImage, c, workload)
 		if !okToPush {
 			return okToPush, nil
@@ -492,6 +491,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	currentRegistryOpts := source.RegistryOpts{CACertPaths: opts.CACertPaths, RegistryUsername: opts.RegistryUsername, RegistryPassword: opts.RegistryPassword, RegistryToken: opts.RegistryToken}
 	var reg registry.Registry
 	var err error
+	// if there is no color or there should not be any prompts, skip the progress bar
 	if c.NoColor || !shouldPrint {
 		reg, err = source.NewRegistry(ctx, &currentRegistryOpts)
 	} else {

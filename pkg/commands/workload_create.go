@@ -131,7 +131,7 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 			c.Printf("\n")
 		}
 	} else if opts.Output != "" && opts.Yes {
-		// since there are no prompts, set okToApply to true (accepted through --yes)
+		// since there are no prompts, set okToCreate to true (accepted through --yes)
 		okToCreate = true
 		if _, err := opts.PublishLocalSource(ctx, c, workload, workload, shouldPrint); err != nil {
 			return err
