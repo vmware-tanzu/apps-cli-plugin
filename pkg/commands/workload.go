@@ -100,16 +100,17 @@ type WorkloadOptions struct {
 	Debug       bool
 	LiveUpdate  bool
 
-	FilePath        string
-	GitRepo         string
-	GitCommit       string
-	GitBranch       string
-	GitTag          string
-	SourceImage     string
-	LocalPath       string
-	ExcludePathFile string
-	Image           string
-	SubPath         string
+	FilePath             string
+	GitRepo              string
+	GitCommit            string
+	GitBranch            string
+	GitTag               string
+	SourceImage          string
+	LocalPath            string
+	ExcludePathFile      string
+	Image                string
+	SubPath              string
+	LocalRegistryService bool
 
 	BuildEnv    []string
 	Env         []string
@@ -181,9 +182,6 @@ func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldError
 	}
 
 	if opts.RegistryPassword != "" || opts.RegistryUsername != "" || opts.RegistryToken != "" || len(opts.CACertPaths) != 0 {
-		if opts.SourceImage == "" {
-			errs = errs.Also(validation.ErrMissingField(flags.SourceImageFlagName))
-		}
 		if opts.LocalPath == "" {
 			errs = errs.Also(validation.ErrMissingField(flags.LocalPathFlagName))
 		}
@@ -450,8 +448,30 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 		return true, nil
 	}
 
-	var okToPush bool
+	var okToPush, local bool
+	var svcNamespacedName *types.NamespacedName
+	var err error
+
 	taggedImage := strings.Split(workload.Spec.Source.Image, "@sha")[0]
+
+	svcNamespacedName, err = source.GetNamespacedName()
+	if err != nil {
+		return false, nil
+	}
+	localImageRepo := fmt.Sprintf("%s.%s.svc.cluster.local", svcNamespacedName.Name, svcNamespacedName.Namespace)
+
+	if taggedImage == "" {
+		taggedImage = fmt.Sprintf("%s/%s/%s:%s", localImageRepo, workload.Namespace, workload.Name, source.ImageTag)
+		// local = true
+	}
+
+	local = opts.LocalRegistryService
+	// } else {
+	// 	if strings.HasPrefix(taggedImage, localImageRepo) {
+	// 		local = true
+	// 	}
+	// }
+
 	if shouldPrint {
 		// display survey to publish local source if user did not use
 		// --yes flag to accept workload create/update
@@ -488,9 +508,17 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 		return false, fmt.Errorf("unsupported file format %q", opts.LocalPath)
 	}
 
+	if local {
+		localTransport, err := source.LocalRegsitryTransport(ctx, c.GetClientSet(), c.KubeRestConfig(), svcNamespacedName)
+		if err != nil {
+			c.Errorf("Failed to get local registry\n")
+			return false, err
+		}
+		ctx = source.StashContainerRemoteTransport(ctx, localTransport)
+	}
+
 	currentRegistryOpts := source.RegistryOpts{CACertPaths: opts.CACertPaths, RegistryUsername: opts.RegistryUsername, RegistryPassword: opts.RegistryPassword, RegistryToken: opts.RegistryToken}
 	var reg registry.Registry
-	var err error
 	// if there is no color or there should not be any prompts, skip the progress bar
 	if c.NoColor || !shouldPrint {
 		reg, err = source.NewRegistry(ctx, &currentRegistryOpts)
@@ -507,6 +535,34 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, reg, taggedImage)
 	if err != nil {
 		return okToPush, err
+	}
+
+	if local {
+		workload.Spec.Source = &cartov1alpha1.Source{}
+		// TODO: This needs to be rewritten to follow coding conventions
+		customTransport, err := source.LocalRegsitryTransport(ctx, c.GetClientSet(), c.KubeRestConfig(), svcNamespacedName)
+		if err != nil {
+			c.Errorf("Failed to create local transport with service proxy\n")
+			return false, err
+		}
+		nc := http.Client{
+			Transport: customTransport,
+		}
+
+		resp, err := nc.Get("https://source-registry/registry")
+		if err != nil {
+			panic(err)
+		}
+		defer resp.Body.Close()
+
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			c.Errorf("source-registry-proxy returned an invalid registry response")
+			return false, err
+		}
+
+		newval := string(bodyBytes)
+		digestedImage = strings.Replace(digestedImage, "source-registry.tap-source-storage.svc.cluster.local", newval, 1)
 	}
 	workload.Spec.Source.Image = digestedImage
 
@@ -789,6 +845,7 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.Flags().StringVar(&opts.SubPath, cli.StripDash(flags.SubPathFlagName), "", "relative `path` inside the repo or image to treat as application root (to unset, pass empty string \"\")")
 	cmd.Flags().StringVar(&opts.LocalPath, cli.StripDash(flags.LocalPathFlagName), "", "`path` to a directory, .zip, .jar or .war file containing workload source code")
 	cmd.MarkFlagDirname(cli.StripDash(flags.LocalPathFlagName))
+	cmd.Flags().BoolVar(&opts.LocalRegistryService, cli.StripDash(flags.LocalRegistryServiceFlagName), false, "Use oncluster registry proxy")
 	cmd.Flags().StringVarP(&opts.Image, cli.StripDash(flags.ImageFlagName), "i", "", "pre-built `image`, skips the source resolution and build phases of the supply chain")
 	cmd.Flags().StringArrayVarP(&opts.Env, cli.StripDash(flags.EnvFlagName), "e", []string{}, "environment variables represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
 	cmd.Flags().StringArrayVar(&opts.BuildEnv, cli.StripDash(flags.BuildEnvFlagName), []string{}, "build environment variables represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")

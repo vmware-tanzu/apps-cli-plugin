@@ -2407,19 +2407,6 @@ To get status: "tanzu apps workload get my-workload --namespace test-namespace"
 `,
 		},
 		{
-			Name:         "local path - missing fields",
-			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
-			GivenObjects: givenNamespaceDefault,
-			ShouldError:  true,
-			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
-				if expected, actual := false, cmd.SilenceUsage; expected != actual {
-					t.Errorf("expected cmd.SilenceUsage to be %t, actually %t", expected, actual)
-				}
-
-				return nil
-			},
-		},
-		{
 			Name:        "filepath invalid name",
 			Args:        []string{flags.FilePathFlagName, "testdata/workload-invalid-name.yaml", flags.YesFlagName},
 			ShouldError: true,

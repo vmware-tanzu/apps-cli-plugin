@@ -539,39 +539,6 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			ExpectFieldErrors: validation.ErrMissingField(flags.LocalPathFlagName),
 		},
 		{
-			Name: "ca cert with no source image",
-			Validatable: &commands.WorkloadOptions{
-				Namespace:   "default",
-				Name:        "my-resource",
-				LocalPath:   localRepo,
-				CACertPaths: []string{caCertPath},
-			},
-			ExpectFieldErrors: validation.ErrMissingField(flags.SourceImageFlagName),
-		},
-		{
-			Name: "ca cert with no local path and no source image",
-			Validatable: &commands.WorkloadOptions{
-				Namespace:   "default",
-				Name:        "my-resource",
-				CACertPaths: []string{caCertPath},
-			},
-			ExpectFieldErrors: validation.FieldErrors{}.Also(
-				validation.ErrMissingField(flags.SourceImageFlagName),
-				validation.ErrMissingField(flags.LocalPathFlagName),
-			),
-		},
-		{
-			Name: "registry username and pass with no source image",
-			Validatable: &commands.WorkloadOptions{
-				Namespace:        "default",
-				Name:             "my-resource",
-				LocalPath:        localRepo,
-				RegistryUsername: "username",
-				RegistryPassword: "password",
-			},
-			ExpectFieldErrors: validation.ErrMissingField(flags.SourceImageFlagName),
-		},
-		{
 			Name: "registry username and pass with no local path",
 			Validatable: &commands.WorkloadOptions{
 				Namespace:        "default",
@@ -583,29 +550,6 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			ExpectFieldErrors: validation.ErrMissingField(flags.LocalPathFlagName),
 		},
 		{
-			Name: "registry username and pass with no local path and no source image",
-			Validatable: &commands.WorkloadOptions{
-				Namespace:        "default",
-				Name:             "my-resource",
-				RegistryUsername: "username",
-				RegistryPassword: "password",
-			},
-			ExpectFieldErrors: validation.FieldErrors{}.Also(
-				validation.ErrMissingField(flags.SourceImageFlagName),
-				validation.ErrMissingField(flags.LocalPathFlagName),
-			),
-		},
-		{
-			Name: "registry token with no source image",
-			Validatable: &commands.WorkloadOptions{
-				Namespace:     "default",
-				Name:          "my-resource",
-				RegistryToken: "my-token",
-				LocalPath:     localRepo,
-			},
-			ExpectFieldErrors: validation.ErrMissingField(flags.SourceImageFlagName),
-		},
-		{
 			Name: "registry token with no local path",
 			Validatable: &commands.WorkloadOptions{
 				Namespace:     "default",
@@ -614,18 +558,6 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 				SourceImage:   "repo.example/image:tag",
 			},
 			ExpectFieldErrors: validation.ErrMissingField(flags.LocalPathFlagName),
-		},
-		{
-			Name: "registry token with no source image and no local path",
-			Validatable: &commands.WorkloadOptions{
-				Namespace:     "default",
-				Name:          "my-resource",
-				RegistryToken: "my-token",
-			},
-			ExpectFieldErrors: validation.FieldErrors{}.Also(
-				validation.ErrMissingField(flags.SourceImageFlagName),
-				validation.ErrMissingField(flags.LocalPathFlagName),
-			),
 		},
 		{
 			Name: "registry token",

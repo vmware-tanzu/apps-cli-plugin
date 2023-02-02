@@ -748,19 +748,6 @@ spec:
 			ShouldError: true,
 		},
 		{
-			Name:         "local path - missing fields",
-			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
-			GivenObjects: givenNamespaceDefault,
-			ShouldError:  true,
-			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
-				if expected, actual := false, cmd.SilenceUsage; expected != actual {
-					t.Errorf("expected cmd.SilenceUsage to be %t, actually %t", expected, actual)
-				}
-
-				return nil
-			},
-		},
-		{
 			Name:         "add annotation",
 			Args:         []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.AnnotationFlagName, "NEW=value", flags.AnnotationFlagName, "FOO=bar", flags.AnnotationFlagName, "removeme-"},
 			GivenObjects: givenNamespaceDefault,
