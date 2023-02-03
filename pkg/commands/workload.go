@@ -557,7 +557,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	if isLocal {
 		workload.Spec.Source = &cartov1alpha1.Source{}
 
-		digestedImage = strings.Replace(digestedImage, fmt.Sprintf("%s.%s.svc.cluster.local", source.SourceRegistryService, source.SourceRegistryNamespace), registryBasePath, 1)
+		digestedImage = strings.Replace(digestedImage, fmt.Sprintf("%s/%s", localImageRepo, source.ImageTag), registryBasePath, 1)
 	}
 
 	workload.Spec.Source.Image = digestedImage
