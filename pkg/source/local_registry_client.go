@@ -30,16 +30,18 @@ import (
 )
 
 const ImageTag = "source"
+const SourceRegistryService = "source-registry"
+const SourceRegistryNamespace = "tap-source-storage"
 
 func LocalRegsitryTransport(ctx context.Context, cl *kubernetes.Clientset,
-	kubeconfig *rest.Config, svc *types.NamespacedName) (http.RoundTripper, error) {
+	kubeconfig *rest.Config) (http.RoundTripper, error) {
 
-	_, err := cl.CoreV1().Services(svc.Namespace).Get(ctx, svc.Name, metav1.GetOptions{})
+	_, err := cl.CoreV1().Services(SourceRegistryNamespace).Get(ctx, SourceRegistryService, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	r := cl.CoreV1().RESTClient().Get().Namespace(svc.Namespace).Resource("services").SubResource("proxy").Name(net.JoinSchemeNamePort("https", svc.Name, "443"))
+	r := cl.CoreV1().RESTClient().Get().Namespace(SourceRegistryNamespace).Resource("services").SubResource("proxy").Name(net.JoinSchemeNamePort("https", SourceRegistryService, "443"))
 
 	gv := corev1.SchemeGroupVersion
 	kubeconfig.GroupVersion = &gv

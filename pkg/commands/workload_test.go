@@ -2073,6 +2073,8 @@ func TestWorkloadOptionsPublishLocalSourcePrivateRegistry(t *testing.T) {
 		t.Fatalf("Unable to parse certificate %v", err)
 	}
 
+	sourceImage := fmt.Sprintf("%s/hello:source", registryHost)
+
 	tests := []struct {
 		name           string
 		args           []string
@@ -2084,7 +2086,7 @@ func TestWorkloadOptionsPublishLocalSourcePrivateRegistry(t *testing.T) {
 	}{{
 		name:        "local source to private registry",
 		shouldPrint: true,
-		args:        []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.RegistryCertFlagName, cert.Name(), flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
 		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
@@ -2094,7 +2096,7 @@ Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost
 	}, {
 		name:        "local source to private registry with username and pass",
 		shouldPrint: true,
-		args:        []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.RegistryUsernameFlagName, "admin", flags.RegistryPasswordFlagName, "password", flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.RegistryCertFlagName, cert.Name(), flags.RegistryUsernameFlagName, "admin", flags.RegistryPasswordFlagName, "password", flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
 		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
@@ -2104,7 +2106,7 @@ Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost
 	}, {
 		name:        "local source to private registry with token",
 		shouldPrint: true,
-		args:        []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.RegistryTokenFlagName, "myToken123", flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.RegistryCertFlagName, cert.Name(), flags.RegistryTokenFlagName, "myToken123", flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
 		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
@@ -2113,7 +2115,7 @@ Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost
 `,
 	}, {
 		name:           "local source to private registry without prompts",
-		args:           []string{flags.LocalPathFlagName, localSource, flags.RegistryCertFlagName, cert.Name(), flags.YesFlagName},
+		args:           []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.RegistryCertFlagName, cert.Name(), flags.YesFlagName},
 		input:          fmt.Sprintf("%s/hello:source", registryHost),
 		expected:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: "",
@@ -2181,6 +2183,8 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 		expectedImageDigest = "4b931bb7ef0a7780a3fc58364aaf8634cf4885af6359fb692461f0247c8a9f34"
 	}
 
+	sourceImage := fmt.Sprintf("%s/hello:source", registryHost)
+
 	tests := []struct {
 		name             string
 		args             []string
@@ -2194,7 +2198,7 @@ func TestWorkloadOptionsPublishLocalSource(t *testing.T) {
 	}{{
 		name:        "local source with excluded files",
 		shouldPrint: true,
-		args:        []string{flags.LocalPathFlagName, filepath.Join("testdata", "local-source-exclude-files"), flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, filepath.Join("testdata", "local-source-exclude-files"), flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
 		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, expectedImageDigest),
 		expectedOutput: `
@@ -2206,7 +2210,7 @@ Publishing source in ` + fmt.Sprintf("%q", filepath.Join("testdata", "local-sour
 		name:        "local source include tanzu ignore with windows path",
 		shouldPrint: true,
 		skip:        runtime.GOOS != "windows",
-		args:        []string{flags.LocalPathFlagName, filepath.Join("testdata", "local-source-exclude-files-windows"), flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, filepath.Join("testdata", "local-source-exclude-files-windows"), flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
 		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "8ce661d3fc7f94de72d76ec32f3ab6befc159fc263977e5b80564bf9e97a4509"),
 		expectedOutput: `
@@ -2217,7 +2221,7 @@ Publishing source in ` + fmt.Sprintf("%q", filepath.Join("testdata", "local-sour
 	}, {
 		name:        "local source",
 		shouldPrint: true,
-		args:        []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
 		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
@@ -2227,7 +2231,7 @@ Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost
 	}, {
 		name:        "jar file",
 		shouldPrint: true,
-		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
 		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
 		expectedOutput: `
@@ -2236,13 +2240,13 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registr
 `,
 	}, {
 		name:        "invalid file",
-		args:        []string{flags.LocalPathFlagName, filepath.Join("testdata", "invalid.zip"), flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, filepath.Join("testdata", "invalid.zip"), flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
 		shouldError: true,
 	}, {
 		name:        "with digest",
 		shouldPrint: true,
-		args:        []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
 		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: `
@@ -2252,7 +2256,7 @@ Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost
 	}, {
 		name:        "when workload already has resolved image with digest",
 		shouldPrint: true,
-		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
 		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
 		existingWorkload: &cartov1alpha1.Workload{
@@ -2269,7 +2273,7 @@ No source code is changed
 	}, {
 		name:        "when workload already has resolved image with digest and no source",
 		shouldPrint: true,
-		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
 		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
 		existingWorkload: &cartov1alpha1.Workload{
@@ -2281,13 +2285,13 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registr
 `,
 	}, {
 		name:           "local source without prompts",
-		args:           []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
+		args:           []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:          fmt.Sprintf("%s/hello:source", registryHost),
 		expected:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
 		expectedOutput: "",
 	}, {
 		name:           "jar file without prompts",
-		args:           []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		args:           []string{flags.LocalPathFlagName, helloJarFilePath, flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:          fmt.Sprintf("%s/hello:source", registryHost),
 		expected:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
 		expectedOutput: "",
@@ -2299,7 +2303,7 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registr
 		expectedOutput: "",
 	}, {
 		name:        "publish local source with error",
-		args:        []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
+		args:        []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, "a", flags.YesFlagName},
 		input:       "a",
 		shouldError: true,
 	}}
