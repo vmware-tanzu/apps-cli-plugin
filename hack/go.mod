@@ -6,7 +6,7 @@ require (
 	dies.dev/diegen v0.7.0
 	github.com/get-woke/woke v0.19.0
 	golang.org/x/tools v0.5.0
-	sigs.k8s.io/controller-tools v0.11.2
+	sigs.k8s.io/controller-tools v0.11.3
 )
 
 require (
