@@ -58,6 +58,7 @@ import (
 const (
 	AnnotationReservedKey     = "annotations"
 	MavenOverwrittenNoticeMsg = "Maven configuration flags have overwritten values provided by \"--params-yaml\"."
+	SourceProxyDomain         = "svc.cluster.local"
 )
 
 func NewWorkloadCommand(ctx context.Context, c *cli.Config) *cobra.Command {
@@ -100,21 +101,19 @@ type WorkloadOptions struct {
 	Debug       bool
 	LiveUpdate  bool
 
-	FilePath             string
-	GitRepo              string
-	GitCommit            string
-	GitBranch            string
-	GitTag               string
-	SourceImage          string
-	LocalPath            string
-	ExcludePathFile      string
-	Image                string
-	SubPath              string
-	LocalRegistryService bool
-
-	BuildEnv    []string
-	Env         []string
-	ServiceRefs []string
+	FilePath        string
+	GitRepo         string
+	GitCommit       string
+	GitBranch       string
+	GitTag          string
+	SourceImage     string
+	LocalPath       string
+	ExcludePathFile string
+	Image           string
+	SubPath         string
+	BuildEnv        []string
+	Env             []string
+	ServiceRefs     []string
 
 	ServiceAccountName string
 
@@ -452,46 +451,20 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	var okToPush bool
 
 	isLocal := opts.SourceImage == ""
-	var registryBasePath string
-	var taggedImageForDisplay string
-	localImageRepo := fmt.Sprintf("%s.%s.svc.cluster.local", source.SourceRegistryService, source.SourceRegistryNamespace)
+	localImageRepo := fmt.Sprintf("%s.%s.%s", source.SourceProxyService, source.SourceProxyNamespace, SourceProxyDomain)
 
 	if isLocal {
 		taggedImage = fmt.Sprintf("%s/%s:%s-%s", localImageRepo, source.ImageTag, workload.Namespace, workload.Name)
-		// TODO: This needs to be rewritten to follow coding conventions
-		customTransport, err := source.LocalRegsitryTransport(ctx, c.GetClientSet(), c.KubeRestConfig())
-		if err != nil {
-			c.Errorf("Failed to create local transport with service proxy\n")
-			return false, err
-		}
-		nc := http.Client{
-			Transport: customTransport,
-		}
-
-		resp, err := nc.Get("https://source-registry/registry")
-		if err != nil {
-			panic(err)
-		}
-		defer resp.Body.Close()
-
-		bodyBytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			c.Errorf("source-registry-proxy returned an invalid registry response")
-			return false, err
-		}
-
-		registryBasePath = string(bodyBytes)
-		taggedImageForDisplay = fmt.Sprintf("%s:%s-%s", registryBasePath, workload.Namespace, workload.Name)
-
 	} else {
-		taggedImage = strings.Split(workload.Spec.Source.Image, "@sha")[0]
-		taggedImageForDisplay = workload.Spec.Source.Image
+		taggedImage = workload.Spec.Source.Image
 	}
+
+	taggedImage = strings.Split(taggedImage, "@sha")[0]
 
 	if shouldPrint {
 		// display survey to publish local source if user did not use
 		// --yes flag to accept workload create/update
-		okToPush = opts.checkToPublishLocalSource(taggedImageForDisplay, c, workload)
+		okToPush = opts.checkToPublishLocalSource(taggedImage, c, workload)
 		if !okToPush {
 			return okToPush, nil
 		}
@@ -524,10 +497,11 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 		return false, fmt.Errorf("unsupported file format %q", opts.LocalPath)
 	}
 
+	localTransport := &source.Wrapper{}
 	if isLocal {
-		localTransport, err := source.LocalRegsitryTransport(ctx, c.GetClientSet(), c.KubeRestConfig())
+		var err error
+		localTransport, err = source.LocalRegistryTransport(ctx, c.GetClientSet(), c.KubeRestConfig())
 		if err != nil {
-			c.Errorf("Failed to get local registry\n")
 			return false, err
 		}
 		ctx = source.StashContainerRemoteTransport(ctx, localTransport)
@@ -557,7 +531,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	if isLocal {
 		workload.Spec.Source = &cartov1alpha1.Source{}
 
-		digestedImage = strings.Replace(digestedImage, fmt.Sprintf("%s/%s", localImageRepo, source.ImageTag), registryBasePath, 1)
+		digestedImage = strings.Replace(digestedImage, fmt.Sprintf("%s/%s", localImageRepo, source.ImageTag), localTransport.Repository, 1)
 	}
 
 	workload.Spec.Source.Image = digestedImage

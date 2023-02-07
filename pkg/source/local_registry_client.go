@@ -18,7 +18,6 @@ package source
 
 import (
 	"context"
-	"net/http"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,18 +28,18 @@ import (
 )
 
 const ImageTag = "source"
-const SourceRegistryService = "local-source-proxy"
-const SourceRegistryNamespace = "tap-local-source-assistant"
+const SourceProxyService = "local-source-proxy"
+const SourceProxyNamespace = "tap-local-source-system"
 
-func LocalRegsitryTransport(ctx context.Context, cl *kubernetes.Clientset,
-	kubeconfig *rest.Config) (http.RoundTripper, error) {
+func LocalRegistryTransport(ctx context.Context, cl *kubernetes.Clientset,
+	kubeconfig *rest.Config) (*Wrapper, error) {
 
-	_, err := cl.CoreV1().Services(SourceRegistryNamespace).Get(ctx, SourceRegistryService, metav1.GetOptions{})
+	_, err := cl.CoreV1().Services(SourceProxyNamespace).Get(ctx, SourceProxyService, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	r := cl.CoreV1().RESTClient().Get().Namespace(SourceRegistryNamespace).Resource("services").SubResource("proxy").Name(net.JoinSchemeNamePort("http", SourceRegistryService, "5001"))
+	r := cl.CoreV1().RESTClient().Get().Namespace(SourceProxyNamespace).Resource("services").SubResource("proxy").Name(net.JoinSchemeNamePort("http", SourceProxyService, "5001"))
 
 	gv := corev1.SchemeGroupVersion
 	kubeconfig.GroupVersion = &gv
@@ -53,15 +52,8 @@ func LocalRegsitryTransport(ctx context.Context, cl *kubernetes.Clientset,
 
 	// Wrap transport to rewrite paths
 	return &Wrapper{
-		Client: client.Client,
-		URL:    r.URL(),
+		Client:     client.Client,
+		URL:        r.URL(),
+		Repository: "",
 	}, nil
 }
-
-// func GetNamespacedName() (*types.NamespacedName, error) {
-// 	svcNamespacedName := &types.NamespacedName{}
-// 	svcNamespacedName.Name = "source-registry"
-// 	svcNamespacedName.Namespace = "tap-source-storage"
-
-// 	return svcNamespacedName, nil
-// }

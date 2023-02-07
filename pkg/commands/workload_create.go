@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/logs"
@@ -105,14 +106,16 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 
 	var okToCreate bool
 	shouldPrint := opts.Output == "" || (opts.Output != "" && !opts.Yes)
-	if shouldPrint {
-		// If user answers yes to survey prompt about publishing source, continue with workload creation
-		if okToPush, err := opts.PublishLocalSource(ctx, c, nil, workload, shouldPrint); err != nil {
-			return err
-		} else if !okToPush {
-			return nil
-		}
+	if okToPush, err := opts.PublishLocalSource(ctx, c, nil, workload, shouldPrint); err != nil {
+		return err
+	} else if !okToPush {
+		return nil
+	}
+	if opts.LocalPath != "" && opts.SourceImage == "" {
+		workload.MergeAnnotations(apis.LocalSourceProxyAnnotationName, workload.Spec.Image)
+	}
 
+	if shouldPrint {
 		var err error
 		okToCreate, err = opts.Create(ctx, c, workload)
 		if err != nil {
@@ -127,9 +130,6 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	} else if opts.Output != "" && opts.Yes {
 		// since there are no prompts, set okToCreate to true (accepted through --yes)
 		okToCreate = true
-		if _, err := opts.PublishLocalSource(ctx, c, workload, workload, shouldPrint); err != nil {
-			return err
-		}
 		if err := c.Create(ctx, workload); err != nil {
 			return err
 		}

@@ -17,3 +17,4 @@ limitations under the License.
 package apis
 
 const ServiceClaimAnnotationName = "serviceclaims.supplychain.apps.x-tanzu.vmware.com/extensions"
+const LocalSourceProxyAnnotationName = "local-source-proxy.apps.tanzu.vmware.com"

@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/logs"
@@ -152,20 +153,24 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 		return nil
 	}
 
+	workloadExists := currentWorkload != nil
+
+	if okToPush, err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
+		return err
+	} else if !okToPush {
+		return nil
+	}
+	if opts.LocalPath != "" && opts.SourceImage == "" && !workloadExists {
+		workload.MergeAnnotations(apis.LocalSourceProxyAnnotationName, workload.Spec.Image)
+	}
+
 	// if output flag was not set or it was not used with yes flag, then proceed to show
 	// surveys and all other output
 	if shouldPrint {
-		// If user answers yes to survey prompt about publishing source, continue with creation or update
-		if okToPush, err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
-			return err
-		} else if !okToPush {
-			return nil
-		}
-
 		var okToCreate, okToUpdate bool
 		var createError, updateError error
 		// If there is no workload, create a new one
-		if currentWorkload == nil {
+		if !workloadExists {
 			okToCreate, createError = opts.Create(ctx, c, workload)
 			if createError != nil {
 				return createError
@@ -186,10 +191,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 	} else if opts.Output != "" && opts.Yes {
 		// since there are no prompts, set okToApply to true (accepted through --yes)
 		okToApply = true
-		if _, err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
-			return err
-		}
-		if currentWorkload == nil {
+		if !workloadExists {
 			if err := c.Create(ctx, workload); err != nil {
 				return err
 			}

@@ -22,11 +22,16 @@ import (
 	"strings"
 )
 
+const (
+	LocalSourceProxyRegistryPath = "Lsp-Registry-Path"
+)
+
 // Wrapper implements RoundTripper by appending request path and parameters to
 // its URL.
 type Wrapper struct {
-	Client *http.Client
-	URL    *url.URL
+	Client     *http.Client
+	URL        *url.URL
+	Repository string
 }
 
 // RoundTrip implements the http.RoundTripper interface.
@@ -53,5 +58,17 @@ func (w *Wrapper) RoundTrip(req *http.Request) (*http.Response, error) {
 	u.RawQuery = params.Encode()
 	req.URL = u
 
-	return w.Client.Transport.RoundTrip(req)
+	resp, err := w.Client.Transport.RoundTrip(req)
+
+	for k, vs := range resp.Header {
+		for _, v := range vs {
+			if k == LocalSourceProxyRegistryPath {
+				// add log to say we got the local source proxy
+				w.Repository = v
+				break
+			}
+		}
+	}
+
+	return resp, err
 }
