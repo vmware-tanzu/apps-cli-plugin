@@ -225,6 +225,10 @@ jobs:
         set -o pipefail
 
         tar -xvf tanzu-apps-plugin.tar.gz
+        if [[ -z ${BUILD_VERSION} ]]; then
+          BUILD_SHA_SHORT=$(git rev-parse --short HEAD)
+          BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)+dev-$BUILD_SHA_SHORT
+        fi
         tanzu plugin install apps --local ./${OS_ARCH} --version ${BUILD_VERSION:-v0.0.0-dev}
     - name: Generate certs
       run: |
