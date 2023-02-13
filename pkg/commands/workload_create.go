@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/logs"
@@ -111,9 +110,7 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	} else if !okToPush {
 		return nil
 	}
-	if opts.LocalPath != "" && opts.SourceImage == "" {
-		workload.MergeAnnotations(apis.LocalSourceProxyAnnotationName, workload.Spec.Image)
-	}
+	opts.ManageLocalSourceProxyAnnotation(nil, workload)
 
 	if shouldPrint {
 		var err error

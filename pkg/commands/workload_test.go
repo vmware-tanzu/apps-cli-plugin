@@ -55,6 +55,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/logger"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/logger/fake"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
+	fake_source "github.com/vmware-tanzu/apps-cli-plugin/pkg/source/fake"
 )
 
 var localSource = filepath.Join("testdata", "local-source")
@@ -539,6 +540,39 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			ExpectFieldErrors: validation.ErrMissingField(flags.LocalPathFlagName),
 		},
 		{
+			Name: "ca cert with no source image",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:   "default",
+				Name:        "my-resource",
+				LocalPath:   localRepo,
+				CACertPaths: []string{caCertPath},
+			},
+			ExpectFieldErrors: validation.ErrMissingField(flags.SourceImageFlagName),
+		},
+		{
+			Name: "ca cert with no local path and no source image",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:   "default",
+				Name:        "my-resource",
+				CACertPaths: []string{caCertPath},
+			},
+			ExpectFieldErrors: validation.FieldErrors{}.Also(
+				validation.ErrMissingField(flags.SourceImageFlagName),
+				validation.ErrMissingField(flags.LocalPathFlagName),
+			),
+		},
+		{
+			Name: "registry username and pass with no source image",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:        "default",
+				Name:             "my-resource",
+				LocalPath:        localRepo,
+				RegistryUsername: "username",
+				RegistryPassword: "password",
+			},
+			ExpectFieldErrors: validation.ErrMissingField(flags.SourceImageFlagName),
+		},
+		{
 			Name: "registry username and pass with no local path",
 			Validatable: &commands.WorkloadOptions{
 				Namespace:        "default",
@@ -550,6 +584,29 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 			ExpectFieldErrors: validation.ErrMissingField(flags.LocalPathFlagName),
 		},
 		{
+			Name: "registry username and pass with no local path and no source image",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:        "default",
+				Name:             "my-resource",
+				RegistryUsername: "username",
+				RegistryPassword: "password",
+			},
+			ExpectFieldErrors: validation.FieldErrors{}.Also(
+				validation.ErrMissingField(flags.SourceImageFlagName),
+				validation.ErrMissingField(flags.LocalPathFlagName),
+			),
+		},
+		{
+			Name: "registry token with no source image",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:     "default",
+				Name:          "my-resource",
+				RegistryToken: "my-token",
+				LocalPath:     localRepo,
+			},
+			ExpectFieldErrors: validation.ErrMissingField(flags.SourceImageFlagName),
+		},
+		{
 			Name: "registry token with no local path",
 			Validatable: &commands.WorkloadOptions{
 				Namespace:     "default",
@@ -558,6 +615,18 @@ func TestWorkloadOptionsValidate(t *testing.T) {
 				SourceImage:   "repo.example/image:tag",
 			},
 			ExpectFieldErrors: validation.ErrMissingField(flags.LocalPathFlagName),
+		},
+		{
+			Name: "registry token with no source image and no local path",
+			Validatable: &commands.WorkloadOptions{
+				Namespace:     "default",
+				Name:          "my-resource",
+				RegistryToken: "my-token",
+			},
+			ExpectFieldErrors: validation.FieldErrors{}.Also(
+				validation.ErrMissingField(flags.SourceImageFlagName),
+				validation.ErrMissingField(flags.LocalPathFlagName),
+			),
 		},
 		{
 			Name: "registry token",
@@ -2055,6 +2124,161 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 	}
 }
 
+func TestManageLocalSourceProxyAnnotation(t *testing.T) {
+	sourceImage := "localsource/hello:source"
+	tests := []struct {
+		name             string
+		args             []string
+		currentWorkload  *cartov1alpha1.Workload
+		workload         *cartov1alpha1.Workload
+		expectedWorkload *cartov1alpha1.Workload
+	}{{
+		name: "add annotation",
+		args: []string{flags.LocalPathFlagName, localSource},
+		workload: &cartov1alpha1.Workload{
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: "my-image@sha:123abc",
+				},
+			},
+		},
+		expectedWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-image@sha:123abc",
+				},
+			},
+		},
+	}, {
+		name: "remove annotation",
+		args: []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage},
+		currentWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-local-source-annotation",
+				},
+			},
+		},
+		workload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-local-source-annotation",
+				},
+			},
+		},
+		expectedWorkload: &cartov1alpha1.Workload{},
+	}, {
+		name: "update annotation",
+		args: []string{flags.LocalPathFlagName, localSource},
+		currentWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-local-source-annotation",
+				},
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: "my-image@sha:123abc",
+				},
+			},
+		},
+		workload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-local-source-annotation",
+				},
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: "my-image@sha:456efg",
+				},
+			},
+		},
+		expectedWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-image@sha:456efg",
+				},
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: "my-image@sha:456efg",
+				},
+			},
+		},
+	}, {
+		name: "do not change annotation when setting other flags",
+		args: []string{flags.LocalPathFlagName, localSource, flags.TypeFlagName, "my-type"},
+		currentWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-image@sha:123abc",
+				},
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: "my-image@sha:123abc",
+				},
+			},
+		},
+		workload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-image@sha:123abc",
+				},
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: "my-image@sha:123abc",
+				},
+			},
+		},
+		expectedWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-image@sha:123abc",
+				},
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: "my-image@sha:123abc",
+				},
+			},
+		},
+	}}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			scheme := k8sruntime.NewScheme()
+			c := cli.NewDefaultConfig("test", scheme)
+
+			cmd := &cobra.Command{}
+			ctx := cli.WithCommand(context.Background(), cmd)
+			opts := &commands.WorkloadOptions{}
+			opts.LoadDefaults(c)
+			opts.DefineFlags(ctx, c, cmd)
+			cmd.ParseFlags(test.args)
+
+			opts.ManageLocalSourceProxyAnnotation(test.currentWorkload, test.workload)
+
+			if test.expectedWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) && !test.workload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) {
+				t.Errorf("expected local source proxy annotation to exist in workload")
+			}
+			if !test.expectedWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) && test.workload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) {
+				t.Errorf("local source proxy annotation not expected to be in workload")
+			}
+			if test.expectedWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) && test.workload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) {
+				workloadAnnotation := test.workload.Annotations[apis.LocalSourceProxyAnnotationName]
+				expectedAnnotation := test.expectedWorkload.Annotations[apis.LocalSourceProxyAnnotationName]
+
+				if workloadAnnotation != expectedAnnotation {
+					t.Errorf("workload annotation expected to be %q, got %q", expectedAnnotation, workloadAnnotation)
+				}
+			}
+		})
+	}
+}
+
 func TestWorkloadOptionsPublishLocalSourcePrivateRegistry(t *testing.T) {
 	reg, err := ggcrregistry.TLS("localhost")
 	utilruntime.Must(err)
@@ -2284,6 +2508,21 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registr
 📥 Published source
 `,
 	}, {
+		name:        "update workload created in public repo when changing local path and not using source image",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		existingWorkload: &cartov1alpha1.Workload{
+			Spec: cartov1alpha1.WorkloadSpec{
+				Image: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+			},
+		},
+		expectedOutput: `
+Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registryHost + `/hello:source"...
+📥 Published source
+`,
+	}, {
 		name:           "local source without prompts",
 		args:           []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:          fmt.Sprintf("%s/hello:source", registryHost),
@@ -2334,6 +2573,195 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registr
 					Source: &cartov1alpha1.Source{
 						Image: test.input,
 					},
+				},
+			}
+
+			_, err := opts.PublishLocalSource(ctx, c, test.existingWorkload, workload, test.shouldPrint)
+			if err != nil && !test.shouldError {
+				t.Errorf("PublishLocalSource() errored %v", err)
+			}
+
+			if err == nil && test.shouldError {
+				t.Errorf("PublishLocalSource() expected error")
+			}
+
+			if test.shouldError {
+				return
+			}
+
+			if test.expected != workload.Spec.Source.Image {
+				t.Errorf("PublishLocalSource() wanted %q, got %q", test.expected, workload.Spec.Source.Image)
+			}
+
+			if diff := cmp.Diff(strings.TrimSpace(test.expectedOutput), strings.TrimSpace(output.String())); diff != "" {
+				t.Errorf("PublishLocalSource() (-want, +got) = %s", diff)
+			}
+		})
+	}
+}
+
+func TestWorkloadOptionsPublishLocalSourceProxy(t *testing.T) {
+	expectedImageDigest := "fedc574423e7aa2ecdd2ffb3381214e3c288db871ab9a3758f77489d6a777a1d"
+	if runtime.GOOS == "windows" {
+		expectedImageDigest = "4b931bb7ef0a7780a3fc58364aaf8634cf4885af6359fb692461f0247c8a9f34"
+	}
+	workload := &cartov1alpha1.Workload{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+	}
+	fakeWrapper := fake_source.GetFakeWrapper()
+	if fakeWrapper.Repository == "" {
+		fakeWrapper.Repository = "my-test-repo"
+	}
+
+	helloJarFilePath := filepath.Join("testdata", "hello.go.jar")
+
+	tests := []struct {
+		name             string
+		args             []string
+		input            string
+		expected         string
+		shouldError      bool
+		shouldPrint      bool
+		expectedOutput   string
+		skip             bool
+		existingWorkload *cartov1alpha1.Workload
+	}{{
+		name:        "local source with excluded files",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, filepath.Join("testdata", "local-source-exclude-files"), flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source", source.GetLocalImageRepo()),
+		expected:    fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, expectedImageDigest),
+		expectedOutput: `
+The files and/or directories listed in the .tanzuignore file are being excluded from the uploaded source code.
+Publishing source in ` + fmt.Sprintf("%q", filepath.Join("testdata", "local-source-exclude-files")) + ` to "` + source.GetLocalImageRepo() + `/` + source.ImageTag + `:` + workload.Namespace + `-` + workload.Name + `"...
+📥 Published source
+`,
+	}, {
+		name:        "local source",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source", source.GetLocalImageRepo()),
+		expected:    fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expectedOutput: `
+Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + source.GetLocalImageRepo() + `/` + source.ImageTag + `:` + workload.Namespace + `-` + workload.Name + `"...
+📥 Published source
+`,
+	}, {
+		name:        "jar file",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source", source.GetLocalImageRepo()),
+		expected:    fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		expectedOutput: `
+Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + source.GetLocalImageRepo() + `/` + source.ImageTag + `:` + workload.Namespace + `-` + workload.Name + `"...
+📥 Published source
+`,
+	}, {
+		name:        "invalid file",
+		args:        []string{flags.LocalPathFlagName, filepath.Join("testdata", "invalid.zip"), flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source", source.GetLocalImageRepo()),
+		shouldError: true,
+	}, {
+		name:        "with digest",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source@sha256:%s", source.GetLocalImageRepo(), "0000000000000000000000000000000000000000000000000000000000000000"),
+		expected:    fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expectedOutput: `
+Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + source.GetLocalImageRepo() + `/` + source.ImageTag + `:` + workload.Namespace + `-` + workload.Name + `"...
+📥 Published source
+`,
+	}, {
+		name:        "when workload already has resolved image with digest",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source@sha256:%s", source.GetLocalImageRepo(), "0000000000000000000000000000000000000000000000000000000000000000"),
+		expected:    fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		existingWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+				},
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+				},
+			},
+		},
+		expectedOutput: `
+Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + source.GetLocalImageRepo() + `/` + source.ImageTag + `:` + workload.Namespace + `-` + workload.Name + `"...
+No source code is changed
+`,
+	}, {
+		name:        "when workload already has resolved image with digest and no source",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		input:       fmt.Sprintf("%s/hello:source@sha256:%s", source.GetLocalImageRepo(), "0000000000000000000000000000000000000000000000000000000000000000"),
+		expected:    fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		existingWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+				},
+			},
+			Spec: cartov1alpha1.WorkloadSpec{},
+		},
+		expectedOutput: `
+Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + source.GetLocalImageRepo() + `/` + source.ImageTag + `:` + workload.Namespace + `-` + workload.Name + `"...
+📥 Published source
+`,
+	}, {
+		name:           "local source without prompts",
+		args:           []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
+		input:          fmt.Sprintf("%s/hello:source", source.GetLocalImageRepo()),
+		expected:       fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expectedOutput: "",
+	}, {
+		name:           "jar file without prompts",
+		args:           []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName},
+		input:          fmt.Sprintf("%s/hello:source", source.GetLocalImageRepo()),
+		expected:       fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		expectedOutput: "",
+	}, {
+		name:           "no local path",
+		args:           []string{},
+		input:          fmt.Sprintf("%s/hello:source", source.GetLocalImageRepo()),
+		expected:       fmt.Sprintf("%s/hello:source", source.GetLocalImageRepo()),
+		expectedOutput: "",
+	}}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if test.skip {
+				t.SkipNow()
+			}
+			scheme := k8sruntime.NewScheme()
+			c := cli.NewDefaultConfig("test", scheme)
+			output := &bytes.Buffer{}
+			c.Stdout = output
+			c.Stderr = output
+			c.Client = clitesting.NewFakeCliClient(clitesting.NewFakeClient(scheme))
+
+			cmd := &cobra.Command{}
+			ctx := cli.WithCommand(context.Background(), cmd)
+			ctx = source.StashContainerWrapper(ctx, fakeWrapper)
+			ctx = logger.StashSourceImageLogger(ctx, logger.NewNoopLogger())
+			opts := &commands.WorkloadOptions{}
+			opts.LoadDefaults(c)
+			opts.DefineFlags(ctx, c, cmd)
+			cmd.ParseFlags(test.args)
+
+			ctx = logger.StashProgressBarLogger(ctx, fake.NewNoopProgressBar())
+
+			workload.Annotations = map[string]string{
+				apis.LocalSourceProxyAnnotationName: test.input,
+			}
+			workload.Spec = cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: test.input,
 				},
 			}
 

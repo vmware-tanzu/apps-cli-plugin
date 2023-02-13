@@ -39,7 +39,7 @@ PUBLISH_JOBS := $(addprefix publish-,${ENVS})
 all: test build ## Prepare and run the project tests
 
 .PHONY: install
-install: prepare## Install the plugin binaries to the local machine
+install: test## Install the plugin binaries to the local machine
 	@# TODO avoid deleting an existing plugin once in place reinstalls are working again
 	@tanzu plugin delete apps > /dev/null 2>&1 || true
 	tanzu builder cli compile --version $(BUILD_VERSION) --ldflags "$(LD_FLAGS)" --path ./cmd/plugin --target local --artifacts ${ARTIFACTS_DIR}/${GOHOSTOS}/${GOHOSTARCH}/cli

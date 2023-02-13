@@ -1,5 +1,5 @@
 /*
-Copyright 2021 VMware, Inc.
+Copyright 2023 VMware, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,28 +18,37 @@ package source
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/net"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/kubectl/pkg/scheme"
 )
 
-const ImageTag = "source"
-const SourceProxyService = "local-source-proxy"
-const SourceProxyNamespace = "tap-local-source-system"
+const (
+	ImageTag             = "source"
+	sourceProxyService   = "local-source-proxy"
+	sourceProxyNamespace = "tap-local-source-system"
+	sourceProxyDomain    = "svc.cluster.local"
+	servicesResource     = "services"
+	proxySubResource     = "proxy"
+)
 
-func LocalRegistryTransport(ctx context.Context, cl *kubernetes.Clientset,
-	kubeconfig *rest.Config) (*Wrapper, error) {
+func GetLocalImageRepo() string {
+	return fmt.Sprintf("%s.%s.%s", sourceProxyService, sourceProxyNamespace, sourceProxyDomain)
+}
 
-	_, err := cl.CoreV1().Services(SourceProxyNamespace).Get(ctx, SourceProxyService, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
+func LocalRegistryTransport(ctx context.Context, kubeconfig *rest.Config, restClient rest.Interface) (*Wrapper, error) {
+	if wrapper := RetrieveContainerWrapper(ctx); wrapper != nil {
+		return wrapper, nil
 	}
 
-	r := cl.CoreV1().RESTClient().Get().Namespace(SourceProxyNamespace).Resource("services").SubResource("proxy").Name(net.JoinSchemeNamePort("http", SourceProxyService, "5001"))
+	if restClient == nil {
+		return nil, errors.New("no RESTClient was set for local proxy transport")
+	}
+	r := restClient.Get().Namespace(sourceProxyNamespace).Resource(servicesResource).SubResource(proxySubResource).Name(net.JoinSchemeNamePort("http", sourceProxyService, "5001"))
 
 	gv := corev1.SchemeGroupVersion
 	kubeconfig.GroupVersion = &gv

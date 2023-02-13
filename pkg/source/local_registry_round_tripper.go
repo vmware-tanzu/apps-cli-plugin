@@ -1,5 +1,5 @@
 /*
-Copyright 2021 VMware, Inc.
+Copyright 2023 VMware, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ limitations under the License.
 package source
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"path"
@@ -23,7 +24,7 @@ import (
 )
 
 const (
-	LocalSourceProxyRegistryPath = "Lsp-Registry-Path"
+	localSourceProxyRegistryPath = "Lsp-Registry-Path"
 )
 
 // Wrapper implements RoundTripper by appending request path and parameters to
@@ -32,6 +33,21 @@ type Wrapper struct {
 	Client     *http.Client
 	URL        *url.URL
 	Repository string
+}
+
+type containerWrapperStashKey struct{}
+
+func StashContainerWrapper(ctx context.Context, wrapper Wrapper) context.Context {
+	return context.WithValue(ctx, containerWrapperStashKey{}, wrapper)
+}
+
+func RetrieveContainerWrapper(ctx context.Context) *Wrapper {
+	wrapper, ok := ctx.Value(containerWrapperStashKey{}).(Wrapper)
+	if !ok {
+		return nil
+	}
+
+	return &wrapper
 }
 
 // RoundTrip implements the http.RoundTripper interface.
@@ -59,13 +75,18 @@ func (w *Wrapper) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.URL = u
 
 	resp, err := w.Client.Transport.RoundTrip(req)
+	if err != nil {
+		return nil, err
+	}
 
-	for k, vs := range resp.Header {
-		for _, v := range vs {
-			if k == LocalSourceProxyRegistryPath {
-				// add log to say we got the local source proxy
-				w.Repository = v
-				break
+	if resp != nil {
+		for k, vs := range resp.Header {
+			for _, v := range vs {
+				if k == localSourceProxyRegistryPath {
+					// add log to say we got the local source proxy
+					w.Repository = v
+					break
+				}
 			}
 		}
 	}

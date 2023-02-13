@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/logs"
@@ -160,9 +159,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 	} else if !okToPush {
 		return nil
 	}
-	if opts.LocalPath != "" && opts.SourceImage == "" && !workloadExists {
-		workload.MergeAnnotations(apis.LocalSourceProxyAnnotationName, workload.Spec.Image)
-	}
+	opts.ManageLocalSourceProxyAnnotation(currentWorkload, workload)
 
 	// if output flag was not set or it was not used with yes flag, then proceed to show
 	// surveys and all other output

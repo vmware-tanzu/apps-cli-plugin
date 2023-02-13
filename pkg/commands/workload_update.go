@@ -130,6 +130,7 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	} else if !okToPush {
 		return nil
 	}
+	opts.ManageLocalSourceProxyAnnotation(currentWorkload, workload)
 
 	okToUpdate, err := opts.Update(ctx, c, currentWorkload, workload)
 	if err != nil {

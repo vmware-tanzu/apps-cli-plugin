@@ -58,7 +58,6 @@ import (
 const (
 	AnnotationReservedKey     = "annotations"
 	MavenOverwrittenNoticeMsg = "Maven configuration flags have overwritten values provided by \"--params-yaml\"."
-	SourceProxyDomain         = "svc.cluster.local"
 )
 
 func NewWorkloadCommand(ctx context.Context, c *cli.Config) *cobra.Command {
@@ -181,6 +180,9 @@ func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldError
 	}
 
 	if opts.RegistryPassword != "" || opts.RegistryUsername != "" || opts.RegistryToken != "" || len(opts.CACertPaths) != 0 {
+		if opts.SourceImage == "" {
+			errs = errs.Also(validation.ErrMissingField(flags.SourceImageFlagName))
+		}
 		if opts.LocalPath == "" {
 			errs = errs.Also(validation.ErrMissingField(flags.LocalPathFlagName))
 		}
@@ -450,11 +452,13 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	var taggedImage string
 	var okToPush bool
 
-	isLocal := opts.SourceImage == ""
-	localImageRepo := fmt.Sprintf("%s.%s.%s", source.SourceProxyService, source.SourceProxyNamespace, SourceProxyDomain)
+	// is local source if source is to be created without a source image being specified
+	// or if there is an update of a workload that was initially created to push to LSP
+	isLocal := (opts.SourceImage == "" && currentWorkload == nil) ||
+		(currentWorkload != nil && currentWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) && opts.SourceImage == "")
 
 	if isLocal {
-		taggedImage = fmt.Sprintf("%s/%s:%s-%s", localImageRepo, source.ImageTag, workload.Namespace, workload.Name)
+		taggedImage = fmt.Sprintf("%s/%s:%s-%s", source.GetLocalImageRepo(), source.ImageTag, workload.Namespace, workload.Name)
 	} else {
 		taggedImage = workload.Spec.Source.Image
 	}
@@ -500,7 +504,8 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	localTransport := &source.Wrapper{}
 	if isLocal {
 		var err error
-		localTransport, err = source.LocalRegistryTransport(ctx, c.GetClientSet(), c.KubeRestConfig())
+		// pass RESTClient as CoreV1 restclient, which will call custom RoundTripper
+		localTransport, err = source.LocalRegistryTransport(ctx, c.KubeRestConfig(), c.GetClientSet().CoreV1().RESTClient())
 		if err != nil {
 			return false, err
 		}
@@ -531,7 +536,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	if isLocal {
 		workload.Spec.Source = &cartov1alpha1.Source{}
 
-		digestedImage = strings.Replace(digestedImage, fmt.Sprintf("%s/%s", localImageRepo, source.ImageTag), localTransport.Repository, 1)
+		digestedImage = strings.Replace(digestedImage, fmt.Sprintf("%s/%s", source.GetLocalImageRepo(), source.ImageTag), localTransport.Repository, 1)
 	}
 
 	workload.Spec.Source.Image = digestedImage
@@ -591,6 +596,24 @@ func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config, displayInfo bool) 
 		}
 	}
 	return exclude
+}
+
+func (opts *WorkloadOptions) ManageLocalSourceProxyAnnotation(currentWorkload, workload *cartov1alpha1.Workload) {
+	workloadExists := currentWorkload != nil
+
+	// merge annotation only when workload is being created or when source code was changed and there is a new digested,
+	// do not add it when updating workload
+	// since user could be updating another field and annotation must not be added
+	if (opts.LocalPath != "" && opts.SourceImage == "" && !workloadExists) ||
+		(opts.LocalPath != "" && opts.SourceImage == "" && workloadExists && currentWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName)) {
+		workload.MergeAnnotations(apis.LocalSourceProxyAnnotationName, workload.Spec.Source.Image)
+	}
+
+	// if workload is updated from LSP registry to custom or any other registry through source image,
+	// annotation has to be deleted and workload source image needs to be updated to digested based on opts source image
+	if opts.LocalPath != "" && opts.SourceImage != "" && workloadExists {
+		workload.RemoveAnnotations(apis.LocalSourceProxyAnnotationName)
+	}
 }
 
 func loadNamespace(ctx context.Context, c *cli.Config, name string) (*corev1.Namespace, error) {

@@ -147,6 +147,7 @@ func (cl CommandLineIntegrationTestCase) Run(t *testing.T, ctx context.Context, 
 		if cl.Skip {
 			t.SkipNow()
 		}
+
 		for _, e := range cl.RequireEnvs {
 			if _, ok := os.LookupEnv(e); !ok {
 				t.Skipf("Required %q environment variable not present, skipping test", e)
