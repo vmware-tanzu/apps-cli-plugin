@@ -6,10 +6,9 @@ BUILD_SHA = $(shell git rev-parse HEAD)
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 GOHOSTARCH ?= $(shell go env GOHOSTARCH)
 
-# Values taken from https://github.com/vmware-tanzu/tanzu-framework/blob/main/pkg/v1/cli/buildvar.go#L12
-LD_FLAGS = -X 'github.com/vmware-tanzu/tanzu-framework/pkg/v1/buildinfo.Date=$(BUILD_DATE)' \
-           -X 'github.com/vmware-tanzu/tanzu-framework/pkg/v1/buildinfo.SHA=$(BUILD_SHA)$(BUILD_DIRTY)' \
-           -X 'github.com/vmware-tanzu/tanzu-framework/pkg/v1/buildinfo.Version=$(BUILD_VERSION)'
+LD_FLAGS = -X 'github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo.Date=$(BUILD_DATE)' \
+           -X 'github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo.SHA=$(BUILD_SHA)$(BUILD_DIRTY)' \
+           -X 'github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo.Version=$(BUILD_VERSION)'
 
 GO_SOURCES = $(shell find ./cmd ./pkg -type f -name '*.go')
 WORKING_DIR ?= $(shell pwd)
@@ -43,6 +42,7 @@ all: test build ## Prepare and run the project tests
 install: test## Install the plugin binaries to the local machine
 	@# TODO avoid deleting an existing plugin once in place reinstalls are working again
 	@tanzu plugin delete apps > /dev/null 2>&1 || true
+	@echo $(BUILD_VERSION)
 	tanzu builder cli compile --version $(BUILD_VERSION) --ldflags "$(LD_FLAGS)" --path ./cmd/plugin --target local --artifacts ${ARTIFACTS_DIR}/${GOHOSTOS}/${GOHOSTARCH}/cli
 	tanzu builder publish --type local --plugins "apps" --version $(BUILD_VERSION) --os-arch "${GOHOSTOS}-${GOHOSTARCH}" --local-output-discovery-dir "$(TANZU_PLUGIN_PUBLISH_PATH)/${GOHOSTOS}-${GOHOSTARCH}/discovery/standalone" --local-output-distribution-dir "$(TANZU_PLUGIN_PUBLISH_PATH)/${GOHOSTOS}-${GOHOSTARCH}/distribution" --input-artifact-dir $(ARTIFACTS_DIR)
 	tanzu plugin install apps --version $(BUILD_VERSION) --local $(TANZU_PLUGIN_PUBLISH_PATH)/${GOHOSTOS}-${GOHOSTARCH}

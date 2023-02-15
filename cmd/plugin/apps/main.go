@@ -31,8 +31,9 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	tanzucliv1alpha1 "github.com/vmware-tanzu/tanzu-framework/apis/cli/v1alpha1"
-	"github.com/vmware-tanzu/tanzu-framework/pkg/v1/cli/command/plugin"
+	tanzucliv1alpha1 "github.com/vmware-tanzu/tanzu-framework/cli/runtime/apis/cli/v1alpha1"
+	"github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo"
+	"github.com/vmware-tanzu/tanzu-framework/cli/runtime/plugin"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -68,6 +69,8 @@ func main() {
 		Group:          tanzucliv1alpha1.BuildCmdGroup,
 		CompletionType: tanzucliv1alpha1.NativePluginCompletion,
 		Aliases:        []string{"app"},
+		Version:        buildinfo.Version,
+		BuildSHA:       buildinfo.SHA,
 	})
 	if err != nil {
 		log.Fatal(err)
