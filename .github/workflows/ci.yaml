@@ -67,9 +67,9 @@ jobs:
         retention-days: 1
     - name: Install
       run: |
-        if [[ -z ${BUILD_VERSION} ]]; then      
+        if [[ -z ${BUILD_VERSION} ]]; then
           BUILD_SHA_SHORT=$(git rev-parse --short HEAD)
-          BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)+dev-$BUILD_SHA_SHORT         
+          BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)+dev-$BUILD_SHA_SHORT
         fi
         echo $BUILD_VERSION
         tanzu plugin install apps --version $BUILD_VERSION --local ./artifacts/published/linux-amd64
@@ -170,9 +170,9 @@ jobs:
       run: make publish
     - name: Install
       run: |
-        if [[ -z ${BUILD_VERSION} ]]; then       
+        if [[ -z ${BUILD_VERSION} ]]; then
           BUILD_SHA_SHORT=$(git rev-parse --short HEAD)
-          BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)+dev-$BUILD_SHA_SHORT    
+          BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)+dev-$BUILD_SHA_SHORT
         fi
         echo $BUILD_VERSION
         tanzu plugin install apps --version $BUILD_VERSION --local ./artifacts/published/darwin-amd64
@@ -218,11 +218,21 @@ jobs:
           chmod +x /usr/local/bin/tanzu
         env
         tanzu init
+    - name: Build dev version
+      run: |
+        BUILD_SHA_SHORT=$(git rev-parse --short HEAD)
+        echo "BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)+dev-$BUILD_SHA_SHORT" >> $GITHUB_ENV
+        echo $BUILD_VERSION
+      if: startsWith(github.ref, 'refs/tags/') != true
+    - name: Build tag version
+      run: echo "BUILD_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+      if: startsWith(github.ref, 'refs/tags/')
     - name: Install apps plugin
       run: |
         set -o errexit
         set -o nounset
         set -o pipefail
+        set -u
 
         tar -xvf tanzu-apps-plugin.tar.gz
         tanzu plugin install apps --local ./${OS_ARCH} --version ${BUILD_VERSION:-v0.0.0-dev}
