@@ -6,10 +6,9 @@ BUILD_SHA = $(shell git rev-parse HEAD)
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 GOHOSTARCH ?= $(shell go env GOHOSTARCH)
 
-# Values taken from https://github.com/vmware-tanzu/tanzu-framework/blob/main/pkg/v1/cli/buildvar.go#L12
-LD_FLAGS = -X 'github.com/vmware-tanzu/tanzu-framework/pkg/v1/buildinfo.Date=$(BUILD_DATE)' \
-           -X 'github.com/vmware-tanzu/tanzu-framework/pkg/v1/buildinfo.SHA=$(BUILD_SHA)$(BUILD_DIRTY)' \
-           -X 'github.com/vmware-tanzu/tanzu-framework/pkg/v1/buildinfo.Version=$(BUILD_VERSION)'
+LD_FLAGS = -X 'github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo.Date=$(BUILD_DATE)' \
+           -X 'github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo.SHA=$(BUILD_SHA)$(BUILD_DIRTY)' \
+           -X 'github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo.Version=$(BUILD_VERSION)'
 
 GO_SOURCES = $(shell find ./cmd ./pkg -type f -name '*.go')
 WORKING_DIR ?= $(shell pwd)
@@ -73,7 +72,7 @@ docs: $(GO_SOURCES) ## Generate the plugin documentation
 
 .PHONY: test
 test: prepare## Run tests
-	go test ./... -coverprofile=coverage.txt -covermode=atomic -timeout 1m -race
+	go test ./... -coverprofile=coverage.txt -covermode=atomic -timeout 3m -race
 
 .PHONY: lint
 lint: ## Run lint tools to identfy stylistic errors
