@@ -507,7 +507,7 @@ github.com/vmware-labs/reconciler-runtime/reconcilers
 github.com/vmware-labs/reconciler-runtime/testing
 github.com/vmware-labs/reconciler-runtime/tracker
 github.com/vmware-labs/reconciler-runtime/validation
-# github.com/vmware-tanzu/carvel-imgpkg v0.35.0
+# github.com/vmware-tanzu/carvel-imgpkg v0.36.0
 ## explicit; go 1.19
 github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/image
 github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/imagedigest
