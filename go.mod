@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/vito/go-interact v1.0.1
 	github.com/vmware-labs/reconciler-runtime v0.8.2
-	github.com/vmware-tanzu/carvel-imgpkg v0.35.0
+	github.com/vmware-tanzu/carvel-imgpkg v0.36.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230217183103-511c4d538798
 	golang.org/x/crypto v0.6.0
