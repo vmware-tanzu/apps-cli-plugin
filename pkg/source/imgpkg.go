@@ -46,7 +46,6 @@ func ImgpkgPush(ctx context.Context, dir string, excludedFiles []string, reg pla
 	return fmt.Sprintf("%s@%s", uploadRef.Name(), digestRef.DigestStr()), nil
 }
 
-type registryOptionsStashKey struct{}
 type containerRemoteTransportStashKey struct{}
 
 func StashContainerRemoteTransport(ctx context.Context, rTripper http.RoundTripper) context.Context {

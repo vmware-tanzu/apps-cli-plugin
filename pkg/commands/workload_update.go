@@ -113,12 +113,6 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 
 	// validate complex flag interactions with existing state
 	errs = workload.Validate()
-	// local path requires a source image
-	if opts.LocalPath != "" && (workload.Spec.Source == nil || workload.Spec.Source.Image == "") {
-		errs = errs.Also(
-			validation.ErrMissingField(flags.SourceImageFlagName),
-		)
-	}
 	if err := errs.ToAggregate(); err != nil {
 		// show command usage before error
 		cli.CommandFromContext(ctx).SilenceUsage = false
@@ -136,6 +130,7 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	} else if !okToPush {
 		return nil
 	}
+	opts.ManageLocalSourceProxyAnnotation(currentWorkload, workload)
 
 	okToUpdate, err := opts.Update(ctx, c, currentWorkload, workload)
 	if err != nil {

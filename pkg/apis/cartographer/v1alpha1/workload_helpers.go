@@ -425,6 +425,15 @@ func (w *Workload) MergeAnnotations(key, value string) {
 	w.Annotations[key] = value
 }
 
+func (w *Workload) RemoveAnnotations(key string) {
+	delete(w.Annotations, key)
+}
+
+func (w *Workload) IsAnnotationExists(key string) bool {
+	_, ok := w.Annotations[key]
+	return ok
+}
+
 func (w *Workload) MergeLabels(key, value string) {
 	if w.Labels == nil {
 		w.Labels = map[string]string{}

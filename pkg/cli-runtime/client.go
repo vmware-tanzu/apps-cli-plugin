@@ -51,6 +51,7 @@ type Client interface {
 	ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error)
 	ToRESTConfig() (*rest.Config, error)
 	ToRESTMapper() (meta.RESTMapper, error)
+	GetClientSet() *kubernetes.Clientset
 	crclient.Client
 }
 
@@ -81,6 +82,10 @@ func (c *client) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error)
 
 func (c *client) ToRESTMapper() (meta.RESTMapper, error) {
 	return c.RESTMapper(), nil
+}
+
+func (c *client) GetClientSet() *kubernetes.Clientset {
+	return c.lazyLoadKubernetesClientsetOrDie()
 }
 
 func (c *client) Get(ctx context.Context, key crclient.ObjectKey, obj crclient.Object) error {

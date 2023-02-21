@@ -110,10 +110,9 @@ type WorkloadOptions struct {
 	ExcludePathFile string
 	Image           string
 	SubPath         string
-
-	BuildEnv    []string
-	Env         []string
-	ServiceRefs []string
+	BuildEnv        []string
+	Env             []string
+	ServiceRefs     []string
 
 	ServiceAccountName string
 
@@ -450,8 +449,22 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 		return true, nil
 	}
 
+	var taggedImage string
 	var okToPush bool
-	taggedImage := strings.Split(workload.Spec.Source.Image, "@sha")[0]
+
+	// is local source if source is to be created without a source image being specified
+	// or if there is an update of a workload that was initially created to push to LSP
+	isLocal := (opts.SourceImage == "" && currentWorkload == nil) ||
+		(currentWorkload != nil && currentWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) && opts.SourceImage == "")
+
+	if isLocal {
+		taggedImage = fmt.Sprintf("%s/%s:%s-%s", source.GetLocalImageRepo(), source.ImageTag, workload.Namespace, workload.Name)
+	} else {
+		taggedImage = workload.Spec.Source.Image
+	}
+
+	taggedImage = strings.Split(taggedImage, "@sha")[0]
+
 	if shouldPrint {
 		// display survey to publish local source if user did not use
 		// --yes flag to accept workload create/update
@@ -488,6 +501,17 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 		return false, fmt.Errorf("unsupported file format %q", opts.LocalPath)
 	}
 
+	localTransport := &source.Wrapper{}
+	if isLocal {
+		var err error
+		// pass RESTClient as CoreV1 restclient, which will call custom RoundTripper
+		localTransport, err = source.LocalRegistryTransport(ctx, c.KubeRestConfig(), c.GetClientSet().CoreV1().RESTClient())
+		if err != nil {
+			return false, err
+		}
+		ctx = source.StashContainerRemoteTransport(ctx, localTransport)
+	}
+
 	currentRegistryOpts := source.RegistryOpts{CACertPaths: opts.CACertPaths, RegistryUsername: opts.RegistryUsername, RegistryPassword: opts.RegistryPassword, RegistryToken: opts.RegistryToken}
 	var reg registry.Registry
 	var err error
@@ -508,6 +532,13 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	if err != nil {
 		return okToPush, err
 	}
+
+	if isLocal {
+		workload.Spec.Source = &cartov1alpha1.Source{}
+
+		digestedImage = strings.Replace(digestedImage, fmt.Sprintf("%s/%s", source.GetLocalImageRepo(), source.ImageTag), localTransport.Repository, 1)
+	}
+
 	workload.Spec.Source.Image = digestedImage
 
 	if currentWorkload != nil && currentWorkload.Spec.Source != nil && currentWorkload.Spec.Source.Image == workload.Spec.Source.Image {
@@ -565,6 +596,24 @@ func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config, displayInfo bool) 
 		}
 	}
 	return exclude
+}
+
+func (opts *WorkloadOptions) ManageLocalSourceProxyAnnotation(currentWorkload, workload *cartov1alpha1.Workload) {
+	workloadExists := currentWorkload != nil
+
+	// merge annotation only when workload is being created or when source code was changed and there is a new digested,
+	// do not add it when updating workload
+	// since user could be updating another field and annotation must not be added
+	if (opts.LocalPath != "" && opts.SourceImage == "" && !workloadExists) ||
+		(opts.LocalPath != "" && opts.SourceImage == "" && workloadExists && currentWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName)) {
+		workload.MergeAnnotations(apis.LocalSourceProxyAnnotationName, workload.Spec.Source.Image)
+	}
+
+	// if workload is updated from LSP registry to custom or any other registry through source image,
+	// annotation has to be deleted and workload source image needs to be updated to digested based on opts source image
+	if opts.LocalPath != "" && opts.SourceImage != "" && workloadExists {
+		workload.RemoveAnnotations(apis.LocalSourceProxyAnnotationName)
+	}
 }
 
 func loadNamespace(ctx context.Context, c *cli.Config, name string) (*corev1.Namespace, error) {

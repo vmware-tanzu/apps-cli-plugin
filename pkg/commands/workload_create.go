@@ -92,12 +92,6 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 
 	// validate complex flag interactions with existing state
 	errs := workload.Validate()
-	// local path requires a source image
-	if opts.LocalPath != "" && (workload.Spec.Source == nil || workload.Spec.Source.Image == "") {
-		errs = errs.Also(
-			validation.ErrMissingField(flags.SourceImageFlagName),
-		)
-	}
 	if err := errs.ToAggregate(); err != nil {
 		// show command usage before error
 		cli.CommandFromContext(ctx).SilenceUsage = false
@@ -111,14 +105,14 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 
 	var okToCreate bool
 	shouldPrint := opts.Output == "" || (opts.Output != "" && !opts.Yes)
-	if shouldPrint {
-		// If user answers yes to survey prompt about publishing source, continue with workload creation
-		if okToPush, err := opts.PublishLocalSource(ctx, c, nil, workload, shouldPrint); err != nil {
-			return err
-		} else if !okToPush {
-			return nil
-		}
+	if okToPush, err := opts.PublishLocalSource(ctx, c, nil, workload, shouldPrint); err != nil {
+		return err
+	} else if !okToPush {
+		return nil
+	}
+	opts.ManageLocalSourceProxyAnnotation(nil, workload)
 
+	if shouldPrint {
 		var err error
 		okToCreate, err = opts.Create(ctx, c, workload)
 		if err != nil {
@@ -133,9 +127,6 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	} else if opts.Output != "" && opts.Yes {
 		// since there are no prompts, set okToCreate to true (accepted through --yes)
 		okToCreate = true
-		if _, err := opts.PublishLocalSource(ctx, c, workload, workload, shouldPrint); err != nil {
-			return err
-		}
 		if err := c.Create(ctx, workload); err != nil {
 			return err
 		}

@@ -33,10 +33,10 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/discovery/cached/disk"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/kubectl/pkg/scheme"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
@@ -47,7 +47,7 @@ func (c *fakeclient) DefaultNamespace() string {
 }
 
 func (c *fakeclient) KubeRestConfig() *rest.Config {
-	panic(fmt.Errorf("not implemented"))
+	return &rest.Config{}
 }
 
 func (c *fakeclient) Discovery() discovery.DiscoveryInterface {
@@ -56,6 +56,10 @@ func (c *fakeclient) Discovery() discovery.DiscoveryInterface {
 
 func (c *fakeclient) SetLogger(logger logr.Logger) {
 	panic(fmt.Errorf("not implemented"))
+}
+
+func (c *fakeclient) GetClientSet() *kubernetes.Clientset {
+	return &kubernetes.Clientset{}
 }
 
 func NewFakeCliClient(c crclient.Client) cli.Client {
@@ -151,7 +155,7 @@ func testDynamicResources() []*restmapper.APIGroupResources {
 }
 
 // build a readercloser response from a pod list
-func PodV1TableObjBody(codec runtime.Codec, pods []client.Object) io.ReadCloser {
+func PodV1TableObjBody(codec runtime.Codec, pods []crclient.Object) io.ReadCloser {
 	table := TableMetaObject(pods)
 	data, err := json.Marshal(table)
 	if err != nil {
@@ -170,7 +174,7 @@ func DefaultHeader() http.Header {
 }
 
 // build a meta table response from list of client objects
-func TableMetaObject(objects []client.Object) *metav1.Table {
+func TableMetaObject(objects []crclient.Object) *metav1.Table {
 	var podColumns = []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string", Format: "name"},
 		{Name: "Ready", Type: "string", Format: ""},

@@ -1192,21 +1192,6 @@ To get status: "tanzu apps workload get my-workload --namespace test-namespace"
 			ShouldError: true,
 		},
 		{
-			Name: "local path - missing fields",
-			Args: []string{workloadName, flags.LocalPathFlagName, "testdata/local-source", flags.YesFlagName},
-			GivenObjects: []client.Object{
-				parent,
-			},
-			ShouldError: true,
-			CleanUp: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) error {
-				if expected, actual := false, cmd.SilenceUsage; expected != actual {
-					t.Errorf("expected cmd.SilenceUsage to be %t, actually %t", expected, actual)
-				}
-
-				return nil
-			},
-		},
-		{
 			Name: "update existing param-yaml",
 			Args: []string{workloadName, flags.ParamYamlFlagName, `ports_json={"name": "smtp", "port": 2026}`, flags.YesFlagName},
 			GivenObjects: []client.Object{

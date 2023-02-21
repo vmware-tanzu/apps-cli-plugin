@@ -141,12 +141,6 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 
 	// validate complex flag interactions with existing state
 	errs = workload.Validate()
-	// local path requires a source image
-	if opts.LocalPath != "" && (workload.Spec.Source == nil || workload.Spec.Source.Image == "") {
-		errs = errs.Also(
-			validation.ErrMissingField(flags.SourceImageFlagName),
-		)
-	}
 	if err := errs.ToAggregate(); err != nil {
 		// show command usage before error
 		cli.CommandFromContext(ctx).SilenceUsage = false
@@ -158,20 +152,22 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 		return nil
 	}
 
+	workloadExists := currentWorkload != nil
+
+	if okToPush, err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
+		return err
+	} else if !okToPush {
+		return nil
+	}
+	opts.ManageLocalSourceProxyAnnotation(currentWorkload, workload)
+
 	// if output flag was not set or it was not used with yes flag, then proceed to show
 	// surveys and all other output
 	if shouldPrint {
-		// If user answers yes to survey prompt about publishing source, continue with creation or update
-		if okToPush, err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
-			return err
-		} else if !okToPush {
-			return nil
-		}
-
 		var okToCreate, okToUpdate bool
 		var createError, updateError error
 		// If there is no workload, create a new one
-		if currentWorkload == nil {
+		if !workloadExists {
 			okToCreate, createError = opts.Create(ctx, c, workload)
 			if createError != nil {
 				return createError
@@ -192,10 +188,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 	} else if opts.Output != "" && opts.Yes {
 		// since there are no prompts, set okToApply to true (accepted through --yes)
 		okToApply = true
-		if _, err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
-			return err
-		}
-		if currentWorkload == nil {
+		if !workloadExists {
 			if err := c.Create(ctx, workload); err != nil {
 				return err
 			}
