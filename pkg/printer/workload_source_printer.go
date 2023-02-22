@@ -18,6 +18,8 @@ package printer
 
 import (
 	"io"
+	"reflect"
+	"strings"
 
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 
@@ -108,16 +110,6 @@ func WorkloadSourceGitPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 
 		rows := []metav1beta1.TableRow{sourceRow, urlRow}
 
-		if workload.Spec.Source.Subpath != "" {
-			subPathRow := metav1beta1.TableRow{
-				Cells: []interface{}{
-					"sub-path:",
-					workload.Spec.Source.Subpath,
-				},
-			}
-			rows = append(rows, subPathRow)
-		}
-
 		if workload.Spec.Source.Git.Ref.Branch != "" {
 			branchRow := metav1beta1.TableRow{
 				Cells: []interface{}{
@@ -138,6 +130,16 @@ func WorkloadSourceGitPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 			rows = append(rows, tagRow)
 		}
 
+		if workload.Spec.Source.Subpath != "" {
+			subPathRow := metav1beta1.TableRow{
+				Cells: []interface{}{
+					"sub-path:",
+					workload.Spec.Source.Subpath,
+				},
+			}
+			rows = append(rows, subPathRow)
+		}
+
 		if workload.Spec.Source.Git.Ref.Commit != "" {
 			commitRow := metav1beta1.TableRow{
 				Cells: []interface{}{
@@ -146,6 +148,16 @@ func WorkloadSourceGitPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 				},
 			}
 			rows = append(rows, commitRow)
+		} else {
+			if revision := getRevision(workload); revision != "" {
+				revisionRow := metav1beta1.TableRow{
+					Cells: []interface{}{
+						"revision:",
+						revision,
+					},
+				}
+				rows = append(rows, revisionRow)
+			}
 		}
 
 		return rows, nil
@@ -156,4 +168,18 @@ func WorkloadSourceGitPrinter(w io.Writer, workload *cartov1alpha1.Workload) err
 	})
 
 	return tablePrinter.PrintObj(workload, w)
+}
+
+func getRevision(workload *cartov1alpha1.Workload) string {
+	if !reflect.DeepEqual(workload.Status, (cartov1alpha1.WorkloadStatus{})) {
+		for _, r := range workload.Status.Resources {
+			for _, o := range r.Outputs {
+				if o.Name == cartov1alpha1.ResourceOutputRevision {
+					return strings.TrimSuffix(o.Preview, "\n")
+				}
+			}
+		}
+	}
+
+	return ""
 }

@@ -140,9 +140,9 @@ func TestWorkloadSourceGitPrinter(t *testing.T) {
 		expectedOutput: `
    type:       git
    url:        https://example.com/my-repo
-   sub-path:   my-subpath
    branch:     my-branch
    tag:        my-tag
+   sub-path:   my-subpath
    commit:     my-commit
 `,
 	}, {
@@ -167,6 +167,158 @@ func TestWorkloadSourceGitPrinter(t *testing.T) {
    type:     git
    url:      https://example.com/my-repo
    branch:   my-branch
+`,
+	}, {
+		name: "built from git with revision",
+		testWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      workloadName,
+				Namespace: defaultNamespace,
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Subpath: "my-subpath",
+					Git: &cartov1alpha1.GitSource{
+						URL: "https://example.com/my-repo",
+						Ref: cartov1alpha1.GitRef{
+							Branch: "my-branch",
+							Tag:    "my-tag",
+						},
+					},
+				},
+			},
+			Status: cartov1alpha1.WorkloadStatus{
+				Resources: []cartov1alpha1.RealizedResource{
+					{
+						Outputs: []cartov1alpha1.Output{
+							{
+								Name:    "revision",
+								Preview: "my-branch/my-commit",
+							},
+						},
+					},
+				},
+			},
+		},
+		expectedOutput: `
+   type:       git
+   url:        https://example.com/my-repo
+   branch:     my-branch
+   tag:        my-tag
+   sub-path:   my-subpath
+   revision:   my-branch/my-commit
+`,
+	}, {
+		name: "do not display revision if there is commit",
+		testWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      workloadName,
+				Namespace: defaultNamespace,
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Subpath: "my-subpath",
+					Git: &cartov1alpha1.GitSource{
+						URL: "https://example.com/my-repo",
+						Ref: cartov1alpha1.GitRef{
+							Branch: "my-branch",
+							Tag:    "my-tag",
+							Commit: "my-commit",
+						},
+					},
+				},
+			},
+			Status: cartov1alpha1.WorkloadStatus{
+				Resources: []cartov1alpha1.RealizedResource{
+					{
+						Outputs: []cartov1alpha1.Output{
+							{
+								Name:    "revision",
+								Preview: "my-branch/my-commit",
+							},
+						},
+					},
+				},
+			},
+		},
+		expectedOutput: `
+   type:       git
+   url:        https://example.com/my-repo
+   branch:     my-branch
+   tag:        my-tag
+   sub-path:   my-subpath
+   commit:     my-commit
+`,
+	}, {
+		name: "output with no revision",
+		testWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      workloadName,
+				Namespace: defaultNamespace,
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Subpath: "my-subpath",
+					Git: &cartov1alpha1.GitSource{
+						URL: "https://example.com/my-repo",
+						Ref: cartov1alpha1.GitRef{
+							Branch: "my-branch",
+							Tag:    "my-tag",
+							Commit: "my-commit",
+						},
+					},
+				},
+			},
+			Status: cartov1alpha1.WorkloadStatus{
+				Resources: []cartov1alpha1.RealizedResource{
+					{
+						Outputs: []cartov1alpha1.Output{
+							{
+								Name:    "url",
+								Preview: "my-source-controller/my-url@sha:mysha12345",
+							},
+						},
+					},
+				},
+			},
+		},
+		expectedOutput: `
+   type:       git
+   url:        https://example.com/my-repo
+   branch:     my-branch
+   tag:        my-tag
+   sub-path:   my-subpath
+   commit:     my-commit
+`,
+	}, {
+		name: "empty status",
+		testWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      workloadName,
+				Namespace: defaultNamespace,
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Subpath: "my-subpath",
+					Git: &cartov1alpha1.GitSource{
+						URL: "https://example.com/my-repo",
+						Ref: cartov1alpha1.GitRef{
+							Branch: "my-branch",
+							Tag:    "my-tag",
+							Commit: "my-commit",
+						},
+					},
+				},
+			},
+			Status: cartov1alpha1.WorkloadStatus{},
+		},
+		expectedOutput: `
+   type:       git
+   url:        https://example.com/my-repo
+   branch:     my-branch
+   tag:        my-tag
+   sub-path:   my-subpath
+   commit:     my-commit
 `,
 	}}
 
