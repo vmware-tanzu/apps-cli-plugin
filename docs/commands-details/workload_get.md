@@ -84,7 +84,7 @@ To see logs: "tanzu apps workload tail rmq-sample-app --timestamp --since 1h"
 
 ```
 
-### <a id="get-export"></a> `--export`
+### <a id="get-export"></a> `--export`/`-e`
 
 Exports the submitted workload in `yaml` format. This flag can also be used with `--output` flag. With export, the output is shortened because some fields are removed.
 
