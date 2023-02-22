@@ -81,7 +81,7 @@ lint: ## Run lint tools to identfy stylistic errors
 
 .PHONY: integration-test
 integration-test:  ## Run integration test
-	go test -v -timeout 10m -covermode=atomic -coverprofile=coverage.txt github.com/vmware-tanzu/apps-cli-plugin/testing/e2e/... --tags=integration
+	go test -v -timeout 10m github.com/vmware-tanzu/apps-cli-plugin/testing/e2e/... --tags=integration
 
 .PHONY: prepare
 prepare: generate fmt vet
