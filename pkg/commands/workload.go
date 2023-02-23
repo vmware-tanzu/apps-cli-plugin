@@ -795,25 +795,12 @@ func (opts *WorkloadOptions) WaitToBeReady(c *cli.Config, workload *cartov1alpha
 		func(ctx context.Context) error {
 			clientWithWatch, err := watch.GetWatcher(ctx, c)
 			if err != nil {
-				panic(err)
+				return err
 			}
 			return wait.UntilCondition(ctx, clientWithWatch, types.NamespacedName{Name: workload.Name, Namespace: workload.Namespace}, &cartov1alpha1.WorkloadList{}, cartov1alpha1.WorkloadReadyConditionFunc)
 		},
 	}
 	return workers
-}
-
-func (opts *WorkloadOptions) WaitError(ctx context.Context, c *cli.Config, workload *cartov1alpha1.Workload, workers []wait.Worker) error {
-	if err := wait.Race(ctx, opts.WaitTimeout, workers); err != nil {
-		if err == context.DeadlineExceeded {
-			c.Printf("%s timeout after %s waiting for %q to become ready\n", printer.Serrorf("Error:"), opts.WaitTimeout, workload.Name)
-			return cli.SilenceError(err)
-		}
-		c.Eprintf("%s %s\n", printer.Serrorf("Error:"), err)
-		return cli.SilenceError(err)
-	}
-
-	return nil
 }
 
 func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd *cobra.Command) {

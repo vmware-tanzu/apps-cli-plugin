@@ -1581,26 +1581,26 @@ status:
 			},
 			ExpectOutput: `
 {
-	"kind": "Workload",
 	"apiVersion": "carto.run/v1alpha1",
+	"kind": "Workload",
 	"metadata": {
-		"name": "my-workload",
-		"namespace": "default",
-		"resourceVersion": "999",
 		"creationTimestamp": "1970-01-01T00:00:01Z",
 		"labels": {
 			"app.kubernetes.io/part-of": "my-workload"
-		}
+		},
+		"name": "my-workload",
+		"namespace": "default",
+		"resourceVersion": "999"
 	},
 	"spec": {},
 	"status": {
 		"conditions": [
 			{
-				"type": "Ready",
-				"status": "Unknown",
 				"lastTransitionTime": null,
+				"message": "a hopefully informative message about what went wrong",
 				"reason": "Workload Reason",
-				"message": "a hopefully informative message about what went wrong"
+				"status": "Unknown",
+				"type": "Ready"
 			}
 		],
 		"supplyChainRef": {}

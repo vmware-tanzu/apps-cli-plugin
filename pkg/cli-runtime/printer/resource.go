@@ -96,7 +96,14 @@ func OutputResource(obj Object, format OutputFormat, scheme *runtime.Scheme) (st
 	if err != nil {
 		return "", err
 	}
-	return printObject(copy, format)
+	u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(copy)
+	if err != nil {
+		return "", err
+	}
+
+	unstructured.RemoveNestedField(u, "metadata", "managedFields")
+
+	return printObject(u, format)
 }
 
 func OutputResources(objList []Object, format OutputFormat, scheme *runtime.Scheme) (string, error) {
