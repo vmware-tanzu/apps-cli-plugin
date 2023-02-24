@@ -649,7 +649,6 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 								Ref: cartov1alpha1.GitRef{
 									Branch: "main",
 									Tag:    "v1.0.0",
-									Commit: "abcdef",
 								},
 							},
 						})
@@ -665,6 +664,22 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 							Name:       "my-supply-chain",
 							Namespace:  defaultNamespace,
 						})
+						d.Resources(
+							diecartov1alpha1.RealizedResourceBlank.
+								Name("source-provider").
+								Outputs(cartov1alpha1.Output{
+									Name:    "revision",
+									Preview: "main/abcdef",
+								}).
+								ConditionsDie(
+									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
+										Status(metav1.ConditionTrue),
+									diecartov1alpha1.WorkloadConditionResourceSubmittedBlank.
+										Status(metav1.ConditionTrue),
+									diecartov1alpha1.WorkloadConditionResourceHealthyBlank.
+										Status(metav1.ConditionTrue),
+								).DieRelease(),
+						)
 					}),
 			},
 			ExpectOutput: `
@@ -674,16 +689,17 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
    namespace:   default
 
 💾 Source
-   type:     git
-   url:      https://example.com
-   branch:   main
-   tag:      v1.0.0
-   commit:   abcdef
+   type:       git
+   url:        https://example.com
+   branch:     main
+   tag:        v1.0.0
+   revision:   main/abcdef
 
 📦 Supply Chain
    name:   my-supply-chain
 
-   Supply Chain resources not found.
+   NAME              READY   HEALTHY   UPDATED     RESOURCE
+   source-provider   True    True      <unknown>   not found
 
 🚚 Delivery
 
@@ -894,6 +910,10 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 						d.Resources(
 							diecartov1alpha1.RealizedResourceBlank.
 								Name("source-provider").
+								Outputs(cartov1alpha1.Output{
+									Name:    "revision",
+									Preview: "main/abcdef",
+								}).
 								ConditionsDie(
 									diecartov1alpha1.WorkloadConditionResourceReadyBlank.
 										Status(metav1.ConditionTrue),
@@ -971,6 +991,7 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
 					}).
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Source(&cartov1alpha1.Source{
+							Subpath: "my-subpath",
 							Git: &cartov1alpha1.GitSource{
 								URL: url,
 								Ref: cartov1alpha1.GitRef{
@@ -1040,11 +1061,12 @@ To see logs: "tanzu apps workload tail my-workload --timestamp --since 1h"
    namespace:   default
 
 💾 Source
-   type:     git
-   url:      https://example.com
-   branch:   main
-   tag:      v1.0.0
-   commit:   abcdef
+   type:       git
+   url:        https://example.com
+   branch:     main
+   tag:        v1.0.0
+   sub-path:   my-subpath
+   commit:     abcdef
 
 📦 Supply Chain
    name:   my-supply-chain

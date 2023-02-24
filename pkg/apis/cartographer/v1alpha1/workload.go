@@ -46,6 +46,13 @@ const (
 	ConditionResourceHealthy   = "Healthy"
 )
 
+const (
+	ResourceOutputUrl      = "url"
+	ResourceOutputRevision = "revision"
+	ResourceOutputImage    = "image"
+	ResourceOutputConfig   = "config"
+)
+
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:categories="all"
 // +kubebuilder:subresource:status
