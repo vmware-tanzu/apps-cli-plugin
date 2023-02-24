@@ -19,7 +19,7 @@ tanzu apps workload get my-workload
 ### Options
 
 ```
-      --export           export workload in yaml format
+  -e, --export           export workload in yaml format
   -h, --help             help for get
   -n, --namespace name   kubernetes namespace (defaulted from kube config)
   -o, --output string    output the Workload formatted. Supported formats: "json", "yaml", "yml"

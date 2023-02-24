@@ -279,7 +279,7 @@ func NewWorkloadGetCommand(ctx context.Context, c *cli.Config) *cobra.Command {
 	)
 
 	cli.NamespaceFlag(ctx, cmd, c, &opts.Namespace)
-	cmd.Flags().BoolVar(&opts.Export, cli.StripDash(flags.ExportFlagName), false, "export workload in yaml format")
+	cmd.Flags().BoolVarP(&opts.Export, cli.StripDash(flags.ExportFlagName), "e", false, "export workload in yaml format")
 	cmd.Flags().StringVarP(&opts.Output, cli.StripDash(flags.OutputFlagName), "o", "", "output the Workload formatted. Supported formats: \"json\", \"yaml\", \"yml\"")
 
 	return cmd

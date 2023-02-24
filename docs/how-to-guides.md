@@ -156,9 +156,9 @@ Live update is ideally situated for executing from within one of our supported I
 
 ## <a id='export-usage'> --export usage
 
-When using the `--export` flag, the user can retrieve the workload definition with all the extraneous, cluster-specific, properties/values removed (e.g. the status and metadata fileds like `creationTimestamp`) so that the workload definition could be saved and applied to a different environment without having to make significant edits.
+When using the `--export` flag, which can be specified as the shorthand `-e`, user can retrieve the workload definition with all the extraneous, cluster-specific, properties/values removed (e.g. the status and metadata fields like `creationTimestamp`) so that the workload definition could be saved and applied to a different environment without having to make significant edits.
 
-This means that the workload definition includes only the fields that were specificied by the developer that created it (`--export` preserves the essence of the developer's intent for portability).
+This means that the workload definition includes only the fields that were specified by the developer that created it (`--export` preserves the essence of the developer's intent for portability).
 
 For example, if user creates a workload with:
 
