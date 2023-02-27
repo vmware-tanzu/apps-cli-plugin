@@ -155,10 +155,8 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 
 	workloadExists := currentWorkload != nil
 
-	if okToPush, err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
+	if err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
 		return err
-	} else if !okToPush {
-		return nil
 	}
 	opts.ManageLocalSourceProxyAnnotation(currentWorkload, workload)
 

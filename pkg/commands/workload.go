@@ -444,13 +444,12 @@ func (opts *WorkloadOptions) checkGitValues(ctx context.Context, workload *carto
 // PublishLocalSource packages the specified source code in the --local-path flag and creates an image
 // that will be eventually published to the registry specified in the --source-image flag.
 // Returns a boolean that indicates if user does actually want to publish the image and an error in case of failure
-func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Config, currentWorkload, workload *cartov1alpha1.Workload, shouldPrint bool) (bool, error) {
+func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Config, currentWorkload, workload *cartov1alpha1.Workload, shouldPrint bool) error {
 	if opts.LocalPath == "" {
-		return true, nil
+		return nil
 	}
 
 	var taggedImage string
-	var okToPush bool
 
 	// is local source if source is to be created without a source image being specified
 	// or if there is an update of a workload that was initially created to push to LSP
@@ -465,17 +464,6 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 
 	taggedImage = strings.Split(taggedImage, "@sha")[0]
 
-	if shouldPrint {
-		// display survey to publish local source if user did not use
-		// --yes flag to accept workload create/update
-		okToPush = opts.checkToPublishLocalSource(taggedImage, c, workload)
-		if !okToPush {
-			return okToPush, nil
-		}
-	} else {
-		okToPush = true
-	}
-
 	var contentDir string
 	var fileExclusions []string
 	if source.IsDir(opts.LocalPath) {
@@ -485,11 +473,11 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 		zipContentsDir, err := ioutil.TempDir("", "")
 		defer os.RemoveAll(zipContentsDir)
 		if err != nil {
-			return false, err
+			return err
 		}
 		if err = source.ExtractZip(zipContentsDir, opts.LocalPath); err != nil {
 			c.Errorf("Failed to extract file contents from %q. \n", opts.LocalPath)
-			return false, err
+			return err
 		}
 		contentDir = zipContentsDir
 		tmpOpts := &WorkloadOptions{
@@ -498,7 +486,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 		}
 		fileExclusions = tmpOpts.loadExcludedPaths(c, shouldPrint)
 	} else {
-		return false, fmt.Errorf("unsupported file format %q", opts.LocalPath)
+		return fmt.Errorf("unsupported file format %q", opts.LocalPath)
 	}
 
 	localTransport := &source.Wrapper{}
@@ -507,7 +495,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 		// pass RESTClient as CoreV1 restclient, which will call custom RoundTripper
 		localTransport, err = source.LocalRegistryTransport(ctx, c.KubeRestConfig(), c.GetClientSet().CoreV1().RESTClient())
 		if err != nil {
-			return false, err
+			return err
 		}
 		ctx = source.StashContainerRemoteTransport(ctx, localTransport)
 	}
@@ -522,7 +510,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 		reg, err = source.NewRegistryWithProgress(ctx, &currentRegistryOpts)
 	}
 	if err != nil {
-		return okToPush, err
+		return err
 	}
 	ctx = logger.StashSourceImageLogger(ctx, logger.NewNoopLogger())
 
@@ -530,7 +518,7 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 
 	digestedImage, err := source.ImgpkgPush(ctx, contentDir, fileExclusions, reg, taggedImage)
 	if err != nil {
-		return okToPush, err
+		return err
 	}
 
 	if isLocal {
@@ -543,23 +531,10 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 
 	if currentWorkload != nil && currentWorkload.Spec.Source != nil && currentWorkload.Spec.Source.Image == workload.Spec.Source.Image {
 		cli.PrintPrompt(shouldPrint, c.Infof, "No source code is changed\n\n")
-		return okToPush, nil
+	} else {
+		cli.PrintPromptWithEmoji(shouldPrint, c.Emoji, cli.Inbox, cliprinter.Ssuccessf("Published source\n\n"))
 	}
-
-	cli.PrintPromptWithEmoji(shouldPrint, c.Emoji, cli.Inbox, cliprinter.Ssuccessf("Published source\n\n"))
-	return okToPush, nil
-}
-
-func (opts *WorkloadOptions) checkToPublishLocalSource(taggedImage string, c *cli.Config, workload *cartov1alpha1.Workload) bool {
-	okToPush := true
-	if !opts.Yes {
-		err := cli.NewConfirmSurvey(c, "Publish source in %q to %q? It may be visible to others who can pull images from that repository", opts.LocalPath, taggedImage).Resolve(&okToPush)
-		if err != nil || !okToPush {
-			c.Infof("Skipping workload %q\n", workload.Name)
-			return false
-		}
-	}
-	return okToPush
+	return nil
 }
 
 func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config, displayInfo bool) []string {
