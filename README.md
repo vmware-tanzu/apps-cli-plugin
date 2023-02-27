@@ -1,6 +1,10 @@
 # Apps Plugin for the Tanzu CLI
 
 [![CI](https://github.com/vmware-tanzu/apps-cli-plugin/actions/workflows/ci.yaml/badge.svg)](https://github.com/vmware-tanzu/apps-cli-plugin/actions/workflows/ci.yaml)
+[![GoDoc](https://godoc.org/github.com/vmware-tanzu/apps-cli-plugin?status.svg)](https://godoc.org/github.com/vmware-tanzu/apps-cli-plugin)
+[![Go Report Card](https://goreportcard.com/badge/github.com/vmware-tanzu/apps-cli-plugin)](https://goreportcard.com/report/github.com/vmware-tanzu/apps-cli-plugin)
+[![codecov](https://codecov.io/gh/vmware-tanzu/apps-cli-plugin/branch/main/graph/badge.svg)](https://codecov.io/gh/vmware-tanzu/apps-cli-plugin)
+
 
 Apps plugin for [Tanzu CLI](https://github.com/vmware-tanzu/tanzu-framework/tree/main/cmd/cli#installation) provides the ability to create, view, update, and delete application workloads on any Kubernetes cluster that has [Cartographer](https://cartographer.sh/) installed. It also provides commands to list and view ClusterSupplychain resources.
 
