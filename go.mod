@@ -16,12 +16,12 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
 	github.com/stern/stern v1.22.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/vito/go-interact v1.0.1
 	github.com/vmware-labs/reconciler-runtime v0.8.2
 	github.com/vmware-tanzu/carvel-imgpkg v0.36.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
-	github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230217183103-511c4d538798
+	github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230227053937-45edd140d772
 	golang.org/x/crypto v0.6.0
 	gotest.tools/v3 v3.4.0
 	k8s.io/api v0.25.4
