@@ -126,51 +126,61 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		}
 	} else if opts.Output != "" && opts.Yes {
 		// since there are no prompts, set okToCreate to true (accepted through --yes)
-		okToCreate = true
+		okToCreate = opts.Yes
 		if err := c.Create(ctx, workload); err != nil {
 			return err
 		}
 	}
 
-	var workers []wait.Worker
-	if opts.Output != "" && okToCreate {
-		workers = opts.WaitToBeReady(c, workload)
-		if err := opts.WaitError(ctx, c, workload, workers); err != nil {
-			return err
-		}
-		// once the workload is ready, get it as is in the cluster
-		if err := c.Get(ctx, client.ObjectKey{Namespace: opts.Namespace, Name: opts.Name}, workload); err != nil {
-			return err
-		}
-		if err := opts.OutputWorkload(c, workload); err != nil {
-			return err
-		}
+	if okToCreate {
+		anyTail := opts.Tail || opts.TailTimestamps
+		if opts.Wait || anyTail {
+			cli.PrintPrompt(shouldPrint, c.Infof, "Waiting for workload %q to become ready...\n", opts.Name)
 
-		return nil
-	}
+			workers := opts.WaitToBeReady(c, workload)
 
-	anyTail := opts.Tail || opts.TailTimestamps
-	if okToCreate && (opts.Wait || anyTail) {
-		c.Infof("Waiting for workload %q to become ready...\n", opts.Name)
+			if anyTail {
+				workers = append(workers, func(ctx context.Context) error {
+					selector, err := labels.Parse(fmt.Sprintf("%s=%s", cartov1alpha1.WorkloadLabelName, workload.Name))
+					if err != nil {
+						return err
+					}
+					containers := []string{}
+					return logs.Tail(ctx, c, opts.Namespace, selector, containers, time.Minute, opts.TailTimestamps)
+				})
+			}
 
-		workers = opts.WaitToBeReady(c, workload)
-
-		if anyTail {
-			workers = append(workers, func(ctx context.Context) error {
-				selector, err := labels.Parse(fmt.Sprintf("%s=%s", cartov1alpha1.WorkloadLabelName, workload.Name))
-				if err != nil {
-					panic(err)
+			err := wait.Race(ctx, opts.WaitTimeout, workers)
+			// print wait error only if output is not set or it was not used with --yes
+			if err != nil {
+				if err == context.DeadlineExceeded {
+					cli.PrintPrompt(shouldPrint, c.Printf, "%s timeout after %s waiting for %q to become ready\n", printer.Serrorf("Error:"), opts.WaitTimeout, workload.Name)
+				} else {
+					cli.PrintPrompt(shouldPrint, c.Eprintf, "%s %s\n", printer.Serrorf("Error:"), err)
 				}
-				containers := []string{}
-				return logs.Tail(ctx, c, opts.Namespace, selector, containers, time.Minute, opts.TailTimestamps)
-			})
+			}
+			// do not return if --output is set
+			// because workload has to be printed despite it's in a failing state
+			if err != nil && opts.Output == "" {
+				return cli.SilenceError(err)
+			}
+
+			// since there is a possibility that wait failed but did not return
+			// make sure this prompt is printed only if there is no error
+			if err == nil {
+				cli.PrintPrompt(shouldPrint, c.Infof, "Workload %q is ready\n\n", workload.Name)
+			}
 		}
 
-		if err := opts.WaitError(ctx, c, workload, workers); err != nil {
-			return err
+		if opts.Output != "" {
+			// once the workload is created, get it as is in the cluster
+			if err := c.Get(ctx, client.ObjectKey{Namespace: opts.Namespace, Name: opts.Name}, workload); err != nil {
+				return err
+			}
+			if err := opts.OutputWorkload(c, workload); err != nil {
+				return err
+			}
 		}
-
-		c.Infof("Workload %q is ready\n\n", workload.Name)
 	}
 
 	return nil

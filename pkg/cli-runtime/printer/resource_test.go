@@ -325,8 +325,6 @@ metadata:
   generation: 1
   labels:
     name: value
-  managedFields:
-  - manager: tanzu
   name: my-workload
   namespace: default
   ownerReferences:
@@ -395,24 +393,24 @@ status:
 		},
 		want: `
 {
-	"kind": "Workload",
 	"apiVersion": "carto.run/v1alpha1",
+	"kind": "Workload",
 	"metadata": {
-		"name": "my-workload",
-		"namespace": "default",
-		"selfLink": "/default/my-workload",
-		"uid": "uid-xyz",
-		"resourceVersion": "999",
-		"generation": 1,
-		"creationTimestamp": "2021-09-10T15:00:00Z",
-		"deletionTimestamp": "2021-09-10T15:00:00Z",
-		"deletionGracePeriodSeconds": 5,
-		"labels": {
-			"name": "value"
-		},
 		"annotations": {
 			"name": "value"
 		},
+		"creationTimestamp": "2021-09-10T15:00:00Z",
+		"deletionGracePeriodSeconds": 5,
+		"deletionTimestamp": "2021-09-10T15:00:00Z",
+		"finalizers": [
+			"my.finalizer"
+		],
+		"generation": 1,
+		"labels": {
+			"name": "value"
+		},
+		"name": "my-workload",
+		"namespace": "default",
 		"ownerReferences": [
 			{
 				"apiVersion": "v1",
@@ -421,24 +419,19 @@ status:
 				"uid": ""
 			}
 		],
-		"finalizers": [
-			"my.finalizer"
-		],
-		"managedFields": [
-			{
-				"manager": "tanzu"
-			}
-		]
+		"resourceVersion": "999",
+		"selfLink": "/default/my-workload",
+		"uid": "uid-xyz"
 	},
 	"spec": {},
 	"status": {
 		"conditions": [
 			{
-				"type": "Ready",
-				"status": "True",
 				"lastTransitionTime": "2019-06-29T01:44:05Z",
+				"message": "a hopefully informative message about what went wrong",
 				"reason": "No printing status",
-				"message": "a hopefully informative message about what went wrong"
+				"status": "True",
+				"type": "Ready"
 			}
 		],
 		"supplyChainRef": {}
