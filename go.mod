@@ -6,7 +6,7 @@ require (
 	dies.dev v0.6.2
 	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
-	github.com/cheggaaa/pb/v3 v3.1.0
+	github.com/cheggaaa/pb/v3 v3.1.2
 	github.com/creack/pty v1.1.18
 	github.com/fatih/color v1.14.1
 	github.com/go-logr/logr v1.2.3
@@ -21,7 +21,7 @@ require (
 	github.com/vmware-labs/reconciler-runtime v0.8.2
 	github.com/vmware-tanzu/carvel-imgpkg v0.36.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
-	github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230227053937-45edd140d772
+	github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230227230116-77dbba8077ca
 	golang.org/x/crypto v0.6.0
 	gotest.tools/v3 v3.4.0
 	k8s.io/api v0.25.4
@@ -47,7 +47,7 @@ require (
 	github.com/Azure/go-autorest/autorest/date v0.3.0 // indirect
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
-	github.com/VividCortex/ewma v1.1.1 // indirect
+	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/aunum/log v0.0.0-20200821225356-38d2e2c8b489 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.7.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.5.0 // indirect
