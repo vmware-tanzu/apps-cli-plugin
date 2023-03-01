@@ -36,6 +36,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry"
@@ -43,6 +44,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/logs"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/parsers"
 	cliprinter "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
@@ -790,16 +792,28 @@ func isUrl(str string) (bool, error) {
 	}
 }
 
-func (opts *WorkloadOptions) WaitToBeReady(c *cli.Config, workload *cartov1alpha1.Workload) []wait.Worker {
-	workers := []wait.Worker{
-		func(ctx context.Context) error {
-			clientWithWatch, err := watch.GetWatcher(ctx, c)
-			if err != nil {
-				return err
-			}
-			return wait.UntilCondition(ctx, clientWithWatch, types.NamespacedName{Name: workload.Name, Namespace: workload.Namespace}, &cartov1alpha1.WorkloadList{}, cartov1alpha1.WorkloadReadyConditionFunc)
-		},
-	}
+func (opts *WorkloadOptions) GetReadyConditionWorkers(c *cli.Config, workload *cartov1alpha1.Workload, workers []wait.Worker) []wait.Worker {
+	workers = append(workers, func(ctx context.Context) error {
+		clientWithWatch, err := watch.GetWatcher(ctx, c)
+		if err != nil {
+			return err
+		}
+		return wait.UntilCondition(ctx, clientWithWatch, types.NamespacedName{Name: workload.Name, Namespace: workload.Namespace}, &cartov1alpha1.WorkloadList{}, cartov1alpha1.WorkloadReadyConditionFunc)
+	})
+
+	return workers
+}
+
+func (opts *WorkloadOptions) GetTailWorkers(c *cli.Config, workload *cartov1alpha1.Workload, workers []wait.Worker) []wait.Worker {
+	workers = append(workers, func(ctx context.Context) error {
+		selector, err := labels.Parse(fmt.Sprintf("%s=%s", cartov1alpha1.WorkloadLabelName, workload.Name))
+		if err != nil {
+			return err
+		}
+		containers := []string{}
+		return logs.Tail(ctx, c, opts.Namespace, selector, containers, time.Minute, opts.TailTimestamps)
+	})
+
 	return workers
 }
 

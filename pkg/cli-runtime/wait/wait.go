@@ -41,16 +41,21 @@ func UntilCondition(ctx context.Context, watchClient client.WithWatch, target ty
 	for {
 		select {
 		case event := <-eventWatcher.ResultChan():
-			obj := event.Object.(client.Object)
-			if obj.GetName() != target.Name || obj.GetNamespace() != target.Namespace {
-				continue
-			}
-			cond, err := condition(obj)
-			if err != nil {
-				return err
-			}
-			if cond {
-				return nil
+			if event.Object != nil {
+				if obj, ok := event.Object.(client.Object); !ok {
+					continue
+				} else {
+					if obj.GetName() != target.Name || obj.GetNamespace() != target.Namespace {
+						continue
+					}
+					cond, err := condition(obj)
+					if err != nil {
+						return err
+					}
+					if cond {
+						return nil
+					}
+				}
 			}
 		case <-ctx.Done():
 			return ctx.Err()
