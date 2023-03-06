@@ -288,6 +288,18 @@ func (d *ResourceRequirementsDie) AddRequestString(name corev1.ResourceName, qua
 	return d.AddRequest(name, resource.MustParse(quantity))
 }
 
+func (d *ResourceRequirementsDie) ClaimsDie(claims ...*ResourceClaimDie) *ResourceRequirementsDie {
+	return d.DieStamp(func(r *corev1.ResourceRequirements) {
+		r.Claims = make([]corev1.ResourceClaim, len(claims))
+		for i := range claims {
+			r.Claims[i] = claims[i].DieRelease()
+		}
+	})
+}
+
+// +die
+type _ = corev1.ResourceClaim
+
 // +die
 type _ = corev1.VolumeMount
 
