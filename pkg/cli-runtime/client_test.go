@@ -91,6 +91,9 @@ func TestNewClient(t *testing.T) {
 	if err := c.DeleteAllOf(ctx, tr); err != nil {
 		t.Errorf("error durring DeleteAllOf(): %v", err)
 	}
+	if subresource := c.SubResource("pod"); subresource == nil {
+		t.Errorf("error durring fetching Subresource()")
+	}
 }
 
 func TestNewClientWithEnvVarKubeconfig(t *testing.T) {

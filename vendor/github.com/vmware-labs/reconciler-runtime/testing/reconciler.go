@@ -17,6 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -41,6 +42,8 @@ type ReconcilerTestCase struct {
 	// WithReactors installs each ReactionFunc into each fake clientset. ReactionFuncs intercept
 	// each call to the clientset providing the ability to mutate the resource or inject an error.
 	WithReactors []ReactionFunc
+	// WithClientBuilder allows a test to modify the fake client initialization.
+	WithClientBuilder func(*fake.ClientBuilder) *fake.ClientBuilder
 	// GivenObjects build the kubernetes objects which are present at the onset of reconciliation
 	GivenObjects []client.Object
 	// APIGivenObjects contains objects that are only available via an API reader instead of the normal cache
@@ -95,8 +98,11 @@ type ReconcilerTestCase struct {
 	CleanUp func(t *testing.T, ctx context.Context, tc *ReconcilerTestCase) error
 }
 
-// VerifyFunc is a verification function
+// VerifyFunc is a verification function for a reconciler's result
 type VerifyFunc func(t *testing.T, result controllerruntime.Result, err error)
+
+// VerifyStashedValueFunc is a verification function for the entries in the stash
+type VerifyStashedValueFunc func(t *testing.T, key reconcilers.StashKey, expected, actual interface{})
 
 // ReconcilerTests represents a map of reconciler test cases. The map key is the name of each test
 // case. Test cases are executed in random order.
@@ -154,6 +160,7 @@ func (tc *ReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, factory 
 		Scheme:                  scheme,
 		GivenObjects:            tc.GivenObjects,
 		APIGivenObjects:         tc.APIGivenObjects,
+		WithClientBuilder:       tc.WithClientBuilder,
 		WithReactors:            tc.WithReactors,
 		GivenTracks:             tc.GivenTracks,
 		ExpectTracks:            tc.ExpectTracks,

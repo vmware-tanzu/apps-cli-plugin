@@ -28,19 +28,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/flowcontrol"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/printer"
-)
-
-var (
-	// The rate limiter allows bursts of up to 'burst' to exceed the QPS, while still maintaining a
-	// smoothed qps rate of 'qps'.
-	// The bucket is initially filled with 'burst' tokens, and refills at a rate of 'qps'.
-	// The maximum number of tokens in the bucket is capped at 'burst'.
-	burst int     = 100
-	qps   float32 = 100
 )
 
 type Client interface {
@@ -88,9 +79,9 @@ func (c *client) GetClientSet() *kubernetes.Clientset {
 	return c.lazyLoadKubernetesClientsetOrDie()
 }
 
-func (c *client) Get(ctx context.Context, key crclient.ObjectKey, obj crclient.Object) error {
+func (c *client) Get(ctx context.Context, key crclient.ObjectKey, obj crclient.Object, opts ...crclient.GetOption) error {
 	c.log.V(2).Info("API Request", "host", c.KubeRestConfig().Host, "key", key, "action", "Get")
-	err := c.Client().Get(ctx, key, obj)
+	err := c.Client().Get(ctx, key, obj, opts...)
 	c.log.V(2).Info("Results", "object", obj)
 	c.logError(err)
 	return err
@@ -211,7 +202,6 @@ func (c *client) lazyLoadRestConfigOrDie() *rest.Config {
 			c.logError(err)
 			os.Exit(2)
 		}
-		restConfig.RateLimiter = flowcontrol.NewTokenBucketRateLimiter(qps, burst)
 		c.restConfig = restConfig
 	}
 	return c.restConfig
@@ -228,7 +218,13 @@ func (c *client) lazyLoadKubernetesClientsetOrDie() *kubernetes.Clientset {
 func (c *client) lazyLoadClientOrDie() crclient.Client {
 	if c.client == nil {
 		restConfig := c.lazyLoadRestConfigOrDie()
-		client, err := crclient.New(restConfig, crclient.Options{Scheme: c.scheme})
+		lazyloadMapper, err := apiutil.NewDynamicRESTMapper(c.KubeRestConfig(), apiutil.WithExperimentalLazyMapper)
+		if err != nil {
+			fmt.Printf("%s Unable to create rest mapper. signk8s.io/dynamicrestmapper states %s \n", printer.Serrorf("Error:"), err)
+			c.logError(err)
+			os.Exit(2)
+		}
+		client, err := crclient.New(restConfig, crclient.Options{Scheme: c.scheme, Mapper: lazyloadMapper})
 		if err != nil {
 			fmt.Printf("%s Unable to connect: connection refused. Confirm kubeconfig details and try again.\n", printer.Serrorf("Error:"))
 			c.logError(err)
@@ -256,6 +252,9 @@ func (c *client) lazyLoadDefaultNamespaceOrDie() string {
 		c.defaultNamespace = namespace
 	}
 	return c.defaultNamespace
+}
+func (c *client) SubResource(subResource string) crclient.SubResourceClient {
+	return c.Client().SubResource(subResource)
 }
 
 var _ discovery.CachedDiscoveryInterface = &cachedDiscoveryClient{}

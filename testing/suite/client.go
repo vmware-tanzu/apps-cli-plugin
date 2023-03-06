@@ -31,7 +31,6 @@ import (
 	// load credential helpers
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 )
 
 // AppsPluginDynamicClient to client-go Dynamic client. All methods are relative to the

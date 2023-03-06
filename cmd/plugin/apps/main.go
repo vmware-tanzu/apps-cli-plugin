@@ -27,7 +27,6 @@ import (
 	// load credential helpers
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"

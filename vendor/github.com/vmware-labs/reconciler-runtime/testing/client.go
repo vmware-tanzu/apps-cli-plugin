@@ -35,18 +35,18 @@ type clientWrapper struct {
 
 var _ client.Client = &clientWrapper{}
 
+// Deprecated NewFakeClient use NewFakeClientWrapper
 func NewFakeClient(scheme *runtime.Scheme, objs ...client.Object) *clientWrapper {
-	o := make([]runtime.Object, len(objs))
-	for i := range objs {
-		obj := objs[i].DeepCopyObject().(client.Object)
-		// default to a non-zero creation timestamp
-		if obj.GetCreationTimestamp().Time.IsZero() {
-			obj.SetCreationTimestamp(metav1.NewTime(time.UnixMilli(1000)))
-		}
-		o[i] = obj
-	}
-	client := &clientWrapper{
-		client:                  fakeclient.NewFakeClientWithScheme(scheme, o...),
+	builder := fakeclient.NewClientBuilder()
+	builder = builder.WithScheme(scheme)
+	builder = builder.WithObjects(prepareObjects(objs)...)
+
+	return NewFakeClientWrapper(builder.Build())
+}
+
+func NewFakeClientWrapper(client client.Client) *clientWrapper {
+	c := &clientWrapper{
+		client:                  client,
 		CreateActions:           []objectAction{},
 		UpdateActions:           []objectAction{},
 		PatchActions:            []PatchAction{},
@@ -58,22 +58,35 @@ func NewFakeClient(scheme *runtime.Scheme, objs ...client.Object) *clientWrapper
 		reactionChain:           []Reactor{},
 	}
 	// generate names on create
-	client.AddReactor("create", "*", func(action Action) (bool, runtime.Object, error) {
-		if createAction, ok := action.(CreateAction); ok {
+	c.AddReactor("create", "*", func(action Action) (bool, runtime.Object, error) {
+		if createAction, ok := action.(CreateAction); ok && action.GetSubresource() == "" {
 			obj := createAction.GetObject()
 			if accessor, ok := obj.(metav1.ObjectMetaAccessor); ok {
 				objmeta := accessor.GetObjectMeta()
 				if objmeta.GetName() == "" && objmeta.GetGenerateName() != "" {
-					client.genCount++
+					c.genCount++
 					// mutate the existing obj
-					objmeta.SetName(fmt.Sprintf("%s%03d", objmeta.GetGenerateName(), client.genCount))
+					objmeta.SetName(fmt.Sprintf("%s%03d", objmeta.GetGenerateName(), c.genCount))
 				}
 			}
 		}
 		// never handle the action
 		return false, nil, nil
 	})
-	return client
+	return c
+}
+
+func prepareObjects(objs []client.Object) []client.Object {
+	o := make([]client.Object, len(objs))
+	for i := range objs {
+		obj := objs[i].DeepCopyObject().(client.Object)
+		// default to a non-zero creation timestamp
+		if obj.GetCreationTimestamp().Time.IsZero() {
+			obj.SetCreationTimestamp(metav1.NewTime(time.UnixMilli(1000)))
+		}
+		o[i] = obj
+	}
+	return o
 }
 
 func (w *clientWrapper) AddReactor(verb, kind string, reaction ReactionFunc) {
@@ -117,7 +130,7 @@ func (w *clientWrapper) RESTMapper() meta.RESTMapper {
 	return w.client.RESTMapper()
 }
 
-func (w *clientWrapper) Get(ctx context.Context, key client.ObjectKey, obj client.Object) error {
+func (w *clientWrapper) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
 	gvr, namespace, name, err := w.objmeta(obj)
 	if err != nil {
 		return err
@@ -129,7 +142,7 @@ func (w *clientWrapper) Get(ctx context.Context, key client.ObjectKey, obj clien
 		return err
 	}
 
-	return w.client.Get(ctx, key, obj)
+	return w.client.Get(ctx, key, obj, opts...)
 }
 
 func (w *clientWrapper) List(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
@@ -275,6 +288,13 @@ func (w *clientWrapper) Status() client.StatusWriter {
 	}
 }
 
+func (w *clientWrapper) SubResource(subResource string) client.SubResourceClient {
+	return &subResourceClientWrapper{
+		subResource:   subResource,
+		clientWrapper: w,
+	}
+}
+
 type statusWriterWrapper struct {
 	statusWriter  client.StatusWriter
 	clientWrapper *clientWrapper
@@ -282,7 +302,17 @@ type statusWriterWrapper struct {
 
 var _ client.StatusWriter = &statusWriterWrapper{}
 
-func (w *statusWriterWrapper) Update(ctx context.Context, obj client.Object, opts ...client.UpdateOption) error {
+func (w *statusWriterWrapper) Create(ctx context.Context, obj client.Object, subResource client.Object, opts ...client.SubResourceCreateOption) error {
+	gvr, namespace, name, err := w.clientWrapper.objmeta(obj)
+	if err != nil {
+		return err
+	}
+
+	// call reactor chain
+	return w.clientWrapper.react(clientgotesting.NewCreateSubresourceAction(gvr, name, "status", namespace, subResource))
+}
+
+func (w *statusWriterWrapper) Update(ctx context.Context, obj client.Object, opts ...client.SubResourceUpdateOption) error {
 	gvr, namespace, _, err := w.clientWrapper.objmeta(obj)
 	if err != nil {
 		return err
@@ -300,7 +330,7 @@ func (w *statusWriterWrapper) Update(ctx context.Context, obj client.Object, opt
 	return w.statusWriter.Update(ctx, obj, opts...)
 }
 
-func (w *statusWriterWrapper) Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) error {
+func (w *statusWriterWrapper) Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.SubResourcePatchOption) error {
 	gvr, _, _, err := w.clientWrapper.objmeta(obj)
 	if err != nil {
 		return err
@@ -322,12 +352,76 @@ func (w *statusWriterWrapper) Patch(ctx context.Context, obj client.Object, patc
 	return w.statusWriter.Patch(ctx, obj, patch, opts...)
 }
 
+type subResourceClientWrapper struct {
+	subResource   string
+	clientWrapper *clientWrapper
+}
+
+var _ client.SubResourceClient = &subResourceClientWrapper{}
+
+func (w *subResourceClientWrapper) Get(ctx context.Context, obj client.Object, subResource client.Object, opts ...client.SubResourceGetOption) error {
+	gvr, namespace, name, err := w.clientWrapper.objmeta(obj)
+	if err != nil {
+		return err
+	}
+
+	// call reactor chain
+	return w.clientWrapper.react(clientgotesting.NewGetSubresourceAction(gvr, namespace, w.subResource, name))
+}
+
+func (w *subResourceClientWrapper) Create(ctx context.Context, obj client.Object, subResource client.Object, opts ...client.SubResourceCreateOption) error {
+	if w.subResource == "status" {
+		return w.clientWrapper.Status().Create(ctx, obj, subResource, opts...)
+	}
+
+	gvr, namespace, name, err := w.clientWrapper.objmeta(obj)
+	if err != nil {
+		return err
+	}
+
+	// call reactor chain
+	return w.clientWrapper.react(clientgotesting.NewCreateSubresourceAction(gvr, name, w.subResource, namespace, subResource))
+}
+
+func (w *subResourceClientWrapper) Update(ctx context.Context, obj client.Object, opts ...client.SubResourceUpdateOption) error {
+	if w.subResource == "status" {
+		return w.clientWrapper.Status().Update(ctx, obj, opts...)
+	}
+
+	gvr, namespace, _, err := w.clientWrapper.objmeta(obj)
+	if err != nil {
+		return err
+	}
+
+	// call reactor chain
+	return w.clientWrapper.react(clientgotesting.NewUpdateSubresourceAction(gvr, w.subResource, namespace, obj))
+}
+
+func (w *subResourceClientWrapper) Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.SubResourcePatchOption) error {
+	if w.subResource == "status" {
+		return w.clientWrapper.Status().Patch(ctx, obj, patch, opts...)
+	}
+
+	gvr, _, _, err := w.clientWrapper.objmeta(obj)
+	if err != nil {
+		return err
+	}
+	b, err := patch.Data(obj)
+	if err != nil {
+		return err
+	}
+
+	// call reactor chain
+	return w.clientWrapper.react(clientgotesting.NewPatchSubresourceAction(gvr, obj.GetNamespace(), obj.GetName(), patch.Type(), b, w.subResource))
+}
+
 // InduceFailure is used in conjunction with reconciler test's WithReactors field.
 // Tests that want to induce a failure in a testcase of a reconciler test would add:
-//   WithReactors: []rtesting.ReactionFunc{
-//      // Makes calls to create stream return an error.
-//      rtesting.InduceFailure("create", "Stream"),
-//   },
+//
+//	WithReactors: []rtesting.ReactionFunc{
+//	   // Makes calls to create stream return an error.
+//	   rtesting.InduceFailure("create", "Stream"),
+//	},
 func InduceFailure(verb, kind string, o ...InduceFailureOpts) ReactionFunc {
 	var opts *InduceFailureOpts
 	switch len(o) {
