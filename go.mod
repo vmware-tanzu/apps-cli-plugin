@@ -3,7 +3,7 @@ module github.com/vmware-tanzu/apps-cli-plugin
 go 1.19
 
 require (
-	dies.dev v0.6.2
+	dies.dev v0.7.0
 	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/cheggaaa/pb/v3 v3.1.2
@@ -25,7 +25,7 @@ require (
 	golang.org/x/crypto v0.7.0
 	gotest.tools/v3 v3.4.0
 	k8s.io/api v0.26.2
-	k8s.io/apiextensions-apiserver v0.25.0
+	k8s.io/apiextensions-apiserver v0.26.0
 	k8s.io/apimachinery v0.26.2
 	k8s.io/cli-runtime v0.25.4
 	k8s.io/client-go v0.25.4

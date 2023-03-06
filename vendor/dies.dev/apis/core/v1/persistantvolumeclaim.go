@@ -52,9 +52,9 @@ func (d *PersistentVolumeClaimSpecDie) DataSourceDie(fn func(d *TypedLocalObject
 	})
 }
 
-func (d *PersistentVolumeClaimSpecDie) DataSourceRefDie(fn func(d *TypedLocalObjectReferenceDie)) *PersistentVolumeClaimSpecDie {
+func (d *PersistentVolumeClaimSpecDie) DataSourceRefDie(fn func(d *TypedObjectReferenceDie)) *PersistentVolumeClaimSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimSpec) {
-		d := TypedLocalObjectReferenceBlank.DieImmutable(false).DieFeedPtr(r.DataSourceRef)
+		d := TypedObjectReferenceBlank.DieImmutable(false).DieFeedPtr(r.DataSourceRef)
 		fn(d)
 		r.DataSourceRef = d.DieReleasePtr()
 	})

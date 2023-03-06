@@ -519,6 +519,118 @@ func (d *TypedLocalObjectReferenceDie) Name(v string) *TypedLocalObjectReference
 	})
 }
 
+var TypedObjectReferenceBlank = (&TypedObjectReferenceDie{}).DieFeed(corev1.TypedObjectReference{})
+
+type TypedObjectReferenceDie struct {
+	mutable bool
+	r       corev1.TypedObjectReference
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *TypedObjectReferenceDie) DieImmutable(immutable bool) *TypedObjectReferenceDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *TypedObjectReferenceDie) DieFeed(r corev1.TypedObjectReference) *TypedObjectReferenceDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &TypedObjectReferenceDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *TypedObjectReferenceDie) DieFeedPtr(r *corev1.TypedObjectReference) *TypedObjectReferenceDie {
+	if r == nil {
+		r = &corev1.TypedObjectReference{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *TypedObjectReferenceDie) DieFeedRawExtension(raw runtime.RawExtension) *TypedObjectReferenceDie {
+	b, _ := json.Marshal(raw)
+	r := corev1.TypedObjectReference{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *TypedObjectReferenceDie) DieRelease() corev1.TypedObjectReference {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *TypedObjectReferenceDie) DieReleasePtr() *corev1.TypedObjectReference {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *TypedObjectReferenceDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *TypedObjectReferenceDie) DieStamp(fn func(r *corev1.TypedObjectReference)) *TypedObjectReferenceDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *TypedObjectReferenceDie) DeepCopy() *TypedObjectReferenceDie {
+	r := *d.r.DeepCopy()
+	return &TypedObjectReferenceDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// APIGroup is the group for the resource being referenced. If APIGroup is not specified, the specified Kind must be in the core API group. For any other third-party types, APIGroup is required.
+func (d *TypedObjectReferenceDie) APIGroup(v *string) *TypedObjectReferenceDie {
+	return d.DieStamp(func(r *corev1.TypedObjectReference) {
+		r.APIGroup = v
+	})
+}
+
+// Kind is the type of resource being referenced
+func (d *TypedObjectReferenceDie) Kind(v string) *TypedObjectReferenceDie {
+	return d.DieStamp(func(r *corev1.TypedObjectReference) {
+		r.Kind = v
+	})
+}
+
+// Name is the name of resource being referenced
+func (d *TypedObjectReferenceDie) Name(v string) *TypedObjectReferenceDie {
+	return d.DieStamp(func(r *corev1.TypedObjectReference) {
+		r.Name = v
+	})
+}
+
+// Namespace is the namespace of resource being referenced Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details. (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+func (d *TypedObjectReferenceDie) Namespace(v *string) *TypedObjectReferenceDie {
+	return d.DieStamp(func(r *corev1.TypedObjectReference) {
+		r.Namespace = v
+	})
+}
+
 var SecretReferenceBlank = (&SecretReferenceDie{}).DieFeed(corev1.SecretReference{})
 
 type SecretReferenceDie struct {
@@ -2499,6 +2611,108 @@ func (d *ResourceRequirementsDie) Limits(v corev1.ResourceList) *ResourceRequire
 func (d *ResourceRequirementsDie) Requests(v corev1.ResourceList) *ResourceRequirementsDie {
 	return d.DieStamp(func(r *corev1.ResourceRequirements) {
 		r.Requests = v
+	})
+}
+
+// Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
+//
+// This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+//
+// This field is immutable.
+func (d *ResourceRequirementsDie) Claims(v ...corev1.ResourceClaim) *ResourceRequirementsDie {
+	return d.DieStamp(func(r *corev1.ResourceRequirements) {
+		r.Claims = v
+	})
+}
+
+var ResourceClaimBlank = (&ResourceClaimDie{}).DieFeed(corev1.ResourceClaim{})
+
+type ResourceClaimDie struct {
+	mutable bool
+	r       corev1.ResourceClaim
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *ResourceClaimDie) DieImmutable(immutable bool) *ResourceClaimDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *ResourceClaimDie) DieFeed(r corev1.ResourceClaim) *ResourceClaimDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &ResourceClaimDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *ResourceClaimDie) DieFeedPtr(r *corev1.ResourceClaim) *ResourceClaimDie {
+	if r == nil {
+		r = &corev1.ResourceClaim{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *ResourceClaimDie) DieFeedRawExtension(raw runtime.RawExtension) *ResourceClaimDie {
+	b, _ := json.Marshal(raw)
+	r := corev1.ResourceClaim{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *ResourceClaimDie) DieRelease() corev1.ResourceClaim {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *ResourceClaimDie) DieReleasePtr() *corev1.ResourceClaim {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *ResourceClaimDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *ResourceClaimDie) DieStamp(fn func(r *corev1.ResourceClaim)) *ResourceClaimDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *ResourceClaimDie) DeepCopy() *ResourceClaimDie {
+	r := *d.r.DeepCopy()
+	return &ResourceClaimDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
+func (d *ResourceClaimDie) Name(v string) *ResourceClaimDie {
+	return d.DieStamp(func(r *corev1.ResourceClaim) {
+		r.Name = v
 	})
 }
 
@@ -6840,7 +7054,7 @@ func (d *NodeSpecDie) Taints(v ...corev1.Taint) *NodeSpecDie {
 	})
 }
 
-// Deprecated: Previously used to specify the source of the node's configuration for the DynamicKubeletConfig feature. This feature is removed from Kubelets as of 1.24 and will be fully removed in 1.26.
+// Deprecated: Previously used to specify the source of the node's configuration for the DynamicKubeletConfig feature. This feature is removed.
 func (d *NodeSpecDie) ConfigSource(v *corev1.NodeConfigSource) *NodeSpecDie {
 	return d.DieStamp(func(r *corev1.NodeSpec) {
 		r.ConfigSource = v
@@ -7288,7 +7502,7 @@ func (d *NodeStatusDie) Conditions(v ...corev1.NodeCondition) *NodeStatusDie {
 	})
 }
 
-// List of addresses reachable to the node. Queried from cloud provider, if available. More info: https://kubernetes.io/docs/concepts/nodes/node/#addresses Note: This field is declared as mergeable, but the merge key is not sufficiently unique, which can cause data corruption when it is merged. Callers should instead use a full-replacement patch. See http://pr.k8s.io/79391 for an example.
+// List of addresses reachable to the node. Queried from cloud provider, if available. More info: https://kubernetes.io/docs/concepts/nodes/node/#addresses Note: This field is declared as mergeable, but the merge key is not sufficiently unique, which can cause data corruption when it is merged. Callers should instead use a full-replacement patch. See https://pr.k8s.io/79391 for an example.
 func (d *NodeStatusDie) Addresses(v ...corev1.NodeAddress) *NodeStatusDie {
 	return d.DieStamp(func(r *corev1.NodeStatus) {
 		r.Addresses = v
@@ -10609,15 +10823,15 @@ func (d *PersistentVolumeClaimSpecDie) VolumeMode(v *corev1.PersistentVolumeMode
 	})
 }
 
-// dataSource field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. If the AnyVolumeDataSource feature gate is enabled, this field will always have the same contents as the DataSourceRef field.
+// dataSource field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified. If the namespace is specified, then dataSourceRef will not be copied to dataSource.
 func (d *PersistentVolumeClaimSpecDie) DataSource(v *corev1.TypedLocalObjectReference) *PersistentVolumeClaimSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimSpec) {
 		r.DataSource = v
 	})
 }
 
-// dataSourceRef specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef allows any non-core object, as well as PersistentVolumeClaim objects. * While DataSource ignores disallowed values (dropping them), DataSourceRef preserves all values, and generates an error if a disallowed value is specified. (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
-func (d *PersistentVolumeClaimSpecDie) DataSourceRef(v *corev1.TypedLocalObjectReference) *PersistentVolumeClaimSpecDie {
+// dataSourceRef specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the dataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, when namespace isn't specified in dataSourceRef, both fields (dataSource and dataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. When namespace is specified in dataSourceRef, dataSource isn't set to the same value and must be empty. There are three important differences between dataSource and dataSourceRef: * While dataSource only allows two specific types of objects, dataSourceRef allows any non-core object, as well as PersistentVolumeClaim objects. * While dataSource ignores disallowed values (dropping them), dataSourceRef preserves all values, and generates an error if a disallowed value is specified. * While dataSource only allows local objects, dataSourceRef allows objects in any namespaces. (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled. (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+func (d *PersistentVolumeClaimSpecDie) DataSourceRef(v *corev1.TypedObjectReference) *PersistentVolumeClaimSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimSpec) {
 		r.DataSourceRef = v
 	})
@@ -11374,6 +11588,319 @@ func (d *PodSpecDie) HostUsers(v *bool) *PodSpecDie {
 	})
 }
 
+// SchedulingGates is an opaque list of values that if specified will block scheduling the pod. More info:  https://git.k8s.io/enhancements/keps/sig-scheduling/3521-pod-scheduling-readiness.
+//
+// This is an alpha-level feature enabled by PodSchedulingReadiness feature gate.
+func (d *PodSpecDie) SchedulingGates(v ...corev1.PodSchedulingGate) *PodSpecDie {
+	return d.DieStamp(func(r *corev1.PodSpec) {
+		r.SchedulingGates = v
+	})
+}
+
+// ResourceClaims defines which ResourceClaims must be allocated and reserved before the Pod is allowed to start. The resources will be made available to those containers which consume them by name.
+//
+// This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
+//
+// This field is immutable.
+func (d *PodSpecDie) ResourceClaims(v ...corev1.PodResourceClaim) *PodSpecDie {
+	return d.DieStamp(func(r *corev1.PodSpec) {
+		r.ResourceClaims = v
+	})
+}
+
+var PodSchedulingGateBlank = (&PodSchedulingGateDie{}).DieFeed(corev1.PodSchedulingGate{})
+
+type PodSchedulingGateDie struct {
+	mutable bool
+	r       corev1.PodSchedulingGate
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *PodSchedulingGateDie) DieImmutable(immutable bool) *PodSchedulingGateDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *PodSchedulingGateDie) DieFeed(r corev1.PodSchedulingGate) *PodSchedulingGateDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &PodSchedulingGateDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *PodSchedulingGateDie) DieFeedPtr(r *corev1.PodSchedulingGate) *PodSchedulingGateDie {
+	if r == nil {
+		r = &corev1.PodSchedulingGate{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *PodSchedulingGateDie) DieFeedRawExtension(raw runtime.RawExtension) *PodSchedulingGateDie {
+	b, _ := json.Marshal(raw)
+	r := corev1.PodSchedulingGate{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *PodSchedulingGateDie) DieRelease() corev1.PodSchedulingGate {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *PodSchedulingGateDie) DieReleasePtr() *corev1.PodSchedulingGate {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *PodSchedulingGateDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *PodSchedulingGateDie) DieStamp(fn func(r *corev1.PodSchedulingGate)) *PodSchedulingGateDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *PodSchedulingGateDie) DeepCopy() *PodSchedulingGateDie {
+	r := *d.r.DeepCopy()
+	return &PodSchedulingGateDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// Name of the scheduling gate. Each scheduling gate must have a unique name field.
+func (d *PodSchedulingGateDie) Name(v string) *PodSchedulingGateDie {
+	return d.DieStamp(func(r *corev1.PodSchedulingGate) {
+		r.Name = v
+	})
+}
+
+var PodResourceClaimBlank = (&PodResourceClaimDie{}).DieFeed(corev1.PodResourceClaim{})
+
+type PodResourceClaimDie struct {
+	mutable bool
+	r       corev1.PodResourceClaim
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *PodResourceClaimDie) DieImmutable(immutable bool) *PodResourceClaimDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *PodResourceClaimDie) DieFeed(r corev1.PodResourceClaim) *PodResourceClaimDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &PodResourceClaimDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *PodResourceClaimDie) DieFeedPtr(r *corev1.PodResourceClaim) *PodResourceClaimDie {
+	if r == nil {
+		r = &corev1.PodResourceClaim{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *PodResourceClaimDie) DieFeedRawExtension(raw runtime.RawExtension) *PodResourceClaimDie {
+	b, _ := json.Marshal(raw)
+	r := corev1.PodResourceClaim{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *PodResourceClaimDie) DieRelease() corev1.PodResourceClaim {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *PodResourceClaimDie) DieReleasePtr() *corev1.PodResourceClaim {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *PodResourceClaimDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *PodResourceClaimDie) DieStamp(fn func(r *corev1.PodResourceClaim)) *PodResourceClaimDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *PodResourceClaimDie) DeepCopy() *PodResourceClaimDie {
+	r := *d.r.DeepCopy()
+	return &PodResourceClaimDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// Name uniquely identifies this resource claim inside the pod. This must be a DNS_LABEL.
+func (d *PodResourceClaimDie) Name(v string) *PodResourceClaimDie {
+	return d.DieStamp(func(r *corev1.PodResourceClaim) {
+		r.Name = v
+	})
+}
+
+// Source describes where to find the ResourceClaim.
+func (d *PodResourceClaimDie) Source(v corev1.ClaimSource) *PodResourceClaimDie {
+	return d.DieStamp(func(r *corev1.PodResourceClaim) {
+		r.Source = v
+	})
+}
+
+var ClaimSourceBlank = (&ClaimSourceDie{}).DieFeed(corev1.ClaimSource{})
+
+type ClaimSourceDie struct {
+	mutable bool
+	r       corev1.ClaimSource
+}
+
+// DieImmutable returns a new die for the current die's state that is either mutable (`false`) or immutable (`true`).
+func (d *ClaimSourceDie) DieImmutable(immutable bool) *ClaimSourceDie {
+	if d.mutable == !immutable {
+		return d
+	}
+	d = d.DeepCopy()
+	d.mutable = !immutable
+	return d
+}
+
+// DieFeed returns a new die with the provided resource.
+func (d *ClaimSourceDie) DieFeed(r corev1.ClaimSource) *ClaimSourceDie {
+	if d.mutable {
+		d.r = r
+		return d
+	}
+	return &ClaimSourceDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// DieFeedPtr returns a new die with the provided resource pointer. If the resource is nil, the empty value is used instead.
+func (d *ClaimSourceDie) DieFeedPtr(r *corev1.ClaimSource) *ClaimSourceDie {
+	if r == nil {
+		r = &corev1.ClaimSource{}
+	}
+	return d.DieFeed(*r)
+}
+
+// DieFeedRawExtension returns the resource managed by the die as an raw extension.
+func (d *ClaimSourceDie) DieFeedRawExtension(raw runtime.RawExtension) *ClaimSourceDie {
+	b, _ := json.Marshal(raw)
+	r := corev1.ClaimSource{}
+	_ = json.Unmarshal(b, &r)
+	return d.DieFeed(r)
+}
+
+// DieRelease returns the resource managed by the die.
+func (d *ClaimSourceDie) DieRelease() corev1.ClaimSource {
+	if d.mutable {
+		return d.r
+	}
+	return *d.r.DeepCopy()
+}
+
+// DieReleasePtr returns a pointer to the resource managed by the die.
+func (d *ClaimSourceDie) DieReleasePtr() *corev1.ClaimSource {
+	r := d.DieRelease()
+	return &r
+}
+
+// DieReleaseRawExtension returns the resource managed by the die as an raw extension.
+func (d *ClaimSourceDie) DieReleaseRawExtension() runtime.RawExtension {
+	r := d.DieReleasePtr()
+	b, _ := json.Marshal(r)
+	raw := runtime.RawExtension{}
+	_ = json.Unmarshal(b, &raw)
+	return raw
+}
+
+// DieStamp returns a new die with the resource passed to the callback function. The resource is mutable.
+func (d *ClaimSourceDie) DieStamp(fn func(r *corev1.ClaimSource)) *ClaimSourceDie {
+	r := d.DieRelease()
+	fn(&r)
+	return d.DieFeed(r)
+}
+
+// DeepCopy returns a new die with equivalent state. Useful for snapshotting a mutable die.
+func (d *ClaimSourceDie) DeepCopy() *ClaimSourceDie {
+	r := *d.r.DeepCopy()
+	return &ClaimSourceDie{
+		mutable: d.mutable,
+		r:       r,
+	}
+}
+
+// ResourceClaimName is the name of a ResourceClaim object in the same namespace as this pod.
+func (d *ClaimSourceDie) ResourceClaimName(v *string) *ClaimSourceDie {
+	return d.DieStamp(func(r *corev1.ClaimSource) {
+		r.ResourceClaimName = v
+	})
+}
+
+// ResourceClaimTemplateName is the name of a ResourceClaimTemplate object in the same namespace as this pod.
+//
+// The template will be used to create a new ResourceClaim, which will be bound to this pod. When this pod is deleted, the ResourceClaim will also be deleted. The name of the ResourceClaim will be <pod name>-<resource name>, where <resource name> is the PodResourceClaim.Name. Pod validation will reject the pod if the concatenated name is not valid for a ResourceClaim (e.g. too long).
+//
+// An existing ResourceClaim with that name that is not owned by the pod will not be used for the pod to avoid using an unrelated resource by mistake. Scheduling and pod startup are then blocked until the unrelated ResourceClaim is removed.
+//
+// This field is immutable and no changes will be made to the corresponding ResourceClaim by the control plane after creating the ResourceClaim.
+func (d *ClaimSourceDie) ResourceClaimTemplateName(v *string) *ClaimSourceDie {
+	return d.DieStamp(func(r *corev1.ClaimSource) {
+		r.ResourceClaimTemplateName = v
+	})
+}
+
 var PodSecurityContextBlank = (&PodSecurityContextDie{}).DieFeed(corev1.PodSecurityContext{})
 
 type PodSecurityContextDie struct {
@@ -11493,7 +12020,7 @@ func (d *PodSecurityContextDie) RunAsNonRoot(v *bool) *PodSecurityContextDie {
 	})
 }
 
-// A list of groups applied to the first process run in each container, in addition to the container's primary GID.  If unspecified, no groups will be added to any container. Note that this field cannot be set when spec.os.name is windows.
+// A list of groups applied to the first process run in each container, in addition to the container's primary GID, the fsGroup (if specified), and group memberships defined in the container image for the uid of the container process. If unspecified, no additional groups are added to any container. Note that group memberships defined in the container image for the uid of the container process are still effective, even if they are not included in this list. Note that this field cannot be set when spec.os.name is windows.
 func (d *PodSecurityContextDie) SupplementalGroups(v ...int64) *PodSecurityContextDie {
 	return d.DieStamp(func(r *corev1.PodSecurityContext) {
 		r.SupplementalGroups = v
@@ -12265,7 +12792,7 @@ func (d *TopologySpreadConstraintDie) MinDomains(v *int32) *TopologySpreadConstr
 
 // NodeAffinityPolicy indicates how we will treat Pod's nodeAffinity/nodeSelector when calculating pod topology spread skew. Options are: - Honor: only nodes matching nodeAffinity/nodeSelector are included in the calculations. - Ignore: nodeAffinity/nodeSelector are ignored. All nodes are included in the calculations.
 //
-// If this value is nil, the behavior is equivalent to the Honor policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+// If this value is nil, the behavior is equivalent to the Honor policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
 func (d *TopologySpreadConstraintDie) NodeAffinityPolicy(v *corev1.NodeInclusionPolicy) *TopologySpreadConstraintDie {
 	return d.DieStamp(func(r *corev1.TopologySpreadConstraint) {
 		r.NodeAffinityPolicy = v
@@ -12274,7 +12801,7 @@ func (d *TopologySpreadConstraintDie) NodeAffinityPolicy(v *corev1.NodeInclusion
 
 // NodeTaintsPolicy indicates how we will treat node taints when calculating pod topology spread skew. Options are: - Honor: nodes without taints, along with tainted nodes for which the incoming pod has a toleration, are included. - Ignore: node taints are ignored. All nodes are included.
 //
-// If this value is nil, the behavior is equivalent to the Ignore policy. This is a alpha-level feature enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
+// If this value is nil, the behavior is equivalent to the Ignore policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
 func (d *TopologySpreadConstraintDie) NodeTaintsPolicy(v *corev1.NodeInclusionPolicy) *TopologySpreadConstraintDie {
 	return d.DieStamp(func(r *corev1.TopologySpreadConstraint) {
 		r.NodeTaintsPolicy = v
@@ -13187,7 +13714,7 @@ func (d *ReplicationControllerStatusDie) DeepCopy() *ReplicationControllerStatus
 	}
 }
 
-// Replicas is the most recently oberved number of replicas. More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#what-is-a-replicationcontroller
+// Replicas is the most recently observed number of replicas. More info: https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller#what-is-a-replicationcontroller
 func (d *ReplicationControllerStatusDie) Replicas(v int32) *ReplicationControllerStatusDie {
 	return d.DieStamp(func(r *corev1.ReplicationControllerStatus) {
 		r.Replicas = v

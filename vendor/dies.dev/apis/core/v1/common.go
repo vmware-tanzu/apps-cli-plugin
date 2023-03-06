@@ -30,6 +30,9 @@ type _ = corev1.LocalObjectReference
 type _ = corev1.TypedLocalObjectReference
 
 // +die
+type _ = corev1.TypedObjectReference
+
+// +die
 type _ = corev1.SecretReference
 
 // +die
