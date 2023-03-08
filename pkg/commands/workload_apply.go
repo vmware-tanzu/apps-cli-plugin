@@ -20,16 +20,13 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/logs"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/wait"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
@@ -202,20 +199,14 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 
 	if okToApply {
 		anyTail := opts.Tail || opts.TailTimestamps
+		var workers []wait.Worker
 		if opts.Wait || anyTail {
 			cli.PrintPrompt(shouldPrint, c.Infof, "Waiting for workload %q to become ready...\n", opts.Name)
 
-			workers := opts.WaitToBeReady(c, workload)
+			workers = opts.GetReadyConditionWorkers(c, workload, workers)
 
 			if anyTail {
-				workers = append(workers, func(ctx context.Context) error {
-					selector, err := labels.Parse(fmt.Sprintf("%s=%s", cartov1alpha1.WorkloadLabelName, workload.Name))
-					if err != nil {
-						return err
-					}
-					containers := []string{}
-					return logs.Tail(ctx, c, opts.Namespace, selector, containers, time.Minute, opts.TailTimestamps)
-				})
+				workers = opts.GetTailWorkers(c, workload, workers)
 			}
 
 			err := wait.Race(ctx, opts.WaitTimeout, workers)
