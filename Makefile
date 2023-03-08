@@ -1,5 +1,5 @@
 BUILD_SHA_SHORT := $(shell git rev-parse --short HEAD)
-BUILD_VERSION ?= $(shell cat APPS_PLUGIN_VERSION)+dev-$(BUILD_SHA_SHORT)
+BUILD_VERSION ?= $(shell cat APPS_PLUGIN_VERSION)-dev-$(BUILD_SHA_SHORT)
 BUILD_DIRTY = $(shell git diff --quiet HEAD || echo "-dirty")
 BUILD_DATE ?= $$(date -u +"%Y-%m-%d")
 BUILD_SHA = $(shell git rev-parse HEAD)
@@ -48,6 +48,7 @@ install: test## Install the plugin binaries to the local machine
 
 .PHONY: build
 build: $(BUILD_JOBS)
+	tar -zcvf tanzu-apps-plugin-build.tar.gz -C $(ARTIFACTS_DIR) .
 
 .PHONY: build-%
 build-%: ## Build the plugin binaries for the given OS-ARCHITECTURE combination
@@ -56,8 +57,12 @@ build-%: ## Build the plugin binaries for the given OS-ARCHITECTURE combination
 	tanzu builder cli compile --version $(BUILD_VERSION) --ldflags "$(LD_FLAGS)" --path ./cmd/plugin --artifacts ${ARTIFACTS_DIR}/${OS}/${ARCH}/cli --target ${OS}_${ARCH}
 
 .PHONY: publish
-publish: $(PUBLISH_JOBS) ## Generate the dustributable plugin binaries packages
+publish: $(PUBLISH_JOBS) ## Generate the distributable plugin binaries packages
 	tar -zcvf tanzu-apps-plugin.tar.gz -C $(TANZU_PLUGIN_PUBLISH_PATH) .
+
+.PHONY: publish-oci
+publish-oci: 
+	tanzu builder publish --input-artifact-dir $(ARTIFACTS_DIR) --plugins "apps" --version "${BUILD_VERSION}" --type oci --oci-discovery-image "${DISCOVERY_REPO}" --oci-distribution-image-repository "${DISTRIBUTION_REPO}"
 
 .PHONY: publish-%
 publish-%: ## Generate the dustributable plugin binaries packages for the given OS-ARCHITECTURE combination
