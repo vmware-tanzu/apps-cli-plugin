@@ -8,7 +8,7 @@ require (
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/cheggaaa/pb/v3 v3.1.2
 	github.com/creack/pty v1.1.18
-	github.com/fatih/color v1.14.1
+	github.com/fatih/color v1.15.0
 	github.com/go-logr/logr v1.2.3
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.13.0
@@ -21,7 +21,7 @@ require (
 	github.com/vmware-labs/reconciler-runtime v0.8.2
 	github.com/vmware-tanzu/carvel-imgpkg v0.36.0
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
-	github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230303201416-8354312f13e9
+	github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230311011418-99dd6215d05a
 	golang.org/x/crypto v0.7.0
 	gotest.tools/v3 v3.4.0
 	k8s.io/api v0.26.2
