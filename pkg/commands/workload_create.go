@@ -102,10 +102,8 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 
 	var okToCreate bool
 	shouldPrint := opts.Output == "" || (opts.Output != "" && !opts.Yes)
-	if okToPush, err := opts.PublishLocalSource(ctx, c, nil, workload, shouldPrint); err != nil {
+	if err := opts.PublishLocalSource(ctx, c, nil, workload, shouldPrint); err != nil {
 		return err
-	} else if !okToPush {
-		return nil
 	}
 	opts.ManageLocalSourceProxyAnnotation(nil, workload)
 

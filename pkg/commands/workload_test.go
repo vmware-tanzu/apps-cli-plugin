@@ -2363,7 +2363,7 @@ Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost
 				},
 			}
 
-			_, err := opts.PublishLocalSource(ctx, c, nil, workload, test.shouldPrint)
+			err := opts.PublishLocalSource(ctx, c, nil, workload, test.shouldPrint)
 			if err != nil && !test.shouldError {
 				t.Errorf("PublishLocalSource() errored %v", err)
 			}
@@ -2569,7 +2569,7 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registr
 				},
 			}
 
-			_, err := opts.PublishLocalSource(ctx, c, test.existingWorkload, workload, test.shouldPrint)
+			err := opts.PublishLocalSource(ctx, c, test.existingWorkload, workload, test.shouldPrint)
 			if err != nil && !test.shouldError {
 				t.Errorf("PublishLocalSource() errored %v", err)
 			}
@@ -2758,7 +2758,7 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + source.
 				},
 			}
 
-			_, err := opts.PublishLocalSource(ctx, c, test.existingWorkload, workload, test.shouldPrint)
+			err := opts.PublishLocalSource(ctx, c, test.existingWorkload, workload, test.shouldPrint)
 			if err != nil && !test.shouldError {
 				t.Errorf("PublishLocalSource() errored %v", err)
 			}
