@@ -522,7 +522,7 @@ github.com/vmware-tanzu/difflib
 # github.com/vmware-tanzu/tanzu-framework/apis/cli v0.0.0-20230215121916-ba6b6f70b187
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-framework/apis/cli/v1alpha1
-# github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230311011418-99dd6215d05a
+# github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230315043541-5b41308a4606
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-framework/cli/runtime/apis/cli/v1alpha1
 github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo
@@ -961,7 +961,7 @@ k8s.io/kube-openapi/pkg/schemamutation
 k8s.io/kube-openapi/pkg/spec3
 k8s.io/kube-openapi/pkg/util/proto
 k8s.io/kube-openapi/pkg/validation/spec
-# k8s.io/kubectl v0.25.4
+# k8s.io/kubectl v0.26.2
 ## explicit; go 1.19
 k8s.io/kubectl/pkg/scheme
 # k8s.io/utils v0.0.0-20230220204549-a5ecb0141aa5
