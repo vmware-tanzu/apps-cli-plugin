@@ -17,34 +17,24 @@ package stern
 import (
 	"context"
 	"fmt"
-	"sync"
+	"regexp"
+	"strings"
+	"time"
+
+	"sync/atomic"
 
 	"github.com/pkg/errors"
+
 	"github.com/stern/stern/kubernetes"
-	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/time/rate"
+
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/utils/pointer"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientset "k8s.io/client-go/kubernetes"
 )
-
-var tails = make(map[string]*Tail)
-var tailLock sync.RWMutex
-
-func getTail(targetID string) (*Tail, bool) {
-	tailLock.RLock()
-	defer tailLock.RUnlock()
-	tail, ok := tails[targetID]
-	return tail, ok
-}
-
-func setTail(targetID string, tail *Tail) {
-	tailLock.Lock()
-	defer tailLock.Unlock()
-	tails[targetID] = tail
-}
-
-func clearTail(targetID string) {
-	tailLock.Lock()
-	defer tailLock.Unlock()
-	delete(tails, targetID)
-}
 
 // Run starts the main run loop
 func Run(ctx context.Context, config *Config) error {
@@ -54,7 +44,7 @@ func Run(ctx context.Context, config *Config) error {
 		return err
 	}
 
-	clientset, err := corev1client.NewForConfig(cc)
+	client, err := clientset.NewForConfig(cc)
 	if err != nil {
 		return err
 	}
@@ -74,26 +64,127 @@ func Run(ctx context.Context, config *Config) error {
 		}
 	}
 
-	added := make(chan *Target)
-	removed := make(chan *Target)
+	var resource struct {
+		kind string
+		name string
+	}
+	if config.Resource != "" {
+		parts := strings.Split(config.Resource, "/")
+		if len(parts) != 2 {
+			return errors.New("resource must be specified in the form \"<resource>/<name>\"")
+		}
+		resource.kind, resource.name = parts[0], parts[1]
+		if PodMatcher.Matches(resource.kind) {
+			// Pods might have no labels or share the same labels,
+			// so we use an exact match instead.
+			podName, err := regexp.Compile("^" + resource.name + "$")
+			if err != nil {
+				return errors.Wrap(err, "failed to compile regular expression for pod")
+			}
+			config.PodQuery = podName
+		}
+	}
+
+	filter := newTargetFilter(targetFilterConfig{
+		podFilter:              config.PodQuery,
+		excludePodFilter:       config.ExcludePodQuery,
+		containerFilter:        config.ContainerQuery,
+		containerExcludeFilter: config.ExcludeContainerQuery,
+		initContainers:         config.InitContainers,
+		ephemeralContainers:    config.EphemeralContainers,
+		containerStates:        config.ContainerStates,
+	})
+	newTail := func(t *Target) *Tail {
+		return NewTail(client.CoreV1(), t.Node, t.Namespace, t.Pod, t.Container, config.Template, config.Out, config.ErrOut, &TailOptions{
+			Timestamps:      config.Timestamps,
+			TimestampFormat: config.TimestampFormat,
+			Location:        config.Location,
+			SinceSeconds:    pointer.Int64(int64(config.Since.Seconds())),
+			Exclude:         config.Exclude,
+			Include:         config.Include,
+			Namespace:       config.AllNamespaces || len(namespaces) > 1,
+			TailLines:       config.TailLines,
+			Follow:          config.Follow,
+			OnlyLogLines:    config.OnlyLogLines,
+		})
+	}
+
+	if !config.Follow {
+		var eg errgroup.Group
+		eg.SetLimit(config.MaxLogRequests)
+		for _, n := range namespaces {
+			selector, err := chooseSelector(ctx, client, n, resource.kind, resource.name, config.LabelSelector)
+			if err != nil {
+				return err
+			}
+			targets, err := ListTargets(ctx,
+				client.CoreV1().Pods(n),
+				selector,
+				config.FieldSelector,
+				filter,
+			)
+			if err != nil {
+				return err
+			}
+			for _, t := range targets {
+				t := t
+				eg.Go(func() error {
+					tail := newTail(t)
+					defer tail.Close()
+					return tail.Start(ctx)
+				})
+			}
+		}
+		return eg.Wait()
+	}
+
+	tailTarget := func(ctx context.Context, target *Target) {
+		// We use a rate limiter to prevent a burst of retries.
+		// It also enables us to retry immediately, in most cases,
+		// when it is disconnected on the way.
+		limiter := rate.NewLimiter(rate.Every(time.Second*20), 2)
+		var resumeRequest *ResumeRequest
+		for {
+			if err := limiter.Wait(ctx); err != nil {
+				fmt.Fprintf(config.ErrOut, "failed to retry: %v\n", err)
+				return
+			}
+			tail := newTail(target)
+			var err error
+			if resumeRequest == nil {
+				err = tail.Start(ctx)
+			} else {
+				err = tail.Resume(ctx, resumeRequest)
+			}
+			tail.Close()
+			if err == nil {
+				return
+			}
+			if !filter.isActive(target) {
+				fmt.Fprintf(config.ErrOut, "failed to tail: %v\n", err)
+				return
+			}
+			fmt.Fprintf(config.ErrOut, "failed to tail: %v, will retry\n", err)
+			if resumeReq := tail.GetResumeRequest(); resumeReq != nil {
+				resumeRequest = resumeReq
+			}
+		}
+	}
+
+	var numRequests atomic.Int64
 	errCh := make(chan error)
-
-	defer close(added)
-	defer close(removed)
 	defer close(errCh)
-
 	for _, n := range namespaces {
-		a, r, err := Watch(ctx,
-			clientset.Pods(n),
-			config.PodQuery,
-			config.ExcludePodQuery,
-			config.ContainerQuery,
-			config.ExcludeContainerQuery,
-			config.InitContainers,
-			config.EphemeralContainers,
-			config.ContainerStates,
-			config.LabelSelector,
-			config.FieldSelector)
+		selector, err := chooseSelector(ctx, client, n, resource.kind, resource.name, config.LabelSelector)
+		if err != nil {
+			return err
+		}
+		a, err := WatchTargets(ctx,
+			client.CoreV1().Pods(n),
+			selector,
+			config.FieldSelector,
+			filter,
+		)
 		if err != nil {
 			return errors.Wrap(err, "failed to set up watch")
 		}
@@ -101,18 +192,23 @@ func Run(ctx context.Context, config *Config) error {
 		go func() {
 			for {
 				select {
-				case v, ok := <-a:
+				case target, ok := <-a:
 					if !ok {
 						errCh <- fmt.Errorf("lost watch connection")
 						return
 					}
-					added <- v
-				case v, ok := <-r:
-					if !ok {
-						errCh <- fmt.Errorf("lost watch connection")
+					numRequests.Add(1)
+					if numRequests.Load() > int64(config.MaxLogRequests) {
+						errCh <- fmt.Errorf(
+							"stern reached the maximum number of log requests (%d),"+
+								" use --max-log-requests to increase the limit",
+							config.MaxLogRequests)
 						return
 					}
-					removed <- v
+					go func() {
+						tailTarget(ctx, target)
+						numRequests.Add(-1)
+					}()
 				case <-ctx.Done():
 					return
 				}
@@ -120,53 +216,84 @@ func Run(ctx context.Context, config *Config) error {
 		}()
 	}
 
-	go func() {
-		for p := range added {
-			targetID := p.GetID()
-
-			if tail, ok := getTail(targetID); ok {
-				if tail.isActive() {
-					continue
-				} else {
-					tail.Close()
-					clearTail(targetID)
-				}
-			}
-
-			tail := NewTail(clientset, p.Node, p.Namespace, p.Pod, p.Container, config.Template, config.Out, config.ErrOut, &TailOptions{
-				Timestamps:   config.Timestamps,
-				Location:     config.Location,
-				SinceSeconds: int64(config.Since.Seconds()),
-				Exclude:      config.Exclude,
-				Include:      config.Include,
-				Namespace:    config.AllNamespaces || len(namespaces) > 1,
-				TailLines:    config.TailLines,
-				Follow:       config.Follow,
-			})
-			setTail(targetID, tail)
-
-			go func(tail *Tail) {
-				if err := tail.Start(ctx); err != nil {
-					fmt.Fprintf(config.ErrOut, "unexpected error: %v\n", err)
-				}
-			}(tail)
-		}
-	}()
-
-	go func() {
-		for p := range removed {
-			targetID := p.GetID()
-			if tail, ok := getTail(targetID); ok {
-				tail.Close()
-				clearTail(targetID)
-			}
-		}
-	}()
-
 	select {
 	case e := <-errCh:
 		return e
 	case <-ctx.Done():
 		return nil
 	}
+}
+
+func chooseSelector(ctx context.Context, client clientset.Interface, namespace, kind, name string, selector labels.Selector) (labels.Selector, error) {
+	if kind == "" {
+		return selector, nil
+	}
+	if PodMatcher.Matches(kind) {
+		// We use an exact match for pods instead of a label to select pods without labels.
+		return labels.Everything(), nil
+	}
+	labelMap, err := retrieveLabelsFromResource(ctx, client, namespace, kind, name)
+	if err != nil {
+		return nil, err
+	}
+	if len(labelMap) == 0 {
+		return nil, fmt.Errorf("resource %s/%s has no labels to select", kind, name)
+	}
+	return labels.SelectorFromSet(labelMap), nil
+}
+
+func retrieveLabelsFromResource(ctx context.Context, client clientset.Interface, namespace, kind, name string) (map[string]string, error) {
+	opt := metav1.GetOptions{}
+	switch {
+	// core
+	case ReplicationControllerMatcher.Matches(kind):
+		o, err := client.CoreV1().ReplicationControllers(namespace).Get(ctx, name, opt)
+		if err != nil {
+			return nil, err
+		}
+		if o.Spec.Template == nil { // RC's spec.template is a pointer field
+			return nil, fmt.Errorf("%s does not have spec.template", name)
+		}
+		return o.Spec.Template.Labels, nil
+	case ServiceMatcher.Matches(kind):
+		o, err := client.CoreV1().Services(namespace).Get(ctx, name, opt)
+		if err != nil {
+			return nil, err
+		}
+		return o.Spec.Selector, nil
+	// apps
+	case DaemonSetMatcher.Matches(kind):
+		o, err := client.AppsV1().DaemonSets(namespace).Get(ctx, name, opt)
+		if err != nil {
+			return nil, err
+		}
+		return o.Spec.Template.Labels, nil
+	case DeploymentMatcher.Matches(kind):
+		o, err := client.AppsV1().Deployments(namespace).Get(ctx, name, opt)
+		if err != nil {
+			return nil, err
+		}
+		return o.Spec.Template.Labels, nil
+	case ReplicaSetMatcher.Matches(kind):
+		o, err := client.AppsV1().ReplicaSets(namespace).Get(ctx, name, opt)
+		if err != nil {
+			return nil, err
+		}
+		return o.Spec.Template.Labels, nil
+	case StatefulSetMatcher.Matches(kind):
+		o, err := client.AppsV1().StatefulSets(namespace).Get(ctx, name, opt)
+		if err != nil {
+			return nil, err
+		}
+		return o.Spec.Template.Labels, nil
+	// batch
+	// We do not support cronjobs because they might not have labels to select.
+	case JobMatcher.Matches(kind):
+		o, err := client.BatchV1().Jobs(namespace).Get(ctx, name, opt)
+		if err != nil {
+			return nil, err
+		}
+		return o.Spec.Template.Labels, nil
+	}
+	return nil, fmt.Errorf("resource type %s is not supported", kind)
 }

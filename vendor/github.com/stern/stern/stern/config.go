@@ -30,11 +30,12 @@ type Config struct {
 	ContextName           string
 	Namespaces            []string
 	PodQuery              *regexp.Regexp
-	ExcludePodQuery       *regexp.Regexp
+	ExcludePodQuery       []*regexp.Regexp
 	Timestamps            bool
+	TimestampFormat       string
 	Location              *time.Location
 	ContainerQuery        *regexp.Regexp
-	ExcludeContainerQuery *regexp.Regexp
+	ExcludeContainerQuery []*regexp.Regexp
 	ContainerStates       []ContainerState
 	Exclude               []*regexp.Regexp
 	Include               []*regexp.Regexp
@@ -47,6 +48,9 @@ type Config struct {
 	TailLines             *int64
 	Template              *template.Template
 	Follow                bool
+	Resource              string
+	OnlyLogLines          bool
+	MaxLogRequests        int
 
 	Out    io.Writer
 	ErrOut io.Writer

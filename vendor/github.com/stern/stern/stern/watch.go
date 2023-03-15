@@ -16,8 +16,6 @@ package stern
 
 import (
 	"context"
-	"fmt"
-	"regexp"
 
 	"github.com/pkg/errors"
 
@@ -31,23 +29,9 @@ import (
 	watchtools "k8s.io/client-go/tools/watch"
 )
 
-// Target is a target to watch
-type Target struct {
-	Node      string
-	Namespace string
-	Pod       string
-	Container string
-}
-
-// GetID returns the ID of the object
-func (t *Target) GetID() string {
-	return fmt.Sprintf("%s-%s-%s", t.Namespace, t.Pod, t.Container)
-}
-
 // Watch starts listening to Kubernetes events and emits modified
-// containers/pods. The first result is targets added, the second is targets
-// removed
-func Watch(ctx context.Context, i v1.PodInterface, podFilter *regexp.Regexp, excludePodFilter *regexp.Regexp, containerFilter *regexp.Regexp, containerExcludeFilter *regexp.Regexp, initContainers bool, ephemeralContainers bool, containerStates []ContainerState, labelSelector labels.Selector, fieldSelector fields.Selector) (chan *Target, chan *Target, error) {
+// containers/pods. The result is targets added.
+func WatchTargets(ctx context.Context, i v1.PodInterface, labelSelector labels.Selector, fieldSelector fields.Selector, filter *targetFilter) (chan *Target, error) {
 	// RetryWatcher will make sure that in case the underlying watcher is
 	// closed (e.g. due to API timeout or etcd timeout) it will get restarted
 	// from the last point without the consumer even knowing about it.
@@ -57,12 +41,10 @@ func Watch(ctx context.Context, i v1.PodInterface, podFilter *regexp.Regexp, exc
 		},
 	})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to create a watcher")
+		return nil, errors.Wrap(err, "failed to create a watcher")
 	}
 
 	added := make(chan *Target)
-	removed := make(chan *Target)
-
 	go func() {
 		for {
 			select {
@@ -70,7 +52,6 @@ func Watch(ctx context.Context, i v1.PodInterface, podFilter *regexp.Regexp, exc
 				if e.Object == nil {
 					// Closed because of error
 					close(added)
-					close(removed)
 					return
 				}
 
@@ -79,106 +60,21 @@ func Watch(ctx context.Context, i v1.PodInterface, podFilter *regexp.Regexp, exc
 					continue
 				}
 
-				if !podFilter.MatchString(pod.Name) {
-					continue
-				}
-
-				if excludePodFilter != nil && excludePodFilter.MatchString(pod.Name) {
-					continue
-				}
-
 				switch e.Type {
 				case watch.Added, watch.Modified:
-					var statuses []corev1.ContainerStatus
-					statuses = append(statuses, pod.Status.ContainerStatuses...)
-					if initContainers {
-						statuses = append(statuses, pod.Status.InitContainerStatuses...)
-					}
-
-					if ephemeralContainers {
-						statuses = append(statuses, pod.Status.EphemeralContainerStatuses...)
-					}
-
-					for _, c := range statuses {
-						if !containerFilter.MatchString(c.Name) {
-							continue
-						}
-						if containerExcludeFilter != nil && containerExcludeFilter.MatchString(c.Name) {
-							continue
-						}
-						t := &Target{
-							Node:      pod.Spec.NodeName,
-							Namespace: pod.Namespace,
-							Pod:       pod.Name,
-							Container: c.Name,
-						}
-
-						containerStateMatched := false
-						for _, containerState := range containerStates {
-							if containerState.Match(c.State) {
-								containerStateMatched = true
-								break
-							}
-						}
-						if containerStateMatched {
-							added <- t
-						} else {
-							removed <- t
-						}
-					}
+					filter.visit(pod, func(t *Target) {
+						added <- t
+					})
 				case watch.Deleted:
-					var containerNames []string
-					containerNames = append(containerNames, getContainerNames(pod.Spec.Containers)...)
-					if initContainers {
-						containerNames = append(containerNames, getContainerNames(pod.Spec.InitContainers)...)
-					}
-
-					if ephemeralContainers {
-						containerNames = append(containerNames, getEphemeralContainerNames(pod.Spec.EphemeralContainers)...)
-					}
-
-					for _, cn := range containerNames {
-						if !containerFilter.MatchString(cn) {
-							continue
-						}
-						if containerExcludeFilter != nil && containerExcludeFilter.MatchString(cn) {
-							continue
-						}
-
-						removed <- &Target{
-							Node:      pod.Spec.NodeName,
-							Namespace: pod.Namespace,
-							Pod:       pod.Name,
-							Container: cn,
-						}
-					}
+					filter.forget(string(pod.UID))
 				}
 			case <-ctx.Done():
 				watcher.Stop()
 				close(added)
-				close(removed)
 				return
 			}
 		}
 	}()
 
-	return added, removed, nil
-}
-
-// getContainerNames returns names of containers
-func getContainerNames(containers []corev1.Container) []string {
-	var result []string
-	for _, c := range containers {
-		result = append(result, c.Name)
-	}
-	return result
-}
-
-// getContainerNames returns names of ephemeral containers
-func getEphemeralContainerNames(containers []corev1.EphemeralContainer) []string {
-	var result []string
-	for _, c := range containers {
-		result = append(result, c.Name)
-	}
-	return result
+	return added, nil
 }

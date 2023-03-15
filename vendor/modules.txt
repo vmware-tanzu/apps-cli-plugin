@@ -328,7 +328,7 @@ github.com/hashicorp/hcl/json/token
 # github.com/imdario/mergo v0.3.13
 ## explicit; go 1.13
 github.com/imdario/mergo
-# github.com/inconshreveable/mousetrap v1.0.1
+# github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
 # github.com/jmespath/go-jmespath v0.4.0
@@ -481,7 +481,7 @@ github.com/spf13/viper/internal/encoding/javaproperties
 github.com/spf13/viper/internal/encoding/json
 github.com/spf13/viper/internal/encoding/toml
 github.com/spf13/viper/internal/encoding/yaml
-# github.com/stern/stern v1.22.0
+# github.com/stern/stern v1.24.0
 ## explicit; go 1.19
 github.com/stern/stern/kubernetes
 github.com/stern/stern/stern
@@ -522,7 +522,7 @@ github.com/vmware-tanzu/difflib
 # github.com/vmware-tanzu/tanzu-framework/apis/cli v0.0.0-20230215121916-ba6b6f70b187
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-framework/apis/cli/v1alpha1
-# github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230311011418-99dd6215d05a
+# github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230315043541-5b41308a4606
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-framework/cli/runtime/apis/cli/v1alpha1
 github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo
@@ -533,7 +533,7 @@ github.com/vmware-tanzu/tanzu-framework/cli/runtime/version
 # github.com/xlab/treeprint v1.1.0
 ## explicit; go 1.13
 github.com/xlab/treeprint
-# go.starlark.net v0.0.0-20220817180228-f738f5508c12
+# go.starlark.net v0.0.0-20230112144946-fae38c8a6d89
 ## explicit; go 1.13
 go.starlark.net/internal/compile
 go.starlark.net/internal/spell
