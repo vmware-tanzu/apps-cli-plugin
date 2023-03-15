@@ -21,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 // ExpectConfig encompasses the creation of a config object using given state, captures observed
@@ -41,6 +42,8 @@ type ExpectConfig struct {
 	GivenObjects []client.Object
 	// APIGivenObjects contains objects that are only available via an API reader instead of the normal cache
 	APIGivenObjects []client.Object
+	// WithClientBuilder allows a test to modify the fake client initialization.
+	WithClientBuilder func(*fake.ClientBuilder) *fake.ClientBuilder
 	// WithReactors installs each ReactionFunc into each fake clientset. ReactionFuncs intercept
 	// each call to the clientset providing the ability to mutate the resource or inject an error.
 	WithReactors []ReactionFunc
@@ -88,13 +91,13 @@ func (c *ExpectConfig) init() {
 			apiGivenObjects[i] = c.APIGivenObjects[i].DeepCopyObject().(client.Object)
 		}
 
-		c.client = NewFakeClient(c.Scheme, givenObjects...)
+		c.client = c.createClient(givenObjects)
 		for i := range c.WithReactors {
 			// in reverse order since we prepend
 			reactor := c.WithReactors[len(c.WithReactors)-1-i]
 			c.client.PrependReactor("*", "*", reactor)
 		}
-		c.apiReader = NewFakeClient(c.Scheme, apiGivenObjects...)
+		c.apiReader = c.createClient(apiGivenObjects)
 		c.recorder = &eventRecorder{
 			events: []Event{},
 			scheme: c.Scheme,
@@ -102,6 +105,18 @@ func (c *ExpectConfig) init() {
 		c.tracker = createTracker(c.GivenTracks)
 		c.observedErrors = []string{}
 	})
+}
+
+func (c *ExpectConfig) createClient(objs []client.Object) *clientWrapper {
+	builder := fake.NewClientBuilder()
+
+	builder.WithScheme(c.Scheme)
+	builder.WithObjects(prepareObjects(objs)...)
+	if c.WithClientBuilder != nil {
+		builder = c.WithClientBuilder(builder)
+	}
+
+	return NewFakeClientWrapper(builder.Build())
 }
 
 // Config returns the Config object. This method should only be called once. Subsequent calls are
@@ -359,31 +374,39 @@ func (c *ExpectConfig) compareActions(t *testing.T, actionName string, expectedA
 
 var (
 	IgnoreLastTransitionTime = cmp.FilterPath(func(p cmp.Path) bool {
-		return strings.HasSuffix(p.String(), "LastTransitionTime") ||
-			strings.HasSuffix(p.GoString(), `(map[string]interface {})["lastTransitionTime"]`)
+		str := p.String()
+		gostr := p.GoString()
+		return strings.HasSuffix(str, "LastTransitionTime") ||
+			strings.HasSuffix(gostr, `["lastTransitionTime"]`)
 	}, cmp.Ignore())
 	IgnoreTypeMeta = cmp.FilterPath(func(p cmp.Path) bool {
-		return strings.HasSuffix(p.String(), "TypeMeta.APIVersion") ||
-			strings.HasSuffix(p.GoString(), `(*unstructured.Unstructured).Object["apiVersion"]`) ||
-			strings.HasSuffix(p.GoString(), `{*unstructured.Unstructured}.Object["apiVersion"]`) ||
-			strings.HasSuffix(p.String(), "TypeMeta.Kind") ||
-			strings.HasSuffix(p.GoString(), `(*unstructured.Unstructured).Object["kind"]`) ||
-			strings.HasSuffix(p.GoString(), `{*unstructured.Unstructured}.Object["kind"]`)
+		str := p.String()
+		// only ignore for typed resources, compare TypeMeta values for unstructured
+		return strings.HasSuffix(str, "TypeMeta.APIVersion") ||
+			strings.HasSuffix(str, "TypeMeta.Kind")
 	}, cmp.Ignore())
 	IgnoreCreationTimestamp = cmp.FilterPath(func(p cmp.Path) bool {
-		return strings.HasSuffix(p.String(), "ObjectMeta.CreationTimestamp") ||
-			strings.HasSuffix(p.GoString(), `(*unstructured.Unstructured).Object["metadata"].(map[string]interface {})["creationTimestamp"]`) ||
-			strings.HasSuffix(p.GoString(), `{*unstructured.Unstructured}.Object["metadata"].(map[string]interface {})["creationTimestamp"]`)
+		str := p.String()
+		gostr := p.GoString()
+		return strings.HasSuffix(str, "ObjectMeta.CreationTimestamp") ||
+			strings.HasSuffix(gostr, `(*unstructured.Unstructured).Object["metadata"].(map[string]any)["creationTimestamp"]`) ||
+			strings.HasSuffix(gostr, `{*unstructured.Unstructured}.Object["metadata"].(map[string]any)["creationTimestamp"]`) ||
+			strings.HasSuffix(gostr, `(*unstructured.Unstructured).Object["metadata"].(map[string]interface {})["creationTimestamp"]`) ||
+			strings.HasSuffix(gostr, `{*unstructured.Unstructured}.Object["metadata"].(map[string]interface {})["creationTimestamp"]`)
 	}, cmp.Ignore())
 	IgnoreResourceVersion = cmp.FilterPath(func(p cmp.Path) bool {
-		return strings.HasSuffix(p.String(), "ObjectMeta.ResourceVersion") ||
-			strings.HasSuffix(p.GoString(), `(*unstructured.Unstructured).Object["metadata"].(map[string]interface {})["resourceVersion"]`) ||
-			strings.HasSuffix(p.GoString(), `{*unstructured.Unstructured}.Object["metadata"].(map[string]interface {})["resourceVersion"]`)
+		str := p.String()
+		gostr := p.GoString()
+		return strings.HasSuffix(str, "ObjectMeta.ResourceVersion") ||
+			strings.HasSuffix(gostr, `(*unstructured.Unstructured).Object["metadata"].(map[string]any)["resourceVersion"]`) ||
+			strings.HasSuffix(gostr, `{*unstructured.Unstructured}.Object["metadata"].(map[string]any)["resourceVersion"]`) ||
+			strings.HasSuffix(gostr, `(*unstructured.Unstructured).Object["metadata"].(map[string]interface {})["resourceVersion"]`) ||
+			strings.HasSuffix(gostr, `{*unstructured.Unstructured}.Object["metadata"].(map[string]interface {})["resourceVersion"]`)
 	}, cmp.Ignore())
 
 	statusSubresourceOnly = cmp.FilterPath(func(p cmp.Path) bool {
-		q := p.String()
-		return q != "" && !strings.HasPrefix(q, "Status")
+		str := p.String()
+		return str != "" && !strings.HasPrefix(str, "Status")
 	}, cmp.Ignore())
 
 	SafeDeployDiff = cmpopts.IgnoreUnexported(resource.Quantity{})
@@ -403,22 +426,24 @@ var (
 )
 
 type PatchRef struct {
-	Group     string
-	Kind      string
-	Namespace string
-	Name      string
-	PatchType types.PatchType
-	Patch     []byte
+	Group       string
+	Kind        string
+	Namespace   string
+	Name        string
+	SubResource string
+	PatchType   types.PatchType
+	Patch       []byte
 }
 
 func NewPatchRef(action PatchAction) PatchRef {
 	return PatchRef{
-		Group:     action.GetResource().Group,
-		Kind:      action.GetResource().Resource,
-		Namespace: action.GetNamespace(),
-		Name:      action.GetName(),
-		PatchType: action.GetPatchType(),
-		Patch:     action.GetPatch(),
+		Group:       action.GetResource().Group,
+		Kind:        action.GetResource().Resource,
+		Namespace:   action.GetNamespace(),
+		Name:        action.GetName(),
+		SubResource: action.GetSubresource(),
+		PatchType:   action.GetPatchType(),
+		Patch:       action.GetPatch(),
 	}
 }
 

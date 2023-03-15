@@ -18,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -41,6 +42,8 @@ type SubReconcilerTestCase struct {
 	Resource client.Object
 	// GivenStashedValues adds these items to the stash passed into the reconciler. Factories are resolved to their object.
 	GivenStashedValues map[reconcilers.StashKey]interface{}
+	// WithClientBuilder allows a test to modify the fake client initialization.
+	WithClientBuilder func(*fake.ClientBuilder) *fake.ClientBuilder
 	// WithReactors installs each ReactionFunc into each fake clientset. ReactionFuncs intercept
 	// each call to the clientset providing the ability to mutate the resource or inject an error.
 	WithReactors []ReactionFunc
@@ -59,6 +62,8 @@ type SubReconcilerTestCase struct {
 	ExpectResource client.Object
 	// ExpectStashedValues ensures each value is stashed. Values in the stash that are not expected are ignored. Factories are resolved to their object.
 	ExpectStashedValues map[reconcilers.StashKey]interface{}
+	// VerifyStashedValue is an optional, custom verification function for stashed values
+	VerifyStashedValue VerifyStashedValueFunc
 	// ExpectTracks holds the ordered list of Track calls expected during reconciliation
 	ExpectTracks []TrackRequest
 	// ExpectEvents holds the ordered list of events recorded during the reconciliation
@@ -141,6 +146,15 @@ func (tc *SubReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, facto
 		tc.Metadata = map[string]interface{}{}
 	}
 
+	// Set func for verifying stashed values
+	if tc.VerifyStashedValue == nil {
+		tc.VerifyStashedValue = func(t *testing.T, key reconcilers.StashKey, expected, actual interface{}) {
+			if diff := cmp.Diff(expected, actual, IgnoreLastTransitionTime, SafeDeployDiff, IgnoreTypeMeta, IgnoreCreationTimestamp, IgnoreResourceVersion, cmpopts.EquateEmpty()); diff != "" {
+				t.Errorf("Unexpected stash value %q (-expected, +actual): %s", key, diff)
+			}
+		}
+	}
+
 	if tc.Prepare != nil {
 		var err error
 		if ctx, err = tc.Prepare(t, ctx, tc); err != nil {
@@ -170,6 +184,7 @@ func (tc *SubReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, facto
 		Scheme:                  scheme,
 		GivenObjects:            append(tc.GivenObjects, tc.Resource),
 		APIGivenObjects:         append(tc.APIGivenObjects, tc.Resource),
+		WithClientBuilder:       tc.WithClientBuilder,
 		WithReactors:            tc.WithReactors,
 		GivenTracks:             tc.GivenTracks,
 		ExpectTracks:            tc.ExpectTracks,
@@ -258,9 +273,7 @@ func (tc *SubReconcilerTestCase) Run(t *testing.T, scheme *runtime.Scheme, facto
 			expected = f.DeepCopyObject()
 		}
 		actual := reconcilers.RetrieveValue(ctx, key)
-		if diff := cmp.Diff(expected, actual, IgnoreLastTransitionTime, SafeDeployDiff, IgnoreTypeMeta, IgnoreCreationTimestamp, IgnoreResourceVersion, cmpopts.EquateEmpty()); diff != "" {
-			t.Errorf("Unexpected stash value %q (-expected, +actual): %s", key, diff)
-		}
+		tc.VerifyStashedValue(t, key, expected, actual)
 	}
 
 	expectConfig.AssertExpectations(t)

@@ -219,7 +219,7 @@ func (opts *WorkloadGetOptions) Exec(ctx context.Context, c *cli.Config) error {
 		}
 	}
 
-	arg := []string{"Pod"}
+	arg := []string{"pods.v1."}
 	labelSelectorParams := fmt.Sprintf("%s%s%s", cartov1alpha1.WorkloadLabelName, "=", workload.Name)
 	if tableResult, err := source.FetchResourceObjects(c.Builder, workload.Namespace, labelSelectorParams, arg); err != nil {
 		c.Eprintf("\n")
