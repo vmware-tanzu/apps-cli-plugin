@@ -59,7 +59,7 @@ var (
 func TestCreateFromGitWithAnnotations(t *testing.T) {
 	testSuite := it.CommandLineIntegrationTestSuite{
 		{
-			Name:         "Create workload and show emojis",
+			Name:         "Create workload - show emojis and default type to web",
 			Skip:         runtime.GOOS == "windows",
 			WorkloadName: "test-create-workload-show-emojis",
 			Command: func() it.CommandLine {
@@ -70,7 +70,6 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 					"--git-tag=tap-1.2",
 					"--git-repo=https://github.com/sample-accelerators/spring-petclinic",
 					namespaceFlag,
-					"--type=web",
 				)
 				c.SurveyAnswer("y")
 				return c
@@ -120,14 +119,13 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
-			Name:         "Create workload with valid name from url filepath",
+			Name:         "Create workload - valid name from url filepath and default type web",
 			WorkloadName: "spring-petclinic",
 			Command: func() it.CommandLine {
 				c := *it.NewTanzuAppsCommandLine(
 					"workload", "create", "spring-petclinic",
 					"--file=https://raw.githubusercontent.com/vmware-tanzu/apps-cli-plugin/main/pkg/commands/testdata/workload.yaml",
 					namespaceFlag,
-					"--type=web",
 				)
 				c.SurveyAnswer("y")
 				return c

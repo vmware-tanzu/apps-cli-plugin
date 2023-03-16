@@ -109,7 +109,7 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	}
 	workload.Merge(fileWorkload)
 
-	ctx = opts.ApplyOptionsToWorkload(ctx, workload)
+	ctx = opts.ApplyOptionsToWorkload(ctx, workload, true)
 
 	// validate complex flag interactions with existing state
 	errs = workload.Validate()

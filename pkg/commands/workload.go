@@ -60,6 +60,7 @@ import (
 const (
 	AnnotationReservedKey     = "annotations"
 	MavenOverwrittenNoticeMsg = "Maven configuration flags have overwritten values provided by \"--params-yaml\"."
+	WebTypeReservedKey        = "web"
 )
 
 func NewWorkloadCommand(ctx context.Context, c *cli.Config) *cobra.Command {
@@ -222,7 +223,7 @@ func (opts *WorkloadOptions) LoadDefaults(c *cli.Config) {
 	opts.ExcludePathFile = c.TanzuIgnoreFile
 }
 
-func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workload *cartov1alpha1.Workload) context.Context {
+func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workload *cartov1alpha1.Workload, workloadExists bool) context.Context {
 	for _, label := range opts.Labels {
 		parts := parsers.DeletableKeyValue(label)
 		if len(parts) == 1 {
@@ -292,7 +293,8 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 		workload.MergeLabels(apis.AppPartOfLabelName, opts.App)
 	}
 
-	if opts.Type != "" {
+	if (cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.TypeFlagName)) ||
+		(!workload.IsLabelExists(apis.WorkloadTypeLabelName) && !workloadExists)) && opts.Type != "" {
 		workload.MergeLabels(apis.WorkloadTypeLabelName, opts.Type)
 	}
 
@@ -796,9 +798,9 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cli.NamespaceFlag(ctx, cmd, c, &opts.Namespace)
 	cmd.Flags().StringVarP(&opts.FilePath, cli.StripDash(flags.FilePathFlagName), "f", "", "`file path` containing the description of a single workload, other flags are layered on top of this resource. Use value \"-\" to read from stdin")
 	cmd.Flags().StringVarP(&opts.App, cli.StripDash(flags.AppFlagName), "a", "", "application `name` the workload is a part of")
-	cmd.Flags().StringVarP(&opts.Type, cli.StripDash(flags.TypeFlagName), "t", "", "distinguish workload `type`")
+	cmd.Flags().StringVarP(&opts.Type, cli.StripDash(flags.TypeFlagName), "t", WebTypeReservedKey, "distinguish workload `type`")
 	cmd.RegisterFlagCompletionFunc(cli.StripDash(flags.TypeFlagName), func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"web"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{WebTypeReservedKey}, cobra.ShellCompDirectiveNoFileComp
 	})
 	cmd.Flags().StringSliceVarP(&opts.Labels, cli.StripDash(flags.LabelFlagName), "l", []string{}, "label is represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
 	cmd.Flags().StringSliceVar(&opts.Annotations, cli.StripDash(flags.AnnotationFlagName), []string{}, "annotation is represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")

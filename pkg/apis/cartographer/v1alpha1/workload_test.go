@@ -131,6 +131,160 @@ func TestWorkload_Load(t *testing.T) {
 	}
 }
 
+func TestWorkload_IsAnnotationExists(t *testing.T) {
+	tests := []struct {
+		name       string
+		seed       *Workload
+		exists     bool
+		annotation string
+	}{
+		{
+			name: "annotation exists in workload",
+			seed: &Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"hello": "world",
+					},
+				},
+			},
+			annotation: "hello",
+			exists:     true,
+		}, {
+			name: "annotation does not exist in workload",
+			seed: &Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"my-annotation": "my-value",
+					},
+				},
+			},
+			annotation: "hello",
+			exists:     false,
+		}, {
+			name:       "no annotations",
+			seed:       &Workload{},
+			annotation: "hello",
+			exists:     false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			annotationExists := test.seed.IsAnnotationExists(test.annotation)
+			if diff := cmp.Diff(test.exists, annotationExists); diff != "" {
+				t.Errorf("IsAnnotationExists() (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestWorkload_IsLabelExists(t *testing.T) {
+	tests := []struct {
+		name   string
+		seed   *Workload
+		exists bool
+		label  string
+	}{
+		{
+			name: "label exists in workload",
+			seed: &Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"hello": "world",
+					},
+				},
+			},
+			label:  "hello",
+			exists: true,
+		}, {
+			name: "label does not exist in workload",
+			seed: &Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"my-annotation": "my-value",
+					},
+				},
+			},
+			label:  "hello",
+			exists: false,
+		}, {
+			name:   "no labels",
+			seed:   &Workload{},
+			label:  "hello",
+			exists: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			labelExists := test.seed.IsLabelExists(test.label)
+			if diff := cmp.Diff(test.exists, labelExists); diff != "" {
+				t.Errorf("IsLabelExists() (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestWorkload_DeleteAnnotation(t *testing.T) {
+	tests := []struct {
+		name     string
+		seed     *Workload
+		expected *Workload
+		toRemove string
+	}{
+		{
+			name: "delete annotation",
+			seed: &Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"hello":         "world",
+						"my-annotation": "my-value",
+					},
+				},
+			},
+			toRemove: "hello",
+			expected: &Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"my-annotation": "my-value",
+					},
+				},
+			},
+		}, {
+			name: "annotation does not exist",
+			seed: &Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"my-annotation": "my-value",
+					},
+				},
+			},
+			expected: &Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"my-annotation": "my-value",
+					},
+				},
+			},
+			toRemove: "hello",
+		}, {
+			name:     "no annotations",
+			seed:     &Workload{},
+			expected: &Workload{},
+			toRemove: "hello",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.seed.RemoveAnnotations(test.toRemove)
+			if diff := cmp.Diff(test.seed, test.expected); diff != "" {
+				t.Errorf("RemoveAnnotations() (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 func TestWorkload_MergeServiceAccountName(t *testing.T) {
 	serviceAccount := "test-service-account"
 	updatedServiceAccount := "updated-service-account"
