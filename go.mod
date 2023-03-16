@@ -29,7 +29,7 @@ require (
 	k8s.io/apimachinery v0.26.2
 	k8s.io/cli-runtime v0.26.2
 	k8s.io/client-go v0.26.2
-	k8s.io/kubectl v0.25.4
+	k8s.io/kubectl v0.26.2
 	sigs.k8s.io/controller-runtime v0.14.5
 	sigs.k8s.io/yaml v1.3.0
 )
