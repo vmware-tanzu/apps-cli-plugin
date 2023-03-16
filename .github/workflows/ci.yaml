@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3
+    - uses: actions/setup-go@v4
       with:
         go-version: 1.19.x
     - name: Grype scan
@@ -90,7 +90,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3
+    - uses: actions/setup-go@v4
       with:
         go-version: 1.19.x
     - name: Install tanzu cli
@@ -141,7 +141,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3
+    - uses: actions/setup-go@v4
       with:
         go-version: 1.19.x
     - name: Install tanzu cli
@@ -204,7 +204,7 @@ jobs:
     - uses: vmware-tanzu/carvel-setup-action@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-    - uses: actions/setup-go@v3
+    - uses: actions/setup-go@v4
       with:
         go-version: 1.19.x
     - name: Download plugin bundle
