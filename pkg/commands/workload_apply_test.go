@@ -3906,6 +3906,134 @@ To get status: "tanzu apps workload get spring-petclinic"
 `,
 		},
 		{
+			Name: "update - do not modify type in existing workload",
+			Args: []string{workloadName, flags.GitBranchFlagName, "accelerator", flags.GitCommitFlagName, "abcd1234", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name(workloadName)
+						d.Namespace(defaultNamespace)
+						d.Labels(map[string]string{
+							apis.WorkloadTypeLabelName: "my-type",
+						})
+					}).
+					SpecDie(
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
+							d.Source(&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/sample-accelerators/spring-petclinic",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+										Tag:    "tap-1.1",
+									},
+								},
+							})
+						}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "my-type",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "accelerator",
+									Tag:    "tap-1.1",
+									Commit: "abcd1234",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+🔎 Update workload:
+...
+  9,  9   |spec:
+ 10, 10   |  source:
+ 11, 11   |    git:
+ 12, 12   |      ref:
+ 13     - |        branch: main
+     13 + |        branch: accelerator
+     14 + |        commit: abcd1234
+ 14, 15   |        tag: tap-1.1
+ 15, 16   |      url: https://github.com/sample-accelerators/spring-petclinic
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+		{
+			Name: "update - do not default type in existing workload",
+			Args: []string{workloadName, flags.GitBranchFlagName, "accelerator", flags.GitCommitFlagName, "abcd1234", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				diecartov1alpha1.WorkloadBlank.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Name(workloadName)
+						d.Namespace(defaultNamespace)
+					}).
+					SpecDie(
+						func(d *diecartov1alpha1.WorkloadSpecDie) {
+							d.Source(&cartov1alpha1.Source{
+								Git: &cartov1alpha1.GitSource{
+									URL: "https://github.com/sample-accelerators/spring-petclinic",
+									Ref: cartov1alpha1.GitRef{
+										Branch: "main",
+										Tag:    "tap-1.1",
+									},
+								},
+							})
+						}),
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/sample-accelerators/spring-petclinic",
+								Ref: cartov1alpha1.GitRef{
+									Branch: "accelerator",
+									Tag:    "tap-1.1",
+									Commit: "abcd1234",
+								},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+🔎 Update workload:
+...
+  7,  7   |spec:
+  8,  8   |  source:
+  9,  9   |    git:
+ 10, 10   |      ref:
+ 11     - |        branch: main
+     11 + |        branch: accelerator
+     12 + |        commit: abcd1234
+ 12, 13   |        tag: tap-1.1
+ 13, 14   |      url: https://github.com/sample-accelerators/spring-petclinic
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+		{
 			Name: "update git fields",
 			Args: []string{workloadName, flags.GitBranchFlagName, "accelerator", flags.GitCommitFlagName, "abcd1234", flags.YesFlagName},
 			GivenObjects: []client.Object{
