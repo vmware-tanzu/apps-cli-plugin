@@ -1,6 +1,6 @@
 module github.com/vmware-tanzu/apps-cli-plugin/tools
 
-go 1.19
+go 1.20
 
 require (
 	dies.dev/diegen v0.7.0
