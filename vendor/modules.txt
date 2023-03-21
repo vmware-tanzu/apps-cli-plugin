@@ -935,7 +935,7 @@ k8s.io/client-go/util/flowcontrol
 k8s.io/client-go/util/homedir
 k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/workqueue
-# k8s.io/component-base v0.26.2
+# k8s.io/component-base v0.26.3
 ## explicit; go 1.19
 k8s.io/component-base/config
 k8s.io/component-base/config/v1alpha1
@@ -961,7 +961,7 @@ k8s.io/kube-openapi/pkg/schemamutation
 k8s.io/kube-openapi/pkg/spec3
 k8s.io/kube-openapi/pkg/util/proto
 k8s.io/kube-openapi/pkg/validation/spec
-# k8s.io/kubectl v0.26.2
+# k8s.io/kubectl v0.26.3
 ## explicit; go 1.19
 k8s.io/kubectl/pkg/scheme
 # k8s.io/utils v0.0.0-20230220204549-a5ecb0141aa5
