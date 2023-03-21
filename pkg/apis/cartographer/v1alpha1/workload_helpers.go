@@ -434,6 +434,11 @@ func (w *Workload) IsAnnotationExists(key string) bool {
 	return ok
 }
 
+func (w *Workload) IsLabelExists(key string) bool {
+	_, ok := w.Labels[key]
+	return ok
+}
+
 func (w *Workload) MergeLabels(key, value string) {
 	if w.Labels == nil {
 		w.Labels = map[string]string{}

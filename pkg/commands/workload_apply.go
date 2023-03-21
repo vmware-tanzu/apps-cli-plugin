@@ -135,7 +135,8 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 
 	workload.Name = opts.Name
 	workload.Namespace = opts.Namespace
-	ctx = opts.ApplyOptionsToWorkload(ctx, workload)
+	workloadExists := currentWorkload != nil
+	ctx = opts.ApplyOptionsToWorkload(ctx, workload, workloadExists)
 
 	// validate complex flag interactions with existing state
 	errs = workload.Validate()
@@ -149,8 +150,6 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 		cli.DryRunResource(ctx, workload, workload.GetGroupVersionKind())
 		return nil
 	}
-
-	workloadExists := currentWorkload != nil
 
 	if err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
 		return err

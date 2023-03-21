@@ -912,8 +912,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						"FOO": "foo",
-						"BAR": "bar",
+						"FOO":                                 "foo",
+						"BAR":                                 "bar",
+						"apps.tanzu.vmware.com/workload-type": "web",
 					},
 				},
 			},
@@ -922,8 +923,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						"NEW": "value",
-						"FOO": "bar",
+						"NEW":                                 "value",
+						"FOO":                                 "bar",
+						"apps.tanzu.vmware.com/workload-type": "web",
 					},
 				},
 			},
@@ -936,8 +938,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						"FOO": "foo",
-						"BAR": "bar",
+						"FOO":                                 "foo",
+						"BAR":                                 "bar",
+						"apps.tanzu.vmware.com/workload-type": "web",
 					},
 				},
 			},
@@ -946,21 +949,22 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						"NEW": "value",
-						"FOO": "bar",
+						"NEW":                                 "value",
+						"FOO":                                 "bar",
+						"apps.tanzu.vmware.com/workload-type": "web",
 					},
 				},
 			},
 		},
 		{
 			name: "workload with labels add/delete",
-			args: []string{flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.LabelFlagName, "apps.tanzu.vmware.com/workload-type=web", flags.LabelFlagName, "apps.tanzu.vmware.com/workload-type-"},
+			args: []string{flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.LabelFlagName, "app.kubernetes.io/part-of=my-app", flags.LabelFlagName, "app.kubernetes.io/part-of-"},
 			input: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 				},
 			},
@@ -969,7 +973,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
@@ -991,6 +995,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -1006,6 +1013,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -1025,12 +1035,18 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 			},
 			expected: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Params: []cartov1alpha1.Param{
@@ -1049,12 +1065,18 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 			},
 			expected: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Params: []cartov1alpha1.Param{
@@ -1073,6 +1095,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -1088,6 +1113,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -1107,6 +1135,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -1117,7 +1148,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: appName,
+						apis.AppPartOfLabelName:    appName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
@@ -1132,6 +1164,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -1157,6 +1192,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Params: []cartov1alpha1.Param{},
@@ -1167,6 +1205,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Params: []cartov1alpha1.Param{
@@ -1186,6 +1227,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Params: []cartov1alpha1.Param{
@@ -1201,6 +1245,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Params: []cartov1alpha1.Param{
@@ -1217,6 +1264,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -1226,6 +1276,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Params: []cartov1alpha1.Param{
@@ -1252,6 +1305,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Params: []cartov1alpha1.Param{
@@ -1267,6 +1323,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Params: []cartov1alpha1.Param{
@@ -1283,12 +1342,18 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 			},
 			expected: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
@@ -1310,6 +1375,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
@@ -1328,6 +1396,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
@@ -1348,6 +1419,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
@@ -1366,6 +1440,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{},
 			},
@@ -1377,6 +1454,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
@@ -1389,6 +1469,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
@@ -1405,12 +1488,18 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 			},
 			expected: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
@@ -1432,12 +1521,18 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 			},
 			expected: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
@@ -1459,12 +1554,18 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 			},
 			expected: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
@@ -1481,12 +1582,18 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 			},
 			expected: &cartov1alpha1.Workload{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "docker.io/library/ubuntu:bionic",
@@ -1500,6 +1607,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Env: []corev1.EnvVar{
@@ -1513,6 +1623,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Env: []corev1.EnvVar{
@@ -1530,6 +1643,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Build: &cartov1alpha1.WorkloadBuild{
@@ -1545,6 +1661,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Build: &cartov1alpha1.WorkloadBuild{
@@ -1564,6 +1683,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 			},
 			expected: &cartov1alpha1.Workload{
@@ -1625,6 +1747,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 			},
 			expected: &cartov1alpha1.Workload{
@@ -1667,7 +1792,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.AppPartOfLabelName:    workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
@@ -1696,7 +1822,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.AppPartOfLabelName:    workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
@@ -1729,7 +1856,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.AppPartOfLabelName:    workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 					Annotations: map[string]string{
 						apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"cache":{"namespace":"my-cache-ns"}}}}`,
@@ -1761,7 +1889,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.AppPartOfLabelName:    workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 					Annotations: map[string]string{
 						apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"database":{"namespace":"my-prod-ns"}}}}`,
@@ -1797,7 +1926,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.AppPartOfLabelName:    workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
@@ -1826,7 +1956,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.AppPartOfLabelName:    workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
@@ -1859,7 +1990,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.AppPartOfLabelName:    workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 					Annotations: map[string]string{
 						apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"database":{"namespace":"my-prod-ns"}}}}`,
@@ -1891,7 +2023,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.AppPartOfLabelName:    workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 					Annotations: map[string]string{
 						apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"database":{"namespace":"my-prod-ns"}}}}`,
@@ -1927,7 +2060,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.AppPartOfLabelName:    workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 					Annotations: map[string]string{
 						apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"database":{"namespace":"my-prod-delete-me"}}}}`,
@@ -1959,7 +2093,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.AppPartOfLabelName:    workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 					Annotations: map[string]string{},
 				},
@@ -1993,7 +2128,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.AppPartOfLabelName:    workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 					Annotations: map[string]string{
 						apis.ServiceClaimAnnotationName: `{"kind": "ServiceClaimsExtension","apiVersion": "supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec": {"serviceClaims": {"database": {"namespace": "my-prod-delete-me","name": "my-prod-db"},"cache": {"namespace": "my-prod-cache-ns","name": "my-prod-cache"}}}}`,
@@ -2033,7 +2169,8 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 					Namespace: defaultNamespace,
 					Name:      workloadName,
 					Labels: map[string]string{
-						apis.AppPartOfLabelName: workloadName,
+						apis.AppPartOfLabelName:    workloadName,
+						apis.WorkloadTypeLabelName: "web",
 					},
 					Annotations: map[string]string{
 						apis.ServiceClaimAnnotationName: `{"kind":"ServiceClaimsExtension","apiVersion":"supplychain.apps.x-tanzu.vmware.com/v1alpha1","spec":{"serviceClaims":{"cache":{"name":"my-prod-cache","namespace":"my-prod-cache-ns"}}}}`,
@@ -2076,6 +2213,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -2085,6 +2225,9 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -2108,7 +2251,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 		cmd.ParseFlags(test.args)
 
 		actual := test.input.DeepCopy()
-		opts.ApplyOptionsToWorkload(ctx, actual)
+		opts.ApplyOptionsToWorkload(ctx, actual, false)
 		t.Run(test.name, func(t *testing.T) {
 			if diff := cmp.Diff(test.expected, actual); diff != "" {
 				t.Errorf("ApplyOptionsToWorkload() (-want, +got) = %s", diff)
@@ -2800,6 +2943,9 @@ func TestWorkloadOptionsCreate(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -2812,10 +2958,12 @@ func TestWorkloadOptionsCreate(t *testing.T) {
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
       4 + |metadata:
-      5 + |  name: my-workload
-      6 + |  namespace: default
-      7 + |spec:
-      8 + |  image: ubuntu:bionic
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  image: ubuntu:bionic
 👍 Created workload "my-workload"`,
 		},
 		{
@@ -2825,6 +2973,9 @@ func TestWorkloadOptionsCreate(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -2837,10 +2988,12 @@ Create workload:
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
       4 + |metadata:
-      5 + |  name: my-workload
-      6 + |  namespace: default
-      7 + |spec:
-      8 + |  image: ubuntu:bionic
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  image: ubuntu:bionic
 Created workload "my-workload"`,
 		},
 		{
@@ -2883,6 +3036,9 @@ Created workload "my-workload"`,
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 			},
 			shouldError: false,
@@ -2892,9 +3048,11 @@ Created workload "my-workload"`,
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
       4 + |metadata:
-      5 + |  name: my-workload
-      6 + |  namespace: default
-      7 + |spec: {}
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec: {}
 ❗ NOTICE: no source code or image has been specified for this workload.
 👍 Created workload "my-workload"`,
 		},
@@ -3075,6 +3233,9 @@ Updated workload "my-workload"
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Params: []cartov1alpha1.Param{
@@ -3089,15 +3250,15 @@ Updated workload "my-workload"
 			expectedOutput: `
 🔎 Update workload:
 ...
-  7,  7   |spec:
-  8,  8   |  params:
-  9,  9   |  - name: removeme
- 10, 10   |    value: bye
-     11 + |  - name: maven
-     12 + |    value:
-     13 + |      artifactId: spring-petclinic
-     14 + |      groupId: org.springframework.samples
-     15 + |      version: 2.6.0
+  9,  9   |spec:
+ 10, 10   |  params:
+ 11, 11   |  - name: removeme
+ 12, 12   |    value: bye
+     13 + |  - name: maven
+     14 + |    value:
+     15 + |      artifactId: spring-petclinic
+     16 + |      groupId: org.springframework.samples
+     17 + |      version: 2.6.0
 👍 Updated workload "my-workload"`,
 		},
 		{
@@ -3110,6 +3271,9 @@ Updated workload "my-workload"
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -3124,6 +3288,9 @@ Updated workload "my-workload"
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -3144,6 +3311,9 @@ Updated workload "my-workload"
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: defaultNamespace,
 					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Image: "ubuntu:bionic",
@@ -3187,7 +3357,7 @@ Updated workload "my-workload"
 			cmd.ParseFlags(test.args)
 
 			workload := currentWorkload.DeepCopy()
-			opts.ApplyOptionsToWorkload(ctx, workload)
+			opts.ApplyOptionsToWorkload(ctx, workload, true)
 			_, err = opts.Update(ctx, c, currentWorkload, workload)
 
 			if err != nil && !test.shouldError {

@@ -16,6 +16,8 @@ apiVersion: carto.run/v1alpha1
 kind: Workload
 metadata:
   name: spring-petclinic
+  labels:
+    apps.tanzu.vmware.com/workload-type: web
   annotations:
     preserve-me: should-exist
     controller-gen.kubebuilder.io/version: v0.7.0

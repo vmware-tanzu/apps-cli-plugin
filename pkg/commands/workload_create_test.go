@@ -134,6 +134,8 @@ apiVersion: carto.run/v1alpha1
 kind: Workload
 metadata:
   creationTimestamp: null
+  labels:
+    apps.tanzu.vmware.com/workload-type: web
   name: my-workload
   namespace: default
 spec:
@@ -156,6 +158,9 @@ status:
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Status: cartov1alpha1.WorkloadStatus{
 						Conditions: []metav1.Condition{
@@ -177,7 +182,9 @@ status:
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
@@ -197,6 +204,8 @@ apiVersion: carto.run/v1alpha1
 kind: Workload
 metadata:
   creationTimestamp: null
+  labels:
+    apps.tanzu.vmware.com/workload-type: web
   name: my-workload
   namespace: default
   resourceVersion: "1"
@@ -220,7 +229,9 @@ status:
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
@@ -240,6 +251,9 @@ status:
 	"kind": "Workload",
 	"metadata": {
 		"creationTimestamp": null,
+		"labels": {
+			"apps.tanzu.vmware.com/workload-type": "web"
+		},
 		"name": "my-workload",
 		"namespace": "default",
 		"resourceVersion": "1"
@@ -268,6 +282,9 @@ status:
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Status: cartov1alpha1.WorkloadStatus{
 						Conditions: []metav1.Condition{
@@ -292,7 +309,9 @@ status:
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
@@ -313,14 +332,16 @@ status:
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
       4 + |metadata:
-      5 + |  name: my-workload
-      6 + |  namespace: default
-      7 + |spec:
-      8 + |  source:
-      9 + |    git:
-     10 + |      ref:
-     11 + |        branch: main
-     12 + |      url: https://example.com/repo.git
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
@@ -339,6 +360,9 @@ Error: Failed to become ready: a hopefully informative message about what went w
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Status: cartov1alpha1.WorkloadStatus{
 						Conditions: []metav1.Condition{
@@ -361,7 +385,9 @@ Error: Failed to become ready: a hopefully informative message about what went w
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
@@ -382,14 +408,16 @@ Error: Failed to become ready: a hopefully informative message about what went w
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
       4 + |metadata:
-      5 + |  name: my-workload
-      6 + |  namespace: default
-      7 + |spec:
-      8 + |  source:
-      9 + |    git:
-     10 + |      ref:
-     11 + |        branch: main
-     12 + |      url: https://example.com/repo.git
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
@@ -407,6 +435,9 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Status: cartov1alpha1.WorkloadStatus{
 						Conditions: []metav1.Condition{
@@ -429,7 +460,9 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
@@ -449,14 +482,16 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
       4 + |metadata:
-      5 + |  name: my-workload
-      6 + |  namespace: default
-      7 + |spec:
-      8 + |  source:
-      9 + |    git:
-     10 + |      ref:
-     11 + |        branch: main
-     12 + |      url: https://example.com/repo.git
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
@@ -475,6 +510,9 @@ Workload "my-workload" is ready
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Status: cartov1alpha1.WorkloadStatus{
 						Conditions: []metav1.Condition{
@@ -508,7 +546,9 @@ Workload "my-workload" is ready
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
@@ -528,14 +568,16 @@ Workload "my-workload" is ready
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
       4 + |metadata:
-      5 + |  name: my-workload
-      6 + |  namespace: default
-      7 + |spec:
-      8 + |  source:
-      9 + |    git:
-     10 + |      ref:
-     11 + |        branch: main
-     12 + |      url: https://example.com/repo.git
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
@@ -555,6 +597,9 @@ Workload "my-workload" is ready
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Status: cartov1alpha1.WorkloadStatus{
 						Conditions: []metav1.Condition{
@@ -588,7 +633,9 @@ Workload "my-workload" is ready
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
@@ -608,14 +655,16 @@ Workload "my-workload" is ready
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
       4 + |metadata:
-      5 + |  name: my-workload
-      6 + |  namespace: default
-      7 + |spec:
-      8 + |  source:
-      9 + |    git:
-     10 + |      ref:
-     11 + |        branch: main
-     12 + |      url: https://example.com/repo.git
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
@@ -653,7 +702,9 @@ Error: workload "default/my-workload" already exists
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
@@ -683,7 +734,9 @@ Error: workload "default/my-workload" already exists
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
@@ -871,6 +924,9 @@ spec:
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      "my-workload",
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Params: []cartov1alpha1.Param{
@@ -952,7 +1008,9 @@ To get status: "tanzu apps workload get spring-petclinic"
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Params: []cartov1alpha1.Param{
@@ -970,15 +1028,17 @@ To get status: "tanzu apps workload get spring-petclinic"
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
       4 + |metadata:
-      5 + |  name: my-workload
-      6 + |  namespace: default
-      7 + |spec:
-      8 + |  params:
-      9 + |  - name: maven
-     10 + |    value:
-     11 + |      artifactId: spring-petclinic
-     12 + |      groupId: org.springframework.samples
-     13 + |      version: 2.6.0
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  params:
+     11 + |  - name: maven
+     12 + |    value:
+     13 + |      artifactId: spring-petclinic
+     14 + |      groupId: org.springframework.samples
+     15 + |      version: 2.6.0
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
@@ -995,7 +1055,9 @@ To get status: "tanzu apps workload get my-workload"
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Params: []cartov1alpha1.Param{
@@ -1013,15 +1075,17 @@ To get status: "tanzu apps workload get my-workload"
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
       4 + |metadata:
-      5 + |  name: my-workload
-      6 + |  namespace: default
-      7 + |spec:
-      8 + |  params:
-      9 + |  - name: maven
-     10 + |    value:
-     11 + |      artifactId: spring-petclinic
-     12 + |      groupId: org.springframework.samples
-     13 + |      version: 2.6.0
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  params:
+     11 + |  - name: maven
+     12 + |    value:
+     13 + |      artifactId: spring-petclinic
+     14 + |      groupId: org.springframework.samples
+     15 + |      version: 2.6.0
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
@@ -1038,7 +1102,9 @@ To get status: "tanzu apps workload get my-workload"
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Params: []cartov1alpha1.Param{
@@ -1056,16 +1122,18 @@ To get status: "tanzu apps workload get my-workload"
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
       4 + |metadata:
-      5 + |  name: my-workload
-      6 + |  namespace: default
-      7 + |spec:
-      8 + |  params:
-      9 + |  - name: maven
-     10 + |    value:
-     11 + |      artifactId: spring-petclinic
-     12 + |      groupId: org.springframework.samples
-     13 + |      type: jar
-     14 + |      version: 2.6.0
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  params:
+     11 + |  - name: maven
+     12 + |    value:
+     13 + |      artifactId: spring-petclinic
+     14 + |      groupId: org.springframework.samples
+     15 + |      type: jar
+     16 + |      version: 2.6.0
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
@@ -1242,7 +1310,9 @@ To get status: "tanzu apps workload get spring-petclinic"
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
-						Labels:    map[string]string{},
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
@@ -1262,14 +1332,16 @@ To get status: "tanzu apps workload get spring-petclinic"
       2 + |apiVersion: carto.run/v1alpha1
       3 + |kind: Workload
       4 + |metadata:
-      5 + |  name: my-workload
-      6 + |  namespace: default
-      7 + |spec:
-      8 + |  source:
-      9 + |    git:
-     10 + |      ref:
-     11 + |        branch: main
-     12 + |      url: https://example.com/repo.git
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  source:
+     11 + |    git:
+     12 + |      ref:
+     13 + |        branch: main
+     14 + |      url: https://example.com/repo.git
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
@@ -1691,6 +1763,9 @@ To get status: "tanzu apps workload get %s"`, workloadName, workloadName, worklo
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Status: cartov1alpha1.WorkloadStatus{
 						Conditions: []metav1.Condition{
@@ -1806,6 +1881,9 @@ To get status: "tanzu apps workload get %s"`, workloadName, workloadName, worklo
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: defaultNamespace,
 						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
 					},
 					Status: cartov1alpha1.WorkloadStatus{
 						Conditions: []metav1.Condition{
