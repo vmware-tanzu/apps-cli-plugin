@@ -52,8 +52,7 @@ func (opts *ClusterSupplyChainListOptions) Validate(ctx context.Context) validat
 
 func (opts *ClusterSupplyChainListOptions) Exec(ctx context.Context, c *cli.Config) error {
 	supplyChain := &cartov1alpha1.ClusterSupplyChainList{}
-	err := c.List(ctx, supplyChain)
-	if err != nil {
+	if err := c.List(ctx, supplyChain); err != nil {
 		return err
 	}
 

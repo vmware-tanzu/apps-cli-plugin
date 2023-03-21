@@ -73,16 +73,16 @@ func NamespaceFlag(ctx context.Context, cmd *cobra.Command, c *Config, namespace
 
 	cmd.Flags().StringVarP(namespace, StripDash(NamespaceFlagName), "n", "", "kubernetes `name`space (defaulted from kube config)")
 	cmd.RegisterFlagCompletionFunc(StripDash(NamespaceFlagName), func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		sugestions := []string{}
+		suggestions := []string{}
 		namespaces := &corev1.NamespaceList{}
 		err := c.List(ctx, namespaces)
 		if err != nil {
-			return sugestions, cobra.ShellCompDirectiveNoFileComp
+			return suggestions, cobra.ShellCompDirectiveNoFileComp
 		}
 		for _, n := range namespaces.Items {
-			sugestions = append(sugestions, n.Name)
+			suggestions = append(suggestions, n.Name)
 		}
-		return sugestions, cobra.ShellCompDirectiveNoFileComp
+		return suggestions, cobra.ShellCompDirectiveNoFileComp
 	})
 }
 
