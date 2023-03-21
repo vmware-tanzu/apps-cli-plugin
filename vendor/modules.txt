@@ -522,7 +522,7 @@ github.com/vmware-tanzu/difflib
 # github.com/vmware-tanzu/tanzu-framework/apis/cli v0.0.0-20230215121916-ba6b6f70b187
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-framework/apis/cli/v1alpha1
-# github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230315043541-5b41308a4606
+# github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230320101839-c2e27fee9b9d
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-framework/cli/runtime/apis/cli/v1alpha1
 github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo
@@ -675,7 +675,7 @@ gotest.tools/v3/internal/assert
 gotest.tools/v3/internal/difflib
 gotest.tools/v3/internal/format
 gotest.tools/v3/internal/source
-# k8s.io/api v0.26.2
+# k8s.io/api v0.26.3
 ## explicit; go 1.19
 k8s.io/api/admission/v1
 k8s.io/api/admission/v1beta1
@@ -735,7 +735,7 @@ k8s.io/api/storage/v1beta1
 ## explicit; go 1.16
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions
 k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1
-# k8s.io/apimachinery v0.26.2
+# k8s.io/apimachinery v0.26.3
 ## explicit; go 1.19
 k8s.io/apimachinery/pkg/api/equality
 k8s.io/apimachinery/pkg/api/errors
@@ -791,7 +791,7 @@ k8s.io/apimachinery/third_party/forked/golang/reflect
 # k8s.io/cli-runtime v0.26.2
 ## explicit; go 1.19
 k8s.io/cli-runtime/pkg/resource
-# k8s.io/client-go v0.26.2
+# k8s.io/client-go v0.26.3
 ## explicit; go 1.19
 k8s.io/client-go/applyconfigurations/admissionregistration/v1
 k8s.io/client-go/applyconfigurations/admissionregistration/v1alpha1
