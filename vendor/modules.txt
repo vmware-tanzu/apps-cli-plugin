@@ -522,7 +522,7 @@ github.com/vmware-tanzu/difflib
 # github.com/vmware-tanzu/tanzu-framework/apis/cli v0.0.0-20230215121916-ba6b6f70b187
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-framework/apis/cli/v1alpha1
-# github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230320101839-c2e27fee9b9d
+# github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230321065055-c6ab694beaf3
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-framework/cli/runtime/apis/cli/v1alpha1
 github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo
@@ -788,7 +788,7 @@ k8s.io/apimachinery/pkg/version
 k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/third_party/forked/golang/json
 k8s.io/apimachinery/third_party/forked/golang/reflect
-# k8s.io/cli-runtime v0.26.2
+# k8s.io/cli-runtime v0.26.3
 ## explicit; go 1.19
 k8s.io/cli-runtime/pkg/resource
 # k8s.io/client-go v0.26.3
