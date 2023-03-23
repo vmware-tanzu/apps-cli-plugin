@@ -218,13 +218,13 @@ func (c *client) lazyLoadKubernetesClientsetOrDie() *kubernetes.Clientset {
 func (c *client) lazyLoadClientOrDie() crclient.Client {
 	if c.client == nil {
 		restConfig := c.lazyLoadRestConfigOrDie()
-		lazyloadMapper, err := apiutil.NewDynamicRESTMapper(c.KubeRestConfig(), apiutil.WithExperimentalLazyMapper)
+		lazyLoadMapper, err := apiutil.NewDynamicRESTMapper(c.KubeRestConfig(), apiutil.WithExperimentalLazyMapper)
 		if err != nil {
 			fmt.Printf("%s Unable to create rest mapper. signk8s.io/dynamicrestmapper states %s \n", printer.Serrorf("Error:"), err)
 			c.logError(err)
 			os.Exit(2)
 		}
-		client, err := crclient.New(restConfig, crclient.Options{Scheme: c.scheme, Mapper: lazyloadMapper})
+		client, err := crclient.New(restConfig, crclient.Options{Scheme: c.scheme, Mapper: lazyLoadMapper})
 		if err != nil {
 			fmt.Printf("%s Unable to connect: connection refused. Confirm kubeconfig details and try again.\n", printer.Serrorf("Error:"))
 			c.logError(err)

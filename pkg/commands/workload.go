@@ -36,6 +36,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -794,13 +795,36 @@ func (opts *WorkloadOptions) GetTailWorkers(c *cli.Config, workload *cartov1alph
 	return workers
 }
 
+func getClusterSupplyChainTypeSelectors(fields []metav1.LabelSelectorRequirement) []string {
+	var values []string
+	for _, v := range fields {
+		if v.Key == apis.WorkloadTypeLabelName {
+			values = append(values, v.Values...)
+			break
+		}
+	}
+
+	return values
+}
+
 func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd *cobra.Command) {
 	cli.NamespaceFlag(ctx, cmd, c, &opts.Namespace)
 	cmd.Flags().StringVarP(&opts.FilePath, cli.StripDash(flags.FilePathFlagName), "f", "", "`file path` containing the description of a single workload, other flags are layered on top of this resource. Use value \"-\" to read from stdin")
 	cmd.Flags().StringVarP(&opts.App, cli.StripDash(flags.AppFlagName), "a", "", "application `name` the workload is a part of")
 	cmd.Flags().StringVarP(&opts.Type, cli.StripDash(flags.TypeFlagName), "t", WebTypeReservedKey, "distinguish workload `type`")
 	cmd.RegisterFlagCompletionFunc(cli.StripDash(flags.TypeFlagName), func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{WebTypeReservedKey}, cobra.ShellCompDirectiveNoFileComp
+		suggestions := []string{}
+		supplyChainList := &cartov1alpha1.ClusterSupplyChainList{}
+		if err := c.List(ctx, supplyChainList); err != nil {
+			return suggestions, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		supplyChainList = supplyChainList.DeepCopy()
+		for _, i := range supplyChainList.Items {
+			suggestions = append(suggestions, getClusterSupplyChainTypeSelectors(i.Spec.SelectorMatchExpressions)...)
+		}
+
+		return suggestions, cobra.ShellCompDirectiveNoFileComp
 	})
 	cmd.Flags().StringSliceVarP(&opts.Labels, cli.StripDash(flags.LabelFlagName), "l", []string{}, "label is represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
 	cmd.Flags().StringSliceVar(&opts.Annotations, cli.StripDash(flags.AnnotationFlagName), []string{}, "annotation is represented as a `\"key=value\" pair` (\"key-\" to remove, flag can be used multiple times)")
