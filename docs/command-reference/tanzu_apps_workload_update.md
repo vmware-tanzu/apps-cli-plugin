@@ -67,7 +67,7 @@ tanzu apps workload update --file workload.yaml
       --sub-path path                  relative path inside the repo or image to treat as application root (to unset, pass empty string "")
       --tail                           show logs while waiting for workload to become ready
       --tail-timestamp                 show logs and add timestamp to each log line while waiting for workload to become ready
-  -t, --type type                      distinguish workload type
+  -t, --type type                      distinguish workload type (default "web")
       --wait                           waits for workload to become ready
       --wait-timeout duration          timeout for workload to become ready when waiting (default 10m0s)
   -y, --yes                            accept all prompts

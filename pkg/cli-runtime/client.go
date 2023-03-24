@@ -42,7 +42,7 @@ type Client interface {
 	ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error)
 	ToRESTConfig() (*rest.Config, error)
 	ToRESTMapper() (meta.RESTMapper, error)
-	GetClientSet() *kubernetes.Clientset
+	GetClientSet() kubernetes.Interface
 	crclient.Client
 }
 
@@ -75,7 +75,7 @@ func (c *client) ToRESTMapper() (meta.RESTMapper, error) {
 	return c.RESTMapper(), nil
 }
 
-func (c *client) GetClientSet() *kubernetes.Clientset {
+func (c *client) GetClientSet() kubernetes.Interface {
 	return c.lazyLoadKubernetesClientsetOrDie()
 }
 

@@ -34,7 +34,9 @@ import (
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/discovery/cached/disk"
 	"k8s.io/client-go/kubernetes"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
+	fakerest "k8s.io/client-go/rest/fake"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/kubectl/pkg/scheme"
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -47,6 +49,9 @@ func (c *fakeclient) DefaultNamespace() string {
 }
 
 func (c *fakeclient) KubeRestConfig() *rest.Config {
+	if c.kubeConfig != nil {
+		return c.kubeConfig
+	}
 	return &rest.Config{}
 }
 
@@ -58,8 +63,8 @@ func (c *fakeclient) SetLogger(logger logr.Logger) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (c *fakeclient) GetClientSet() *kubernetes.Clientset {
-	return &kubernetes.Clientset{}
+func (c *fakeclient) GetClientSet() kubernetes.Interface {
+	return newClientSet()
 }
 
 func NewFakeCliClient(c crclient.Client) cli.Client {
@@ -69,9 +74,27 @@ func NewFakeCliClient(c crclient.Client) cli.Client {
 	}
 }
 
+func NewFakeCliClientWithResponse(c crclient.Client, resp *http.Response) cli.Client {
+	return &fakeclient{
+		defaultNamespace: "default",
+		Client:           c,
+		kubeConfig: &rest.Config{
+			Transport: fakeTransport{corev1Response: resp},
+		},
+	}
+}
+
 // RESTClient returns a REST client from TestFactory
 func (c *fakeclient) RESTClient() (*rest.RESTClient, error) {
 	panic(fmt.Errorf("not implemented"))
+}
+
+type fakeTransport struct {
+	corev1Response *http.Response
+}
+
+func (t fakeTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	return t.corev1Response, nil
 }
 
 func (c *fakeclient) ToRESTMapper() (meta.RESTMapper, error) {
@@ -114,6 +137,31 @@ type FakeCachedDiscoveryClient struct {
 type fakeclient struct {
 	defaultNamespace string
 	crclient.Client
+	kubeConfig *rest.Config
+}
+
+func newClientSet() *fakeClientSet {
+	return &fakeClientSet{Clientset: kubernetes.Clientset{}}
+}
+
+type fakeClientSet struct {
+	kubernetes.Clientset
+}
+
+func (c *fakeClientSet) CoreV1() corev1.CoreV1Interface {
+	return &fakeClientCoreV1{CoreV1Client: corev1.CoreV1Client{}}
+}
+
+type fakeClientCoreV1 struct {
+	corev1.CoreV1Client
+}
+
+func (c *fakeClientCoreV1) RESTClient() rest.Interface {
+	return &fakeRestClient{RESTClient: fakerest.RESTClient{}}
+}
+
+type fakeRestClient struct {
+	fakerest.RESTClient
 }
 
 func testRESTMapper() meta.RESTMapper {

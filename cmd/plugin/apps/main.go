@@ -88,6 +88,7 @@ func main() {
 
 		// hidden commands
 		commands.NewDocsCommand(ctx, c),
+		commands.NewLocalSourceProxyCommand(ctx, c),
 	)
 
 	// add root persistent flags

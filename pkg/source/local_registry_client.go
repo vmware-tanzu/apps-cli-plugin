@@ -40,7 +40,7 @@ func GetLocalImageRepo() string {
 	return fmt.Sprintf("%s.%s.%s", sourceProxyService, sourceProxyNamespace, sourceProxyDomain)
 }
 
-func LocalRegistryTransport(ctx context.Context, kubeconfig *rest.Config, restClient rest.Interface) (*Wrapper, error) {
+func LocalRegistryTransport(ctx context.Context, kubeconfig *rest.Config, restClient rest.Interface, suffixes ...string) (*Wrapper, error) {
 	if wrapper := RetrieveContainerWrapper(ctx); wrapper != nil {
 		return wrapper, nil
 	}
@@ -48,7 +48,7 @@ func LocalRegistryTransport(ctx context.Context, kubeconfig *rest.Config, restCl
 	if restClient == nil {
 		return nil, errors.New("no RESTClient was set for local proxy transport")
 	}
-	r := restClient.Get().Namespace(sourceProxyNamespace).Resource(servicesResource).SubResource(proxySubResource).Name(net.JoinSchemeNamePort("http", sourceProxyService, "5001"))
+	r := restClient.Get().Namespace(sourceProxyNamespace).Resource(servicesResource).SubResource(proxySubResource).Name(net.JoinSchemeNamePort("http", sourceProxyService, "5001")).Suffix(suffixes...)
 
 	gv := corev1.SchemeGroupVersion
 	kubeconfig.GroupVersion = &gv
