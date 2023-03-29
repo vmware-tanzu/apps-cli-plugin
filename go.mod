@@ -21,7 +21,7 @@ require (
 	github.com/vmware-labs/reconciler-runtime v0.11.1
 	github.com/vmware-tanzu/carvel-imgpkg v0.36.1
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
-	github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230324054311-12c4dab2f252
+	github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230328200324-fe8dd986a431
 	golang.org/x/crypto v0.7.0
 	gotest.tools/v3 v3.4.0
 	k8s.io/api v0.26.3
@@ -30,7 +30,7 @@ require (
 	k8s.io/cli-runtime v0.26.3
 	k8s.io/client-go v0.26.3
 	k8s.io/kubectl v0.26.3
-	sigs.k8s.io/controller-runtime v0.14.5
+	sigs.k8s.io/controller-runtime v0.14.6
 	sigs.k8s.io/yaml v1.3.0
 )
 

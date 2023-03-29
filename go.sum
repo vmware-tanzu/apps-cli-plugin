@@ -675,8 +675,8 @@ github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57 h1:NmeWaPuGdw
 github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57/go.mod h1:q4R37lXdaJmkpws5TUoMwT2GXOMs8qJJ9P+zxrtHv28=
 github.com/vmware-tanzu/tanzu-framework/apis/cli v0.0.0-20230215121916-ba6b6f70b187 h1:VKs3ljTwiZL41pz8ocfDdudxI2rR2HOgUPeebGz8w8Q=
 github.com/vmware-tanzu/tanzu-framework/apis/cli v0.0.0-20230215121916-ba6b6f70b187/go.mod h1:ADpe65BsXH5KM6W5b03PQ3+nVsiyc9CWVhT4tkYpNTE=
-github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230324054311-12c4dab2f252 h1:mWEq5rvP9zfZ/JnhklGL/hJ7xSQooNoei6nO0Ot1ysk=
-github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230324054311-12c4dab2f252/go.mod h1:fw+yGD1Xfnt7CzWq/lL8AaOg/h6H1STMJpQC3LMHYGQ=
+github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230328200324-fe8dd986a431 h1:N/Fo/6wKwkegPMGxSa1kN9nNKT1hZJ6MewQ2AD+8jVo=
+github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230328200324-fe8dd986a431/go.mod h1:fw+yGD1Xfnt7CzWq/lL8AaOg/h6H1STMJpQC3LMHYGQ=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f/go.mod h1:N2zxlSyiKSe5eX1tZViRH5QA0qijqEDrYZiPEAiq3wU=
 github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415/go.mod h1:GwrjFmJcFw6At/Gs6z4yjiIwzuJ1/+UwLxMQDVQXShQ=
 github.com/xeipuuv/gojsonschema v1.2.0/go.mod h1:anYRn/JVcOK2ZgGU+IjEV4nwlhoK5sQluxsYJ78Id3Y=
@@ -1232,8 +1232,8 @@ rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.27/go.mod h1:tq2nT0Kx7W+/f2JVE+zxYtUhdjuELJkVpNz+x/QN5R4=
-sigs.k8s.io/controller-runtime v0.14.5 h1:6xaWFqzT5KuAQ9ufgUaj1G/+C4Y1GRkhrxl+BJ9i+5s=
-sigs.k8s.io/controller-runtime v0.14.5/go.mod h1:WqIdsAY6JBsjfc/CqO0CORmNtoCtE4S6qbPc9s68h+0=
+sigs.k8s.io/controller-runtime v0.14.6 h1:oxstGVvXGNnMvY7TAESYk+lzr6S3V5VFxQ6d92KcwQA=
+sigs.k8s.io/controller-runtime v0.14.6/go.mod h1:WqIdsAY6JBsjfc/CqO0CORmNtoCtE4S6qbPc9s68h+0=
 sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6/go.mod h1:p4QtZmO4uMYipTQNzagwnNoseA6OxSUutVw05NhYDRs=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd h1:EDPBXCAspyGV4jQlpZSudPeMmr1bNJefnuqLsRAsHZo=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd/go.mod h1:B8JuhiUyNFVKdsE8h686QcCxMaH6HrOAZj4vswFpcB0=
