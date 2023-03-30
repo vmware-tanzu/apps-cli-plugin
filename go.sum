@@ -254,8 +254,8 @@ github.com/go-logfmt/logfmt v0.5.0/go.mod h1:wCYkCAKZfumFQihp8CzCvQ3paCTfi41vtzG
 github.com/go-logr/logr v0.1.0/go.mod h1:ixOQHD9gLJUVQQ2ZOR7zLEifBX6tGkNJF4QyIY7sIas=
 github.com/go-logr/logr v0.2.0/go.mod h1:z6/tIYblkpsD+a4lm/fGIIU9mZ+XfAiaFtq7xTgseGU=
 github.com/go-logr/logr v1.2.0/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
-github.com/go-logr/logr v1.2.3 h1:2DntVwHkVopvECVRSlL5PSo9eG+cAkDCuckLubN+rq0=
-github.com/go-logr/logr v1.2.3/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
+github.com/go-logr/logr v1.2.4 h1:g01GSCwiDw2xSZfjJ2/T9M+S6pFdcNtFYsp+Y43HYDQ=
+github.com/go-logr/logr v1.2.4/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
 github.com/go-logr/zapr v1.2.0/go.mod h1:Qa4Bsj2Vb+FAVeAKsLD8RLQ+YRJB8YDmOAKxaBQf7Ro=
 github.com/go-logr/zapr v1.2.3 h1:a9vnzlIBPQBBkeaR9IuMUfmVOrQlkoC4YfPoFkX3T7A=
 github.com/go-openapi/jsonpointer v0.19.3/go.mod h1:Pl9vOtqEWErmShwVjC8pYs9cog34VGT37dQOVbmoatg=
@@ -675,8 +675,8 @@ github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57 h1:NmeWaPuGdw
 github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57/go.mod h1:q4R37lXdaJmkpws5TUoMwT2GXOMs8qJJ9P+zxrtHv28=
 github.com/vmware-tanzu/tanzu-framework/apis/cli v0.0.0-20230215121916-ba6b6f70b187 h1:VKs3ljTwiZL41pz8ocfDdudxI2rR2HOgUPeebGz8w8Q=
 github.com/vmware-tanzu/tanzu-framework/apis/cli v0.0.0-20230215121916-ba6b6f70b187/go.mod h1:ADpe65BsXH5KM6W5b03PQ3+nVsiyc9CWVhT4tkYpNTE=
-github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230324054311-12c4dab2f252 h1:mWEq5rvP9zfZ/JnhklGL/hJ7xSQooNoei6nO0Ot1ysk=
-github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230324054311-12c4dab2f252/go.mod h1:fw+yGD1Xfnt7CzWq/lL8AaOg/h6H1STMJpQC3LMHYGQ=
+github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230328200324-fe8dd986a431 h1:N/Fo/6wKwkegPMGxSa1kN9nNKT1hZJ6MewQ2AD+8jVo=
+github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230328200324-fe8dd986a431/go.mod h1:fw+yGD1Xfnt7CzWq/lL8AaOg/h6H1STMJpQC3LMHYGQ=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f/go.mod h1:N2zxlSyiKSe5eX1tZViRH5QA0qijqEDrYZiPEAiq3wU=
 github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415/go.mod h1:GwrjFmJcFw6At/Gs6z4yjiIwzuJ1/+UwLxMQDVQXShQ=
 github.com/xeipuuv/gojsonschema v1.2.0/go.mod h1:anYRn/JVcOK2ZgGU+IjEV4nwlhoK5sQluxsYJ78Id3Y=
