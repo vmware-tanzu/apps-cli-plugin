@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"regexp"
 	"strings"
 	"text/template"
@@ -79,8 +80,7 @@ func (s *SternTailer) Tail(ctx context.Context, c *cli.Config, namespace string,
 		LabelSelector:  selector,
 		ContainerQuery: containerQuery,
 		ContainerStates: []stern.ContainerState{
-			stern.RUNNING,
-			stern.TERMINATED,
+			stern.ALL_STATES,
 		},
 		InitContainers: true,
 		Since:          since,
@@ -89,10 +89,11 @@ func (s *SternTailer) Tail(ctx context.Context, c *cli.Config, namespace string,
 		PodQuery:      regexp.MustCompile(""),
 		FieldSelector: fields.Everything(),
 
-		Template: template,
-		Out:      c.Stdout,
-		ErrOut:   c.Stderr,
-		Follow:   true,
+		Template:       template,
+		Out:            c.Stdout,
+		ErrOut:         c.Stderr,
+		Follow:         true,
+		MaxLogRequests: math.MaxInt16, // 32767
 	}
 
 	return stern.Run(ctx, &configStern)
