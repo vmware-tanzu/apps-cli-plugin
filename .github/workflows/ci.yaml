@@ -13,7 +13,6 @@ jobs:
 
   unit-ubuntu:
     env:
-      TKG_CUSTOM_IMAGE_REPOSITORY: projects-stg.registry.vmware.com/tkg
       TANZU_CLI_NO_INIT: true
       TANZU_HOME: $HOME/tanzu
     runs-on: ubuntu-latest
@@ -33,7 +32,6 @@ jobs:
     - name: Install tanzu cli
       run: |
         TANZU_VERSION=$(cat TANZU_VERSION)
-        env
         mkdir -p ${TANZU_HOME}
         curl -Lo tanzu-framework.tar.gz https://github.com/vmware-tanzu/tanzu-framework/releases/download/${TANZU_VERSION}/tanzu-framework-linux-amd64.tar.gz
         tar -xzf tanzu-framework.tar.gz -C ${TANZU_HOME}
@@ -60,6 +58,11 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
     - name: Build
       run: make build
+    - uses: actions/upload-artifact@v3
+      with:
+        name: tanzu-apps-plugin-build.tar.gz
+        path: tanzu-apps-plugin-build.tar.gz
+        retention-days: 1
     - name: Publish
       run: make publish
     - uses: actions/upload-artifact@v3
@@ -71,7 +74,7 @@ jobs:
       run: |
         if [[ -z ${BUILD_VERSION} ]]; then
           BUILD_SHA_SHORT=$(git rev-parse --short HEAD)
-          BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)+dev-$BUILD_SHA_SHORT
+          BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)-dev-$BUILD_SHA_SHORT
         fi
         echo $BUILD_VERSION
         tanzu plugin install apps --version $BUILD_VERSION --local ./artifacts/published/linux-amd64
@@ -84,7 +87,6 @@ jobs:
 
   unit-windows:
     env:
-      TKG_CUSTOM_IMAGE_REPOSITORY: projects-stg.registry.vmware.com/tkg
       TANZU_CLI_NO_INIT: true
       TANZU_HOME: c:/Program\ Files/tanzu
     runs-on: windows-latest
@@ -130,12 +132,11 @@ jobs:
         $Env:PATH += ";C:\Program Files\tanzu"
         $BUILD_SHA_SHORT=git rev-parse --short HEAD
         $APP_PLUGIN_VERSION=type .\APPS_PLUGIN_VERSION
-        $BUILD_VERSION=$APP_PLUGIN_VERSION+'+dev-'+$BUILD_SHA_SHORT
+        $BUILD_VERSION=$APP_PLUGIN_VERSION+'-dev-'+$BUILD_SHA_SHORT
         tanzu plugin install apps --version $BUILD_VERSION --local ./artifacts/published/windows-amd64
 
   unit-macos:
     env:
-      TKG_CUSTOM_IMAGE_REPOSITORY: projects-stg.registry.vmware.com/tkg
       TANZU_CLI_NO_INIT: true
       TANZU_HOME: $HOME/tanzu
     runs-on: macos-latest
@@ -174,7 +175,7 @@ jobs:
       run: |
         if [[ -z ${BUILD_VERSION} ]]; then
           BUILD_SHA_SHORT=$(git rev-parse --short HEAD)
-          BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)+dev-$BUILD_SHA_SHORT
+          BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)-dev-$BUILD_SHA_SHORT
         fi
         echo $BUILD_VERSION
         tanzu plugin install apps --version $BUILD_VERSION --local ./artifacts/published/darwin-amd64
@@ -198,7 +199,6 @@ jobs:
       TANZU_CLI_NO_INIT: true
       TANZU_HOME: $HOME/tanzu
       OS_ARCH: linux-amd64
-      TKG_CUSTOM_IMAGE_REPOSITORY: projects-stg.registry.vmware.com/tkg
     steps:
     - uses: actions/checkout@v3
     - uses: vmware-tanzu/carvel-setup-action@v1
@@ -224,7 +224,7 @@ jobs:
     - name: Build dev version
       run: |
         BUILD_SHA_SHORT=$(git rev-parse --short HEAD)
-        echo "BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)+dev-$BUILD_SHA_SHORT" >> $GITHUB_ENV
+        echo "BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)-dev-$BUILD_SHA_SHORT" >> $GITHUB_ENV
         echo $BUILD_VERSION
       if: startsWith(github.ref, 'refs/tags/') != true
     - name: Build tag version
@@ -294,9 +294,6 @@ jobs:
           registry:2
         # Make the $REGISTRY_NAME -> local-registry
         echo "$(hostname -I | cut -d' ' -f1) $REGISTRY_NAME" | sudo tee -a /etc/hosts
-    - name: Build Version
-      run: echo "BUILD_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
-      if: startsWith(github.ref, 'refs/tags/')
     - name: Install kind
       run: |
         cd $(mktemp -d -t kind.XXXX)
@@ -416,7 +413,6 @@ jobs:
         path: RELEASE_INFO_*
         retention-days: 1
 
-
   release:
     needs:
     - create-release
@@ -444,3 +440,63 @@ jobs:
         asset_name: tanzu-apps-plugin${{ matrix.os-arch }}-${{ env.RELEASE_VERSION }}.tar.gz
         asset_content_type: application/gzip
 
+  publish-oci-artifact:
+    env:
+      TANZU_CLI_NO_INIT: true
+      TANZU_HOME: $HOME/tanzu
+      ARTIFACTS_DIR: ./artifacts
+    needs:
+    - release
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: vmware-tanzu/carvel-setup-action@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install tanzu cli
+      run: |
+        TANZU_VERSION=$(cat TANZU_VERSION)
+        mkdir -p ${TANZU_HOME}
+        curl -Lo tanzu-framework.tar.gz https://github.com/vmware-tanzu/tanzu-framework/releases/download/${TANZU_VERSION}/tanzu-framework-linux-amd64.tar.gz
+        tar -xzf tanzu-framework.tar.gz -C ${TANZU_HOME}
+        sudo mv ${TANZU_HOME}/cli/core/${TANZU_VERSION}/tanzu-core-linux_amd64 /usr/local/bin/tanzu
+        chmod +x /usr/local/bin/tanzu
+        tanzu init
+        tanzu plugin repo add -b tanzu-cli-admin-plugins -n admin -p artifacts-admin
+        curl -Lo admin-plugins.tar.gz https://github.com/vmware-tanzu/tanzu-framework/releases/download/${TANZU_VERSION}/tanzu-framework-plugins-admin-linux-amd64.tar.gz
+        tar -xzf admin-plugins.tar.gz -C ${TANZU_HOME}
+        tanzu plugin install builder --local ${TANZU_HOME}/admin-plugins
+        tanzu plugin list
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Set repos
+      run: |
+        echo "DISTRIBUTION_REPO=ghcr.io/${{ github.repository }}/distribution" >> $GITHUB_ENV
+        echo "DISCOVERY_REPO=ghcr.io/${{ github.repository }}/discovery" >> $GITHUB_ENV
+        echo $DISTRIBUTION_REPO
+        echo $DISCOVERY_REPO
+    - name: Build Version
+      run: |
+        echo "BUILD_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: tanzu-apps-plugin-build.tar.gz
+    - name: Get build artifact
+      run: |
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+
+        if [ ! -d ${ARTIFACTS_DIR} ]; then
+          mkdir -p ${ARTIFACTS_DIR}
+        fi
+
+        tar -xvf tanzu-apps-plugin-build.tar.gz -C ${ARTIFACTS_DIR}
+    - name: Publish OCI
+      run: make publish-oci

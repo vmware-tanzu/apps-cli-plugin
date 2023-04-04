@@ -64,7 +64,7 @@ tanzu plugin install builder --local ${TANZU_HOME}/admin-plugins
 tanzu plugin install test --local ${TANZU_HOME}/admin-plugins
 ```
 
-**Building apps plugin**
+**Building Apps CLI Plug-in**
 
 To build and install the apps plugin, run: (repeat this step any time you pull new source code to get the latest)
 
@@ -78,6 +78,35 @@ Verify installed plugins
 ```
 tanzu plugin list
 ```
+
+*Publishing Apps CLI Plug-in artifact to any registry*
+
+Since Tanzu CLI supports installing plugins from an OCI repository, the generated artifact for Apps CLI Plugin release can be uploaded to be publicly accessible in any repository like, for example, GitHub Container Registry.
+
+To publish the artifact, there are some steps that need to be done before running `make publish-oci`.
+
+1. Login to your registry.
+
+2. Export discovery and distribution environment variables to be used in the `make` command.
+  ```sh
+  export DISCOVERY_REPO=<your-registry>/USERNAME/apps-cli-plugin/discovery
+  export DISTRIBUTION_REPO=<your-registry>/USERNAME/apps-cli-plugin/distribution
+  ```
+
+3. Clear the `artifacts` directory and then run `make build` to fill it with the corresponding binaries.
+  If this folder has more than one Apps Plug-in version, all of them will be uploaded in the next step.
+
+4. Run `make publish-oci` command to push to the registry.
+  ```sh
+  make publish-oci
+  ```
+  The output of this last step is similar to the following:
+  ```bash
+  2023-03-09T11:59:51-05:00 [ℹ]  Publishing plugin: apps to <your-registry>/USERNAME/apps-cli-plugin/distribution/apps-darwin-amd64:v0.11.1-dev-4ea1dafb
+  2023-03-09T12:00:22-05:00 [✔]  Successfully published plugin: apps
+  2023-03-09T12:00:22-05:00 [ℹ]  Publishing discovery image to: <your-registry>/USERNAME/apps-cli-plugin/discovery
+  2023-03-09T12:00:29-05:00 [✔]  Successfully published CLIPlugin resources to discovery image: <your-registry>/USERNAME/apps-cli-plugin/discovery
+  ```
 
 ## Testing
 ### Unit testing
