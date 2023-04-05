@@ -36,9 +36,10 @@ tanzu apps workload get rmq-sample-app
    namespace:   default
 
 💾 Source
-   type:     git
-   url:      https://github.com/jhvhs/rabbitmq-sample
-   branch:   main
+   type:       git
+   url:        https://github.com/jhvhs/rabbitmq-sample
+   branch:     main
+   revision:   main/103fde37882b5510e9b3974e5fe209161b54f675
 
 📦 Supply Chain
    name:   source-to-url
@@ -250,10 +251,11 @@ tanzu apps workload get tanzu-java-web-app -n development
    namespace:   development
 
 💾 Source
-   type:     git
-   url:      https://github.com/vmware-tanzu/application-accelerator-samples
-   sub-path: tanzu-java-web-app
-   tag:      tap-1.3
+   type:       git
+   url:        https://github.com/vmware-tanzu/application-accelerator-samples
+   sub-path:   tanzu-java-web-app
+   tag:        tap-1.5.0
+   revision:   tap-1.5.0/0c08007acf53f22d8ec7612c48d00c19a8c0dfa5
 
 📦 Supply Chain
    name:   source-to-url

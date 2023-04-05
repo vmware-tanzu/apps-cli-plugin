@@ -192,9 +192,9 @@ Check [services consumption documentation](https://docs.vmware.com/en/VMware-Tan
 
 You can check workload details and status, add environment variables, export definitions or bind services.
 
-1. To check workload status and details, use `tanzu apps workload get`. 
+1. To check workload status and details, use `tanzu apps workload get`.
    
-   To get workload logs, use `tanzu apps workload tail`. 
+   To get workload logs, use `tanzu apps workload tail`.
    
    For more info about these, refer to [debug workload section](debug-workload.md).
 
