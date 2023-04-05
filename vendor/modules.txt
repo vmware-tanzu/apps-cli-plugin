@@ -460,7 +460,7 @@ github.com/spf13/afero/mem
 # github.com/spf13/cast v1.5.0
 ## explicit; go 1.18
 github.com/spf13/cast
-# github.com/spf13/cobra v1.6.1
+# github.com/spf13/cobra v1.7.0
 ## explicit; go 1.15
 github.com/spf13/cobra
 github.com/spf13/cobra/doc
@@ -522,7 +522,7 @@ github.com/vmware-tanzu/difflib
 # github.com/vmware-tanzu/tanzu-framework/apis/cli v0.0.0-20230215121916-ba6b6f70b187
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-framework/apis/cli/v1alpha1
-# github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230328200324-fe8dd986a431
+# github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230404144256-731e6d4c5a66
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-framework/cli/runtime/apis/cli/v1alpha1
 github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo
