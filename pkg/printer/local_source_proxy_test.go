@@ -74,12 +74,18 @@ message: my cool status
 			name: "yml",
 			args: args{
 				printType: "yml",
-				s:         status,
+				s: lsp.LSPStatus{
+					UserHasPermission:     true,
+					Reachable:             true,
+					UpstreamAuthenticated: false,
+					OverallHealth:         false,
+					Message:               "my cool status",
+				},
 			},
 			wantW: `user_has_permission: true
 reachable: true
-upstream_authenticated: true
-overall_health: true
+upstream_authenticated: false
+overall_health: false
 message: my cool status
 `,
 		},

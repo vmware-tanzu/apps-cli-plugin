@@ -60,7 +60,6 @@ func TestLocalSourceProxyHealthOptions_Validate(t *testing.T) {
 }
 
 func TestNewLocalSourceProxyHealthCommand(t *testing.T) {
-
 	scheme := runtime.NewScheme()
 	var cmd *cobra.Command
 
