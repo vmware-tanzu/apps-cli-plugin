@@ -26,7 +26,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/lsp"
 )
 
-func PrintLocalSourceProxyStatus(w io.Writer, printType string, s lsp.LSPStatus) error {
+func PrintLocalSourceProxyStatus(w io.Writer, printType string, s lsp.HealthStatus) error {
 	switch printType {
 	case "json":
 		if m, err := json.MarshalIndent(s, "", "  "); err != nil {

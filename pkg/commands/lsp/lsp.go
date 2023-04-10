@@ -36,23 +36,23 @@ type lspResponse struct {
 	StatusCode string `json:"statuscode"`
 }
 
-func GetStatus(ctx context.Context, c *cli.Config) (lsp.LSPStatus, error) {
+func GetStatus(ctx context.Context, c *cli.Config) (lsp.HealthStatus, error) {
 	r := &lspResponse{}
 	var localTransport *source.Wrapper
 	var resp *http.Response
 	var err error
 
 	if localTransport, err = source.LocalRegistryTransport(ctx, c.KubeRestConfig(), c.GetClientSet().CoreV1().RESTClient(), "health"); err != nil {
-		return lsp.LSPStatus{}, err
+		return lsp.HealthStatus{}, err
 	}
-	if req, err := http.NewRequest(http.MethodGet, localTransport.URL.Path, nil); err != nil {
-		return lsp.LSPStatus{}, err
+	if req, err := http.NewRequestWithContext(ctx, http.MethodGet, localTransport.URL.Path, nil); err != nil {
+		return lsp.HealthStatus{}, err
 	} else if resp, err = localTransport.RoundTrip(req); err != nil {
-		return lsp.LSPStatus{}, err
+		return lsp.HealthStatus{}, err
 	}
 
 	if b, err := io.ReadAll(resp.Body); err != nil {
-		return lsp.LSPStatus{}, err
+		return lsp.HealthStatus{}, err
 	} else if err := json.Unmarshal(b, r); err != nil {
 		r = &lspResponse{Message: string(b)}
 	}
@@ -64,15 +64,15 @@ func GetStatus(ctx context.Context, c *cli.Config) (lsp.LSPStatus, error) {
 	return getStatusFromLSPResponse(*r)
 }
 
-func checkRequestResponseCode(resp *http.Response, msg string) *lsp.LSPStatus {
+func checkRequestResponseCode(resp *http.Response, msg string) *lsp.HealthStatus {
 	if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusUnauthorized {
-		return &lsp.LSPStatus{
+		return &lsp.HealthStatus{
 			Message: fmt.Sprintf(errFormat, "The current user does not have permission to access the local source proxy.", msg),
 		}
 	}
 
 	if resp.StatusCode >= http.StatusInternalServerError && resp.StatusCode != http.StatusServiceUnavailable {
-		return &lsp.LSPStatus{
+		return &lsp.HealthStatus{
 			UserHasPermission: true,
 			Reachable:         true,
 			Message:           fmt.Sprintf(errFormat, "Local source proxy is not healthy.", msg),
@@ -80,30 +80,42 @@ func checkRequestResponseCode(resp *http.Response, msg string) *lsp.LSPStatus {
 	}
 
 	if resp.StatusCode == http.StatusServiceUnavailable {
-		return &lsp.LSPStatus{
+		return &lsp.HealthStatus{
 			UserHasPermission: true,
 			Message:           fmt.Sprintf(errFormat, "Local source proxy is not healthy.", msg),
 		}
 	}
 
+	if resp.StatusCode >= http.StatusBadRequest && resp.StatusCode != http.StatusNotFound {
+		return &lsp.HealthStatus{
+			Message: fmt.Sprintf(errFormat, "The request is not valid for the query the health of the ocal source proxy.", msg),
+		}
+	}
+
 	if resp.StatusCode == http.StatusNotFound {
-		return &lsp.LSPStatus{
+		return &lsp.HealthStatus{
 			UserHasPermission: true,
 			Message:           fmt.Sprintf(errFormat, "Local source proxy is not installed on the cluster.", msg),
+		}
+	}
+
+	if resp.StatusCode >= http.StatusMultipleChoices {
+		return &lsp.HealthStatus{
+			Message: fmt.Sprintf(errFormat, "Local source proxy was moved and is not reachable in the defined url.", msg),
 		}
 	}
 	return nil
 }
 
-func getStatusFromLSPResponse(r lspResponse) (lsp.LSPStatus, error) {
+func getStatusFromLSPResponse(r lspResponse) (lsp.HealthStatus, error) {
 	if r.StatusCode == "" {
-		return lsp.LSPStatus{}, fmt.Errorf("unable to read local source proxy response: %+v", r)
+		return lsp.HealthStatus{}, fmt.Errorf("unable to read local source proxy response: %+v", r)
 	}
 
 	if s, err := strconv.Atoi(r.StatusCode); err == nil {
 		switch s {
 		case http.StatusOK:
-			return lsp.LSPStatus{
+			return lsp.HealthStatus{
 				UserHasPermission:     true,
 				Reachable:             true,
 				UpstreamAuthenticated: true,
@@ -111,13 +123,13 @@ func getStatusFromLSPResponse(r lspResponse) (lsp.LSPStatus, error) {
 				Message:               "All health checks passed",
 			}, nil
 		default:
-			return lsp.LSPStatus{
+			return lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           fmt.Sprintf(errFormat, "Local source proxy was unable to authenticate against the target registry.", r.Message),
 			}, nil
 		}
 	} else {
-		return lsp.LSPStatus{}, err
+		return lsp.HealthStatus{}, err
 	}
 }

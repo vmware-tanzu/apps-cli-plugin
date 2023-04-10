@@ -40,7 +40,7 @@ func TestGetStatus(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    lsp.LSPStatus
+		want    lsp.HealthStatus
 		wantErr bool
 	}{
 		{
@@ -49,7 +49,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission:     true,
 				Reachable:             true,
 				UpstreamAuthenticated: true,
@@ -63,7 +63,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusUnauthorized, (`{"message": "403 Forbidden"}`))),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				Message: "The current user does not have permission to access the local source proxy.\nErrors:\n- 403 Forbidden",
 			},
 		},
@@ -73,7 +73,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusUnauthorized, (`{"message": "401 Unauthorized"}`))),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				Message: "The current user does not have permission to access the local source proxy.\nErrors:\n- 401 Unauthorized",
 			},
 		},
@@ -83,7 +83,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusInternalServerError, (`{"message": "500 Internal Server Error"}`))),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           "Local source proxy is not healthy.\nErrors:\n- 500 Internal Server Error",
@@ -95,7 +95,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusGatewayTimeout, (`{"message": "504 GatewayTimeout"}`))),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           "Local source proxy is not healthy.\nErrors:\n- 504 GatewayTimeout",
@@ -107,7 +107,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusServiceUnavailable, (`{"message": "503 Service Unavailable"}`))),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Message:           "Local source proxy is not healthy.\nErrors:\n- 503 Service Unavailable",
 			},
@@ -118,7 +118,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusNotFound, (`{"message": "404 Not Found"}`))),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Message:           "Local source proxy is not installed on the cluster.\nErrors:\n- 404 Not Found",
 			},
@@ -130,7 +130,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusOK, `{"statuscode": "302", "message": "Found"}`)),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Found",
@@ -142,7 +142,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "400", "message": "Bad Request"}`))),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Bad Request",
@@ -154,7 +154,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "401", "message": "Unauthorized"}`))),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Unauthorized",
@@ -166,7 +166,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "403", "message": "Forbidden"}`))),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Forbidden",
@@ -178,7 +178,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "404", "message": "Not Found"}`))),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Not Found",
@@ -190,7 +190,7 @@ func TestGetStatus(t *testing.T) {
 				ctx: context.Background(),
 				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "500", "message": "Internal Server Error"}`))),
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Internal Server Error",
@@ -220,7 +220,7 @@ func Test_checkRequestResponseCode(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *lsp.LSPStatus
+		want *lsp.HealthStatus
 	}{
 		{
 			name: http.StatusText(http.StatusOK),
@@ -235,7 +235,7 @@ func Test_checkRequestResponseCode(t *testing.T) {
 				resp: getResponse(http.StatusForbidden, ""),
 				msg:  msg,
 			},
-			want: &lsp.LSPStatus{
+			want: &lsp.HealthStatus{
 				Message: `The current user does not have permission to access the local source proxy.
 Errors:
 - my cool message`,
@@ -247,7 +247,7 @@ Errors:
 				resp: getResponse(http.StatusUnauthorized, ""),
 				msg:  msg,
 			},
-			want: &lsp.LSPStatus{
+			want: &lsp.HealthStatus{
 				Message: `The current user does not have permission to access the local source proxy.
 Errors:
 - my cool message`,
@@ -259,7 +259,7 @@ Errors:
 				resp: getResponse(http.StatusInternalServerError, ""),
 				msg:  msg,
 			},
-			want: &lsp.LSPStatus{
+			want: &lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message: `Local source proxy is not healthy.
@@ -273,7 +273,7 @@ Errors:
 				resp: getResponse(http.StatusNotImplemented, ""),
 				msg:  msg,
 			},
-			want: &lsp.LSPStatus{
+			want: &lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message: `Local source proxy is not healthy.
@@ -287,7 +287,7 @@ Errors:
 				resp: getResponse(http.StatusGatewayTimeout, ""),
 				msg:  msg,
 			},
-			want: &lsp.LSPStatus{
+			want: &lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message: `Local source proxy is not healthy.
@@ -301,7 +301,7 @@ Errors:
 				resp: getResponse(http.StatusServiceUnavailable, ""),
 				msg:  msg,
 			},
-			want: &lsp.LSPStatus{
+			want: &lsp.HealthStatus{
 				UserHasPermission: true,
 				Message: `Local source proxy is not healthy.
 Errors:
@@ -314,9 +314,33 @@ Errors:
 				resp: getResponse(http.StatusNotFound, ""),
 				msg:  msg,
 			},
-			want: &lsp.LSPStatus{
+			want: &lsp.HealthStatus{
 				UserHasPermission: true,
 				Message: `Local source proxy is not installed on the cluster.
+Errors:
+- my cool message`,
+			},
+		},
+		{
+			name: http.StatusText(http.StatusRequestURITooLong),
+			args: args{
+				resp: getResponse(http.StatusRequestURITooLong, ""),
+				msg:  msg,
+			},
+			want: &lsp.HealthStatus{
+				Message: `The request is not valid for the query the health of the ocal source proxy.
+Errors:
+- my cool message`,
+			},
+		},
+		{
+			name: http.StatusText(http.StatusPermanentRedirect),
+			args: args{
+				resp: getResponse(http.StatusPermanentRedirect, ""),
+				msg:  msg,
+			},
+			want: &lsp.HealthStatus{
+				Message: `Local source proxy was moved and is not reachable in the defined url.
 Errors:
 - my cool message`,
 			},
@@ -341,7 +365,7 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    lsp.LSPStatus
+		want    lsp.HealthStatus
 		wantErr bool
 	}{
 		{
@@ -359,7 +383,7 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 					Message:    msg,
 				},
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission:     true,
 				Reachable:             true,
 				UpstreamAuthenticated: true,
@@ -375,7 +399,7 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 					Message:    msg,
 				},
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           respMsg,
@@ -389,7 +413,7 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 					Message:    msg,
 				},
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           respMsg,
@@ -403,7 +427,7 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 					Message:    msg,
 				},
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           respMsg,
@@ -417,7 +441,7 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 					Message:    msg,
 				},
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           respMsg,
@@ -431,7 +455,7 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 					Message:    msg,
 				},
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           respMsg,
@@ -445,7 +469,7 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 					Message:    msg,
 				},
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           respMsg,
@@ -459,7 +483,7 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 					Message:    msg,
 				},
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           respMsg,
@@ -473,7 +497,7 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 					Message:    msg,
 				},
 			},
-			want: lsp.LSPStatus{
+			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
 				Message:           respMsg,

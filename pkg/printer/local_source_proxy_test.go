@@ -26,7 +26,7 @@ import (
 )
 
 func TestPrintLocalSourceProxyStatus(t *testing.T) {
-	status := lsp.LSPStatus{
+	status := lsp.HealthStatus{
 		UserHasPermission:     true,
 		Reachable:             true,
 		UpstreamAuthenticated: true,
@@ -35,7 +35,7 @@ func TestPrintLocalSourceProxyStatus(t *testing.T) {
 	}
 	type args struct {
 		printType string
-		s         lsp.LSPStatus
+		s         lsp.HealthStatus
 	}
 	tests := []struct {
 		name    string
@@ -74,7 +74,7 @@ message: my cool status
 			name: "yml",
 			args: args{
 				printType: "yml",
-				s: lsp.LSPStatus{
+				s: lsp.HealthStatus{
 					UserHasPermission:     true,
 					Reachable:             true,
 					UpstreamAuthenticated: false,

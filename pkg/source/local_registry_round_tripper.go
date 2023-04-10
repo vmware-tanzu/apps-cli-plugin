@@ -88,7 +88,6 @@ func (w *Wrapper) RoundTrip(req *http.Request) (*http.Response, error) {
 		for k, vs := range resp.Header {
 			for _, v := range vs {
 				if k == localSourceProxyRegistryPath {
-					// add log to say we got the local source proxy
 					w.Repository = v
 					break
 				}
