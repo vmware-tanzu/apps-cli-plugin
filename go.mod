@@ -21,8 +21,8 @@ require (
 	github.com/vmware-labs/reconciler-runtime v0.11.1
 	github.com/vmware-tanzu/carvel-imgpkg v0.36.1
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
-	github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230404144256-731e6d4c5a66
-	golang.org/x/crypto v0.7.0
+	github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230407101341-462d945f657a
+	golang.org/x/crypto v0.8.0
 	gotest.tools/v3 v3.4.0
 	k8s.io/api v0.26.3
 	k8s.io/apiextensions-apiserver v0.26.2
@@ -143,12 +143,12 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/oauth2 v0.6.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	gomodules.xyz/jsonpatch/v3 v3.0.1 // indirect
