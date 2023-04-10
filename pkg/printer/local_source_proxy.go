@@ -41,7 +41,7 @@ func PrintLocalSourceProxyStatus(w io.Writer, printType string, s lsp.LSPStatus)
 			w.Write(m)
 		}
 	default:
-		return fmt.Errorf("output not supported, use 'yaml', 'json' or leave it empty for 'text'")
+		return fmt.Errorf("output not supported, supported formats: 'json', 'yaml', 'yml'")
 	}
 	return nil
 }

@@ -32,6 +32,185 @@ import (
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
 )
 
+func TestGetStatus(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		c   *cli.Config
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    lsp.LSPStatus
+		wantErr bool
+	}{
+		{
+			name: "Cluster and LSP 200 OK",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			},
+			want: lsp.LSPStatus{
+				UserHasPermission:     true,
+				Reachable:             true,
+				UpstreamAuthenticated: true,
+				OverallHealth:         true,
+				Message:               "All health checks passed",
+			},
+		},
+		{
+			name: "Cluster 403 Forbidden",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusUnauthorized, (`{"message": "403 Forbidden"}`))),
+			},
+			want: lsp.LSPStatus{
+				Message: "The current user does not have permission to access the local source proxy.\nErrors:\n- 403 Forbidden",
+			},
+		},
+		{
+			name: "Cluster 401 Unauthorized",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusUnauthorized, (`{"message": "401 Unauthorized"}`))),
+			},
+			want: lsp.LSPStatus{
+				Message: "The current user does not have permission to access the local source proxy.\nErrors:\n- 401 Unauthorized",
+			},
+		},
+		{
+			name: "Cluster 500 Internal Server Error",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusInternalServerError, (`{"message": "500 Internal Server Error"}`))),
+			},
+			want: lsp.LSPStatus{
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           "Local source proxy is not healthy.\nErrors:\n- 500 Internal Server Error",
+			},
+		},
+		{
+			name: "Cluster 504 Gateway Timeout",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusGatewayTimeout, (`{"message": "504 GatewayTimeout"}`))),
+			},
+			want: lsp.LSPStatus{
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           "Local source proxy is not healthy.\nErrors:\n- 504 GatewayTimeout",
+			},
+		},
+		{
+			name: "Cluster 503 Service Unavailable",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusServiceUnavailable, (`{"message": "503 Service Unavailable"}`))),
+			},
+			want: lsp.LSPStatus{
+				UserHasPermission: true,
+				Message:           "Local source proxy is not healthy.\nErrors:\n- 503 Service Unavailable",
+			},
+		},
+		{
+			name: "Cluster 404 Not Found",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusNotFound, (`{"message": "404 Not Found"}`))),
+			},
+			want: lsp.LSPStatus{
+				UserHasPermission: true,
+				Message:           "Local source proxy is not installed on the cluster.\nErrors:\n- 404 Not Found",
+			},
+		},
+
+		{
+			name: "Cluster 200 OK and LSP 302 Found",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusOK, `{"statuscode": "302", "message": "Found"}`)),
+			},
+			want: lsp.LSPStatus{
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Found",
+			},
+		},
+		{
+			name: "Cluster 200 OK and LSP 400 Bad Request",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "400", "message": "Bad Request"}`))),
+			},
+			want: lsp.LSPStatus{
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Bad Request",
+			},
+		},
+		{
+			name: "Cluster 200 OK and LSP 401 Unauthorized",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "401", "message": "Unauthorized"}`))),
+			},
+			want: lsp.LSPStatus{
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Unauthorized",
+			},
+		},
+		{
+			name: "Cluster 200 OK and LSP 403 Forbidden",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "403", "message": "Forbidden"}`))),
+			},
+			want: lsp.LSPStatus{
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Forbidden",
+			},
+		},
+		{
+			name: "Cluster 200 OK and LSP 404 Not Found",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "404", "message": "Not Found"}`))),
+			},
+			want: lsp.LSPStatus{
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Not Found",
+			},
+		},
+		{
+			name: "Cluster 200 OK and LSP 500 Internal Server Error",
+			args: args{
+				ctx: context.Background(),
+				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "500", "message": "Internal Server Error"}`))),
+			},
+			want: lsp.LSPStatus{
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Internal Server Error",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetStatus(tt.args.ctx, tt.args.c)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetStatus() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("GetStatus(): Unexpected output (-expected, +actual): %s", diff)
+			}
+		})
+	}
+}
+
 func Test_checkRequestResponseCode(t *testing.T) {
 	msg := "my cool message"
 	type args struct {
@@ -197,8 +376,9 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 				},
 			},
 			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   respMsg,
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           respMsg,
 			},
 		},
 		{
@@ -210,8 +390,9 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 				},
 			},
 			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   respMsg,
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           respMsg,
 			},
 		},
 		{
@@ -223,8 +404,9 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 				},
 			},
 			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   respMsg,
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           respMsg,
 			},
 		},
 		{
@@ -236,8 +418,9 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 				},
 			},
 			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   respMsg,
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           respMsg,
 			},
 		},
 		{
@@ -249,8 +432,9 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 				},
 			},
 			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   respMsg,
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           respMsg,
 			},
 		},
 		{
@@ -262,8 +446,9 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 				},
 			},
 			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   respMsg,
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           respMsg,
 			},
 		},
 		{
@@ -275,8 +460,9 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 				},
 			},
 			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   respMsg,
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           respMsg,
 			},
 		},
 		{
@@ -288,8 +474,9 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 				},
 			},
 			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   respMsg,
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           respMsg,
 			},
 		},
 	}
@@ -307,188 +494,6 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 	}
 }
 
-func TestGetStatus(t *testing.T) {
-	type args struct {
-		ctx context.Context
-		c   *cli.Config
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    lsp.LSPStatus
-		wantErr bool
-	}{
-		{
-			name: "Cluster and LSP 200 OK",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
-			},
-			want: lsp.LSPStatus{
-				UserHasPermission:     true,
-				Reachable:             true,
-				UpstreamAuthenticated: true,
-				OverallHealth:         true,
-				Message:               "All health checks passed",
-			},
-		},
-		{
-			name: "Cluster 403 Forbidden",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusUnauthorized, (`{"message": "403 Forbidden"}`))),
-			},
-			want: lsp.LSPStatus{
-				Message: "The current user does not have permission to access the local source proxy.\nErrors:\n- 403 Forbidden",
-			},
-		},
-		{
-			name: "Cluster 401 Unauthorized",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusUnauthorized, (`{"message": "401 Unauthorized"}`))),
-			},
-			want: lsp.LSPStatus{
-				Message: "The current user does not have permission to access the local source proxy.\nErrors:\n- 401 Unauthorized",
-			},
-		},
-		{
-			name: "Cluster 500 Internal Server Error",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusInternalServerError, (`{"message": "500 Internal Server Error"}`))),
-			},
-			want: lsp.LSPStatus{
-				UserHasPermission: true,
-				Reachable:         true,
-				Message:           "Local source proxy is not healthy.\nErrors:\n- 500 Internal Server Error",
-			},
-		},
-		{
-			name: "Cluster 504 Gateway Timeout",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusGatewayTimeout, (`{"message": "504 GatewayTimeout"}`))),
-			},
-			want: lsp.LSPStatus{
-				UserHasPermission: true,
-				Reachable:         true,
-				Message:           "Local source proxy is not healthy.\nErrors:\n- 504 GatewayTimeout",
-			},
-		},
-		{
-			name: "Cluster 503 Service Unavailable",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusServiceUnavailable, (`{"message": "503 Service Unavailable"}`))),
-			},
-			want: lsp.LSPStatus{
-				UserHasPermission: true,
-				Message:           "Local source proxy is not healthy.\nErrors:\n- 503 Service Unavailable",
-			},
-		},
-		{
-			name: "Cluster 404 Not Found",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusNotFound, (`{"message": "404 Not Found"}`))),
-			},
-			want: lsp.LSPStatus{
-				UserHasPermission: true,
-				Message:           "Local source proxy is not installed on the cluster.\nErrors:\n- 404 Not Found",
-			},
-		},
-
-		//
-		//
-		//
-		//
-		//
-		//
-		//
-		//
-
-		{
-			name: "Cluster 200 OK and LSP 302 Found",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusOK, `{"statuscode": "302", "message": "Found"}`)),
-			},
-			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Found",
-			},
-		},
-		{
-			name: "Cluster 200 OK and LSP 400 Bad Request",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "400", "message": "Bad Request"}`))),
-			},
-			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Bad Request",
-			},
-		},
-		{
-			name: "Cluster 200 OK and LSP 401 Unauthorized",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "401", "message": "Unauthorized"}`))),
-			},
-			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Unauthorized",
-			},
-		},
-		{
-			name: "Cluster 200 OK and LSP 403 Forbidden",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "403", "message": "Forbidden"}`))),
-			},
-			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Forbidden",
-			},
-		},
-		{
-			name: "Cluster 200 OK and LSP 404 Not Found",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "404", "message": "Not Found"}`))),
-			},
-			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Not Found",
-			},
-		},
-		{
-			name: "Cluster 200 OK and LSP 500 Internal Server Error",
-			args: args{
-				ctx: context.Background(),
-				c:   getConfig(getResponse(http.StatusOK, (`{"statuscode": "500", "message": "Internal Server Error"}`))),
-			},
-			want: lsp.LSPStatus{
-				Reachable: true,
-				Message:   "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Internal Server Error",
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetStatus(tt.args.ctx, tt.args.c)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetStatus() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("GetStatus(): Unexpected output (-expected, +actual): %s", diff)
-			}
-		})
-	}
-}
-
 func getResponse(status int, body string) *http.Response {
 	return &http.Response{
 		Status:     http.StatusText(status),
@@ -500,6 +505,6 @@ func getResponse(status int, body string) *http.Response {
 func getConfig(resp *http.Response) *cli.Config {
 	scheme := k8sruntime.NewScheme()
 	c := cli.NewDefaultConfig("test", scheme)
-	c.Client = clitesting.NewFakeCliClientWithResponse(clitesting.NewFakeClient(scheme), resp)
+	c.Client = clitesting.NewFakeCliClientWithTransport(clitesting.NewFakeClient(scheme), clitesting.NewFakeTransportFromResponse(resp))
 	return c
 }

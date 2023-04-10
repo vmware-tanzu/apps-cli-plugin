@@ -74,12 +74,18 @@ func NewFakeCliClient(c crclient.Client) cli.Client {
 	}
 }
 
-func NewFakeCliClientWithResponse(c crclient.Client, resp *http.Response) cli.Client {
+func NewFakeCliClientWithTransport(c crclient.Client, transport http.RoundTripper) cli.Client {
+	var t http.RoundTripper
+	if transport != nil {
+		t = transport
+	} else {
+		t = fakeTransport{}
+	}
 	return &fakeclient{
 		defaultNamespace: "default",
 		Client:           c,
 		kubeConfig: &rest.Config{
-			Transport: fakeTransport{corev1Response: resp},
+			Transport: t,
 		},
 	}
 }
@@ -95,6 +101,10 @@ type fakeTransport struct {
 
 func (t fakeTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.corev1Response, nil
+}
+
+func NewFakeTransportFromResponse(resp *http.Response) http.RoundTripper {
+	return fakeTransport{corev1Response: resp}
 }
 
 func (c *fakeclient) ToRESTMapper() (meta.RESTMapper, error) {

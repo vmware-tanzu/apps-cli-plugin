@@ -81,6 +81,17 @@ func TestRoundTrip(t *testing.T) {
 			},
 		},
 		shouldError: true,
+	}, {
+		name: "nil transport",
+		wrapper: source.Wrapper{
+			Client: &http.Client{},
+			URL: &url.URL{
+				Scheme: "http",
+				Host:   "www.my-fake-url.com",
+				Path:   "search",
+			},
+		},
+		shouldError: true,
 	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

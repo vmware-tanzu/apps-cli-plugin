@@ -17,6 +17,7 @@ package source
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"path"
@@ -52,6 +53,11 @@ func RetrieveContainerWrapper(ctx context.Context) *Wrapper {
 
 // RoundTrip implements the http.RoundTripper interface.
 func (w *Wrapper) RoundTrip(req *http.Request) (*http.Response, error) {
+
+	if w.Client.Transport == nil {
+		return nil, fmt.Errorf("client transport not provided")
+	}
+
 	params, err := url.ParseQuery(req.URL.RawQuery)
 	if err != nil {
 		return nil, err
