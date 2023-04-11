@@ -113,8 +113,8 @@ func getStatusFromLSPResponse(r lspResponse) (lsp.HealthStatus, error) {
 	}
 
 	if s, err := strconv.Atoi(r.StatusCode); err == nil {
-		switch s {
-		case http.StatusOK:
+		switch {
+		case s >= http.StatusOK && s < http.StatusMultipleChoices:
 			return lsp.HealthStatus{
 				UserHasPermission:     true,
 				Reachable:             true,
