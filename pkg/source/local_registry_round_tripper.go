@@ -17,6 +17,7 @@ package source
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"path"
@@ -52,6 +53,10 @@ func RetrieveContainerWrapper(ctx context.Context) *Wrapper {
 
 // RoundTrip implements the http.RoundTripper interface.
 func (w *Wrapper) RoundTrip(req *http.Request) (*http.Response, error) {
+	if w.Client.Transport == nil {
+		return nil, fmt.Errorf("client transport not provided")
+	}
+
 	params, err := url.ParseQuery(req.URL.RawQuery)
 	if err != nil {
 		return nil, err
@@ -83,7 +88,6 @@ func (w *Wrapper) RoundTrip(req *http.Request) (*http.Response, error) {
 		for k, vs := range resp.Header {
 			for _, v := range vs {
 				if k == localSourceProxyRegistryPath {
-					// add log to say we got the local source proxy
 					w.Repository = v
 					break
 				}

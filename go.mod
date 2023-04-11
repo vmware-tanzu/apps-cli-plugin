@@ -23,6 +23,7 @@ require (
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230407101341-462d945f657a
 	golang.org/x/crypto v0.8.0
+	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools/v3 v3.4.0
 	k8s.io/api v0.26.3
 	k8s.io/apiextensions-apiserver v0.26.2
@@ -157,7 +158,6 @@ require (
 	google.golang.org/protobuf v1.29.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/component-base v0.26.3 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect

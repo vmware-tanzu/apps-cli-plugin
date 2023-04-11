@@ -90,6 +90,9 @@ type CommandTestCase struct {
 	// always be replaced with a FakeClient configured with the given objects and reactors to
 	// intercept all calls to the fake client for comparison with the expected operations.
 	Config *cli.Config
+	// Transport to be used as result of HttpReestClient from the kubeconfig file
+	// If not specified, when creating the rest client from kubeconfig, the transport will be nil by default
+	KubeConfigTransport http.RoundTripper
 	// BuilderObjects represents resources needed to build the fake builder. These
 	// resources are passed in the http response to the fake builder.
 	BuilderObjects []client.Object
@@ -220,8 +223,11 @@ func (tc CommandTestCase) Run(t *testing.T, scheme *k8sruntime.Scheme, cmdFactor
 		if c == nil {
 			c = cli.NewDefaultConfig("test", scheme)
 		}
-
-		c.Client = NewFakeCliClient(expectConfig.Config().Client)
+		if tc.KubeConfigTransport != nil {
+			c.Client = NewFakeCliClientWithTransport(expectConfig.Config().Client, tc.KubeConfigTransport)
+		} else {
+			c.Client = NewFakeCliClient(expectConfig.Config().Client)
+		}
 		if tc.ExecHelper != "" {
 			c.Exec = fakeExecCommand(tc.ExecHelper)
 		}

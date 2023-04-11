@@ -668,7 +668,7 @@ github.com/vito/go-interact v1.0.1 h1:O8xi8c93bRUv2Tb/v6HdiuGc+WnWt+AQzF74MOOdlB
 github.com/vito/go-interact v1.0.1/go.mod h1:HrdHSJXD2yn1MhlTwSIMeFgQ5WftiIorszVGd3S/DAA=
 github.com/vmware-labs/reconciler-runtime v0.11.1 h1:eU2bDUq4XWFmjICaKgnNieT8NhCicMqc5ST53R2QYug=
 github.com/vmware-labs/reconciler-runtime v0.11.1/go.mod h1:IrjEBBrCnBhvvQA4RT9l1J4vYbH5+QKF3O93XU/lj3c=
-github.com/vmware-tanzu/carvel-imgpkg v0.36.1 h1:OYO0yIqQ1V2o5E4fXH6QRfEovYm2ln3us31mHFT8OIw=
+github.com/vmware-tanzu/carvel-imgpkg v0.36.1 h1:3GtrY0Lt9uQ2fCvv0TcNm/UxvCdorfeGWgJZS4fdAVQ=
 github.com/vmware-tanzu/carvel-imgpkg v0.36.1/go.mod h1:eBOaUEF4tVajROCfcNFnB3zThG6xONhKuahbLFiqGU4=
 github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57 h1:NmeWaPuGdwr2+NdXEFqDfcBYiA8Qi/z+twfED7mqCyY=
 github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57/go.mod h1:q4R37lXdaJmkpws5TUoMwT2GXOMs8qJJ9P+zxrtHv28=

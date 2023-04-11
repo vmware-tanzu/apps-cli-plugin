@@ -29,6 +29,7 @@ import (
 
 func TestLocalRegistryTransport(t *testing.T) {
 	config := &rest.Config{}
+	defaultPath := "/namespaces/tap-local-source-system/services/http:local-source-proxy:5001/proxy"
 	fakeClient := &fake.RESTClient{
 		Resp: &http.Response{StatusCode: http.StatusOK, Header: nil, Body: nil},
 	}
@@ -37,21 +38,35 @@ func TestLocalRegistryTransport(t *testing.T) {
 		name           string
 		fakeRestClient *fake.RESTClient
 		shouldError    bool
+		suffixes       []string
+		expectedPath   string
 	}{{
 		name: "success",
 		fakeRestClient: &fake.RESTClient{
 			Resp: &http.Response{StatusCode: http.StatusOK, Header: nil, Body: nil},
 		},
+		expectedPath: defaultPath,
+	}, {
+		name: "success with suffixes",
+		fakeRestClient: &fake.RESTClient{
+			Resp: &http.Response{StatusCode: http.StatusOK, Header: nil, Body: nil},
+		},
+		suffixes:     []string{"foo", "bar"},
+		expectedPath: defaultPath + "/foo/bar",
 	}, {
 		name:           "fail",
 		fakeRestClient: nil,
 		shouldError:    true,
+		expectedPath:   defaultPath,
 	}}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := source.LocalRegistryTransport(context.Background(), config, fakeClient)
+			w, err := source.LocalRegistryTransport(context.Background(), config, fakeClient, test.suffixes...)
 			if err != nil && !test.shouldError {
 				t.Errorf("LocalRegistryTransport() not expected to fail %v", err)
+			}
+			if w.URL.Path != test.expectedPath {
+				t.Errorf("LocalRegistryTransport() expected path to be %v but got %s", test.expectedPath, w.URL.Path)
 			}
 		})
 	}
