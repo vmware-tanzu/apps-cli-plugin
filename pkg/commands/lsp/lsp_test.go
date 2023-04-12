@@ -376,7 +376,7 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "200_OK",
+			name: "200 OK",
 			args: args{
 				r: lspResponse{
 					StatusCode: strconv.Itoa(http.StatusOK),
@@ -389,6 +389,36 @@ func Test_getStatusFromLSPResponse(t *testing.T) {
 				UpstreamAuthenticated: true,
 				OverallHealth:         true,
 				Message:               "All health checks passed",
+			},
+		},
+		{
+			name: "204 No Content",
+			args: args{
+				r: lspResponse{
+					StatusCode: strconv.Itoa(http.StatusNoContent),
+					Message:    msg,
+				},
+			},
+			want: lsp.HealthStatus{
+				UserHasPermission:     true,
+				Reachable:             true,
+				UpstreamAuthenticated: true,
+				OverallHealth:         true,
+				Message:               "All health checks passed",
+			},
+		},
+		{
+			name: "302 Found",
+			args: args{
+				r: lspResponse{
+					StatusCode: strconv.Itoa(http.StatusFound),
+					Message:    msg,
+				},
+			},
+			want: lsp.HealthStatus{
+				UserHasPermission: true,
+				Reachable:         true,
+				Message:           respMsg,
 			},
 		},
 		{
