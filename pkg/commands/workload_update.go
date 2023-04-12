@@ -20,21 +20,17 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/logs"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/wait"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/printer"
@@ -151,34 +147,23 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	if okToUpdate && (opts.Wait || anyTail) {
 		c.Infof("Waiting for workload %q to become ready...\n", opts.Name)
 
-		workers := []wait.Worker{
-			func(ctx context.Context) error {
-				clientWithWatch, err := watch.GetWatcher(ctx, c)
-				if err != nil {
-					panic(err)
-				}
-				return wait.UntilCondition(ctx, clientWithWatch, types.NamespacedName{Name: workload.Name, Namespace: workload.Namespace}, &cartov1alpha1.WorkloadList{}, cartov1alpha1.WorkloadReadyConditionFunc)
-			},
+		// get workers to check if Ready condition lastTransitionTime ever changes
+		var statusChangeWorkers []wait.Worker
+		statusChangeWorkers = append(statusChangeWorkers, getStatusChangeWorker(c, currentWorkload))
+		if waitErr := raceWithTimeout(ctx, c, workload, opts.WaitTimeout, true, waitErrorForStatusChange, statusChangeWorkers); waitErr != nil {
+			return cli.SilenceError(waitErr)
 		}
+
+		// create new workers for wait and tail that need to be used in Race func
+		var workers []wait.Worker
+		workers = append(workers, getReadyConditionWorker(c, workload))
 
 		if anyTail {
-			workers = append(workers, func(ctx context.Context) error {
-				selector, err := labels.Parse(fmt.Sprintf("%s=%s", cartov1alpha1.WorkloadLabelName, workload.Name))
-				if err != nil {
-					panic(err)
-				}
-				containers := []string{}
-				return logs.Tail(ctx, c, opts.Namespace, selector, containers, time.Minute, opts.TailTimestamps)
-			})
+			workers = append(workers, getTailWorker(c, workload, opts.TailTimestamps))
 		}
 
-		if err := wait.Race(ctx, opts.WaitTimeout, workers); err != nil {
-			if err == context.DeadlineExceeded {
-				c.Printf("%s timeout after %s waiting for %q to become ready\n", printer.Serrorf("Error:"), opts.WaitTimeout, workload.Name)
-				return cli.SilenceError(err)
-			}
-			c.Eprintf("%s %s\n", printer.Serrorf("Error:"), err)
-			return cli.SilenceError(err)
+		if waitErr := raceWithTimeout(ctx, c, workload, opts.WaitTimeout, true, waitErrorForReadyCondition, workers); waitErr != nil && opts.Output == "" {
+			return cli.SilenceError(waitErr)
 		}
 		c.Infof("Workload %q is ready\n", workload.Name)
 	}

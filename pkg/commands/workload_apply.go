@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
@@ -31,7 +32,6 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/wait"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/printer"
 )
 
 type WorkloadApplyOptions struct {
@@ -49,6 +49,8 @@ const (
 	mergeUpdateStrategy   = "merge"
 	replaceUpdateStrategy = "replace"
 )
+
+type WorkloadTimeoutStashKey struct{}
 
 func (opts *WorkloadApplyOptions) Validate(ctx context.Context) validation.FieldErrors {
 	errs := validation.FieldErrors{}
@@ -136,6 +138,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 	workload.Name = opts.Name
 	workload.Namespace = opts.Namespace
 	workloadExists := currentWorkload != nil
+
 	ctx = opts.ApplyOptionsToWorkload(ctx, workload, workloadExists)
 
 	// validate complex flag interactions with existing state
@@ -206,30 +209,36 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 		if opts.Wait || anyTail {
 			cli.PrintPrompt(shouldPrint, c.Infof, "Waiting for workload %q to become ready...\n", opts.Name)
 
-			workers = opts.GetReadyConditionWorkers(c, workload, workers)
+			if workloadExists {
+				statusChangeWorkers := []wait.Worker{getStatusChangeWorker(c, currentWorkload)}
 
-			if anyTail {
-				workers = opts.GetTailWorkers(c, workload, workers)
-			}
+				timeout := opts.WaitTimeout
+				stashedTimeout, ok := ctx.Value(WorkloadTimeoutStashKey{}).(string)
+				if ok && stashedTimeout != "" {
+					if parsedTimeout, err := time.ParseDuration(stashedTimeout); err == nil {
+						timeout = parsedTimeout
+					}
+				}
 
-			err := wait.Race(ctx, opts.WaitTimeout, workers)
-			// print wait error only if output is not set or it was not used with --yes
-			if err != nil {
-				if err == context.DeadlineExceeded {
-					cli.PrintPrompt(shouldPrint, c.Printf, "%s timeout after %s waiting for %q to become ready\n", printer.Serrorf("Error:"), opts.WaitTimeout, workload.Name)
-				} else {
-					cli.PrintPrompt(shouldPrint, c.Eprintf, "%s %s\n", printer.Serrorf("Error:"), err)
+				if waitErr := raceWithTimeout(ctx, c, workload, timeout, shouldPrint, waitErrorForStatusChange, statusChangeWorkers); waitErr != nil && opts.Output == "" {
+					return cli.SilenceError(waitErr)
 				}
 			}
-			// do not return if --output is set
-			// because workload has to be printed despite it's in a failing state
-			if err != nil && opts.Output == "" {
-				return cli.SilenceError(err)
+
+			workers = append(workers, getReadyConditionWorker(c, workload))
+
+			if anyTail {
+				workers = append(workers, getTailWorker(c, workload, opts.TailTimestamps))
+			}
+
+			waitErr := raceWithTimeout(ctx, c, workload, opts.WaitTimeout, shouldPrint, waitErrorForReadyCondition, workers)
+			if waitErr != nil && opts.Output == "" {
+				return cli.SilenceError(waitErr)
 			}
 
 			// since there is a possibility that wait failed but did not return
 			// make sure this prompt is printed only if there is no error
-			if err == nil {
+			if waitErr == nil {
 				cli.PrintPrompt(shouldPrint, c.Infof, "Workload %q is ready\n\n", workload.Name)
 			}
 		}
