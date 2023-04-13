@@ -151,6 +151,12 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 		return nil
 	}
 
+	if opts.useLSP(currentWorkload) {
+		if err := checkLSPHealth(ctx, c); err != nil {
+			return err
+		}
+	}
+
 	if err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
 		return err
 	}

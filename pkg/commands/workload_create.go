@@ -101,6 +101,13 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	}
 
 	var okToCreate bool
+
+	if opts.useLSP(nil) {
+		if err := checkLSPHealth(ctx, c); err != nil {
+			return err
+		}
+	}
+
 	shouldPrint := opts.Output == "" || (opts.Output != "" && !opts.Yes)
 	if err := opts.PublishLocalSource(ctx, c, nil, workload, shouldPrint); err != nil {
 		return err

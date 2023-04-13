@@ -51,6 +51,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/validation"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/wait"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/watch"
+	"github.com/vmware-tanzu/apps-cli-plugin/pkg/commands/lsp"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/completion"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/flags"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/logger"
@@ -805,6 +806,27 @@ func getClusterSupplyChainTypeSelectors(fields []metav1.LabelSelectorRequirement
 	}
 
 	return values
+}
+
+func (opts *WorkloadOptions) useLSP(wld *cartov1alpha1.Workload) bool {
+	return (opts.LocalPath != "" && opts.SourceImage == "" && wld == nil) ||
+		(wld != nil && wld.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) && opts.LocalPath != "" && opts.SourceImage == "")
+}
+
+func checkLSPHealth(ctx context.Context, c *cli.Config) error {
+	if s, err := lsp.GetStatus(ctx, c); err != nil {
+		return err
+	} else {
+		switch {
+		case !s.UserHasPermission:
+			return fmt.Errorf("Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nError: %s", s.Message)
+		case !s.Reachable:
+			return fmt.Errorf("Local source proxy is not installed or the deployment is not healthy. Either install it or use --source-image flag\nError: %s", s.Message)
+		case !s.UpstreamAuthenticated:
+			return fmt.Errorf("Local source proxy failed to upload source to the repository\nError: %s", s.Message)
+		}
+	}
+	return nil
 }
 
 func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd *cobra.Command) {
