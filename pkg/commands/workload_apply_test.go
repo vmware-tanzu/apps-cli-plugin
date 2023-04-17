@@ -7155,7 +7155,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &v1alpha1.Source{
+						Source: &cartov1alpha1.Source{
 							Image: ":default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652",
 						},
 					},
@@ -7205,7 +7205,7 @@ To get status: "tanzu apps workload get my-workload"
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &v1alpha1.Source{
+						Source: &cartov1alpha1.Source{
 							Image: ":default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652",
 						},
 					},
@@ -7420,7 +7420,7 @@ To get status: "tanzu apps workload get my-workload"
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &v1alpha1.Source{
+						Source: &cartov1alpha1.Source{
 							Image: ":default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652",
 						},
 					},
