@@ -11,7 +11,7 @@ were in a YAML file.
 <details><summary>Example</summary>
 
 ```bash
-tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.3 --type web
+tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.5.0 --type web
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -25,7 +25,7 @@ tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmwar
      10 + |  source:
      11 + |    git:
      12 + |      ref:
-     13 + |        tag: tap-1.3
+     13 + |        tag: tap-1.5.0
      14 + |      url: https://github.com/vmware-tanzu/application-accelerator-samples
      15 + |    subPath: tanzu-java-web-app
 ❓ Do you want to create this workload? [yN]:
@@ -53,7 +53,7 @@ multiple times. These annotations are passed as parameters to be processed in th
 <details><summary>Example</summary>
 
 ```bash
-tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.3 --type web --annotation tag=tap-1.3 --annotation name="Tanzu Java Web"
+tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.5.0 --type web --annotation tag=tap-1.5.0 --annotation name="Tanzu Java Web"
 🔎 Create workload:
     1 + |---
     2 + |apiVersion: carto.run/v1alpha1
@@ -68,11 +68,11 @@ tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmwar
    11 + |  - name: annotations
    12 + |    value:
    13 + |      name: Tanzu Java Web
-   14 + |      tag: tap-1.3
+   14 + |      tag: tap-1.5.0
    15 + |  source:
    16 + |    git:
    17 + |      ref:
-   18 + |        tag: tap-1.3
+   18 + |        tag: tap-1.5.0
    19 + |      url: https://github.com/vmware-tanzu/application-accelerator-samples
    20 + |    subPath: tanzu-java-web-app
 ```
@@ -91,11 +91,11 @@ tanzu apps workload apply tanzu-java-web-app --annotation tag-
 11, 11   |  - name: annotations
 12, 12   |    value:
 13, 13   |      name: Tanzu Java Web
-14     - |      tag: tap-1.3
+14     - |      tag: tap-1.5.0
 15, 14   |  source:
 16, 15   |    git:
 17, 16   |      ref:
-18, 17   |        tag: tap-1.3
+18, 17   |        tag: tap-1.5.0
 ...
 ❓ Really update the workload "tanzu-java-web-app"? [yN]:
 ```
@@ -109,7 +109,7 @@ The app of which the workload is part of. This is part of the workload metadata 
 <details><summary>Example</summary>
 
 ```bash
-tanzu apps workload apply tanzu-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.3 --type web --app tanzu-java-web-app
+tanzu apps workload apply tanzu-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.5.0 --type web --app tanzu-java-web-app
 🔎 Create workload:
     1 + |---
     2 + |apiVersion: carto.run/v1alpha1
@@ -124,7 +124,7 @@ tanzu apps workload apply tanzu-app --git-repo https://github.com/vmware-tanzu/a
    11 + |  source:
    12 + |    git:
    13 + |      ref:
-   14 + |        tag: tap-1.3
+   14 + |        tag: tap-1.5.0
    15 + |      url: https://github.com/vmware-tanzu/application-accelerator-samples
    16 + |    subPath: tanzu-java-web-app
 ❓ Do you want to create this workload? [yN]:
@@ -145,7 +145,7 @@ chain where some **build** specific behavior is set or changed.
 <details><summary>Example</summary>
 
 ```bash
-tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.3 --type web --build-env JAVA_VERSION=1.8
+tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.5.0 --type web --build-env JAVA_VERSION=1.8
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -163,7 +163,7 @@ tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmwar
      14 + |  source:
      15 + |    git:
      16 + |      ref:
-     17 + |        tag: tap-1.3
+     17 + |        tag: tap-1.5.0
      18 + |      url: https://github.com/vmware-tanzu/application-accelerator-samples
      19 + |    subPath: tanzu-java-web-app
 ❓ Do you want to create this workload? [yN]:
@@ -190,7 +190,7 @@ tanzu apps workload apply tanzu-java-web-app --build-env JAVA_VERSION-
   14, 10   |  source:
   15, 11   |    git:
   16, 12   |      ref:
-  17, 13   |        tag: tap-1.3
+  17, 13   |        tag: tap-1.5.0
 ...
 ❓ Really update the workload "tanzu-java-web-app"? [yN]:
 ```
@@ -237,7 +237,7 @@ an output of the final structure of the workload.
 <details><summary>Example</summary>
 
 ```bash
-tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.3 --type web --build-env JAVA_VERSION=1.8 --param-yaml server=$'port: 8080\nmanagement-port: 8181' --dry-run
+tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.5.0 --type web --build-env JAVA_VERSION=1.8 --param-yaml server=$'port: 8080\nmanagement-port: 8181' --dry-run
 ---
 apiVersion: carto.run/v1alpha1
 kind: Workload
@@ -260,7 +260,7 @@ spec:
   source:
     git:
       ref:
-        tag: tap-1.3
+        tag: tap-1.5.0
       url: https://github.com/vmware-tanzu/application-accelerator-samples
     subPath: tanzu-java-web-app
 status:
@@ -277,7 +277,7 @@ status:
  <details><summary>Example</summary>
 
 ```bash
-tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.3 --type web --env NAME="Tanzu Java App"
+tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.5.0 --type web --env NAME="Tanzu Java App"
 🔎 Create workload:
       1 + |---
       2 + |apiVersion: carto.run/v1alpha1
@@ -294,7 +294,7 @@ tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmwar
      13 + |  source:
      14 + |    git:
      15 + |      ref:
-     16 + |        tag: tap-1.3
+     16 + |        tag: tap-1.5.0
      17 + |      url: https://github.com/vmware-tanzu/application-accelerator-samples
      18 + |    subPath: tanzu-java-web-app
 ❓ Do you want to create this workload? [yN]:
@@ -316,7 +316,7 @@ tanzu apps workload apply tanzu-java-web-app --env NAME-
   13, 10   |  source:
   14, 11   |    git:
   15, 12   |      ref:
-  16, 13   |        tag: tap-1.3
+  16, 13   |        tag: tap-1.5.0
 ...
 ❓ Really update the workload "tanzu-java-web-app"? [yN]:
 ```
@@ -357,7 +357,7 @@ tanzu apps workload apply tanzu-java-web-app -f java-app-workload.yaml --param-y
       19 + |  source:
       20 + |    git:
       21 + |      ref:
-      22 + |        tag: tap-1.3
+      22 + |        tag: tap-1.5.0
       23 + |      url: url: https://github.com/vmware-tanzu/application-accelerator-samples
       24 + |    subPath: tanzu-java-web-app
 ❓ Do you want to create this workload? [yN]:
@@ -367,13 +367,18 @@ tanzu apps workload apply tanzu-java-web-app -f java-app-workload.yaml --param-y
 
 ### <a id="apply-git-repo"></a> `--git-repo`
 
-The Git repository from which the workload is created. With this, `--git-tag`, `--git-commit` or
-`--git-branch` is specified.
+The Git repository from which the workload is created. With this, either `--git-tag`, `--git-commit`,
+`--git-branch` or the three of them can be specified. When setting this flag to empty string, the whole
+`spec.source.git` section is removed from workload definition.
+
+For Git source, if all the flags are specified (`--git-tag`, `--git-commit`,
+`--git-branch`) the revision to which the workload will checkout will entirely depend on the source controller.
+<!-- TODO: should we add the fluxCD source controller behavior as an example? -->
 
 ### <a id="apply-git-branch"></a> `--git-branch`
 
-The branch in a Git repository from where the workload is created. This is specified with a commit
-or a tag.
+The branch in a Git repository from where the workload is created. Commit and tag can also be specified alongside this flag.
+It can be unset by defining it as empty string when applying a workload (`--git-branch ""`).
 
 <details><summary>Example</summary>
 
@@ -402,17 +407,17 @@ tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmwar
 
 ### <a id="apply-git-tag"></a> `--git-tag`
 
-The tag in a Git repository from which the workload is created. This is used with `--git-commit`
-or `--git-branch`.
+The tag in a Git repository from which the workload is created. Can be unset by defining it as empty string when applying a workload (`--git-tag ""`).
 
 ### <a id="apply-git-commit"></a> `--git-commit`
 
-Commit in Git repository from where the workload is resolved. Can be used with `--git-branch` or `git-tag`.
+Commit in Git repository from where the workload is resolved. Either `--git-branch` or `--git-tag` can be specified with it too.
+It can be unset by defining it as empty string when applying a workload (`--git-commit ""`).
 
 <details><summary>Example</summary>
 
 ```bash
-tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.3 --git-commit 1c4cf82e499f7e46da182922d4097908d4817320 --type web
+tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-commit 1c4cf82e499f7e46da182922d4097908d4817320 --type web
 🔎 Create workload:
     1 + |---
     2 + |apiVersion: carto.run/v1alpha1
@@ -427,9 +432,8 @@ tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmwar
    11 + |    git:
    12 + |      ref:
    13 + |        commit: 1c4cf82e499f7e46da182922d4097908d4817320
-   14 + |        tag: tap-1.3
-   15 + |      url: https://github.com/vmware-tanzu/application-accelerator-samples
-   16 + |    subPath: tanzu-java-web-app
+   14 + |      url: https://github.com/vmware-tanzu/application-accelerator-samples
+   15 + |    subPath: tanzu-java-web-app
 ❓ Do you want to create this workload? [yN]:
 ```
 
@@ -465,7 +469,7 @@ tanzu apps workload apply tanzu-java-web-app --image private.repo.domain.com/tan
       19 + |  source:
       20 + |    git:
       21 + |      ref:
-      22 + |        tag: tap-1.3
+      22 + |        tag: tap-1.5.0
       23 + |      url: https://github.com/vmware-tanzu/application-accelerator-samples
       24 + |    subPath: tanzu-java-web-app
 ❓ Do you want to create this workload? [yN]:
@@ -798,8 +802,75 @@ tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmwar
    12 + |      ref:
    13 + |        branch: main
    14 + |      url: https://github.com/vmware-tanzu/application-accelerator-samples
-  15 + |    subPath: tanzu-java-web-app
+   15 + |    subPath: tanzu-java-web-app
 ❓ Do you want to create this workload? [yN]:
+```
+
+</details>
+
+### <a id="apply-output"></a> `--output`, `-o`
+
+This flag can be used to retrieve a workload right after it's applied in the specified format (`yaml`, `yml`, `json`).
+If used with `--yes` flag, all prompts are skipped and it only returns the workload definition.
+It can also be used with `--wait` or `--tail` flags in order to return the workload with its status.
+
+<details><summary>Example</summary>
+
+```bash
+tanzu apps workload apply rmq-sample-app --git-repo https://github.com/jhvhs/rabbitmq-sample --git-branch main --service-ref "rmq=rabbitmq.com/v1beta1:RabbitmqCluster:example-rabbitmq-cluster-1" --type web --output yaml
+🔎 Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: rmq-sample-app
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  serviceClaims:
+     11 + |  - name: rmq
+     12 + |    ref:
+     13 + |      apiVersion: rabbitmq.com/v1beta1
+     14 + |      kind: RabbitmqCluster
+     15 + |      name: example-rabbitmq-cluster-1
+     16 + |  source:
+     17 + |    git:
+     18 + |      ref:
+     19 + |        branch: main
+     20 + |      url: https://github.com/jhvhs/rabbitmq-sample
+❓ Do you want to create this workload? [yN]: y
+👍 Created workload "rmq-sample-app"
+
+To see logs:   "tanzu apps workload tail rmq-sample-app --timestamp --since 1h"
+To get status: "tanzu apps workload get rmq-sample-app"
+
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  creationTimestamp: "2023-04-04T15:18:13Z"
+  generation: 1
+  labels:
+    apps.tanzu.vmware.com/workload-type: web
+  name: rmq-sample-app
+  namespace: default
+  resourceVersion: "184169566"
+  uid: 6588d398-b803-47e3-b31a-23d9a1a633a9
+spec:
+  serviceClaims:
+  - name: rmq
+    ref:
+      apiVersion: rabbitmq.com/v1beta1
+      kind: RabbitmqCluster
+      name: example-rabbitmq-cluster-1
+  source:
+    git:
+      ref:
+        branch: main
+      url: https://github.com/jhvhs/rabbitmq-sample
+status:
+  supplyChainRef: {}
 ```
 
 </details>
@@ -1399,14 +1470,14 @@ Holds the command until the workload is ready.
 <details><summary>Example</summary>
 
 ```bash
-tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.3 --type web --wait
+tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.5.0 --type web --wait
 🔎 Update workload:
 ...
 10, 10   |  source:
 11, 11   |    git:
 12, 12   |      ref:
 13, 13   |        branch: main
-    14 + |        tag: tap-1.3
+    14 + |        tag: tap-1.5.0
 14, 15   |      url: https://github.com/vmware-tanzu/application-accelerator-samples
 15, 16   |    subPath: tanzu-java-web-app
 ❓ Really update the workload "tanzu-java-web-app"? Yes
@@ -1428,15 +1499,15 @@ Sets a timeout to wait for the workload to become ready.
 <details><summary>Example</summary>
 
 ```bash
-tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.3-take1 --type web --wait --wait-timeout 1m
+tanzu apps workload apply tanzu-java-web-app --git-repo https://github.com/vmware-tanzu/application-accelerator-samples --sub-path tanzu-java-web-app --git-tag tap-1.5.0-take1 --type web --wait --wait-timeout 1m
 🔎 Update workload:
 ...
 10, 10   |  source:
 11, 11   |    git:
 12, 12   |      ref:
 13, 13   |        branch: main
-14     - |        tag: tap-1.3
-    14 + |        tag: tap-1.3-take1
+14     - |        tag: tap-1.5.0
+    14 + |        tag: tap-1.5.0-take1
 15, 15   |      url: https://github.com/vmware-tanzu/application-accelerator-samples
 16, 16   |    subPath: tanzu-java-web-app
 ❓ Really update the workload "tanzu-java-web-app"? Yes
