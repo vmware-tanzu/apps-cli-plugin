@@ -19,7 +19,10 @@ package commands_test
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	runtm "runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -115,6 +118,13 @@ func TestWorkloadUpdateCommand(t *testing.T) {
 			d.Name("spring-petclinic")
 			d.Namespace(defaultNamespace)
 		})
+	respCreator := func(status int, body string) *http.Response {
+		return &http.Response{
+			Status:     http.StatusText(status),
+			StatusCode: status,
+			Body:       io.NopCloser(strings.NewReader(body)),
+		}
+	}
 	table := clitesting.CommandTestSuite{
 		{
 			Name:        "invalid args",
@@ -1460,6 +1470,267 @@ To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 `,
+		},
+		{
+			Name: "update from local source using lsp",
+			Skip: runtm.GOOS == "windows",
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
+					}),
+			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+						Annotations: map[string]string{
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Image: ":default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652",
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
+Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.cluster.local/source:default-my-workload"...
+📥 Published source
+
+🔎 Update workload:
+...
+  2,  2   |apiVersion: carto.run/v1alpha1
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  annotations:
+  6     - |    local-source-proxy.apps.tanzu.vmware.com: my-old-image
+      6 + |    local-source-proxy.apps.tanzu.vmware.com: :default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652
+  7,  7   |  labels:
+  8,  8   |    apps.tanzu.vmware.com/workload-type: web
+  9,  9   |  name: my-workload
+ 10, 10   |  namespace: default
+ 11     - |spec: {}
+     11 + |spec:
+     12 + |  source:
+     13 + |    image: :default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`, localSource),
+		},
+		{
+			Name: "update from local source using lsp with status 204",
+			Skip: runtm.GOOS == "windows",
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
+					}),
+			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "204"}`)),
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+						Annotations: map[string]string{
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Image: ":default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652",
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+❗ WARNING: the update command has been deprecated and will be removed in a future update. Please use "tanzu apps workload apply" instead.
+
+Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.cluster.local/source:default-my-workload"...
+📥 Published source
+
+🔎 Update workload:
+...
+  2,  2   |apiVersion: carto.run/v1alpha1
+  3,  3   |kind: Workload
+  4,  4   |metadata:
+  5,  5   |  annotations:
+  6     - |    local-source-proxy.apps.tanzu.vmware.com: my-old-image
+      6 + |    local-source-proxy.apps.tanzu.vmware.com: :default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652
+  7,  7   |  labels:
+  8,  8   |    apps.tanzu.vmware.com/workload-type: web
+  9,  9   |  name: my-workload
+ 10, 10   |  namespace: default
+ 11     - |spec: {}
+     11 + |spec:
+     12 + |  source:
+     13 + |    image: :default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`, localSource),
+		},
+		{
+			Name: "update from local source using lsp with redirect registry error",
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
+					}),
+			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "302", "message": "Registry moved found"}`)),
+			ShouldError:         true,
+			Verify: func(t *testing.T, output string, err error) {
+				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry moved found"
+				if err.Error() != msg {
+					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
+				}
+			},
+		},
+		{
+			Name: "update from local source using lsp with no upstream auth",
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
+					}),
+			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "401", "message": "401 Status user UNAUTHORIZED for registry"}`)),
+			ShouldError:         true,
+			Verify: func(t *testing.T, output string, err error) {
+				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- 401 Status user UNAUTHORIZED for registry"
+				if err.Error() != msg {
+					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
+				}
+			},
+		},
+		{
+			Name: "update from local source using lsp with not found registry error",
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
+					}),
+			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "404", "message": "Registry not found"}`)),
+			ShouldError:         true,
+			Verify: func(t *testing.T, output string, err error) {
+				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry not found"
+				if err.Error() != msg {
+					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
+				}
+			},
+		},
+		{
+			Name: "update from local source using lsp with internal error server registry error",
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
+					}),
+			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "500", "message": "Registry internal error"}`)),
+			ShouldError:         true,
+			Verify: func(t *testing.T, output string, err error) {
+				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry internal error"
+				if err.Error() != msg {
+					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
+				}
+			},
+		},
+		{
+			Name: "update from local source using lsp with redirect response",
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
+					}),
+			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusFound, `{"message": "302 Status Found"}`)),
+			ShouldError:         true,
+			Verify: func(t *testing.T, output string, err error) {
+				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nError: Local source proxy was moved and is not reachable in the defined url.\nErrors:\n- 302 Status Found"
+				if err.Error() != msg {
+					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
+				}
+			},
+		},
+		{
+			Name: "update from local source using lsp with no user permission",
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
+					}),
+			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusUnauthorized, `{"message": "401 Status Unauthorized"}`)),
+			ShouldError:         true,
+			Verify: func(t *testing.T, output string, err error) {
+				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nError: The current user does not have permission to access the local source proxy.\nErrors:\n- 401 Status Unauthorized"
+				if err.Error() != msg {
+					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
+				}
+			},
+		},
+		{
+			Name: "update from local source using lsp with no found error",
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
+					}),
+			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusNotFound, `{"message": "404 Status Not Found"}`)),
+			ShouldError:         true,
+			Verify: func(t *testing.T, output string, err error) {
+				msg := "Local source proxy is not installed or the deployment is not healthy. Either install it or use --source-image flag\nError: Local source proxy is not installed on the cluster.\nErrors:\n- 404 Status Not Found"
+				if err.Error() != msg {
+					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
+				}
+			},
+		},
+		{
+			Name: "update from local source using lsp with transport error",
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
+					}),
+			},
+			ShouldError: true,
+			Verify: func(t *testing.T, output string, err error) {
+				msg := "client transport not provided"
+				if err.Error() != msg {
+					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
+				}
+			},
 		},
 	}
 

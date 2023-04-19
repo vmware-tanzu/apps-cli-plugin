@@ -124,6 +124,12 @@ func (opts *WorkloadUpdateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		return nil
 	}
 
+	if opts.useLSP(currentWorkload) {
+		if err := checkLSPHealth(ctx, c); err != nil {
+			return err
+		}
+	}
+
 	// If user answers yes to survey prompt about publishing source, continue with workload update
 	if err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, true); err != nil {
 		return err
