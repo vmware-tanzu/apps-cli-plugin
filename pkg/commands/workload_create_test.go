@@ -361,7 +361,7 @@ To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
-Error: Failed to become ready: a hopefully informative message about what went wrong
+Error waiting for ready condition: Failed to become ready: a hopefully informative message about what went wrong
 `,
 		},
 		{
@@ -437,7 +437,7 @@ To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
-Error: timeout after 1ns waiting for "my-workload" to become ready
+Error waiting for ready condition: timeout after 1ns waiting for "my-workload" to become ready
 `,
 		},
 		{
@@ -1847,7 +1847,7 @@ To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
 ...tail output...
-Error: failed to create watcher
+Error waiting for ready condition: failed to create watcher
 {
 	"apiVersion": "carto.run/v1alpha1",
 	"kind": "Workload",
@@ -1964,7 +1964,7 @@ To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
-Error: failed to create watcher
+Error waiting for ready condition: failed to create watcher
 {
 	"apiVersion": "carto.run/v1alpha1",
 	"kind": "Workload",

@@ -39,6 +39,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry"
 
@@ -63,6 +64,11 @@ const (
 	AnnotationReservedKey     = "annotations"
 	MavenOverwrittenNoticeMsg = "Maven configuration flags have overwritten values provided by \"--params-yaml\"."
 	WebTypeReservedKey        = "web"
+)
+
+const (
+	waitErrorForStatusChange   = "Error waiting for status change"
+	waitErrorForReadyCondition = "Error waiting for ready condition"
 )
 
 func NewWorkloadCommand(ctx context.Context, c *cli.Config) *cobra.Command {
@@ -771,8 +777,48 @@ func isUrl(str string) (bool, error) {
 	}
 }
 
-func (opts *WorkloadOptions) GetReadyConditionWorkers(c *cli.Config, workload *cartov1alpha1.Workload, workers []wait.Worker) []wait.Worker {
-	workers = append(workers, func(ctx context.Context) error {
+func raceWithTimeout(ctx context.Context, c *cli.Config, workload *cartov1alpha1.Workload, timeout time.Duration, shouldPrint bool, errMsg string, workers []wait.Worker) error {
+	err := wait.Race(ctx, timeout, workers)
+	// print wait error only if output is not set or it was not used with --yes
+	if err != nil {
+		if err == context.DeadlineExceeded {
+			cli.PrintPrompt(shouldPrint, c.Printf, "%s timeout after %s waiting for %q to become ready\n", printer.Serrorf(fmt.Sprintf("%s:", errMsg)), timeout, workload.Name)
+		} else {
+			cli.PrintPrompt(shouldPrint, c.Eprintf, "%s %s\n", printer.Serrorf(fmt.Sprintf("%s:", errMsg)), err)
+		}
+	}
+	return err
+}
+
+func getStatusChangeWorker(c *cli.Config, workload *cartov1alpha1.Workload) wait.Worker {
+	worker := wait.Worker(func(ctx context.Context) error {
+		previousReadyCond := printer.FindCondition(workload.Status.Conditions, cartov1alpha1.WorkloadConditionReady)
+		clientWithWatch, err := watch.GetWatcher(ctx, c)
+		if err != nil {
+			return err
+		}
+		return wait.UntilCondition(ctx, clientWithWatch, types.NamespacedName{Name: workload.Name, Namespace: workload.Namespace}, &cartov1alpha1.WorkloadList{}, func(target client.Object) (bool, error) {
+			obj, ok := target.(*cartov1alpha1.Workload)
+			if !ok {
+				return false, nil
+			}
+			if obj.Generation != obj.Status.ObservedGeneration {
+				return false, nil
+			}
+			currentReadyCond := printer.FindCondition(obj.Status.Conditions, cartov1alpha1.WorkloadConditionReady)
+			if previousReadyCond != nil && currentReadyCond != nil {
+				if previousReadyCond.LastTransitionTime.Before(&currentReadyCond.LastTransitionTime) {
+					return true, nil
+				}
+			}
+			return false, nil
+		})
+	})
+	return worker
+}
+
+func getReadyConditionWorker(c *cli.Config, workload *cartov1alpha1.Workload) wait.Worker {
+	worker := wait.Worker(func(ctx context.Context) error {
 		clientWithWatch, err := watch.GetWatcher(ctx, c)
 		if err != nil {
 			return err
@@ -780,20 +826,20 @@ func (opts *WorkloadOptions) GetReadyConditionWorkers(c *cli.Config, workload *c
 		return wait.UntilCondition(ctx, clientWithWatch, types.NamespacedName{Name: workload.Name, Namespace: workload.Namespace}, &cartov1alpha1.WorkloadList{}, cartov1alpha1.WorkloadReadyConditionFunc)
 	})
 
-	return workers
+	return worker
 }
 
-func (opts *WorkloadOptions) GetTailWorkers(c *cli.Config, workload *cartov1alpha1.Workload, workers []wait.Worker) []wait.Worker {
-	workers = append(workers, func(ctx context.Context) error {
+func getTailWorker(c *cli.Config, workload *cartov1alpha1.Workload, tailTimestamps bool) wait.Worker {
+	worker := wait.Worker(func(ctx context.Context) error {
 		selector, err := labels.Parse(fmt.Sprintf("%s=%s", cartov1alpha1.WorkloadLabelName, workload.Name))
 		if err != nil {
 			return err
 		}
 		containers := []string{}
-		return logs.Tail(ctx, c, opts.Namespace, selector, containers, time.Minute, opts.TailTimestamps)
+		return logs.Tail(ctx, c, workload.Namespace, selector, containers, time.Minute, tailTimestamps)
 	})
 
-	return workers
+	return worker
 }
 
 func getClusterSupplyChainTypeSelectors(fields []metav1.LabelSelectorRequirement) []string {

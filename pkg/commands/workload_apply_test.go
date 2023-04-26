@@ -43,7 +43,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis"
-	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cartov1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 	cli "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/logs"
@@ -460,7 +459,7 @@ status:
 						d.Image("ubuntu:bionic")
 					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
 					d.Conditions(metav1.Condition{
-						Type:   "my-type",
+						Type:   cartov1alpha1.WorkloadConditionReady,
 						Status: metav1.ConditionTrue,
 					}, metav1.Condition{
 						Type:   "my-other-type",
@@ -493,7 +492,7 @@ status:
 					Status: cartov1alpha1.WorkloadStatus{
 						Conditions: []metav1.Condition{
 							{
-								Type:   "my-type",
+								Type:   "Ready",
 								Status: metav1.ConditionTrue,
 							},
 							{
@@ -529,7 +528,7 @@ status:
     message: ""
     reason: ""
     status: "True"
-    type: my-type
+    type: Ready
   - lastTransitionTime: null
     message: ""
     reason: ""
@@ -660,6 +659,9 @@ status:
 							{
 								Type:   cartov1alpha1.WorkloadConditionReady,
 								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 12, 0, time.UTC),
+								},
 							},
 						},
 					},
@@ -682,8 +684,11 @@ status:
 						d.Image("ubuntu:bionic")
 					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
 					d.Conditions(metav1.Condition{
-						Type:   "my-type",
+						Type:   cartov1alpha1.WorkloadConditionReady,
 						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
 					}, metav1.Condition{
 						Type:   "my-other-type",
 						Status: metav1.ConditionTrue,
@@ -715,8 +720,11 @@ status:
 					Status: cartov1alpha1.WorkloadStatus{
 						Conditions: []metav1.Condition{
 							{
-								Type:   "my-type",
+								Type:   cartov1alpha1.WorkloadConditionReady,
 								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 12, 0, time.UTC),
+								},
 							},
 							{
 								Type:   "my-other-type",
@@ -756,11 +764,11 @@ status:
 	"status": {
 		"conditions": [
 			{
-				"lastTransitionTime": null,
+				"lastTransitionTime": "2019-06-29T01:44:05Z",
 				"message": "",
 				"reason": "",
 				"status": "True",
-				"type": "my-type"
+				"type": "Ready"
 			},
 			{
 				"lastTransitionTime": null,
@@ -973,11 +981,11 @@ To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
-Error: timeout after 1ns waiting for "my-workload" to become ready
+Error waiting for ready condition: timeout after 1ns waiting for "my-workload" to become ready
 `,
 		},
 		{
-			Name: "successful wait for ready cond",
+			Name: "create - successful wait for ready cond",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -1052,7 +1060,7 @@ Workload "my-workload" is ready
 `,
 		},
 		{
-			Name: "tail while waiting for ready cond",
+			Name: "create - tail while waiting for ready cond",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.TailFlagName},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -1169,7 +1177,7 @@ Workload "my-workload" is ready
 			ShouldError: true,
 		},
 		{
-			Name: "watcher error",
+			Name: "create - watcher error",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				fakewatch := watchfakes.NewFakeWithWatch(true, config.Client, []watch.Event{})
@@ -1274,7 +1282,7 @@ To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
-Error: Failed to become ready: a hopefully informative message about what went wrong
+Error waiting for ready condition: Failed to become ready: a hopefully informative message about what went wrong
 `,
 		},
 		{
@@ -1955,14 +1963,137 @@ Error: conflict updating workload, the object was modified by another user; plea
 `,
 		},
 		{
-			Name: "update - wait error with timeout",
+			Name: "update - wait for ready condition - error with timeout",
 			Skip: runtm.GOOS == "windows",
 			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					}),
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   cartov1alpha1.WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
+			},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 05, 01, time.UTC),
+								},
+							},
+						},
+					},
+				}
+
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = context.WithValue(ctx, commands.WorkloadTimeoutStashKey{}, "1s")
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+							{
+								Name: "database",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "PostgreSQL",
+									Name:       "my-prod-db",
+								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   "Ready",
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 05, 01, time.UTC),
+								},
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
+				},
+			},
+			ShouldError: true,
+			ExpectOutput: `
+🔎 Update workload:
+...
+  7,  7   |  name: my-workload
+  8,  8   |  namespace: default
+  9,  9   |spec:
+ 10, 10   |  image: ubuntu:bionic
+     11 + |  serviceClaims:
+     12 + |  - name: database
+     13 + |    ref:
+     14 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
+     15 + |      kind: PostgreSQL
+     16 + |      name: my-prod-db
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+Waiting for workload "my-workload" to become ready...
+Error waiting for ready condition: timeout after 1ns waiting for "my-workload" to become ready
+`,
+		},
+		{
+			Name: "update - wait timeout when there is no transition time",
+			Skip: runtm.GOOS == "windows",
+			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   cartov1alpha1.WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -2010,6 +2141,21 @@ Error: conflict updating workload, the object was modified by another user; plea
 							},
 						},
 					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   "Ready",
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 05, 01, time.UTC),
+								},
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
 				},
 			},
 			ShouldError: true,
@@ -2032,7 +2178,211 @@ To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
-Error: timeout after 1ns waiting for "my-workload" to become ready
+Error waiting for status change: timeout after 1ns waiting for "my-workload" to become ready
+`,
+		},
+		{
+			Name: "update - wait timeout when there is no ready cond",
+			Skip: runtm.GOOS == "windows",
+			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   "my-type",
+						Status: metav1.ConditionTrue,
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
+			},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+							{
+								Name: "database",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "PostgreSQL",
+									Name:       "my-prod-db",
+								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   "my-type",
+								Status: metav1.ConditionTrue,
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
+				},
+			},
+			ShouldError: true,
+			ExpectOutput: `
+🔎 Update workload:
+...
+  7,  7   |  name: my-workload
+  8,  8   |  namespace: default
+  9,  9   |spec:
+ 10, 10   |  image: ubuntu:bionic
+     11 + |  serviceClaims:
+     12 + |  - name: database
+     13 + |    ref:
+     14 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
+     15 + |      kind: PostgreSQL
+     16 + |      name: my-prod-db
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+Waiting for workload "my-workload" to become ready...
+Error waiting for status change: timeout after 1ns waiting for "my-workload" to become ready
+`,
+		},
+		{
+			Name: "update - wait for timestamp change error with timeout",
+			Skip: runtm.GOOS == "windows",
+			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   cartov1alpha1.WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
+			},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 05, 01, time.UTC),
+								},
+							},
+						},
+					},
+				}
+
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+							{
+								Name: "database",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "PostgreSQL",
+									Name:       "my-prod-db",
+								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   "Ready",
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 05, 01, time.UTC),
+								},
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
+				},
+			},
+			ShouldError: true,
+			ExpectOutput: `
+🔎 Update workload:
+...
+  7,  7   |  name: my-workload
+  8,  8   |  namespace: default
+  9,  9   |spec:
+ 10, 10   |  image: ubuntu:bionic
+     11 + |  serviceClaims:
+     12 + |  - name: database
+     13 + |    ref:
+     14 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
+     15 + |      kind: PostgreSQL
+     16 + |      name: my-prod-db
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+Waiting for workload "my-workload" to become ready...
+Error waiting for status change: timeout after 1ns waiting for "my-workload" to become ready
 `,
 		},
 		{
@@ -2042,7 +2392,18 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					}),
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   cartov1alpha1.WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -2060,6 +2421,9 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 								Status:  metav1.ConditionFalse,
 								Reason:  "OopsieDoodle",
 								Message: "a hopefully informative message about what went wrong",
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
 							},
 						},
 					},
@@ -2089,6 +2453,21 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 									Kind:       "PostgreSQL",
 									Name:       "my-prod-db",
 								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   "Ready",
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},
@@ -2114,7 +2493,7 @@ To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
-Error: Failed to become ready: a hopefully informative message about what went wrong
+Error waiting for ready condition: Failed to become ready: a hopefully informative message about what went wrong
 `,
 		},
 		{
@@ -2124,7 +2503,18 @@ Error: Failed to become ready: a hopefully informative message about what went w
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					}),
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   cartov1alpha1.WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -2140,6 +2530,9 @@ Error: Failed to become ready: a hopefully informative message about what went w
 							{
 								Type:   cartov1alpha1.WorkloadConditionReady,
 								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
 							},
 						},
 					},
@@ -2169,6 +2562,21 @@ Error: Failed to become ready: a hopefully informative message about what went w
 									Kind:       "PostgreSQL",
 									Name:       "my-prod-db",
 								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   "Ready",
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},
@@ -2214,6 +2622,9 @@ Workload "my-workload" is ready
 							{
 								Type:   cartov1alpha1.WorkloadConditionReady,
 								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
 							},
 						},
 					},
@@ -2239,7 +2650,18 @@ Workload "my-workload" is ready
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					}),
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   cartov1alpha1.WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -2260,6 +2682,21 @@ Workload "my-workload" is ready
 									Kind:       "PostgreSQL",
 									Name:       "my-prod-db",
 								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   "Ready",
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},
@@ -4998,7 +5435,8 @@ To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
-Error: failed to create watcher
+Error waiting for status change: failed to create watcher
+Error waiting for ready condition: failed to create watcher
 ---
 apiVersion: carto.run/v1alpha1
 kind: Workload
@@ -5024,6 +5462,158 @@ status:
     reason: ""
     status: "True"
     type: my-type
+  - lastTransitionTime: null
+    message: ""
+    reason: ""
+    status: "True"
+    type: my-other-type
+  supplyChainRef: {}
+`, clitesting.ToInteractTerminal("❓ Really update the workload %q? [yN]: y", workloadName), workloadName),
+		},
+		{
+			Name: "console interaction - output workload after update in yaml format with wait",
+			Args: []string{workloadName, flags.ServiceRefFlagName,
+				"database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db",
+				flags.OutputFlagName, printer.OutputFormatYml, flags.WaitFlagName},
+			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
+				workload := &cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
+							},
+						},
+					},
+				}
+				fakeWatcher := watchfakes.NewFakeWithWatch(false, config.Client, []watch.Event{
+					{Type: watch.Modified, Object: workload},
+				})
+				ctx = watchhelper.WithWatcher(ctx, fakeWatcher)
+				return ctx, nil
+			},
+			GivenObjects: []client.Object{
+				parent.
+					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+						d.Image("ubuntu:bionic")
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   cartov1alpha1.WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
+			},
+			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
+				c.ExpectString(clitesting.ToInteractTerminal("? Really update the workload %q? [yN]: ", workloadName))
+				c.Send(clitesting.InteractInputLine("y"))
+				c.ExpectString(clitesting.ToInteractOutput(`👍 Updated workload %q
+
+To see logs:   "tanzu apps workload tail %s --timestamp --since 1h"
+To get status: "tanzu apps workload get %s"`, workloadName, workloadName, workloadName))
+			},
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Image: "ubuntu:bionic",
+						ServiceClaims: []cartov1alpha1.WorkloadServiceClaim{
+							{
+								Name: "database",
+								Ref: &cartov1alpha1.WorkloadServiceClaimReference{
+									APIVersion: "services.tanzu.vmware.com/v1alpha1",
+									Kind:       "PostgreSQL",
+									Name:       "my-prod-db",
+								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+🔎 Update workload:
+...
+  7,  7   |  name: my-workload
+  8,  8   |  namespace: default
+  9,  9   |spec:
+ 10, 10   |  image: ubuntu:bionic
+     11 + |  serviceClaims:
+     12 + |  - name: database
+     13 + |    ref:
+     14 + |      apiVersion: services.tanzu.vmware.com/v1alpha1
+     15 + |      kind: PostgreSQL
+     16 + |      name: my-prod-db
+%s
+
+👍 Updated workload %q
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+Waiting for workload "my-workload" to become ready...
+Workload "my-workload" is ready
+
+---
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  creationTimestamp: "1970-01-01T00:00:01Z"
+  labels:
+    apps.tanzu.vmware.com/workload-type: web
+  name: my-workload
+  namespace: default
+  resourceVersion: "1000"
+spec:
+  image: ubuntu:bionic
+  serviceClaims:
+  - name: database
+    ref:
+      apiVersion: services.tanzu.vmware.com/v1alpha1
+      kind: PostgreSQL
+      name: my-prod-db
+status:
+  conditions:
+  - lastTransitionTime: "2019-06-29T01:44:05Z"
+    message: ""
+    reason: ""
+    status: "True"
+    type: Ready
   - lastTransitionTime: null
     message: ""
     reason: ""
@@ -5283,7 +5873,7 @@ To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
 ...tail output...
-Error: failed to create watcher
+Error waiting for ready condition: failed to create watcher
 {
 	"apiVersion": "carto.run/v1alpha1",
 	"kind": "Workload",
@@ -7363,7 +7953,7 @@ To get status: "tanzu apps workload get my-workload"
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &v1alpha1.Source{
+						Source: &cartov1alpha1.Source{
 							Image: ":default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652",
 						},
 					},

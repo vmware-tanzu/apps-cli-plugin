@@ -140,21 +140,13 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		if opts.Wait || anyTail {
 			cli.PrintPrompt(shouldPrint, c.Infof, "Waiting for workload %q to become ready...\n", opts.Name)
 
-			workers = opts.GetReadyConditionWorkers(c, workload, workers)
+			workers = append(workers, getReadyConditionWorker(c, workload))
 
 			if anyTail {
-				workers = opts.GetTailWorkers(c, workload, workers)
+				workers = append(workers, getTailWorker(c, workload, opts.TailTimestamps))
 			}
 
-			err := wait.Race(ctx, opts.WaitTimeout, workers)
-			// print wait error only if output is not set or it was not used with --yes
-			if err != nil {
-				if err == context.DeadlineExceeded {
-					cli.PrintPrompt(shouldPrint, c.Printf, "%s timeout after %s waiting for %q to become ready\n", printer.Serrorf("Error:"), opts.WaitTimeout, workload.Name)
-				} else {
-					cli.PrintPrompt(shouldPrint, c.Eprintf, "%s %s\n", printer.Serrorf("Error:"), err)
-				}
-			}
+			err := raceWithTimeout(ctx, c, workload, opts.WaitTimeout, shouldPrint, waitErrorForReadyCondition, workers)
 			// do not return if --output is set
 			// because workload has to be printed despite it's in a failing state
 			if err != nil && opts.Output == "" {

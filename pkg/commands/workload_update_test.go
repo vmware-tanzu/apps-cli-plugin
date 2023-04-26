@@ -435,7 +435,18 @@ Error: conflict updating workload, the object was modified by another user; plea
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					}),
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   cartov1alpha1.WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -451,6 +462,9 @@ Error: conflict updating workload, the object was modified by another user; plea
 							{
 								Type:   cartov1alpha1.WorkloadConditionReady,
 								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
 							},
 						},
 					},
@@ -483,6 +497,21 @@ Error: conflict updating workload, the object was modified by another user; plea
 							},
 						},
 					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
+							},
+						},
+					},
 				},
 			},
 			ShouldError: true,
@@ -507,7 +536,7 @@ To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
-Error: timeout after 1ns waiting for "my-workload" to become ready
+Error waiting for status change: timeout after 1ns waiting for "my-workload" to become ready
 `,
 		},
 		{
@@ -517,7 +546,18 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					}),
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   cartov1alpha1.WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -535,6 +575,9 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 								Status:  metav1.ConditionFalse,
 								Reason:  "OopsieDoodle",
 								Message: "a hopefully informative message about what went wrong",
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
 							},
 						},
 					},
@@ -564,6 +607,21 @@ Error: timeout after 1ns waiting for "my-workload" to become ready
 									Kind:       "PostgreSQL",
 									Name:       "my-prod-db",
 								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},
@@ -591,7 +649,7 @@ To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
 To get status: "tanzu apps workload get my-workload"
 
 Waiting for workload "my-workload" to become ready...
-Error: Failed to become ready: a hopefully informative message about what went wrong
+Error waiting for ready condition: Failed to become ready: a hopefully informative message about what went wrong
 `,
 		},
 		{
@@ -601,7 +659,18 @@ Error: Failed to become ready: a hopefully informative message about what went w
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					}),
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   cartov1alpha1.WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
 			},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -617,6 +686,9 @@ Error: Failed to become ready: a hopefully informative message about what went w
 							{
 								Type:   cartov1alpha1.WorkloadConditionReady,
 								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
 							},
 						},
 					},
@@ -646,6 +718,21 @@ Error: Failed to become ready: a hopefully informative message about what went w
 									Kind:       "PostgreSQL",
 									Name:       "my-prod-db",
 								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},
@@ -692,6 +779,9 @@ Workload "my-workload" is ready
 							{
 								Type:   cartov1alpha1.WorkloadConditionReady,
 								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
 							},
 						},
 					},
@@ -717,7 +807,18 @@ Workload "my-workload" is ready
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					}),
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   cartov1alpha1.WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -738,6 +839,21 @@ Workload "my-workload" is ready
 									Kind:       "PostgreSQL",
 									Name:       "my-prod-db",
 								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},
@@ -785,6 +901,9 @@ Workload "my-workload" is ready
 							{
 								Type:   cartov1alpha1.WorkloadConditionReady,
 								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
 							},
 						},
 					},
@@ -810,7 +929,18 @@ Workload "my-workload" is ready
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 						d.Image("ubuntu:bionic")
-					}),
+					}).StatusDie(func(d *diecartov1alpha1.WorkloadStatusDie) {
+					d.Conditions(metav1.Condition{
+						Type:   cartov1alpha1.WorkloadConditionReady,
+						Status: metav1.ConditionTrue,
+						LastTransitionTime: metav1.Time{
+							Time: time.Date(2019, 6, 29, 01, 44, 05, 0, time.UTC),
+						},
+					}, metav1.Condition{
+						Type:   "my-other-type",
+						Status: metav1.ConditionTrue,
+					})
+				}),
 			},
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
@@ -831,6 +961,21 @@ Workload "my-workload" is ready
 									Kind:       "PostgreSQL",
 									Name:       "my-prod-db",
 								},
+							},
+						},
+					},
+					Status: cartov1alpha1.WorkloadStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:   cartov1alpha1.WorkloadConditionReady,
+								Status: metav1.ConditionTrue,
+								LastTransitionTime: metav1.Time{
+									Time: time.Date(2019, 6, 29, 01, 44, 06, 0, time.UTC),
+								},
+							},
+							{
+								Type:   "my-other-type",
+								Status: metav1.ConditionTrue,
 							},
 						},
 					},
