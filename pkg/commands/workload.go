@@ -91,7 +91,6 @@ Workload configuration includes:
 	cmd.AddCommand(NewWorkloadGetCommand(ctx, c))
 	cmd.AddCommand(NewWorkloadTailCommand(ctx, c))
 	cmd.AddCommand(NewWorkloadCreateCommand(ctx, c))
-	cmd.AddCommand(NewWorkloadUpdateCommand(ctx, c))
 	cmd.AddCommand(NewWorkloadApplyCommand(ctx, c))
 	cmd.AddCommand(NewWorkloadDeleteCommand(ctx, c))
 
@@ -151,8 +150,6 @@ type WorkloadOptions struct {
 	Yes            bool
 	Output         string
 }
-
-var _ validation.Validatable = (*WorkloadUpdateOptions)(nil)
 
 func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldErrors {
 	errs := validation.FieldErrors{}
