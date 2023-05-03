@@ -178,7 +178,7 @@ The intent of these bindings is to provide information from a service resource t
 - To bind a database service to a workload, run:
 
     ```bash
-    tanzu apps workload update pet-clinic --service-ref "database=services.tanzu.vmware.com/v1alpha1:MySQL:my-prod-db"
+    tanzu apps workload apply pet-clinic --service-ref "database=services.tanzu.vmware.com/v1alpha1:MySQL:my-prod-db"
     ```
 
     Where:
@@ -202,7 +202,7 @@ You can check workload details and status, add environment variables, export def
 2. To add environment variables, run:
 
     ```bash
-    tanzu apps workload update pet-clinic --env foo=bar
+    tanzu apps workload apply pet-clinic --env foo=bar
     ```
 
 3. To export the workload definition into git, or to migrate to another environment, run:

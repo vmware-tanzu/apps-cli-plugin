@@ -36,5 +36,4 @@ Workload configuration includes:
 * [tanzu apps workload get](tanzu_apps_workload_get.md)	 - Get details from a workload
 * [tanzu apps workload list](tanzu_apps_workload_list.md)	 - Table listing of workloads
 * [tanzu apps workload tail](tanzu_apps_workload_tail.md)	 - Watch workload related logs
-* [tanzu apps workload update](tanzu_apps_workload_update.md)	 - Update configuration of an existing workload
 
