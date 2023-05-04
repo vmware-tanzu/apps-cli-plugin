@@ -4,9 +4,8 @@ The proceeding topics shows detailed examples of how to use flags on the Tanzu C
 
 - [Workload](command-reference/tanzu_apps_workload.md)
   - [Workload apply](command-reference/tanzu_apps_workload_apply.md)
-  - [Workload create](command-reference/tanzu_apps_workload_create.md)
-  - [Workload update](command-reference/tanzu_apps_workload_update.md)
     - [`tanzu apps workload apply`](./commands-details/workload_create_update_apply.md) flags usage and examples
+  - [Workload create](command-reference/tanzu_apps_workload_create.md)
   - [Workload get](command-reference/tanzu_apps_workload_get.md)
     - [`tanzu apps workload get`](./commands-details/workload_get.md) flags usage and examples
   - [Workload delete](command-reference/tanzu_apps_workload_delete.md)
