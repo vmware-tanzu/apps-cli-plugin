@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/lsp"
@@ -34,6 +35,14 @@ const errFormat = "%s\nErrors:\n- %s"
 type lspResponse struct {
 	Message    string `json:"message"`
 	StatusCode string `json:"statuscode"`
+}
+
+func (l lspResponse) getDecodedMessage() string {
+	m, err := url.QueryUnescape(l.Message)
+	if err != nil {
+		return l.Message
+	}
+	return m
 }
 
 func GetStatus(ctx context.Context, c *cli.Config) (lsp.HealthStatus, error) {
@@ -57,7 +66,7 @@ func GetStatus(ctx context.Context, c *cli.Config) (lsp.HealthStatus, error) {
 		r = &lspResponse{Message: string(b)}
 	}
 
-	if s := checkRequestResponseCode(resp, r.Message); s != nil {
+	if s := checkRequestResponseCode(resp, r.getDecodedMessage()); s != nil {
 		return *s, nil
 	}
 
@@ -126,7 +135,7 @@ func getStatusFromLSPResponse(r lspResponse) (lsp.HealthStatus, error) {
 			return lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
-				Message:           fmt.Sprintf(errFormat, "Local source proxy was unable to authenticate against the target registry.", r.Message),
+				Message:           fmt.Sprintf(errFormat, "Local source proxy was unable to authenticate against the target registry.", r.getDecodedMessage()),
 			}, nil
 		}
 	} else {

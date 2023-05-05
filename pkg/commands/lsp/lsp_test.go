@@ -25,12 +25,47 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	k8sruntime "k8s.io/apimachinery/pkg/runtime"
-
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/lsp"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 )
+
+func Test_lspResponse_getDecodedMessage(t *testing.T) {
+	desiredMessage := "GET https://my-registry.vmw/v2/token?scope=repository:my-repo/lsp-source:pull,push&service=my-registry.vmw: UNAUTHORIZED: Not Authorized."
+	tests := []struct {
+		name    string
+		message string
+		want    string
+	}{
+		{
+			name:    "decode not required",
+			message: desiredMessage,
+			want:    desiredMessage,
+		},
+		{
+			name:    "decode required",
+			message: "GET https://my-registry.vmw/v2/token?scope=repository%3Amy-repo%2Flsp-source%3Apull%2Cpush&service=my-registry.vmw:%20UNAUTHORIZED:+Not Authorized.",
+			want:    desiredMessage,
+		},
+		{
+			name:    "decode required but error",
+			message: "GET https://my-registry.vmw/v2/token?scope=repository%3Amy-repo%2Flsp-source%3Apull%2Cpush&service=my-registry.vmw:%20UNAUTHORIZED:+Not Authorized.%",
+			want:    "GET https://my-registry.vmw/v2/token?scope=repository%3Amy-repo%2Flsp-source%3Apull%2Cpush&service=my-registry.vmw:%20UNAUTHORIZED:+Not Authorized.%",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := lspResponse{
+				Message: tt.message,
+			}
+			got := l.getDecodedMessage()
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("lspResponse.getDecodedMessage(): Unexpected output (-expected, +actual): %s", diff)
+			}
+		})
+	}
+}
 
 func TestGetStatus(t *testing.T) {
 	type args struct {
