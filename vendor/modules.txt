@@ -507,7 +507,7 @@ github.com/vmware-labs/reconciler-runtime/reconcilers
 github.com/vmware-labs/reconciler-runtime/testing
 github.com/vmware-labs/reconciler-runtime/tracker
 github.com/vmware-labs/reconciler-runtime/validation
-# github.com/vmware-tanzu/carvel-imgpkg v0.36.1
+# github.com/vmware-tanzu/carvel-imgpkg v0.36.2
 ## explicit; go 1.20
 github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/image
 github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/imagedigest
@@ -522,7 +522,7 @@ github.com/vmware-tanzu/difflib
 # github.com/vmware-tanzu/tanzu-framework/apis/cli v0.0.0-20230215121916-ba6b6f70b187
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-framework/apis/cli/v1alpha1
-# github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230407101341-462d945f657a
+# github.com/vmware-tanzu/tanzu-framework/cli/runtime v0.0.0-20230428192643-b25b198b0418
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-framework/cli/runtime/apis/cli/v1alpha1
 github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo
