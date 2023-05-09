@@ -901,6 +901,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     []string
+		current  *cartov1alpha1.Workload
 		input    *cartov1alpha1.Workload
 		expected *cartov1alpha1.Workload
 	}{
@@ -2240,6 +2241,95 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "workload from lsp",
+			args: []string{flags.LocalPathFlagName, "path"},
+			current: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
+					Annotations: map[string]string{
+						apis.LocalSourceProxyAnnotationName: "my-lsp-annotation",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image: "any-image",
+					},
+				},
+			},
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Image: "ubuntu:bionic",
+				},
+			},
+			expected: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image: "local-source-proxy.tap-local-source-system.svc.cluster.local/source:default-my-workload",
+					},
+				},
+			},
+		},
+		{
+			name: "update workload with source image already defined",
+			args: []string{flags.LocalPathFlagName, "path"},
+			current: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image: "any-image",
+					},
+				},
+			},
+			input: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{},
+			},
+			expected: &cartov1alpha1.Workload{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: defaultNamespace,
+					Name:      workloadName,
+					Labels: map[string]string{
+						apis.WorkloadTypeLabelName: "web",
+					},
+				},
+				Spec: cartov1alpha1.WorkloadSpec{
+					Source: &cartov1alpha1.Source{
+						Image: "any-image",
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -2251,7 +2341,7 @@ func TestWorkloadOptionsApplyOptionsToWorkload(t *testing.T) {
 		cmd.ParseFlags(test.args)
 
 		actual := test.input.DeepCopy()
-		opts.ApplyOptionsToWorkload(ctx, actual, false)
+		opts.ApplyOptionsToWorkload(ctx, test.current, actual)
 		t.Run(test.name, func(t *testing.T) {
 			if diff := cmp.Diff(test.expected, actual); diff != "" {
 				t.Errorf("ApplyOptionsToWorkload() (-want, +got) = %s", diff)
@@ -2286,7 +2376,7 @@ func TestManageLocalSourceProxyAnnotation(t *testing.T) {
 			},
 		},
 	}, {
-		name: "remove annotation",
+		name: "remove annotation when using source image",
 		args: []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage},
 		currentWorkload: &cartov1alpha1.Workload{
 			ObjectMeta: metav1.ObjectMeta{
@@ -2303,6 +2393,60 @@ func TestManageLocalSourceProxyAnnotation(t *testing.T) {
 			},
 		},
 		expectedWorkload: &cartov1alpha1.Workload{},
+	}, {
+		name: "remove annotation when switching to git",
+		args: []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage},
+		currentWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-local-source-annotation",
+				},
+			},
+		},
+		workload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-local-source-annotation",
+				},
+			},
+		},
+		expectedWorkload: &cartov1alpha1.Workload{
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Git: &cartov1alpha1.GitSource{
+						URL: "my-repo.git",
+						Ref: cartov1alpha1.GitRef{
+							Branch: "main",
+						},
+					},
+				},
+			},
+		},
+	}, {
+		name: "remove annotation when switching to image",
+		args: []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage},
+		currentWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-local-source-annotation",
+				},
+			},
+		},
+		workload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-local-source-annotation",
+				},
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Image: "my-image",
+			},
+		},
+		expectedWorkload: &cartov1alpha1.Workload{
+			Spec: cartov1alpha1.WorkloadSpec{
+				Image: "my-image",
+			},
+		},
 	}, {
 		name: "update annotation",
 		args: []string{flags.LocalPathFlagName, localSource},
@@ -2448,7 +2592,7 @@ func TestWorkloadOptionsPublishLocalSourcePrivateRegistry(t *testing.T) {
 		shouldPrint: true,
 		args:        []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.RegistryCertFlagName, cert.Name(), flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
-		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
@@ -2458,7 +2602,7 @@ Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost
 		shouldPrint: true,
 		args:        []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.RegistryCertFlagName, cert.Name(), flags.RegistryUsernameFlagName, "admin", flags.RegistryPasswordFlagName, "password", flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
-		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
@@ -2468,7 +2612,7 @@ Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost
 		shouldPrint: true,
 		args:        []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.RegistryCertFlagName, cert.Name(), flags.RegistryTokenFlagName, "myToken123", flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
-		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
@@ -2477,7 +2621,7 @@ Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost
 		name:           "local source to private registry without prompts",
 		args:           []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.RegistryCertFlagName, cert.Name(), flags.YesFlagName},
 		input:          fmt.Sprintf("%s/hello:source", registryHost),
-		expected:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"),
 		expectedOutput: "",
 	}}
 	for _, test := range tests {
@@ -2583,7 +2727,7 @@ Publishing source in ` + fmt.Sprintf("%q", filepath.Join("testdata", "local-sour
 		shouldPrint: true,
 		args:        []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", registryHost),
-		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
@@ -2608,7 +2752,7 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registr
 		shouldPrint: true,
 		args:        []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "0000000000000000000000000000000000000000000000000000000000000000"),
-		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + registryHost + `/hello:source"...
 📥 Published source
@@ -2651,7 +2795,46 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registr
 		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
 		existingWorkload: &cartov1alpha1.Workload{
 			Spec: cartov1alpha1.WorkloadSpec{
-				Image: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+				Source: &cartov1alpha1.Source{
+					Image: fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+				},
+			},
+		},
+		expectedOutput: `
+Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registryHost + `/hello:source"...
+📥 Published source
+`,
+	}, {
+		name:        "from git source to source image",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName, flags.SourceImageFlagName, sourceImage},
+		input:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		existingWorkload: &cartov1alpha1.Workload{
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Git: &cartov1alpha1.GitSource{
+						Ref: cartov1alpha1.GitRef{
+							Branch: "main",
+						},
+						URL: "my-repo.git",
+					},
+				},
+			},
+		},
+		expectedOutput: `
+Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registryHost + `/hello:source"...
+📥 Published source
+`,
+	}, {
+		name:        "from image to source image",
+		shouldPrint: true,
+		args:        []string{flags.LocalPathFlagName, helloJarFilePath, flags.YesFlagName, flags.SourceImageFlagName, sourceImage},
+		input:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:    fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be"),
+		existingWorkload: &cartov1alpha1.Workload{
+			Spec: cartov1alpha1.WorkloadSpec{
+				Image: "my-image",
 			},
 		},
 		expectedOutput: `
@@ -2662,7 +2845,7 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + registr
 		name:           "local source without prompts",
 		args:           []string{flags.LocalPathFlagName, localSource, flags.SourceImageFlagName, sourceImage, flags.YesFlagName},
 		input:          fmt.Sprintf("%s/hello:source", registryHost),
-		expected:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:       fmt.Sprintf("%s/hello:source@sha256:%s", registryHost, "978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"),
 		expectedOutput: "",
 	}, {
 		name:           "jar file without prompts",
@@ -2780,7 +2963,7 @@ Publishing source in ` + fmt.Sprintf("%q", filepath.Join("testdata", "local-sour
 		shouldPrint: true,
 		args:        []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source", source.GetLocalImageRepo()),
-		expected:    fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:    fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + source.GetLocalImageRepo() + `/` + source.ImageTag + `:` + workload.Namespace + `-` + workload.Name + `"...
 📥 Published source
@@ -2805,7 +2988,7 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + source.
 		shouldPrint: true,
 		args:        []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
 		input:       fmt.Sprintf("%s/hello:source@sha256:%s", source.GetLocalImageRepo(), "0000000000000000000000000000000000000000000000000000000000000000"),
-		expected:    fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:    fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"),
 		expectedOutput: `
 Publishing source in ` + fmt.Sprintf("%q", localSource) + ` to "` + source.GetLocalImageRepo() + `/` + source.ImageTag + `:` + workload.Namespace + `-` + workload.Name + `"...
 📥 Published source
@@ -2854,7 +3037,7 @@ Publishing source in ` + fmt.Sprintf("%q", helloJarFilePath) + ` to "` + source.
 		name:           "local source without prompts",
 		args:           []string{flags.LocalPathFlagName, localSource, flags.YesFlagName},
 		input:          fmt.Sprintf("%s/hello:source", source.GetLocalImageRepo()),
-		expected:       fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"),
+		expected:       fmt.Sprintf("%s:%s-%s@sha256:%s", fakeWrapper.Repository, workload.Namespace, workload.Name, "978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"),
 		expectedOutput: "",
 	}, {
 		name:           "jar file without prompts",
@@ -3357,7 +3540,7 @@ Updated workload "my-workload"
 			cmd.ParseFlags(test.args)
 
 			workload := currentWorkload.DeepCopy()
-			opts.ApplyOptionsToWorkload(ctx, workload, true)
+			opts.ApplyOptionsToWorkload(ctx, currentWorkload, workload)
 			_, err = opts.Update(ctx, c, currentWorkload, workload)
 
 			if err != nil && !test.shouldError {

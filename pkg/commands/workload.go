@@ -228,7 +228,8 @@ func (opts *WorkloadOptions) LoadDefaults(c *cli.Config) {
 	opts.ExcludePathFile = c.TanzuIgnoreFile
 }
 
-func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workload *cartov1alpha1.Workload, workloadExists bool) context.Context {
+func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, currentWorkload, workload *cartov1alpha1.Workload) context.Context {
+	workloadExists := currentWorkload != nil
 	for _, label := range opts.Labels {
 		parts := parsers.DeletableKeyValue(label)
 		if len(parts) == 1 {
@@ -319,8 +320,17 @@ func (opts *WorkloadOptions) ApplyOptionsToWorkload(ctx context.Context, workloa
 
 	opts.checkGitValues(ctx, workload)
 
-	if opts.SourceImage != "" {
+	if opts.isLocalSource(currentWorkload) {
+		workload.Spec.MergeSourceImage(getLocalSourceProxyTaggedImage(workload))
+	} else if opts.LocalPath != "" || opts.SourceImage != "" {
 		workload.Spec.MergeSourceImage(opts.SourceImage)
+
+		// add image if a workload created with source image is being updated but the source image
+		// flag was not used during the update
+		// this will add a source to the workload avoiding the failure if subpath is set through flags
+		if workloadExists && currentWorkload.Spec.Source != nil && workload.Spec.Source.Image == "" {
+			workload.Spec.Source.Image = currentWorkload.Spec.Source.Image
+		}
 	}
 
 	if cli.CommandFromContext(ctx).Flags().Changed(cli.StripDash(flags.SubPathFlagName)) {
@@ -450,8 +460,33 @@ func (opts *WorkloadOptions) checkGitValues(ctx context.Context, workload *carto
 	}
 }
 
+func (opts *WorkloadOptions) isLocalSource(currentWorkload *cartov1alpha1.Workload) bool {
+	workloadExists := currentWorkload != nil
+
+	if opts.LocalPath == "" || opts.SourceImage != "" {
+		return false
+	}
+
+	// the possible cases to determine whether it's using LSP are the following
+	// the workload does not exist and local path comes with no source image
+	// workload exists and it does not have a source
+	// workload does exist and the annotation exists
+	// workload exists and it has git source but now it's being updated to use local path without source image
+	// workload exists and its source is a prebuilt image but now it's being updated to use local path without source image
+	return !workloadExists ||
+		(workloadExists && !currentWorkload.Spec.IsSourceFound()) ||
+		(workloadExists && currentWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName)) ||
+		(workloadExists && currentWorkload.Spec.Source != nil && currentWorkload.Spec.Source.Image == "") ||
+		(workloadExists && currentWorkload.Spec.Source == nil)
+}
+
+func getLocalSourceProxyTaggedImage(workload *cartov1alpha1.Workload) string {
+	return fmt.Sprintf("%s/%s:%s-%s", source.GetLocalImageRepo(), source.ImageTag, workload.Namespace, workload.Name)
+}
+
 // PublishLocalSource packages the specified source code in the --local-path flag and creates an image
 // that will be eventually published to the registry specified in the --source-image flag.
+// If there is no --source-image specified, then it will push to Local Source Proxy
 // Returns a boolean that indicates if user does actually want to publish the image and an error in case of failure
 func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Config, currentWorkload, workload *cartov1alpha1.Workload, shouldPrint bool) error {
 	if opts.LocalPath == "" {
@@ -462,13 +497,20 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 
 	// is local source if source is to be created without a source image being specified
 	// or if there is an update of a workload that was initially created to push to LSP
-	isLocal := (opts.SourceImage == "" && currentWorkload == nil) ||
-		(currentWorkload != nil && currentWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) && opts.SourceImage == "")
+	isLocal := opts.isLocalSource(currentWorkload)
 
 	if isLocal {
-		taggedImage = fmt.Sprintf("%s/%s:%s-%s", source.GetLocalImageRepo(), source.ImageTag, workload.Namespace, workload.Name)
+		taggedImage = getLocalSourceProxyTaggedImage(workload)
 	} else {
-		taggedImage = workload.Spec.Source.Image
+		if workload.Spec.Source != nil {
+			taggedImage = workload.Spec.Source.Image
+		}
+
+		if taggedImage == "" {
+			if currentWorkload != nil && currentWorkload.Spec.Source != nil {
+				taggedImage = currentWorkload.Spec.Source.Image
+			}
+		}
 	}
 
 	taggedImage = strings.Split(taggedImage, "@sha")[0]
@@ -531,7 +573,12 @@ func (opts *WorkloadOptions) PublishLocalSource(ctx context.Context, c *cli.Conf
 	}
 
 	if isLocal {
-		workload.Spec.Source = &cartov1alpha1.Source{}
+		if workload.Spec.Source != nil {
+			workload.Spec.Source = &cartov1alpha1.Source{Subpath: workload.Spec.Source.Subpath}
+		} else {
+			workload.Spec.Source = &cartov1alpha1.Source{}
+		}
+		workload.Spec.Image = ""
 
 		digestedImage = strings.Replace(digestedImage, fmt.Sprintf("%s/%s", source.GetLocalImageRepo(), source.ImageTag), localTransport.Repository, 1)
 	}
@@ -588,14 +635,15 @@ func (opts *WorkloadOptions) ManageLocalSourceProxyAnnotation(currentWorkload, w
 	// merge annotation only when workload is being created or when source code was changed and there is a new digested,
 	// do not add it when updating workload
 	// since user could be updating another field and annotation must not be added
-	if (opts.LocalPath != "" && opts.SourceImage == "" && !workloadExists) ||
-		(opts.LocalPath != "" && opts.SourceImage == "" && workloadExists && currentWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName)) {
+	if opts.isLocalSource(currentWorkload) {
 		workload.MergeAnnotations(apis.LocalSourceProxyAnnotationName, workload.Spec.Source.Image)
 	}
 
 	// if workload is updated from LSP registry to custom or any other registry through source image,
+	// or it is moved from LSP to any other source (git, maven, image)
 	// annotation has to be deleted and workload source image needs to be updated to digested based on opts source image
-	if opts.LocalPath != "" && opts.SourceImage != "" && workloadExists {
+	if (opts.SourceImage != "" && workloadExists) ||
+		(workloadExists && ((workload.Spec.Source != nil && workload.Spec.Source.Image == "") || workload.Spec.Source == nil)) {
 		workload.RemoveAnnotations(apis.LocalSourceProxyAnnotationName)
 	}
 }
