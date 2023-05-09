@@ -22,6 +22,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -2930,7 +2931,10 @@ func TestWorkloadOptionsPublishLocalSourceProxy(t *testing.T) {
 			Namespace: "default",
 		},
 	}
-	fakeWrapper := fake_source.GetFakeWrapper()
+	fakeWrapper := fake_source.GetFakeWrapper(http.Header{
+		"Content-Type":          []string{"text/html", "application/json", "application/octet-stream"},
+		"Docker-Content-Digest": []string{"sha256:" + expectedImageDigest},
+	})
 	if fakeWrapper.Repository == "" {
 		fakeWrapper.Repository = "my-test-repo"
 	}

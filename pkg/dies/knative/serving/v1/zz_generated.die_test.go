@@ -22,9 +22,8 @@ limitations under the License.
 package v1
 
 import (
-	testingx "testing"
-
 	testing "dies.dev/testing"
+	testingx "testing"
 )
 
 func TestServiceDie_MissingMethods(t *testingx.T) {
