@@ -75,6 +75,23 @@ func (d *ContainerDie) ResourcesDie(fn func(d *ResourceRequirementsDie)) *Contai
 	})
 }
 
+func (d *ContainerDie) ResizePolicyDie(name corev1.ResourceName, fn func(d *ContainerResizePolicyDie)) *ContainerDie {
+	return d.DieStamp(func(r *corev1.Container) {
+		for i := range r.ResizePolicy {
+			if name == r.ResizePolicy[i].ResourceName {
+				d := ContainerResizePolicyBlank.DieImmutable(false).DieFeed(r.ResizePolicy[i])
+				fn(d)
+				r.ResizePolicy[i] = d.DieRelease()
+				return
+			}
+		}
+
+		d := ContainerResizePolicyBlank.DieImmutable(false).DieFeed(corev1.ContainerResizePolicy{ResourceName: name})
+		fn(d)
+		r.ResizePolicy = append(r.ResizePolicy, d.DieRelease())
+	})
+}
+
 func (d *ContainerDie) VolumeMountDie(name string, fn func(d *VolumeMountDie)) *ContainerDie {
 	return d.DieStamp(func(r *corev1.Container) {
 		for i := range r.VolumeMounts {
@@ -301,6 +318,9 @@ func (d *ResourceRequirementsDie) ClaimsDie(claims ...*ResourceClaimDie) *Resour
 type _ = corev1.ResourceClaim
 
 // +die
+type _ = corev1.ContainerResizePolicy
+
+// +die
 type _ = corev1.VolumeMount
 
 // +die
@@ -517,6 +537,29 @@ func (d *ContainerStatusDie) LastTerminationStateDie(fn func(d *ContainerStateDi
 		r.LastTerminationState = d.DieRelease()
 	})
 }
+
+func (d *ContainerStatusDie) AddAllocatedResource(name corev1.ResourceName, quantity resource.Quantity) *ContainerStatusDie {
+	return d.DieStamp(func(r *corev1.ContainerStatus) {
+		if r.AllocatedResources == nil {
+			r.AllocatedResources = corev1.ResourceList{}
+		}
+		r.AllocatedResources[name] = quantity
+	})
+}
+
+func (d *ContainerStatusDie) AddAllocatedResourceString(name corev1.ResourceName, quantity string) *ContainerStatusDie {
+	return d.AddAllocatedResource(name, resource.MustParse(quantity))
+}
+
+func (d *ContainerStatusDie) ResourcesDie(fn func(d *ResourceRequirementsDie)) *ContainerStatusDie {
+	return d.DieStamp(func(r *corev1.ContainerStatus) {
+		d := ResourceRequirementsBlank.DieImmutable(false).DieFeedPtr(r.Resources)
+		fn(d)
+		r.Resources = d.DieReleasePtr()
+	})
+}
+
+// ADD
 
 // +die
 type _ = corev1.ContainerState
