@@ -469,7 +469,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				c := *it.NewTanzuAppsCommandLine(
 					"workload", "create", "test-create-local-registry-priv",
 					"--local-path=./testdata/hello.go.jar",
-					"--source-image", os.Getenv("BUNDLE"),
+					"--source-image", os.Getenv("BUNDLE")+"-pr",
 					"--registry-username", os.Getenv("REGISTRY_USERNAME"),
 					"--registry-password", os.Getenv("REGISTRY_PASSWORD"),
 					"--registry-ca-cert", os.Getenv("CERT_DIR")+"/ca.pem",
@@ -498,7 +498,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				},
 				Spec: cartov1alpha1.WorkloadSpec{
 					Source: &cartov1alpha1.Source{
-						Image: fmt.Sprintf("%v@sha256:f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be", os.Getenv("BUNDLE")),
+						Image: fmt.Sprintf("%v@sha256:f8a4db186af07dbc720730ebb71a07bf5e9407edc150eb22c1aa915af4f242be", os.Getenv("BUNDLE")+"-pr"),
 					},
 				},
 			},
@@ -515,7 +515,7 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 				if strings.Contains(output, apis.LocalSourceProxyAnnotationName) {
 					t.Fatalf("local source proxy annotation %q not expected in output %v", apis.LocalSourceProxyAnnotationName, output)
 				}
-				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE"), "-o", dir)
+				ic := it.NewCommandLine("imgpkg", "pull", "--registry-ca-cert-path", os.Getenv("CERT_DIR")+"/ca.pem", "-i", os.Getenv("BUNDLE")+"-pr", "-o", dir)
 				ic.AddEnvVars(
 					"IMGPKG_USERNAME="+os.Getenv("REGISTRY_USERNAME"),
 					"IMGPKG_PASSWORD="+os.Getenv("REGISTRY_PASSWORD"),
