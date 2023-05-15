@@ -85,7 +85,7 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		}
 	}
 
-	ctx = opts.ApplyOptionsToWorkload(ctx, workload, false)
+	ctx = opts.ApplyOptionsToWorkload(ctx, nil, workload)
 
 	// validate complex flag interactions with existing state
 	errs := workload.Validate()
@@ -109,6 +109,7 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	}
 
 	shouldPrint := opts.Output == "" || (opts.Output != "" && !opts.Yes)
+
 	if err := opts.PublishLocalSource(ctx, c, nil, workload, shouldPrint); err != nil {
 		return err
 	}

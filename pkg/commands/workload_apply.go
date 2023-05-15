@@ -139,7 +139,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 	workload.Namespace = opts.Namespace
 	workloadExists := currentWorkload != nil
 
-	ctx = opts.ApplyOptionsToWorkload(ctx, workload, workloadExists)
+	ctx = opts.ApplyOptionsToWorkload(ctx, currentWorkload, workload)
 
 	// validate complex flag interactions with existing state
 	errs = workload.Validate()

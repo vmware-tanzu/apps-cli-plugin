@@ -25,10 +25,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
+
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/lsp"
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime"
 	clitesting "github.com/vmware-tanzu/apps-cli-plugin/pkg/cli-runtime/testing"
-	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 )
 
 func Test_lspResponse_getDecodedMessage(t *testing.T) {

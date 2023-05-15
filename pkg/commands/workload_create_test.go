@@ -2008,12 +2008,12 @@ Error waiting for ready condition: failed to create watcher
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
-							Image: ":default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652",
+							Image: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 				},
@@ -2028,14 +2028,145 @@ Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.clu
       3 + |kind: Workload
       4 + |metadata:
       5 + |  annotations:
-      6 + |    local-source-proxy.apps.tanzu.vmware.com: :default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652
+      6 + |    local-source-proxy.apps.tanzu.vmware.com: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
       7 + |  labels:
       8 + |    apps.tanzu.vmware.com/workload-type: web
       9 + |  name: my-workload
      10 + |  namespace: default
      11 + |spec:
      12 + |  source:
-     13 + |    image: :default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652
+     13 + |    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
+👍 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`, localSource),
+		},
+
+		{
+			Name:                "create using lsp with subpath",
+			Skip:                runtm.GOOS == "windows",
+			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.SubPathFlagName, subpath, flags.YesFlagName},
+			GivenObjects:        givenNamespaceDefault,
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+						Annotations: map[string]string{
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Image:   ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							Subpath: "testdata/local-source/subpath",
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.cluster.local/source:default-my-workload"...
+📥 Published source
+
+🔎 Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  annotations:
+      6 + |    local-source-proxy.apps.tanzu.vmware.com: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
+      7 + |  labels:
+      8 + |    apps.tanzu.vmware.com/workload-type: web
+      9 + |  name: my-workload
+     10 + |  namespace: default
+     11 + |spec:
+     12 + |  source:
+     13 + |    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
+     14 + |    subPath: testdata/local-source/subpath
+👍 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`, localSource),
+		},
+		{
+			Name:                "create using lsp and taking fields from file",
+			Skip:                runtm.GOOS == "windows",
+			GivenObjects:        givenNamespaceDefault,
+			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.FilePathFlagName, "testdata/workload.yaml", flags.YesFlagName},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "my-workload",
+						Labels: map[string]string{
+							apis.AppPartOfLabelName:               "spring-petclinic",
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+						Annotations: map[string]string{
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Image: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name:  "SPRING_PROFILES_ACTIVE",
+								Value: "mysql",
+							},
+						},
+						Resources: &corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("500m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.cluster.local/source:default-my-workload"...
+📥 Published source
+
+🔎 Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  annotations:
+      6 + |    local-source-proxy.apps.tanzu.vmware.com: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
+      7 + |  labels:
+      8 + |    app.kubernetes.io/part-of: spring-petclinic
+      9 + |    apps.tanzu.vmware.com/workload-type: web
+     10 + |  name: my-workload
+     11 + |  namespace: default
+     12 + |spec:
+     13 + |  env:
+     14 + |  - name: SPRING_PROFILES_ACTIVE
+     15 + |    value: mysql
+     16 + |  resources:
+     17 + |    limits:
+     18 + |      cpu: 500m
+     19 + |      memory: 1Gi
+     20 + |    requests:
+     21 + |      cpu: 100m
+     22 + |      memory: 1Gi
+     23 + |  source:
+     24 + |    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
@@ -2058,12 +2189,12 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
-							Image: ":default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652",
+							Image: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 				},
@@ -2078,14 +2209,14 @@ Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.clu
       3 + |kind: Workload
       4 + |metadata:
       5 + |  annotations:
-      6 + |    local-source-proxy.apps.tanzu.vmware.com: :default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652
+      6 + |    local-source-proxy.apps.tanzu.vmware.com: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
       7 + |  labels:
       8 + |    apps.tanzu.vmware.com/workload-type: web
       9 + |  name: my-workload
      10 + |  namespace: default
      11 + |spec:
      12 + |  source:
-     13 + |    image: :default-my-workload@sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652
+     13 + |    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
