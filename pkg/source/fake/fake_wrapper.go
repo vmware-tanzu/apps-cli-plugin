@@ -17,26 +17,32 @@ limitations under the License.
 package fake_source
 
 import (
+	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
 )
 
-type nilBodyRoundTripper struct{}
+type nilBodyRoundTripper struct {
+	Headers http.Header
+	Body    string
+}
 
-func (nilBodyRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+func (n nilBodyRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		StatusCode: http.StatusOK,
 		Status:     http.StatusText(http.StatusOK),
-		Body:       nil,
+		Body:       io.NopCloser(strings.NewReader(n.Body)),
 		Request:    req,
+		Header:     n.Headers,
 	}, nil
 }
 
-func GetFakeWrapper() source.Wrapper {
+func GetFakeWrapper(headers http.Header) source.Wrapper {
 	return source.Wrapper{
-		Client: &http.Client{Transport: nilBodyRoundTripper{}},
+		Client: &http.Client{Transport: nilBodyRoundTripper{Headers: headers}},
 		URL: &url.URL{
 			Scheme: "http",
 			Host:   "www.my-fake-url.com",

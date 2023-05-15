@@ -182,11 +182,16 @@ func TestWorkloadApplyCommand(t *testing.T) {
 			}),
 	}
 
-	respCreator := func(status int, body string) *http.Response {
+	myWorkloadHeader := http.Header{
+		"Content-Type":          []string{"text/html", "application/json", "application/octet-stream"},
+		"Docker-Content-Digest": []string{"sha256:111d543b7736846f502387eed53be08c5ceb0a6010faaaf043409702074cf652"},
+	}
+	respCreator := func(status int, body string, headers map[string][]string) *http.Response {
 		return &http.Response{
 			Status:     http.StatusText(status),
 			StatusCode: status,
 			Body:       io.NopCloser(strings.NewReader(body)),
+			Header:     headers,
 		}
 	}
 
@@ -7734,7 +7739,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 			Skip:                runtm.GOOS == "windows",
 			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
 			GivenObjects:        givenNamespaceDefault,
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -7784,7 +7789,7 @@ To get status: "tanzu apps workload get my-workload"
 			Skip:                runtm.GOOS == "windows",
 			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
 			GivenObjects:        givenNamespaceDefault,
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "204"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "204"}`, myWorkloadHeader)),
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -7834,7 +7839,7 @@ To get status: "tanzu apps workload get my-workload"
 			Skip:                runtm.GOOS == "windows",
 			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.SubPathFlagName, subpath, flags.YesFlagName},
 			GivenObjects:        givenNamespaceDefault,
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -7886,7 +7891,7 @@ To get status: "tanzu apps workload get my-workload"
 			Skip:                runtm.GOOS == "windows",
 			GivenObjects:        givenNamespaceDefault,
 			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.FilePathFlagName, file, flags.YesFlagName},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectCreates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -7965,7 +7970,7 @@ To get status: "tanzu apps workload get my-workload"
 			Name:                "create from local source using lsp with redirect registry error",
 			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
 			GivenObjects:        givenNamespaceDefault,
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "302", "message": "Registry moved found"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "302", "message": "Registry moved found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry moved found"
@@ -7978,7 +7983,7 @@ To get status: "tanzu apps workload get my-workload"
 			Name:                "create from local source using lsp with no upstream auth",
 			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
 			GivenObjects:        givenNamespaceDefault,
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "401", "message": "401 Status user UNAUTHORIZED for registry"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "401", "message": "401 Status user UNAUTHORIZED for registry"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- 401 Status user UNAUTHORIZED for registry"
@@ -7991,7 +7996,7 @@ To get status: "tanzu apps workload get my-workload"
 			Name:                "create from local source using lsp with not found registry error",
 			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
 			GivenObjects:        givenNamespaceDefault,
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "404", "message": "Registry not found"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "404", "message": "Registry not found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry not found"
@@ -8004,7 +8009,7 @@ To get status: "tanzu apps workload get my-workload"
 			Name:                "create from local source using lsp with internal error server registry error",
 			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
 			GivenObjects:        givenNamespaceDefault,
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "500", "message": "Registry internal error"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "500", "message": "Registry internal error"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry internal error"
@@ -8017,7 +8022,7 @@ To get status: "tanzu apps workload get my-workload"
 			Name:                "create from local source using lsp with redirect response",
 			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
 			GivenObjects:        givenNamespaceDefault,
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusFound, `{"message": "302 Status Found"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusFound, `{"message": "302 Status Found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nError: Local source proxy was moved and is not reachable in the defined url.\nErrors:\n- 302 Status Found"
@@ -8030,7 +8035,7 @@ To get status: "tanzu apps workload get my-workload"
 			Name:                "create from local source using lsp with no user permission",
 			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
 			GivenObjects:        givenNamespaceDefault,
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusUnauthorized, `{"message": "401 Status Unauthorized"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusUnauthorized, `{"message": "401 Status Unauthorized"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nError: The current user does not have permission to access the local source proxy.\nErrors:\n- 401 Status Unauthorized"
@@ -8043,7 +8048,7 @@ To get status: "tanzu apps workload get my-workload"
 			Name:                "create from local source using lsp with no found error",
 			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
 			GivenObjects:        givenNamespaceDefault,
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusNotFound, `{"message": "404 Status Not Found"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusNotFound, `{"message": "404 Status Not Found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Local source proxy is not installed or the deployment is not healthy. Either install it or use --source-image flag\nError: Local source proxy is not installed on the cluster.\nErrors:\n- 404 Status Not Found"
@@ -8078,6 +8083,7 @@ To get status: "tanzu apps workload get my-workload"
 					})
 				}),
 			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -8141,6 +8147,7 @@ To get status: "tanzu apps workload get my-workload"
 					})
 				}),
 			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -8205,6 +8212,7 @@ To get status: "tanzu apps workload get my-workload"
 					})
 				}),
 			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -8252,7 +8260,7 @@ To get status: "tanzu apps workload get my-workload"
 						d.Image("my-image")
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -8309,7 +8317,7 @@ To get status: "tanzu apps workload get my-workload"
 						d.Image("my-image")
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -8364,7 +8372,7 @@ To get status: "tanzu apps workload get my-workload"
 			GivenObjects: []client.Object{
 				parent,
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -8417,7 +8425,7 @@ To get status: "tanzu apps workload get my-workload"
 			GivenObjects: []client.Object{
 				parent,
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -8482,7 +8490,7 @@ To get status: "tanzu apps workload get my-workload"
 						})
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -8548,7 +8556,7 @@ To get status: "tanzu apps workload get my-workload"
 						})
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -8637,7 +8645,7 @@ To get status: "tanzu apps workload get my-workload"
 						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -8694,7 +8702,7 @@ To get status: "tanzu apps workload get my-workload"
 						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "204"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "204"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				&cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -8750,7 +8758,7 @@ To get status: "tanzu apps workload get my-workload"
 						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "302", "message": "Registry moved found"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "302", "message": "Registry moved found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry moved found"
@@ -8768,7 +8776,7 @@ To get status: "tanzu apps workload get my-workload"
 						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "401", "message": "401 Status user UNAUTHORIZED for registry"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "401", "message": "401 Status user UNAUTHORIZED for registry"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- 401 Status user UNAUTHORIZED for registry"
@@ -8786,7 +8794,7 @@ To get status: "tanzu apps workload get my-workload"
 						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "404", "message": "Registry not found"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "404", "message": "Registry not found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry not found"
@@ -8804,7 +8812,7 @@ To get status: "tanzu apps workload get my-workload"
 						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "500", "message": "Registry internal error"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "500", "message": "Registry internal error"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry internal error"
@@ -8822,7 +8830,7 @@ To get status: "tanzu apps workload get my-workload"
 						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusFound, `{"message": "302 Status Found"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusFound, `{"message": "302 Status Found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nError: Local source proxy was moved and is not reachable in the defined url.\nErrors:\n- 302 Status Found"
@@ -8840,7 +8848,7 @@ To get status: "tanzu apps workload get my-workload"
 						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusUnauthorized, `{"message": "401 Status Unauthorized"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusUnauthorized, `{"message": "401 Status Unauthorized"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nError: The current user does not have permission to access the local source proxy.\nErrors:\n- 401 Status Unauthorized"
@@ -8858,7 +8866,7 @@ To get status: "tanzu apps workload get my-workload"
 						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
 					}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusNotFound, `{"message": "404 Status Not Found"}`)),
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusNotFound, `{"message": "404 Status Not Found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
 				msg := "Local source proxy is not installed or the deployment is not healthy. Either install it or use --source-image flag\nError: Local source proxy is not installed on the cluster.\nErrors:\n- 404 Status Not Found"
