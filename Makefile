@@ -47,6 +47,8 @@ PUBLISHER ?= tzcli
 VENDOR ?= vmware
 PLUGIN_SCOPE_ASSOCIATION_FILE ?= ""
 
+include ./plugin-tooling.mk
+
 .PHONY: all
 all: test build ## Prepare and run the project tests
 

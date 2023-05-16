@@ -1,0 +1,4 @@
+plugins:
+- name: apps
+  target: global
+  isContextScoped: false
