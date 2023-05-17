@@ -286,8 +286,10 @@ type GCPPluginRepository struct {
 // CoreCliOptions are core CLI specific options that are specific to CLI(not for plugins) like ceipOptIn, etc
 // that goes into nextgen configuration file.
 type CoreCliOptions struct {
-	// CEIPOptIn is the users CEIP opt-in/opt-out status.
+	// CEIPOptIn is the user's CEIP opt-in/opt-out status.
 	CEIPOptIn string `json:"ceipOptIn,omitempty" yaml:"ceipOptIn,omitempty"`
+	// EULAStatus is the EULA acceptance status.
+	EULAStatus string `json:"eulaStatus,omitempty" yaml:"eulaStatus,omitempty"`
 	// DiscoverySources determine where to discover plugins
 	DiscoverySources []PluginDiscovery `json:"discoverySources,omitempty" yaml:"discoverySources,omitempty"`
 }
