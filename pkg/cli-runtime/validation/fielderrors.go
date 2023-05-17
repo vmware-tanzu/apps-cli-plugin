@@ -17,11 +17,20 @@ limitations under the License.
 package validation
 
 import (
+	"fmt"
+	"strings"
+
 	k8sfield "k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 func ErrMissingFieldWithDetail(field string, detail string) FieldErrors {
 	return FieldErrors{
 		k8sfield.Required(k8sfield.NewPath(field), detail),
+	}
+}
+
+func ErrMultipleSources(names ...string) FieldErrors {
+	return FieldErrors{
+		k8sfield.Required(k8sfield.NewPath(fmt.Sprintf("[%s]", strings.Join(names, ", "))), "expected exactly one, got multiple"),
 	}
 }

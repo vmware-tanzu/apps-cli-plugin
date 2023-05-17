@@ -17,6 +17,8 @@ limitations under the License.
 package validation_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -50,6 +52,44 @@ func TestErrMissingFieldWithDetail(t *testing.T) {
 		t.Run(test.testName, func(t *testing.T) {
 			expected := test.expected
 			actual := validation.ErrMissingFieldWithDetail(test.field, test.msg)
+			if diff := cmp.Diff(expected, actual); diff != "" {
+				t.Errorf("%s() = (-expected, +actual): %s", test.testName, diff)
+			}
+		})
+	}
+}
+
+func TestErrMultipleSources(t *testing.T) {
+	tests := []struct {
+		testName string
+		sources  []string
+		expected validation.FieldErrors
+	}{
+		{
+			testName: "multiple sources",
+			expected: validation.FieldErrors{
+				k8sfield.Required(k8sfield.NewPath(fmt.Sprintf("[%s]", strings.Join([]string{flags.GitFlagWildcard, flags.ImageFlagName}, ", "))), "expected exactly one, got multiple"),
+			},
+			sources: append([]string{}, flags.GitFlagWildcard, flags.ImageFlagName),
+		}, {
+			testName: "single source",
+			expected: validation.FieldErrors{
+				k8sfield.Required(k8sfield.NewPath(fmt.Sprintf("[%s]", strings.Join([]string{flags.GitFlagWildcard}, ", "))), "expected exactly one, got multiple"),
+			},
+			sources: append([]string{}, flags.GitFlagWildcard),
+		}, {
+			testName: "Empty source",
+			expected: validation.FieldErrors{
+				k8sfield.Required(k8sfield.NewPath(fmt.Sprintf("[%s]", strings.Join([]string{}, ", "))), "expected exactly one, got multiple"),
+			},
+			sources: []string{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.testName, func(t *testing.T) {
+			expected := test.expected
+			actual := validation.ErrMultipleSources(test.sources...)
 			if diff := cmp.Diff(expected, actual); diff != "" {
 				t.Errorf("%s() = (-expected, +actual): %s", test.testName, diff)
 			}

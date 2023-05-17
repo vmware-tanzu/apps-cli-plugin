@@ -64,6 +64,9 @@ const (
 	AnnotationReservedKey     = "annotations"
 	MavenOverwrittenNoticeMsg = "Maven configuration flags have overwritten values provided by \"--params-yaml\"."
 	WebTypeReservedKey        = "web"
+	MavenFlagWildcard         = "--maven*"
+	// --source-image can be a source for workload without local path and vice versa.
+	LocalPathAndSource = "--local-path with/without --source-image"
 )
 
 const (
@@ -153,6 +156,8 @@ type WorkloadOptions struct {
 
 func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldErrors {
 	errs := validation.FieldErrors{}
+	var mavenSource bool
+	sources := []string{}
 
 	errs = errs.Also(validation.K8sName(opts.Namespace, flags.NamespaceFlagName))
 	if opts.FilePath == "" {
@@ -200,6 +205,34 @@ func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldError
 		errs = errs.Also(validation.Enum(opts.Output, flags.OutputFlagName, []string{printer.OutputFormatJson, printer.OutputFormatYaml, printer.OutputFormatYml}))
 	}
 
+	// validating sources as the source options are mutually exclusive
+	if opts.MavenArtifact != "" || opts.MavenVersion != "" || opts.MavenGroup != "" || opts.MavenType != "" {
+		mavenSource = true
+	}
+	for _, p := range opts.ParamsYaml {
+		kv := parsers.DeletableKeyValue(p)
+		if len(kv) != 1 {
+			if kv[0] == cartov1alpha1.WorkloadMavenParam {
+				mavenSource = true
+				break
+			}
+		}
+	}
+	if mavenSource {
+		sources = append(sources, MavenFlagWildcard)
+	}
+	if opts.LocalPath != "" || opts.SourceImage != "" {
+		sources = append(sources, LocalPathAndSource)
+	}
+	if opts.Image != "" {
+		sources = append(sources, flags.ImageFlagName)
+	}
+	if opts.GitRepo != "" || opts.GitBranch != "" || opts.GitCommit != "" || opts.GitTag != "" {
+		sources = append(sources, flags.GitFlagWildcard)
+	}
+	if len(sources) > 1 {
+		errs = errs.Also(validation.ErrMultipleSources(sources...))
+	}
 	return errs
 }
 
