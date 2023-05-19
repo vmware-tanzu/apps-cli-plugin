@@ -57,19 +57,11 @@ jobs:
       run: echo "PLUGIN_BUILD_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       if: startsWith(github.ref, 'refs/tags/')
     - name: Build
-      run: make build
-    - uses: actions/upload-artifact@v3
-      with:
-        name: tanzu-apps-plugin-build.tar.gz
-        path: tanzu-apps-plugin-build.tar.gz
-        retention-days: 1
-      if: startsWith(github.ref, 'refs/tags/')
-    - name: Publish
-      run: make publish
+      run: make plugin-build
     - uses: actions/upload-artifact@v3
       with:
         name: tanzu-apps-plugin.tar.gz
-        path: tanzu-apps-plugin*.tar.gz
+        path: ./artifacts/tanzu-apps-plugin*.tar.gz
         retention-days: 1
     - name: Install
       run: |
@@ -78,7 +70,7 @@ jobs:
           PLUGIN_BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)-dev-$PLUGIN_BUILD_SHA_SHORT
         fi
         echo $PLUGIN_BUILD_VERSION
-        tanzu plugin install apps --version $PLUGIN_BUILD_VERSION --local ./artifacts/published/linux-amd64
+        tanzu plugin install apps --version $PLUGIN_BUILD_VERSION --local ./artifacts/plugins/linux/amd64
     - name: Verify docs
       run: |
         rm -rf docs/command-reference
@@ -119,18 +111,14 @@ jobs:
     - name: Build
       run: |
         $Env:PATH += ";C:\Program Files\tanzu"
-        make build
-    - name: Publish
-      run: |
-        $Env:PATH += ";C:\Program Files\tanzu"
-        make publish
+        make plugin-build
     - name: Install
       run: |
         $Env:PATH += ";C:\Program Files\tanzu"
         $PLUGIN_BUILD_SHA_SHORT=git rev-parse --short HEAD
         $APP_PLUGIN_VERSION=type .\APPS_PLUGIN_VERSION
         $PLUGIN_BUILD_VERSION=$APP_PLUGIN_VERSION+'-dev-'+$PLUGIN_BUILD_SHA_SHORT
-        tanzu plugin install apps --version $PLUGIN_BUILD_VERSION --local ./artifacts/published/windows-amd64
+        tanzu plugin install apps --version $PLUGIN_BUILD_VERSION --local ./artifacts/plugins/windows/amd64
 
   unit-macos:
     env:
@@ -163,9 +151,7 @@ jobs:
       run: echo "PLUGIN_BUILD_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       if: startsWith(github.ref, 'refs/tags/')
     - name: Build
-      run: make build
-    - name: Publish
-      run: make publish
+      run: make plugin-build
     - name: Install
       run: |
         if [[ -z ${PLUGIN_BUILD_VERSION} ]]; then
@@ -173,7 +159,7 @@ jobs:
           PLUGIN_BUILD_VERSION=$(cat APPS_PLUGIN_VERSION)-dev-$PLUGIN_BUILD_SHA_SHORT
         fi
         echo $PLUGIN_BUILD_VERSION
-        tanzu plugin install apps --version $PLUGIN_BUILD_VERSION --local ./artifacts/published/darwin-amd64
+        tanzu plugin install apps --version $PLUGIN_BUILD_VERSION --local ./artifacts/plugins/darwin/amd64
 
   acceptance:
     needs: [unit-ubuntu, unit-windows, unit-macos]
@@ -234,7 +220,7 @@ jobs:
         set -u
 
         tar -xvf tanzu-apps-plugin.tar.gz
-        tanzu plugin install apps --local ./${OS_ARCH} --version ${PLUGIN_BUILD_VERSION:-v0.0.0-dev}
+        tanzu plugin install apps --local ./linux/amd64 --version ${PLUGIN_BUILD_VERSION:-v0.0.0-dev}
     - name: Generate certs
       run: |
         set -o errexit

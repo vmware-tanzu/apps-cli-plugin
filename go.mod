@@ -22,7 +22,7 @@ require (
 	github.com/vmware-tanzu/carvel-imgpkg v0.36.2
 	github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 	github.com/vmware-tanzu/tanzu-plugin-runtime v0.90.0-alpha.2
-	golang.org/x/crypto v0.8.0
+	golang.org/x/crypto v0.9.0
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools/v3 v3.4.0
 	k8s.io/api v0.26.3
@@ -167,7 +167,6 @@ require (
 )
 
 replace (
-	github.com/vmware-tanzu/tanzu-framework/cli/runtime => github.com/vmware-tanzu/tanzu-plugin-runtime v0.90.0-alpha.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.23.4
 	sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.1.3
 )
