@@ -1106,6 +1106,5 @@ sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.3.0
 ## explicit; go 1.12
 sigs.k8s.io/yaml
-# github.com/vmware-tanzu/tanzu-framework/cli/runtime => github.com/vmware-tanzu/tanzu-plugin-runtime v0.90.0-alpha.0
 # k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.23.4
 # sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.1.3

@@ -167,7 +167,6 @@ require (
 )
 
 replace (
-	github.com/vmware-tanzu/tanzu-framework/cli/runtime => github.com/vmware-tanzu/tanzu-plugin-runtime v0.90.0-alpha.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.23.4
 	sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.1.3
 )
