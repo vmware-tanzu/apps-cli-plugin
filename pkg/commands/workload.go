@@ -209,12 +209,14 @@ func (opts *WorkloadOptions) Validate(ctx context.Context) validation.FieldError
 	if opts.MavenArtifact != "" || opts.MavenVersion != "" || opts.MavenGroup != "" || opts.MavenType != "" {
 		mavenSource = true
 	}
-	for _, p := range opts.ParamsYaml {
-		kv := parsers.DeletableKeyValue(p)
-		if len(kv) != 1 {
-			if kv[0] == cartov1alpha1.WorkloadMavenParam {
-				mavenSource = true
-				break
+	if !mavenSource {
+		for _, p := range opts.ParamsYaml {
+			kv := parsers.DeletableKeyValue(p)
+			if len(kv) != 1 {
+				if kv[0] == cartov1alpha1.WorkloadMavenParam {
+					mavenSource = true
+					break
+				}
 			}
 		}
 	}
