@@ -910,11 +910,11 @@ func checkLSPHealth(ctx context.Context, c *cli.Config) error {
 	} else {
 		switch {
 		case !s.UserHasPermission:
-			return fmt.Errorf("Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nError: %s", s.Message)
+			return fmt.Errorf("Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nReason: %s", s.Message)
 		case !s.Reachable:
-			return fmt.Errorf("Local source proxy is not installed or the deployment is not healthy. Either install it or use --source-image flag\nError: %s", s.Message)
+			return fmt.Errorf("Local source proxy is not installed or the deployment is not healthy. Either install it or use --source-image flag\nReason: %s", s.Message)
 		case !s.UpstreamAuthenticated:
-			return fmt.Errorf("Local source proxy failed to upload source to the repository\nError: %s", s.Message)
+			return fmt.Errorf("Local source proxy failed to upload source to the repository\nReason: %s", s.Message)
 		}
 	}
 	return nil

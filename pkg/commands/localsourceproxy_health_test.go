@@ -136,7 +136,7 @@ upstream_authenticated: false
 overall_health: false
 message: |-
   The current user does not have permission to access the local source proxy.
-  Errors:
+  Messages:
   - 401 Status Unauthorized
 `,
 		},
@@ -151,7 +151,7 @@ upstream_authenticated: false
 overall_health: false
 message: |-
   Local source proxy was unable to authenticate against the target registry.
-  Errors:
+  Messages:
   - 401 Status user UNAUTHORIZED for registry
 `,
 		},

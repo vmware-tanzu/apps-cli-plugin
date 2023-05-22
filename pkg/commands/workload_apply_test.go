@@ -7973,7 +7973,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "302", "message": "Registry moved found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry moved found"
+				msg := "Local source proxy failed to upload source to the repository\nReason: Local source proxy was unable to authenticate against the target registry.\nMessages:\n- Registry moved found"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -7986,7 +7986,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "401", "message": "401 Status user UNAUTHORIZED for registry"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- 401 Status user UNAUTHORIZED for registry"
+				msg := "Local source proxy failed to upload source to the repository\nReason: Local source proxy was unable to authenticate against the target registry.\nMessages:\n- 401 Status user UNAUTHORIZED for registry"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -7999,7 +7999,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "404", "message": "Registry not found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry not found"
+				msg := "Local source proxy failed to upload source to the repository\nReason: Local source proxy was unable to authenticate against the target registry.\nMessages:\n- Registry not found"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -8012,7 +8012,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "500", "message": "Registry internal error"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry internal error"
+				msg := "Local source proxy failed to upload source to the repository\nReason: Local source proxy was unable to authenticate against the target registry.\nMessages:\n- Registry internal error"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -8025,7 +8025,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusFound, `{"message": "302 Status Found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nError: Local source proxy was moved and is not reachable in the defined url.\nErrors:\n- 302 Status Found"
+				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nReason: Local source proxy was moved and is not reachable in the defined url.\nMessages:\n- 302 Status Found"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -8038,7 +8038,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusUnauthorized, `{"message": "401 Status Unauthorized"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nError: The current user does not have permission to access the local source proxy.\nErrors:\n- 401 Status Unauthorized"
+				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nReason: The current user does not have permission to access the local source proxy.\nMessages:\n- 401 Status Unauthorized"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -8051,7 +8051,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusNotFound, `{"message": "404 Status Not Found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Local source proxy is not installed or the deployment is not healthy. Either install it or use --source-image flag\nError: Local source proxy is not installed on the cluster.\nErrors:\n- 404 Status Not Found"
+				msg := "Local source proxy is not installed or the deployment is not healthy. Either install it or use --source-image flag\nReason: Local source proxy is not installed on the cluster.\nMessages:\n- 404 Status Not Found"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -8761,7 +8761,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "302", "message": "Registry moved found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry moved found"
+				msg := "Local source proxy failed to upload source to the repository\nReason: Local source proxy was unable to authenticate against the target registry.\nMessages:\n- Registry moved found"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -8779,7 +8779,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "401", "message": "401 Status user UNAUTHORIZED for registry"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- 401 Status user UNAUTHORIZED for registry"
+				msg := "Local source proxy failed to upload source to the repository\nReason: Local source proxy was unable to authenticate against the target registry.\nMessages:\n- 401 Status user UNAUTHORIZED for registry"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -8797,7 +8797,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "404", "message": "Registry not found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry not found"
+				msg := "Local source proxy failed to upload source to the repository\nReason: Local source proxy was unable to authenticate against the target registry.\nMessages:\n- Registry not found"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -8815,7 +8815,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "500", "message": "Registry internal error"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Local source proxy failed to upload source to the repository\nError: Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Registry internal error"
+				msg := "Local source proxy failed to upload source to the repository\nReason: Local source proxy was unable to authenticate against the target registry.\nMessages:\n- Registry internal error"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -8833,7 +8833,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusFound, `{"message": "302 Status Found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nError: Local source proxy was moved and is not reachable in the defined url.\nErrors:\n- 302 Status Found"
+				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nReason: Local source proxy was moved and is not reachable in the defined url.\nMessages:\n- 302 Status Found"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -8851,7 +8851,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusUnauthorized, `{"message": "401 Status Unauthorized"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nError: The current user does not have permission to access the local source proxy.\nErrors:\n- 401 Status Unauthorized"
+				msg := "Either Local Source Proxy is not installed on the Cluster or you don't have permissions to access it\nReason: The current user does not have permission to access the local source proxy.\nMessages:\n- 401 Status Unauthorized"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
@@ -8869,7 +8869,7 @@ To get status: "tanzu apps workload get my-workload"
 			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusNotFound, `{"message": "404 Status Not Found"}`, myWorkloadHeader)),
 			ShouldError:         true,
 			Verify: func(t *testing.T, output string, err error) {
-				msg := "Local source proxy is not installed or the deployment is not healthy. Either install it or use --source-image flag\nError: Local source proxy is not installed on the cluster.\nErrors:\n- 404 Status Not Found"
+				msg := "Local source proxy is not installed or the deployment is not healthy. Either install it or use --source-image flag\nReason: Local source proxy is not installed on the cluster.\nMessages:\n- 404 Status Not Found"
 				if err.Error() != msg {
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
