@@ -14,4 +14,3 @@ ignore:
 comment:
   # Update existing comment or create new if deleted.
   behavior: default
-  

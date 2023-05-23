@@ -1,7 +1,7 @@
 name: CI
 
 on:
-  push: 
+  push:
     branches:
     - '**'
     - '!dependabot/**'
@@ -42,11 +42,10 @@ jobs:
         tanzu init
         tanzu version
         tanzu plugin install builder
-        tanzu plugin install test
         tanzu plugin list
     - name: Scan Inclusive Terminology
       uses: get-woke/woke-action@v0
-      with: 
+      with:
         fail-on-error: true
         woke-args: -c https://via.vmw.com/its-woke-rules
     - name: Test
@@ -91,7 +90,7 @@ jobs:
     - name: Install tanzu cli
       run: |
         $TANZU_VERSION = type .\TANZU_VERSION
-        mkdir "C:\Program Files\tanzu"       
+        mkdir "C:\Program Files\tanzu"
         $Env:PATH += ";C:\Program Files\tanzu"
         $TANZU_HOME = "C:\Program Files\tanzu"
         $Env:TANZU_CLI_NO_INIT = "true"
@@ -102,11 +101,10 @@ jobs:
         tanzu config eula accept
         tanzu init
         tanzu plugin install builder
-        tanzu plugin install test
         tanzu plugin list
     - name: Test
       run: |
-        $Env:PATH += ";C:\Program Files\tanzu"      
+        $Env:PATH += ";C:\Program Files\tanzu"
         make test
     - name: Build
       run: |
@@ -143,7 +141,6 @@ jobs:
         tanzu config eula accept
         tanzu init
         tanzu plugin install builder
-        tanzu plugin install test
         tanzu plugin list
     - name: Test
       run: make test
@@ -263,7 +260,7 @@ jobs:
         docker run \
         --entrypoint htpasswd \
         httpd:2 -Bbn ${REGISTRY_USERNAME} ${REGISTRY_PASSWORD} > ${REGISTRY_HTPWD}/htpasswd
-        
+
         # Run a registry.
         docker run -d \
           --restart=always \
@@ -383,7 +380,7 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ steps.get_version.outputs.VERSION }}
-        draft: true 
+        draft: true
     - name: Create release info files
       run: |
         echo "${{ steps.get_version.outputs.VERSION }}" > RELEASE_INFO_VERSION

@@ -99,7 +99,7 @@ prepare: generate fmt vet
 fmt: ## Run go fmt against code
 ifneq ($(OS),Windows_NT)
 	$(GOIMPORTS) --local github.com/vmware-tanzu/apps-cli-plugin -w pkg/ cmd/
-endif 
+endif
 
 .PHONY: vet
 vet: ## Run go vet against code
