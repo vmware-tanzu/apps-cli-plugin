@@ -22,8 +22,9 @@ limitations under the License.
 package v1alpha1
 
 import (
-	testing "dies.dev/testing"
 	testingx "testing"
+
+	testing "dies.dev/testing"
 )
 
 func TestClusterSupplyChainDie_MissingMethods(t *testingx.T) {

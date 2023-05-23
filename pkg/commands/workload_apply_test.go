@@ -145,6 +145,23 @@ func TestWorkloadApplyOptionsValidate(t *testing.T) {
 			},
 			ExpectFieldErrors: validation.EnumInvalidValue("invalid", flags.UpdateStrategyFlagName, []string{"merge", "replace"}),
 		},
+		{
+			Name: "apply with multiple sources",
+			Validatable: &commands.WorkloadApplyOptions{
+				WorkloadOptions: commands.WorkloadOptions{
+					Namespace:     "default",
+					Name:          "my-resource",
+					GitRepo:       "https://example.com/repo.git",
+					GitBranch:     "main",
+					SourceImage:   "repo.example/image:tag",
+					Image:         "repo.example/image:tag",
+					MavenArtifact: "hello-world",
+					MavenType:     "jar",
+					MavenVersion:  "0.0.1",
+				},
+			},
+			ExpectFieldErrors: validation.ErrMultipleSources(commands.MavenFlagWildcard, commands.LocalPathAndSource, flags.ImageFlagName, flags.GitFlagWildcard),
+		},
 	}
 
 	table.Run(t)

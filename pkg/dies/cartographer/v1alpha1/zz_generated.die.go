@@ -22,15 +22,17 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"dies.dev/apis/meta/v1"
 	json "encoding/json"
 	fmtx "fmt"
-	cartographerv1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
+
+	v1 "dies.dev/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	unstructured "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
+
+	cartographerv1alpha1 "github.com/vmware-tanzu/apps-cli-plugin/pkg/apis/cartographer/v1alpha1"
 )
 
 var ClusterSupplyChainBlank = (&ClusterSupplyChainDie{}).DieFeed(cartographerv1alpha1.ClusterSupplyChain{})

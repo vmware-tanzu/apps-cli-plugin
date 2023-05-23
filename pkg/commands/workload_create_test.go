@@ -92,6 +92,22 @@ func TestWorkloadCreateOptionsValidate(t *testing.T) {
 			},
 			ExpectFieldErrors: validation.ErrInvalidArrayValue("FOO", flags.BuildEnvFlagName, 0),
 		},
+		{
+			Name: "apply with multiple sources",
+			Validatable: &commands.WorkloadCreateOptions{
+				WorkloadOptions: commands.WorkloadOptions{
+					Namespace:     "default",
+					Name:          "my-resource",
+					GitRepo:       "https://example.com/repo.git",
+					GitBranch:     "main",
+					SourceImage:   "repo.example/image:tag",
+					MavenArtifact: "hello-world",
+					MavenType:     "jar",
+					MavenVersion:  "0.0.1",
+				},
+			},
+			ExpectFieldErrors: validation.ErrMultipleSources(commands.MavenFlagWildcard, commands.LocalPathAndSource, flags.GitFlagWildcard),
+		},
 	}
 
 	table.Run(t)
