@@ -47,18 +47,6 @@ PUBLISHER ?= tzcli
 VENDOR ?= vmware
 PLUGIN_SCOPE_ASSOCIATION_FILE ?= ""
 
-PLUGIN_DIR := ./cmd/plugin
-PLUGIN_BINARY_ARTIFACTS_DIR := $(ROOT_DIR)/artifacts/plugins
-
-PLUGIN_NAME ?= apps
-
-# Repository specific configuration
-TZBIN ?= tanzu
-BUILDER_PLUGIN ?= $(TZBIN) builder
-PUBLISHER ?= tzcli
-VENDOR ?= vmware
-PLUGIN_SCOPE_ASSOCIATION_FILE ?= ""
-
 .PHONY: all
 all: test build ## Prepare and run the project tests
 
