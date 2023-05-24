@@ -222,7 +222,8 @@ func (w *WorkloadSpec) Merge(updates *WorkloadSpec) {
 	if updates.Image != "" {
 		w.MergeImage(updates.Image)
 	}
-	if s := updates.Source; s != nil {
+	if updates.Source != nil {
+		s := updates.Source.DeepCopy()
 		if s.Git != nil {
 			w.MergeGit(*s.Git)
 		}
@@ -326,7 +327,7 @@ func (w *WorkloadSpec) ResetSource() {
 }
 
 func (w *WorkloadSpec) MergeGit(git GitSource) {
-	stash := w.Source
+	stash := w.Source.DeepCopy()
 	image := w.Image
 	w.ResetSource()
 
@@ -348,13 +349,13 @@ func (w *WorkloadSpec) MergeGit(git GitSource) {
 }
 
 func (w *WorkloadSpec) MergeSourceImage(image string) {
-	stash := w.Source
+	stash := w.Source.DeepCopy()
 	w.ResetSource()
 
 	w.Source = &Source{
 		Image: image,
 	}
-	if stash != nil && stash.Image != "" {
+	if stash != nil && stash.Subpath != "" {
 		w.Source.Subpath = stash.Subpath
 	}
 }

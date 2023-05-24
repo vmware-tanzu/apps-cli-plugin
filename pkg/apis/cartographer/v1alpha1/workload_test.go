@@ -1884,25 +1884,6 @@ func TestWorkloadSpec_MergeSourceImage(t *testing.T) {
 				Subpath: "my-subpath",
 			},
 		},
-	}, {
-		name: "update deleting subpath",
-		seed: &WorkloadSpec{
-			Source: &Source{
-				Git: &GitSource{
-					URL: "git@github.com:example/repo.git",
-					Ref: GitRef{
-						Branch: "main",
-					},
-				},
-				Subpath: "my-subpath",
-			},
-		},
-		sourceImage: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
-		want: &WorkloadSpec{
-			Source: &Source{
-				Image: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
-			},
-		},
 	}}
 
 	for _, test := range tests {
