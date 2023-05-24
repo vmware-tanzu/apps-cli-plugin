@@ -1,5 +1,5 @@
 /*
-Copyright 2021 VMware, Inc.
+Copyright 2023 VMware, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,9 +30,9 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	tanzucliv1alpha1 "github.com/vmware-tanzu/tanzu-framework/cli/runtime/apis/cli/v1alpha1"
-	"github.com/vmware-tanzu/tanzu-framework/cli/runtime/buildinfo"
-	"github.com/vmware-tanzu/tanzu-framework/cli/runtime/plugin"
+	"github.com/vmware-tanzu/tanzu-plugin-runtime/config/types"
+	"github.com/vmware-tanzu/tanzu-plugin-runtime/plugin"
+	"github.com/vmware-tanzu/tanzu-plugin-runtime/plugin/buildinfo"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -62,14 +62,15 @@ func init() {
 func main() {
 	ctx := context.Background()
 
-	p, err := plugin.NewPlugin(&tanzucliv1alpha1.PluginDescriptor{
+	p, err := plugin.NewPlugin(&plugin.PluginDescriptor{
 		Name:           "apps",
 		Description:    "Applications on Kubernetes",
-		Group:          tanzucliv1alpha1.BuildCmdGroup,
-		CompletionType: tanzucliv1alpha1.NativePluginCompletion,
+		Group:          plugin.BuildCmdGroup,
+		CompletionType: plugin.NativePluginCompletion,
 		Aliases:        []string{"app"},
 		Version:        buildinfo.Version,
 		BuildSHA:       buildinfo.SHA,
+		Target:         types.TargetK8s,
 	})
 	if err != nil {
 		log.Fatal(err)
