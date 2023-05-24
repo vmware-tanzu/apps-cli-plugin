@@ -30,7 +30,7 @@ import (
 	"github.com/vmware-tanzu/apps-cli-plugin/pkg/source"
 )
 
-const errFormat = "%s\nErrors:\n- %s"
+const errFormat = "%s\nMessages:\n- %s"
 
 type lspResponse struct {
 	Message    string `json:"message"`

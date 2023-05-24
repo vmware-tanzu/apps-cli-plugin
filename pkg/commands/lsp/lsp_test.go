@@ -100,7 +100,7 @@ func TestGetStatus(t *testing.T) {
 				c:   getConfig(getResponse(http.StatusUnauthorized, (`{"message": "403 Forbidden"}`))),
 			},
 			want: lsp.HealthStatus{
-				Message: "The current user does not have permission to access the local source proxy.\nErrors:\n- 403 Forbidden",
+				Message: "The current user does not have permission to access the local source proxy.\nMessages:\n- 403 Forbidden",
 			},
 		},
 		{
@@ -110,7 +110,7 @@ func TestGetStatus(t *testing.T) {
 				c:   getConfig(getResponse(http.StatusUnauthorized, (`{"message": "401 Unauthorized"}`))),
 			},
 			want: lsp.HealthStatus{
-				Message: "The current user does not have permission to access the local source proxy.\nErrors:\n- 401 Unauthorized",
+				Message: "The current user does not have permission to access the local source proxy.\nMessages:\n- 401 Unauthorized",
 			},
 		},
 		{
@@ -122,7 +122,7 @@ func TestGetStatus(t *testing.T) {
 			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
-				Message:           "Local source proxy is not healthy.\nErrors:\n- 500 Internal Server Error",
+				Message:           "Local source proxy is not healthy.\nMessages:\n- 500 Internal Server Error",
 			},
 		},
 		{
@@ -134,7 +134,7 @@ func TestGetStatus(t *testing.T) {
 			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
-				Message:           "Local source proxy is not healthy.\nErrors:\n- 504 GatewayTimeout",
+				Message:           "Local source proxy is not healthy.\nMessages:\n- 504 GatewayTimeout",
 			},
 		},
 		{
@@ -145,7 +145,7 @@ func TestGetStatus(t *testing.T) {
 			},
 			want: lsp.HealthStatus{
 				UserHasPermission: true,
-				Message:           "Local source proxy is not healthy.\nErrors:\n- 503 Service Unavailable",
+				Message:           "Local source proxy is not healthy.\nMessages:\n- 503 Service Unavailable",
 			},
 		},
 		{
@@ -156,7 +156,7 @@ func TestGetStatus(t *testing.T) {
 			},
 			want: lsp.HealthStatus{
 				UserHasPermission: true,
-				Message:           "Local source proxy is not installed on the cluster.\nErrors:\n- 404 Not Found",
+				Message:           "Local source proxy is not installed on the cluster.\nMessages:\n- 404 Not Found",
 			},
 		},
 
@@ -169,7 +169,7 @@ func TestGetStatus(t *testing.T) {
 			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
-				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Found",
+				Message:           "Local source proxy was unable to authenticate against the target registry.\nMessages:\n- Found",
 			},
 		},
 		{
@@ -181,7 +181,7 @@ func TestGetStatus(t *testing.T) {
 			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
-				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Bad Request",
+				Message:           "Local source proxy was unable to authenticate against the target registry.\nMessages:\n- Bad Request",
 			},
 		},
 		{
@@ -193,7 +193,7 @@ func TestGetStatus(t *testing.T) {
 			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
-				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Unauthorized",
+				Message:           "Local source proxy was unable to authenticate against the target registry.\nMessages:\n- Unauthorized",
 			},
 		},
 		{
@@ -205,7 +205,7 @@ func TestGetStatus(t *testing.T) {
 			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
-				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Forbidden",
+				Message:           "Local source proxy was unable to authenticate against the target registry.\nMessages:\n- Forbidden",
 			},
 		},
 		{
@@ -217,7 +217,7 @@ func TestGetStatus(t *testing.T) {
 			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
-				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Not Found",
+				Message:           "Local source proxy was unable to authenticate against the target registry.\nMessages:\n- Not Found",
 			},
 		},
 		{
@@ -229,7 +229,7 @@ func TestGetStatus(t *testing.T) {
 			want: lsp.HealthStatus{
 				UserHasPermission: true,
 				Reachable:         true,
-				Message:           "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- Internal Server Error",
+				Message:           "Local source proxy was unable to authenticate against the target registry.\nMessages:\n- Internal Server Error",
 			},
 		},
 	}
@@ -273,7 +273,7 @@ func Test_checkRequestResponseCode(t *testing.T) {
 			},
 			want: &lsp.HealthStatus{
 				Message: `The current user does not have permission to access the local source proxy.
-Errors:
+Messages:
 - my cool message`,
 			},
 		},
@@ -285,7 +285,7 @@ Errors:
 			},
 			want: &lsp.HealthStatus{
 				Message: `The current user does not have permission to access the local source proxy.
-Errors:
+Messages:
 - my cool message`,
 			},
 		},
@@ -299,7 +299,7 @@ Errors:
 				UserHasPermission: true,
 				Reachable:         true,
 				Message: `Local source proxy is not healthy.
-Errors:
+Messages:
 - my cool message`,
 			},
 		},
@@ -313,7 +313,7 @@ Errors:
 				UserHasPermission: true,
 				Reachable:         true,
 				Message: `Local source proxy is not healthy.
-Errors:
+Messages:
 - my cool message`,
 			},
 		},
@@ -327,7 +327,7 @@ Errors:
 				UserHasPermission: true,
 				Reachable:         true,
 				Message: `Local source proxy is not healthy.
-Errors:
+Messages:
 - my cool message`,
 			},
 		},
@@ -340,7 +340,7 @@ Errors:
 			want: &lsp.HealthStatus{
 				UserHasPermission: true,
 				Message: `Local source proxy is not healthy.
-Errors:
+Messages:
 - my cool message`,
 			},
 		},
@@ -353,7 +353,7 @@ Errors:
 			want: &lsp.HealthStatus{
 				UserHasPermission: true,
 				Message: `Local source proxy is not installed on the cluster.
-Errors:
+Messages:
 - my cool message`,
 			},
 		},
@@ -365,7 +365,7 @@ Errors:
 			},
 			want: &lsp.HealthStatus{
 				Message: `The request is not valid for the query the health of the ocal source proxy.
-Errors:
+Messages:
 - my cool message`,
 			},
 		},
@@ -377,7 +377,7 @@ Errors:
 			},
 			want: &lsp.HealthStatus{
 				Message: `Local source proxy was moved and is not reachable in the defined url.
-Errors:
+Messages:
 - my cool message`,
 			},
 		},
@@ -394,7 +394,7 @@ Errors:
 
 func Test_getStatusFromLSPResponse(t *testing.T) {
 	msg := "my cool message"
-	respMsg := "Local source proxy was unable to authenticate against the target registry.\nErrors:\n- my cool message"
+	respMsg := "Local source proxy was unable to authenticate against the target registry.\nMessages:\n- my cool message"
 	type args struct {
 		r lspResponse
 	}
