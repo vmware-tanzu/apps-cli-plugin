@@ -42,7 +42,31 @@ func (p *Plugin) AddCommands(commands ...*cobra.Command) {
 
 // Execute executes the plugin.
 func (p *Plugin) Execute() error {
+	propagateTargetAnnotation(p.Cmd)
 	return p.Cmd.Execute()
+}
+
+// propagateTargetAnnotation propagates the target annotation from parent command to all its children.
+// This target annotation is used in the usage template to display the target kubernetes/mission-control for the plugins
+func propagateTargetAnnotation(cmd *cobra.Command) {
+	if cmd.HasParent() {
+		parentAnnotations := cmd.Parent().Annotations
+		if parentAnnotations != nil {
+			// Only propagate "target" annotation
+			if group, ok := parentAnnotations["target"]; ok {
+				if cmd.Annotations == nil {
+					cmd.Annotations = make(map[string]string)
+				}
+				// Do not overwrite child command's annotation if it exists
+				if _, ok := cmd.Annotations["target"]; !ok {
+					cmd.Annotations["target"] = group
+				}
+			}
+		}
+	}
+	for _, childCmd := range cmd.Commands() {
+		propagateTargetAnnotation(childCmd)
+	}
 }
 
 // ApplyDefaultConfig applies default configurations to plugin descriptor.

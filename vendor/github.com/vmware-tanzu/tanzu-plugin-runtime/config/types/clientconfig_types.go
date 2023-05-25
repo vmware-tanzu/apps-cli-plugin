@@ -139,6 +139,8 @@ type GlobalServerAuth struct {
 // ClientOptions are the client specific options.
 type ClientOptions struct {
 	// CLI options specific to the CLI.
+	//
+	// Deprecated: CLI has been deprecated and will be removed from future version. use CoreCliOptions
 	CLI      *CLIOptions           `json:"cli,omitempty" yaml:"cli,omitempty"`
 	Features map[string]FeatureMap `json:"features,omitempty" yaml:"features,omitempty"`
 	Env      map[string]string     `json:"env,omitempty" yaml:"env,omitempty"`
@@ -151,13 +153,16 @@ type FeatureMap map[string]string
 type EnvMap map[string]string
 
 // CLIOptions are options for the CLI.
+//
+// Deprecated: CLIOptions has been deprecated and will be removed from future version
 type CLIOptions struct {
 	// Repositories are the plugin repositories.
 	//
 	// Deprecated: Repositories has been deprecated and will be removed from future version
 	Repositories []PluginRepository `json:"repositories,omitempty" yaml:"repositories,omitempty"`
 	// DiscoverySources determines from where to discover stand-alone plugins
-	// Deprecated: DiscoverySources has been deprecated and will be removed in a future version
+	//
+	// Deprecated: DiscoverySources has been deprecated and will be removed in a future version. use CoreCliOptions.DiscoverySources
 	DiscoverySources []PluginDiscovery `json:"discoverySources,omitempty" yaml:"discoverySources,omitempty"`
 	// UnstableVersionSelector determined which version tags are allowed
 	//
@@ -336,6 +341,8 @@ type ClientConfig struct {
 }
 
 // ClientConfigList contains a list of ClientConfig
+//
+// Deprecated: ClientConfigList struct is deprecated. Use ClientConfig instead.
 type ClientConfigList struct {
 	Items []ClientConfig `json:"items"`
 }

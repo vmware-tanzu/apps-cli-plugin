@@ -25,6 +25,9 @@ func newRootCmd(descriptor *PluginDescriptor) *cobra.Command {
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true,
 		},
+		Annotations: map[string]string{
+			"target": string(descriptor.Target),
+		},
 	}
 	cobra.AddTemplateFuncs(TemplateFuncs)
 	cmd.SetUsageTemplate(CmdTemplate)
