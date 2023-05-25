@@ -355,7 +355,7 @@ func (w *WorkloadSpec) MergeSourceImage(image string) {
 	w.Source = &Source{
 		Image: image,
 	}
-	if stash != nil && stash.Subpath != "" {
+	if stash != nil {
 		w.Source.Subpath = stash.Subpath
 	}
 }
