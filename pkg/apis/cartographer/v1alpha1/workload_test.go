@@ -1035,6 +1035,101 @@ func TestWorkload_Merge(t *testing.T) {
 			},
 		},
 	}, {
+		name: "image with sources nill",
+		seed: &Workload{
+			Spec: WorkloadSpec{
+				Image: "alpine:latest",
+			},
+		},
+		update: &Workload{
+			Spec: WorkloadSpec{
+				Image:  "ubuntu:bionic",
+				Source: &Source{Subpath: "my-subpath"},
+			},
+		},
+		want: &Workload{
+			Spec: WorkloadSpec{
+				Image: "ubuntu:bionic",
+			},
+		},
+	}, {
+		name: "image with sources source image and subpath",
+		seed: &Workload{
+			Spec: WorkloadSpec{
+				Image: "alpine:latest",
+			},
+		},
+		update: &Workload{
+			Spec: WorkloadSpec{
+				Image: "ubuntu:bionic",
+				Source: &Source{
+					Image:   "ubuntu:bionic",
+					Subpath: "my-subpath",
+				},
+			},
+		},
+		want: &Workload{
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Image:   "ubuntu:bionic",
+					Subpath: "my-subpath",
+				},
+			},
+		},
+	}, {
+		name: "image update sources source image and subpath",
+		seed: &Workload{
+			Spec: WorkloadSpec{
+				Image: "alpine:latest",
+				Source: &Source{
+					Subpath: "new-subpath",
+				},
+			},
+		},
+		update: &Workload{
+			Spec: WorkloadSpec{
+				Image: "ubuntu:bionic",
+				Source: &Source{
+					Image:   "ubuntu:bionic",
+					Subpath: "my-subpath",
+				},
+			},
+		},
+		want: &Workload{
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Image:   "ubuntu:bionic",
+					Subpath: "my-subpath",
+				},
+			},
+		},
+	}, {
+		name: "local source image with subpath update source image and subpath",
+		seed: &Workload{
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Image:   "ubuntu:bionic",
+					Subpath: "/opt",
+				},
+			},
+		},
+		update: &Workload{
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Image:   "ubuntu:bionic",
+					Subpath: "/sys",
+				},
+			},
+		},
+		want: &Workload{
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Image:   "ubuntu:bionic",
+					Subpath: "/sys",
+				},
+			},
+		},
+	}, {
 		name: "git",
 		seed: &Workload{
 			Spec: WorkloadSpec{
@@ -1092,13 +1187,7 @@ func TestWorkload_Merge(t *testing.T) {
 				},
 			},
 		},
-		want: &Workload{
-			Spec: WorkloadSpec{
-				Source: &Source{
-					Subpath: "test-path",
-				},
-			},
-		},
+		want: &Workload{},
 	}, {
 		name: "env",
 		seed: &Workload{

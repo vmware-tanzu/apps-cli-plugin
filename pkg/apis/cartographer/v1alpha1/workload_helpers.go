@@ -219,6 +219,19 @@ func (w *WorkloadSpec) Merge(updates *WorkloadSpec) {
 	for _, p := range updates.Params {
 		w.MergeParams(p.Name, p.Value)
 	}
+	sp := ""
+	if w.Source != nil {
+		sp = w.Source.Subpath
+	}
+	if updates.Image != "" {
+		w.MergeImage(updates.Image)
+	}
+	if updates.Source != nil && (updates.Source.Git != nil || updates.Source.Image != "") && sp != "" {
+		if w.Source == nil {
+			w.Source = &Source{}
+		}
+		w.Source.Subpath = sp
+	}
 	if updates.Source != nil {
 		s := updates.Source.DeepCopy()
 		if s.Git != nil {
@@ -227,12 +240,9 @@ func (w *WorkloadSpec) Merge(updates *WorkloadSpec) {
 		if s.Image != "" {
 			w.MergeSourceImage(s.Image)
 		}
-		if s.Subpath != "" {
+		if s.Subpath != "" && w.Source != nil && (w.Source.Git != nil || w.Source.Image != "") {
 			w.MergeSubPath(s.Subpath)
 		}
-	}
-	if updates.Image != "" {
-		w.MergeImage(updates.Image)
 	}
 	for _, e := range updates.Env {
 		w.MergeEnv(e)

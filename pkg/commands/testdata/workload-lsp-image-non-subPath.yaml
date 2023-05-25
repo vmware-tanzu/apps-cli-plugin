@@ -1,0 +1,31 @@
+# Copyright 2023 VMware, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  annotations:
+    local-source-proxy.apps.tanzu.vmware.com: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
+  labels:
+    apps.tanzu.vmware.com/workload-type: web
+  name: my-workload
+  namespace: default
+spec:
+  params:
+    - name: annotations
+      value:
+        autoscaling.knative.dev/minScale: "2"
+  image: my-registry/default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
+  source:
+    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
