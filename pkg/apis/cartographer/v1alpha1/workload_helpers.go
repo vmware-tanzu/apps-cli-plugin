@@ -219,9 +219,6 @@ func (w *WorkloadSpec) Merge(updates *WorkloadSpec) {
 	for _, p := range updates.Params {
 		w.MergeParams(p.Name, p.Value)
 	}
-	if updates.Image != "" {
-		w.MergeImage(updates.Image)
-	}
 	if updates.Source != nil {
 		s := updates.Source.DeepCopy()
 		if s.Git != nil {
@@ -233,6 +230,9 @@ func (w *WorkloadSpec) Merge(updates *WorkloadSpec) {
 		if s.Subpath != "" {
 			w.MergeSubPath(s.Subpath)
 		}
+	}
+	if updates.Image != "" {
+		w.MergeImage(updates.Image)
 	}
 	for _, e := range updates.Env {
 		w.MergeEnv(e)
@@ -342,35 +342,30 @@ func (w *WorkloadSpec) MergeGit(git GitSource) {
 		w.Source = &Source{
 			Git: &git,
 		}
-		if stash != nil && stash.Git != nil {
+		if stash != nil && stash.Subpath != "" {
 			w.Source.Subpath = stash.Subpath
 		}
 	}
 }
 
 func (w *WorkloadSpec) MergeSourceImage(image string) {
-	stash := w.Source.DeepCopy()
+	src := &Source{Image: image}
+	if w.Source != nil {
+		src.Subpath = w.Source.Subpath
+	}
 	w.ResetSource()
-
-	w.Source = &Source{
-		Image: image,
-	}
-	if stash != nil {
-		w.Source.Subpath = stash.Subpath
-	}
+	w.Source = src
 }
 
 func (w *WorkloadSpec) MergeSubPath(subPath string) {
 	if w.Source == nil {
 		w.Source = &Source{}
 	}
-
 	w.Source.Subpath = subPath
 }
 
 func (w *WorkloadSpec) MergeImage(image string) {
 	w.ResetSource()
-
 	w.Image = image
 }
 

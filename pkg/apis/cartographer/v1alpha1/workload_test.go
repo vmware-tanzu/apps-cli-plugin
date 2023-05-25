@@ -1002,6 +1002,39 @@ func TestWorkload_Merge(t *testing.T) {
 			},
 		},
 	}, {
+		name: "image without source",
+		seed: &Workload{},
+		update: &Workload{
+			Spec: WorkloadSpec{
+				Image: "ubuntu:bionic",
+			},
+		},
+		want: &Workload{
+			Spec: WorkloadSpec{
+				Image: "ubuntu:bionic",
+			},
+		},
+	}, {
+		name: "image with subpath",
+		seed: &Workload{
+			Spec: WorkloadSpec{
+				Image: "alpine:latest",
+				Source: &Source{
+					Subpath: "/sys",
+				},
+			},
+		},
+		update: &Workload{
+			Spec: WorkloadSpec{
+				Image: "ubuntu:bionic",
+			},
+		},
+		want: &Workload{
+			Spec: WorkloadSpec{
+				Image: "ubuntu:bionic",
+			},
+		},
+	}, {
 		name: "git",
 		seed: &Workload{
 			Spec: WorkloadSpec{
@@ -1765,30 +1798,6 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 					},
 				},
 				Subpath: "my-subpath",
-			},
-		},
-	}, {
-		name: "update to git source deleting subpath",
-		seed: &WorkloadSpec{
-			Source: &Source{
-				Image:   "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
-				Subpath: "my-subpath",
-			},
-		},
-		git: GitSource{
-			URL: "git@github.com:example/repo.git",
-			Ref: GitRef{
-				Branch: "main",
-			},
-		},
-		want: &WorkloadSpec{
-			Source: &Source{
-				Git: &GitSource{
-					URL: "git@github.com:example/repo.git",
-					Ref: GitRef{
-						Branch: "main",
-					},
-				},
 			},
 		},
 	}, {

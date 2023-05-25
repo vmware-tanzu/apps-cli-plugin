@@ -8979,6 +8979,75 @@ To get status: "tanzu apps workload get my-workload"
 
 `, localSource),
 		},
+		{
+			Name: "update from local source using lsp from file without subpath",
+			Skip: runtm.GOOS == "windows",
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.FilePathFlagName, "./testdata/workload-lsp-non-subPath.yaml", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"})
+						d.Labels(map[string]string{apis.WorkloadTypeLabelName: "web"})
+					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+					d.Source(&cartov1alpha1.Source{
+						Image:   ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+						Subpath: "current-subpath",
+					})
+				}),
+			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+						Annotations: map[string]string{
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Image:   ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							Subpath: "current-subpath",
+						},
+						Params: []cartov1alpha1.Param{
+							{
+								Name:  "annotations",
+								Value: apiextensionsv1.JSON{Raw: []byte(`{"autoscaling.knative.dev/minScale":"2"}`)},
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.cluster.local/source:default-my-workload"...
+No source code is changed
+
+🔎 Update workload:
+...
+  8,  8   |    apps.tanzu.vmware.com/workload-type: web
+  9,  9   |  name: my-workload
+ 10, 10   |  namespace: default
+ 11, 11   |spec:
+     12 + |  params:
+     13 + |  - name: annotations
+     14 + |    value:
+     15 + |      autoscaling.knative.dev/minScale: "2"
+ 12, 16   |  source:
+ 13, 17   |    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
+ 14, 18   |    subPath: current-subpath
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`, localSource),
+		},
 	}
 
 	table.Run(t, scheme, func(ctx context.Context, c *cli.Config) *cobra.Command {
