@@ -1035,7 +1035,7 @@ func TestWorkload_Merge(t *testing.T) {
 			},
 		},
 	}, {
-		name: "image with sources nill",
+		name: "image with sources nil",
 		seed: &Workload{
 			Spec: WorkloadSpec{
 				Image: "alpine:latest",
@@ -1053,7 +1053,7 @@ func TestWorkload_Merge(t *testing.T) {
 			},
 		},
 	}, {
-		name: "image with sources source image and subpath",
+		name: "workload with multiple sources and subpath",
 		seed: &Workload{
 			Spec: WorkloadSpec{
 				Image: "alpine:latest",

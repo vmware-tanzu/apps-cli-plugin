@@ -7766,7 +7766,7 @@ To get status: "tanzu apps workload get spring-petclinic"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -7816,7 +7816,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -7866,7 +7866,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -7919,7 +7919,7 @@ To get status: "tanzu apps workload get my-workload"
 							"apps.tanzu.vmware.com/workload-type": "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8287,7 +8287,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8344,7 +8344,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8399,7 +8399,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8452,7 +8452,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8517,7 +8517,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8584,7 +8584,7 @@ To get status: "tanzu apps workload get my-workload"
 							"apps.tanzu.vmware.com/workload-type": "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8672,7 +8672,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8729,7 +8729,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8935,7 +8935,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -9005,7 +9005,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -9074,7 +9074,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -9173,7 +9173,6 @@ To get status: "tanzu apps workload get my-workload"
 		},
 		{
 			Name: "update image to git with subpath using flags",
-			Skip: runtm.GOOS == "windows",
 			Args: []string{workloadName, flags.GitBranchFlagName, "main", flags.GitRepoFlagName, "my-repo-server/my-repo", flags.SubPathFlagName, subpath, flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
@@ -9183,7 +9182,6 @@ To get status: "tanzu apps workload get my-workload"
 					d.Image(":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69")
 				}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
@@ -9289,7 +9287,6 @@ To get status: "tanzu apps workload get my-workload"
 		},
 		{
 			Name: "update local source to image using flags",
-			Skip: runtm.GOOS == "windows",
 			Args: []string{workloadName, flags.ImageFlagName, ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69", flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
@@ -9305,7 +9302,6 @@ To get status: "tanzu apps workload get my-workload"
 					)
 				}),
 			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
 			ExpectUpdates: []client.Object{
 				parent.
 					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
