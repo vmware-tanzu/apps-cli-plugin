@@ -50,11 +50,14 @@ func (opts *WorkloadCreateOptions) Validate(ctx context.Context) validation.Fiel
 
 func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) error {
 	workload := &cartov1alpha1.Workload{}
+	fileWorkload := &cartov1alpha1.Workload{}
 
 	if opts.FilePath != "" {
-		if err := opts.WorkloadOptions.LoadInputWorkload(c.Stdin, workload); err != nil {
+		if err := opts.WorkloadOptions.LoadInputWorkload(c.Stdin, fileWorkload); err != nil {
 			return err
 		}
+
+		workload = fileWorkload
 	}
 
 	if opts.Name != "" {
@@ -113,7 +116,7 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 	if err := opts.PublishLocalSource(ctx, c, nil, workload, shouldPrint); err != nil {
 		return err
 	}
-	opts.ManageLocalSourceProxyAnnotation(nil, workload)
+	opts.ManageLocalSourceProxyAnnotation(fileWorkload, nil, workload)
 
 	if shouldPrint {
 		var err error
