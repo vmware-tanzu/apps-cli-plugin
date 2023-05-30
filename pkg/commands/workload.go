@@ -664,21 +664,21 @@ func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config, displayInfo bool) 
 	return exclude
 }
 
-func (opts *WorkloadOptions) ManageLocalSourceProxyAnnotation(currentWorkload, workload *cartov1alpha1.Workload) {
+func (opts *WorkloadOptions) ManageLocalSourceProxyAnnotation(fileWorkload, currentWorkload, workload *cartov1alpha1.Workload) {
 	workloadExists := currentWorkload != nil
+	fileWorkloadExists := fileWorkload != nil
 
 	// merge annotation only when workload is being created or when source code was changed and there is a new digested,
 	// do not add it when updating workload
 	// since user could be updating another field and annotation must not be added
 	if opts.isLocalSource(currentWorkload) {
 		workload.MergeAnnotations(apis.LocalSourceProxyAnnotationName, workload.Spec.Source.Image)
-	}
-
-	// if workload is updated from LSP registry to custom or any other registry through source image,
-	// or it is moved from LSP to any other source (git, maven, image)
-	// annotation has to be deleted and workload source image needs to be updated to digested based on opts source image
-	if (opts.SourceImage != "" && workloadExists) ||
-		(workloadExists && ((workload.Spec.Source != nil && workload.Spec.Source.Image == "") || workload.Spec.Source == nil)) {
+	} else if (opts.SourceImage != "" && workloadExists) ||
+		(workloadExists && ((workload.Spec.Source != nil && workload.Spec.Source.Image == "") || workload.Spec.Source == nil)) ||
+		fileWorkloadExists && fileWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) {
+		// if workload is updated from LSP registry to custom or any other registry through source image,
+		// or it is moved from LSP to any other source (git, maven, image)
+		// annotation has to be deleted and workload source image needs to be updated to digested based on opts source image
 		workload.RemoveAnnotations(apis.LocalSourceProxyAnnotationName)
 	}
 }
