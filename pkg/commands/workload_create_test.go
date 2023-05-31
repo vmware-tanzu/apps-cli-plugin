@@ -2015,7 +2015,7 @@ Error waiting for ready condition: failed to create watcher
 `, clitesting.ToInteractTerminal("❓ Do you want to create this workload? [yN]: y"), workloadName),
 		},
 		{
-			Name:         "Create from file without adding lsp annotation",
+			Name:         "create from file without adding lsp annotation",
 			Args:         []string{workloadName, flags.FilePathFlagName, "./testdata/workload-with-lsp-annotation.yaml", flags.YesFlagName},
 			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
@@ -2036,6 +2036,16 @@ Error waiting for ready condition: failed to create watcher
 								},
 							},
 						},
+						Resources: &corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("500m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+						},
 					},
 				},
 			},
@@ -2050,11 +2060,18 @@ Error waiting for ready condition: failed to create watcher
       7 + |  name: my-workload
       8 + |  namespace: default
       9 + |spec:
-     10 + |  source:
-     11 + |    git:
-     12 + |      ref:
-     13 + |        branch: main
-     14 + |      url: https://github.com/spring-projects/spring-petclinic.git
+     10 + |  resources:
+     11 + |    limits:
+     12 + |      cpu: 500m
+     13 + |      memory: 1Gi
+     14 + |    requests:
+     15 + |      cpu: 100m
+     16 + |      memory: 1Gi
+     17 + |  source:
+     18 + |    git:
+     19 + |      ref:
+     20 + |        branch: main
+     21 + |      url: https://github.com/spring-projects/spring-petclinic.git
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"

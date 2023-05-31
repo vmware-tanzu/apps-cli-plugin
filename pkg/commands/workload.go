@@ -666,19 +666,23 @@ func (opts *WorkloadOptions) loadExcludedPaths(c *cli.Config, displayInfo bool) 
 
 func (opts *WorkloadOptions) ManageLocalSourceProxyAnnotation(fileWorkload, currentWorkload, workload *cartov1alpha1.Workload) {
 	workloadExists := currentWorkload != nil
-	fileWorkloadExists := fileWorkload != nil
+	annotationExistsInFile := fileWorkload != nil && fileWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName)
+	mergeAnnotationFromFile := workloadExists && currentWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName)
 
 	// merge annotation only when workload is being created or when source code was changed and there is a new digested,
 	// do not add it when updating workload
 	// since user could be updating another field and annotation must not be added
-	if opts.isLocalSource(currentWorkload) {
+	if opts.isLocalSource(currentWorkload) || (annotationExistsInFile && mergeAnnotationFromFile && workload.Spec.Source != nil) {
 		workload.MergeAnnotations(apis.LocalSourceProxyAnnotationName, workload.Spec.Source.Image)
-	} else if (opts.SourceImage != "" && workloadExists) ||
+	}
+
+	// if workload is updated from LSP registry to custom or any other registry through source image,
+	// or it is moved from LSP to any other source (git, maven, image)
+	// or an annotation comes in a workload file definition and it is not an lsp workload
+	// annotation has to be deleted and workload source image needs to be updated to digested based on opts source image
+	if (opts.SourceImage != "" && workloadExists) ||
 		(workloadExists && ((workload.Spec.Source != nil && workload.Spec.Source.Image == "") || workload.Spec.Source == nil)) ||
-		fileWorkloadExists && fileWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) {
-		// if workload is updated from LSP registry to custom or any other registry through source image,
-		// or it is moved from LSP to any other source (git, maven, image)
-		// annotation has to be deleted and workload source image needs to be updated to digested based on opts source image
+		(annotationExistsInFile && !mergeAnnotationFromFile) {
 		workload.RemoveAnnotations(apis.LocalSourceProxyAnnotationName)
 	}
 }

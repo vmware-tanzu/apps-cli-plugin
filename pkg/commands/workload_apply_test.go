@@ -7780,6 +7780,16 @@ To get status: "tanzu apps workload get spring-petclinic"
 						Name:      workloadName,
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
+						Resources: &corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("500m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+						},
 						Source: &cartov1alpha1.Source{
 							Git: &cartov1alpha1.GitSource{
 								URL: "https://github.com/spring-projects/spring-petclinic.git",
@@ -7805,7 +7815,17 @@ To get status: "tanzu apps workload get spring-petclinic"
   8,  5   |  name: my-workload
   9,  6   |  namespace: default
  10,  7   |spec:
- 11,  8   |  source:
+      8 + |  resources:
+      9 + |    limits:
+     10 + |      cpu: 500m
+     11 + |      memory: 1Gi
+     12 + |    requests:
+     13 + |      cpu: 100m
+     14 + |      memory: 1Gi
+ 11, 15   |  source:
+ 12, 16   |    git:
+ 13, 17   |      ref:
+ 14, 18   |        branch: main
 ...
 👍 Updated workload "my-workload"
 
@@ -7815,7 +7835,7 @@ To get status: "tanzu apps workload get my-workload"
 `,
 		},
 		{
-			Name:         "Create from file without adding lsp annotation",
+			Name:         "create from file without adding lsp annotation",
 			Args:         []string{workloadName, flags.FilePathFlagName, "./testdata/workload-with-lsp-annotation.yaml", flags.YesFlagName},
 			GivenObjects: givenNamespaceDefault,
 			ExpectCreates: []client.Object{
@@ -7836,6 +7856,16 @@ To get status: "tanzu apps workload get my-workload"
 								},
 							},
 						},
+						Resources: &corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("500m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+						},
 					},
 				},
 			},
@@ -7852,11 +7882,18 @@ To get status: "tanzu apps workload get my-workload"
       7 + |  name: my-workload
       8 + |  namespace: default
       9 + |spec:
-     10 + |  source:
-     11 + |    git:
-     12 + |      ref:
-     13 + |        branch: main
-     14 + |      url: https://github.com/spring-projects/spring-petclinic.git
+     10 + |  resources:
+     11 + |    limits:
+     12 + |      cpu: 500m
+     13 + |      memory: 1Gi
+     14 + |    requests:
+     15 + |      cpu: 100m
+     16 + |      memory: 1Gi
+     17 + |  source:
+     18 + |    git:
+     19 + |      ref:
+     20 + |        branch: main
+     21 + |      url: https://github.com/spring-projects/spring-petclinic.git
 👍 Created workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
@@ -8261,7 +8298,6 @@ To get status: "tanzu apps workload get my-workload"
 
 `,
 		},
-
 		{
 			Name: "update from lsp to git source changing subpath",
 			Skip: runtm.GOOS == "windows",
@@ -8440,7 +8476,6 @@ To get status: "tanzu apps workload get my-workload"
 
 `, localSource),
 		},
-
 		{
 			Name: "update from image to lsp with subpath",
 			Skip: runtm.GOOS == "windows",
@@ -8666,6 +8701,147 @@ Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.clu
  13     - |        branch: main
  14     - |      url: my-repo.git
      13 + |    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`, localSource),
+		},
+		{
+			Name: "update using lsp from file with no source",
+			Skip: runtm.GOOS == "windows",
+			Args: []string{workloadName, flags.FilePathFlagName, "./testdata/workload-with-no-source.yaml", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-lsp-image@sha256:1234567890"})
+					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+					d.Source(&cartov1alpha1.Source{
+						Image: "my-lsp-image@sha256:1234567890",
+					})
+				}),
+			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "my-workload",
+						Labels: map[string]string{
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+						Annotations: map[string]string{
+							apis.LocalSourceProxyAnnotationName: "my-lsp-image@sha256:1234567890",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Image: "my-lsp-image@sha256:1234567890",
+						},
+						Resources: &corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("500m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+🔎 Update workload:
+...
+  8,  8   |    apps.tanzu.vmware.com/workload-type: web
+  9,  9   |  name: my-workload
+ 10, 10   |  namespace: default
+ 11, 11   |spec:
+     12 + |  resources:
+     13 + |    limits:
+     14 + |      cpu: 500m
+     15 + |      memory: 1Gi
+     16 + |    requests:
+     17 + |      cpu: 100m
+     18 + |      memory: 1Gi
+ 12, 19   |  source:
+ 13, 20   |    image: my-lsp-image@sha256:1234567890
+👍 Updated workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+		{
+			Name: "update using lsp and not removing annotation",
+			Skip: runtm.GOOS == "windows",
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.FilePathFlagName, "./testdata/workload-with-lsp-annotation.yaml", flags.YesFlagName},
+			GivenObjects: []client.Object{
+				parent.
+					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
+						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"})
+					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
+					d.Source(&cartov1alpha1.Source{
+						Image: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+					})
+				}),
+			},
+			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
+			ExpectUpdates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      "my-workload",
+						Labels: map[string]string{
+							"apps.tanzu.vmware.com/workload-type": "web",
+						},
+						Annotations: map[string]string{
+							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Image: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+						},
+						Resources: &corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("500m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: fmt.Sprintf(`
+❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
+
+Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.cluster.local/source:default-my-workload"...
+No source code is changed
+
+🔎 Update workload:
+...
+  8,  8   |    apps.tanzu.vmware.com/workload-type: web
+  9,  9   |  name: my-workload
+ 10, 10   |  namespace: default
+ 11, 11   |spec:
+     12 + |  resources:
+     13 + |    limits:
+     14 + |      cpu: 500m
+     15 + |      memory: 1Gi
+     16 + |    requests:
+     17 + |      cpu: 100m
+     18 + |      memory: 1Gi
+ 12, 19   |  source:
+ 13, 20   |    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
 👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
