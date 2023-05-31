@@ -38,29 +38,47 @@ var (
 
 const (
 	// AllUnstableVersions allows all plugin versions
+	//
+	// Deprecated: This API constant is deprecated
 	AllUnstableVersions VersionSelectorLevel = "all"
 	// AlphaUnstableVersions allows all alpha tagged versions
+	//
+	// Deprecated: This API constant is deprecated
 	AlphaUnstableVersions VersionSelectorLevel = "alpha"
 	// ExperimentalUnstableVersions includes all pre-releases, minus +build tags
+	//
+	// Deprecated: This API constant is deprecated
 	ExperimentalUnstableVersions VersionSelectorLevel = "experimental"
 	// NoUnstableVersions allows no unstable plugin versions, format major.minor.patch only
+	//
+	// Deprecated: This API constant is deprecated
 	NoUnstableVersions VersionSelectorLevel = "none"
 )
 
 const (
 	// FeatureCli allows a feature to be set at the CLI level (globally) rather than for a single plugin
+	//
+	// Deprecated: This API constant is deprecated
 	FeatureCli string = "cli"
 	// EditionStandard refers to the standard edition
 	// Edition value (in config) affects branding and cluster creation
+	//
+	// Deprecated: This API constant is deprecated
 	EditionStandard = "tkg"
 	// EditionCommunity refers to the community edition
+	//
+	// Deprecated: This API constant is deprecated
 	EditionCommunity = "tce"
 )
 
 // EditionSelector allows selecting edition versions based on config file
+//
+// Deprecated: This type is deprecated
 type EditionSelector string
 
 // VersionSelectorLevel allows selecting plugin versions based on semver properties
+//
+// Deprecated: This API type is deprecated
 type VersionSelectorLevel string
 
 // IsGlobal tells if the server is global.
@@ -90,6 +108,8 @@ func (c *ClientConfig) GetCurrentServer() (*Server, error) {
 }
 
 // HasServer tells whether the Server by the given name exists.
+//
+// Deprecated: This API is deprecated. Use HasContext instead.
 func (c *ClientConfig) HasServer(name string) bool {
 	for _, s := range c.KnownServers {
 		if s.Name == name {

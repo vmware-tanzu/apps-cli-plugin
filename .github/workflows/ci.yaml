@@ -41,6 +41,7 @@ jobs:
         tanzu config eula accept
         tanzu init
         tanzu version
+        tanzu plugin source init
         tanzu plugin install builder
         tanzu plugin list
     - name: Scan Inclusive Terminology
@@ -100,6 +101,7 @@ jobs:
         tanzu ceip-participation set false
         tanzu config eula accept
         tanzu init
+        tanzu plugin source init
         tanzu plugin install builder
         tanzu plugin list
     - name: Test
@@ -140,6 +142,7 @@ jobs:
         tanzu ceip-participation set false
         tanzu config eula accept
         tanzu init
+        tanzu plugin source init
         tanzu plugin install builder
         tanzu plugin list
     - name: Test

@@ -23,8 +23,8 @@ var UsageFunc = func(c *cobra.Command) error {
 
 // CmdTemplate is the template for plugin commands.
 const CmdTemplate = `{{ bold "Usage:" }}{{if .Runnable}}
-  tanzu {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
-  tanzu {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+  tanzu{{ $target := index .Annotations "target" }}{{ if and (ne $target "global") (ne $target "") }} {{ $target }} {{ else }} {{ end }}{{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
+  tanzu{{ $target := index .Annotations "target" }}{{ if and (ne $target "global") (ne $target "") }} {{ $target }} {{ else }} {{ end }}{{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
 
 {{ bold "Aliases:" }}
   {{.NameAndAliases}}{{end}}{{if .HasExample}}
@@ -44,7 +44,7 @@ const CmdTemplate = `{{ bold "Usage:" }}{{if .Runnable}}
 {{ bold "Additional help topics:" }}{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
   {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
 
-Use "{{if beginsWith .CommandPath "tanzu "}}{{.CommandPath}}{{else}}tanzu {{.CommandPath}}{{end}} [command] --help" for more information about a command.{{end}}
+Use "{{if beginsWith .CommandPath "tanzu "}}{{.CommandPath}}{{else}}tanzu{{ $target := index .Annotations "target" }}{{ if and (ne $target "global") (ne $target "") }} {{ $target }} {{ else }} {{ end }}{{.CommandPath}}{{end}} [command] --help" for more information about a command.{{end}}
 `
 
 // TemplateFuncs are the template usage funcs.
