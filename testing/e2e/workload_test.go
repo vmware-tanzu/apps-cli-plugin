@@ -284,12 +284,13 @@ func TestCreateFromGitWithAnnotations(t *testing.T) {
 			},
 		},
 		{
-			Name:         "Create workload with valid name from local source code",
+			Name:         "Create workload using source image without adding lsp annotation",
 			WorkloadName: "test-create-local-registry",
 			RequireEnvs:  []string{"BUNDLE"},
 			Command: func() it.CommandLine {
 				c := *it.NewTanzuAppsCommandLine(
 					"workload", "create", "test-create-local-registry",
+					"--file=testdata/workload-with-lsp-annotation.yaml",
 					"--local-path=./testdata/hello.go.jar",
 					"--source-image", os.Getenv("BUNDLE"),
 					namespaceFlag,

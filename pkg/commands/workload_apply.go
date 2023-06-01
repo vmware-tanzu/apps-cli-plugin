@@ -163,7 +163,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 	if err := opts.PublishLocalSource(ctx, c, currentWorkload, workload, shouldPrint); err != nil {
 		return err
 	}
-	opts.ManageLocalSourceProxyAnnotation(currentWorkload, workload)
+	opts.ManageLocalSourceProxyAnnotation(fileWorkload, currentWorkload, workload)
 
 	// if output flag was not set or it was not used with yes flag, then proceed to show
 	// surveys and all other output

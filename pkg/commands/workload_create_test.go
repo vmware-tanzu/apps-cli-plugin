@@ -2015,6 +2015,71 @@ Error waiting for ready condition: failed to create watcher
 `, clitesting.ToInteractTerminal("❓ Do you want to create this workload? [yN]: y"), workloadName),
 		},
 		{
+			Name:         "create from file without adding lsp annotation",
+			Args:         []string{workloadName, flags.FilePathFlagName, "./testdata/workload-with-lsp-annotation.yaml", flags.YesFlagName},
+			GivenObjects: givenNamespaceDefault,
+			ExpectCreates: []client.Object{
+				&cartov1alpha1.Workload{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: defaultNamespace,
+						Name:      workloadName,
+						Labels: map[string]string{
+							apis.WorkloadTypeLabelName: "web",
+						},
+					},
+					Spec: cartov1alpha1.WorkloadSpec{
+						Source: &cartov1alpha1.Source{
+							Git: &cartov1alpha1.GitSource{
+								URL: "https://github.com/spring-projects/spring-petclinic.git",
+								Ref: cartov1alpha1.GitRef{
+									Branch: gitBranch,
+								},
+							},
+						},
+						Resources: &corev1.ResourceRequirements{
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("500m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("100m"),
+								corev1.ResourceMemory: resource.MustParse("1Gi"),
+							},
+						},
+					},
+				},
+			},
+			ExpectOutput: `
+🔎 Create workload:
+      1 + |---
+      2 + |apiVersion: carto.run/v1alpha1
+      3 + |kind: Workload
+      4 + |metadata:
+      5 + |  labels:
+      6 + |    apps.tanzu.vmware.com/workload-type: web
+      7 + |  name: my-workload
+      8 + |  namespace: default
+      9 + |spec:
+     10 + |  resources:
+     11 + |    limits:
+     12 + |      cpu: 500m
+     13 + |      memory: 1Gi
+     14 + |    requests:
+     15 + |      cpu: 100m
+     16 + |      memory: 1Gi
+     17 + |  source:
+     18 + |    git:
+     19 + |      ref:
+     20 + |        branch: main
+     21 + |      url: https://github.com/spring-projects/spring-petclinic.git
+👍 Created workload "my-workload"
+
+To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
+To get status: "tanzu apps workload get my-workload"
+
+`,
+		},
+		{
 			Name:                "create from local source using lsp",
 			Skip:                runtm.GOOS == "windows",
 			Args:                []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},

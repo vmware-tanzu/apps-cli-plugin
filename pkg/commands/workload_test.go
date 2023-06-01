@@ -2376,6 +2376,7 @@ func TestManageLocalSourceProxyAnnotation(t *testing.T) {
 		currentWorkload  *cartov1alpha1.Workload
 		workload         *cartov1alpha1.Workload
 		expectedWorkload *cartov1alpha1.Workload
+		fileWorkload     *cartov1alpha1.Workload
 	}{{
 		name: "add annotation",
 		args: []string{flags.LocalPathFlagName, localSource},
@@ -2390,6 +2391,71 @@ func TestManageLocalSourceProxyAnnotation(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
 					apis.LocalSourceProxyAnnotationName: "my-image@sha:123abc",
+				},
+			},
+		},
+	}, {
+		name: "do not add annotation coming from file",
+		args: []string{},
+		fileWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-image@sha:123abc",
+				},
+			},
+		},
+		workload: &cartov1alpha1.Workload{
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: "my-image@sha:123abc",
+				},
+			},
+		},
+		expectedWorkload: &cartov1alpha1.Workload{
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: "my-image@sha:123abc",
+				},
+			},
+		},
+	}, {
+		name: "do not remove annotation if workload in file does not contain source",
+		args: []string{flags.LocalPathFlagName, localSource},
+		fileWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: map[string]string{
+					"my-label": "my-image@sha:123abc",
+				},
+			},
+		},
+		currentWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-image@sha:123abc",
+				},
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: "my-image@sha:123abc",
+				},
+			},
+		},
+		workload: &cartov1alpha1.Workload{
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: "my-image@sha:123abc",
+				},
+			},
+		},
+		expectedWorkload: &cartov1alpha1.Workload{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					apis.LocalSourceProxyAnnotationName: "my-image@sha:123abc",
+				},
+			},
+			Spec: cartov1alpha1.WorkloadSpec{
+				Source: &cartov1alpha1.Source{
+					Image: "my-image@sha:123abc",
 				},
 			},
 		},
@@ -2557,7 +2623,7 @@ func TestManageLocalSourceProxyAnnotation(t *testing.T) {
 			opts.DefineFlags(ctx, c, cmd)
 			cmd.ParseFlags(test.args)
 
-			opts.ManageLocalSourceProxyAnnotation(test.currentWorkload, test.workload)
+			opts.ManageLocalSourceProxyAnnotation(test.fileWorkload, test.currentWorkload, test.workload)
 
 			if test.expectedWorkload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) && !test.workload.IsAnnotationExists(apis.LocalSourceProxyAnnotationName) {
 				t.Errorf("expected local source proxy annotation to exist in workload")
