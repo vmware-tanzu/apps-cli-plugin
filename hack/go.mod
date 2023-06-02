@@ -5,7 +5,7 @@ go 1.20
 require (
 	dies.dev/diegen v0.7.0
 	github.com/get-woke/woke v0.19.0
-	golang.org/x/tools v0.9.2
+	golang.org/x/tools v0.9.3
 	sigs.k8s.io/controller-tools v0.12.0
 )
 
