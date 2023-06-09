@@ -37,12 +37,10 @@ jobs:
         tar -xzf tanzu-framework.tar.gz -C ${TANZU_HOME}
         sudo mv ${TANZU_HOME}/${TANZU_VERSION}/tanzu-cli-linux_amd64 /usr/local/bin/tanzu
         chmod +x /usr/local/bin/tanzu
-        tanzu ceip-participation set false
         tanzu config eula accept
-        tanzu init
         tanzu version
         tanzu plugin source init
-        tanzu plugin install builder
+        tanzu plugin install builder --version ${TANZU_VERSION}
         tanzu plugin list
     - name: Scan Inclusive Terminology
       uses: get-woke/woke-action@v0
@@ -98,11 +96,9 @@ jobs:
         curl -Lo tanzu-framework-windows-amd64.zip https://github.com/vmware-tanzu/tanzu-cli/releases/download/$TANZU_VERSION/tanzu-cli-windows-amd64.zip
         tar -xf tanzu-framework-windows-amd64.zip
         cp "$TANZU_VERSION\tanzu-cli-windows_amd64.exe" "C:\Program Files\tanzu\tanzu.exe"
-        tanzu ceip-participation set false
         tanzu config eula accept
-        tanzu init
         tanzu plugin source init
-        tanzu plugin install builder
+        tanzu plugin install builder --version ${TANZU_VERSION}
         tanzu plugin list
     - name: Test
       run: |
@@ -139,11 +135,9 @@ jobs:
         tar -xzf tanzu-framework.tar.gz -C ${TANZU_HOME}
         sudo mv ${TANZU_HOME}/${TANZU_VERSION}/tanzu-cli-darwin_amd64 /usr/local/bin/tanzu
         chmod +x /usr/local/bin/tanzu
-        tanzu ceip-participation set false
         tanzu config eula accept
-        tanzu init
         tanzu plugin source init
-        tanzu plugin install builder
+        tanzu plugin install builder --version ${TANZU_VERSION}
         tanzu plugin list
     - name: Test
       run: make test
@@ -201,9 +195,7 @@ jobs:
         tar -xzf tanzu-framework.tar.gz -C ${TANZU_HOME}
         sudo mv ${TANZU_HOME}/${TANZU_VERSION}/tanzu-cli-linux_amd64 /usr/local/bin/tanzu
         chmod +x /usr/local/bin/tanzu
-        tanzu ceip-participation set false
         tanzu config eula accept
-        tanzu init
     - name: Build dev version
       run: |
         PLUGIN_BUILD_SHA_SHORT=$(git rev-parse --short HEAD)
