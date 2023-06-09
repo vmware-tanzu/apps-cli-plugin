@@ -359,7 +359,7 @@ github.com/mailru/easyjson/jwriter
 # github.com/mattn/go-colorable v0.1.13
 ## explicit; go 1.15
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.17
+# github.com/mattn/go-isatty v0.0.19
 ## explicit; go 1.15
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.13
@@ -500,7 +500,7 @@ github.com/vmware-labs/reconciler-runtime/reconcilers
 github.com/vmware-labs/reconciler-runtime/testing
 github.com/vmware-labs/reconciler-runtime/tracker
 github.com/vmware-labs/reconciler-runtime/validation
-# github.com/vmware-tanzu/carvel-imgpkg v0.36.2
+# github.com/vmware-tanzu/carvel-imgpkg v0.37.1
 ## explicit; go 1.20
 github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/image
 github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/imagedigest
@@ -561,7 +561,7 @@ golang.org/x/oauth2/google/internal/externalaccount
 golang.org/x/oauth2/internal
 golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
-# golang.org/x/sync v0.1.0
+# golang.org/x/sync v0.2.0
 ## explicit
 golang.org/x/sync/errgroup
 # golang.org/x/sys v0.8.0
