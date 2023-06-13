@@ -1002,134 +1002,6 @@ func TestWorkload_Merge(t *testing.T) {
 			},
 		},
 	}, {
-		name: "image without source",
-		seed: &Workload{},
-		update: &Workload{
-			Spec: WorkloadSpec{
-				Image: "ubuntu:bionic",
-			},
-		},
-		want: &Workload{
-			Spec: WorkloadSpec{
-				Image: "ubuntu:bionic",
-			},
-		},
-	}, {
-		name: "image with subpath",
-		seed: &Workload{
-			Spec: WorkloadSpec{
-				Image: "alpine:latest",
-				Source: &Source{
-					Subpath: "/sys",
-				},
-			},
-		},
-		update: &Workload{
-			Spec: WorkloadSpec{
-				Image: "ubuntu:bionic",
-			},
-		},
-		want: &Workload{
-			Spec: WorkloadSpec{
-				Image: "ubuntu:bionic",
-			},
-		},
-	}, {
-		name: "image with sources nil",
-		seed: &Workload{
-			Spec: WorkloadSpec{
-				Image: "alpine:latest",
-			},
-		},
-		update: &Workload{
-			Spec: WorkloadSpec{
-				Image:  "ubuntu:bionic",
-				Source: &Source{Subpath: "my-subpath"},
-			},
-		},
-		want: &Workload{
-			Spec: WorkloadSpec{
-				Image: "ubuntu:bionic",
-			},
-		},
-	}, {
-		name: "workload with multiple sources and subpath",
-		seed: &Workload{
-			Spec: WorkloadSpec{
-				Image: "alpine:latest",
-			},
-		},
-		update: &Workload{
-			Spec: WorkloadSpec{
-				Image: "ubuntu:bionic",
-				Source: &Source{
-					Image:   "ubuntu:bionic",
-					Subpath: "my-subpath",
-				},
-			},
-		},
-		want: &Workload{
-			Spec: WorkloadSpec{
-				Source: &Source{
-					Image:   "ubuntu:bionic",
-					Subpath: "my-subpath",
-				},
-			},
-		},
-	}, {
-		name: "image update sources source image and subpath",
-		seed: &Workload{
-			Spec: WorkloadSpec{
-				Image: "alpine:latest",
-				Source: &Source{
-					Subpath: "new-subpath",
-				},
-			},
-		},
-		update: &Workload{
-			Spec: WorkloadSpec{
-				Image: "ubuntu:bionic",
-				Source: &Source{
-					Image:   "ubuntu:bionic",
-					Subpath: "my-subpath",
-				},
-			},
-		},
-		want: &Workload{
-			Spec: WorkloadSpec{
-				Source: &Source{
-					Image:   "ubuntu:bionic",
-					Subpath: "my-subpath",
-				},
-			},
-		},
-	}, {
-		name: "local source image with subpath update source image and subpath",
-		seed: &Workload{
-			Spec: WorkloadSpec{
-				Source: &Source{
-					Image:   "ubuntu:bionic",
-					Subpath: "/opt",
-				},
-			},
-		},
-		update: &Workload{
-			Spec: WorkloadSpec{
-				Source: &Source{
-					Image:   "ubuntu:bionic",
-					Subpath: "/sys",
-				},
-			},
-		},
-		want: &Workload{
-			Spec: WorkloadSpec{
-				Source: &Source{
-					Image:   "ubuntu:bionic",
-					Subpath: "/sys",
-				},
-			},
-		},
-	}, {
 		name: "git",
 		seed: &Workload{
 			Spec: WorkloadSpec{
@@ -1187,7 +1059,13 @@ func TestWorkload_Merge(t *testing.T) {
 				},
 			},
 		},
-		want: &Workload{},
+		want: &Workload{
+			Spec: WorkloadSpec{
+				Source: &Source{
+					Subpath: "test-path",
+				},
+			},
+		},
 	}, {
 		name: "env",
 		seed: &Workload{
@@ -1890,6 +1768,30 @@ func TestWorkloadSpec_MergeGit(t *testing.T) {
 			},
 		},
 	}, {
+		name: "update to git source deleting subpath",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Image:   "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+				Subpath: "my-subpath",
+			},
+		},
+		git: GitSource{
+			URL: "git@github.com:example/repo.git",
+			Ref: GitRef{
+				Branch: "main",
+			},
+		},
+		want: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
+					},
+				},
+			},
+		},
+	}, {
 		name: "delete source when setting repo to empty string",
 		seed: &WorkloadSpec{
 			Source: &Source{
@@ -1980,6 +1882,25 @@ func TestWorkloadSpec_MergeSourceImage(t *testing.T) {
 			Source: &Source{
 				Image:   "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
 				Subpath: "my-subpath",
+			},
+		},
+	}, {
+		name: "update deleting subpath",
+		seed: &WorkloadSpec{
+			Source: &Source{
+				Git: &GitSource{
+					URL: "git@github.com:example/repo.git",
+					Ref: GitRef{
+						Branch: "main",
+					},
+				},
+				Subpath: "my-subpath",
+			},
+		},
+		sourceImage: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
+		want: &WorkloadSpec{
+			Source: &Source{
+				Image: "my-registry.nip.io/my-folder/my-image:latest@sha:my-sha1234567890",
 			},
 		},
 	}}
