@@ -7916,7 +7916,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -7966,7 +7966,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8016,7 +8016,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8069,7 +8069,7 @@ To get status: "tanzu apps workload get my-workload"
 							"apps.tanzu.vmware.com/workload-type": "web",
 						},
 						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8374,8 +8374,7 @@ To get status: "tanzu apps workload get my-workload"
 						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: "my-old-image"})
 					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
 					d.Source(&cartov1alpha1.Source{
-						Image:   "my-lsp-image@sha256:1234567890",
-						Subpath: "my-subpath",
+						Image: "my-lsp-image@sha256:1234567890",
 					})
 				}),
 			},
@@ -8409,7 +8408,6 @@ To get status: "tanzu apps workload get my-workload"
  11,  9   |spec:
  12     - |  source:
  13     - |    image: my-lsp-image@sha256:1234567890
- 14     - |    subPath: my-subpath
      10 + |  image: my-image
 👍 Updated workload "my-workload"
 
@@ -8421,7 +8419,7 @@ To get status: "tanzu apps workload get my-workload"
 		{
 			Name: "update from image to lsp",
 			Skip: runtm.GOOS == "windows",
-			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.SubPathFlagName, subpath, flags.YesFlagName},
+			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.YesFlagName},
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
@@ -8438,13 +8436,12 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
 						Source: &cartov1alpha1.Source{
-							Image:   ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
-							Subpath: subpath,
+							Image: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 				},
@@ -8468,7 +8465,6 @@ Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.clu
  10     - |  image: my-image
      12 + |  source:
      13 + |    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
-     14 + |    subPath: testdata/local-source/subpath
 👍 Updated workload "my-workload"
 
 To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
@@ -8496,7 +8492,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8551,7 +8547,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8604,7 +8600,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8669,7 +8665,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8877,7 +8873,7 @@ To get status: "tanzu apps workload get my-workload"
 							"apps.tanzu.vmware.com/workload-type": "web",
 						},
 						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -8965,7 +8961,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -9022,7 +9018,7 @@ To get status: "tanzu apps workload get my-workload"
 							apis.WorkloadTypeLabelName: "web",
 						},
 						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
+							"local-source-proxy.apps.tanzu.vmware.com": ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
 						},
 					},
 					Spec: cartov1alpha1.WorkloadSpec{
@@ -9201,328 +9197,6 @@ To get status: "tanzu apps workload get my-workload"
 					t.Errorf("Expected error to be %q but got %q", msg, err.Error())
 				}
 			},
-		},
-		{
-			Name: "update from local source using lsp changing subpath",
-			Skip: runtm.GOOS == "windows",
-			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.FilePathFlagName, "./testdata/workload-lsp-subPath.yaml", flags.YesFlagName},
-			GivenObjects: []client.Object{
-				parent.
-					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"})
-						d.Labels(map[string]string{apis.WorkloadTypeLabelName: "web"})
-					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-					d.Source(&cartov1alpha1.Source{
-						Image:   ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
-						Subpath: "old-subpath",
-					})
-				}),
-			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
-			ExpectUpdates: []client.Object{
-				&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-						Labels: map[string]string{
-							apis.WorkloadTypeLabelName: "web",
-						},
-						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
-						},
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &cartov1alpha1.Source{
-							Image:   ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
-							Subpath: "new-subpath",
-						},
-						Params: []cartov1alpha1.Param{
-							{
-								Name:  "annotations",
-								Value: apiextensionsv1.JSON{Raw: []byte(`{"autoscaling.knative.dev/minScale":"2"}`)},
-							},
-						},
-					},
-				},
-			},
-			ExpectOutput: fmt.Sprintf(`
-❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
-
-Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.cluster.local/source:default-my-workload"...
-No source code is changed
-
-🔎 Update workload:
-...
-  8,  8   |    apps.tanzu.vmware.com/workload-type: web
-  9,  9   |  name: my-workload
- 10, 10   |  namespace: default
- 11, 11   |spec:
-     12 + |  params:
-     13 + |  - name: annotations
-     14 + |    value:
-     15 + |      autoscaling.knative.dev/minScale: "2"
- 12, 16   |  source:
- 13, 17   |    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
- 14     - |    subPath: old-subpath
-     18 + |    subPath: new-subpath
-👍 Updated workload "my-workload"
-
-To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
-To get status: "tanzu apps workload get my-workload"
-
-`, localSource),
-		},
-		{
-			Name: "update from local source using lsp from file without subpath",
-			Skip: runtm.GOOS == "windows",
-			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.FilePathFlagName, "./testdata/workload-lsp-non-subPath.yaml", flags.YesFlagName},
-			GivenObjects: []client.Object{
-				parent.
-					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"})
-						d.Labels(map[string]string{apis.WorkloadTypeLabelName: "web"})
-					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-					d.Source(&cartov1alpha1.Source{
-						Image:   ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
-						Subpath: "current-subpath",
-					})
-				}),
-			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
-			ExpectUpdates: []client.Object{
-				&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-						Labels: map[string]string{
-							apis.WorkloadTypeLabelName: "web",
-						},
-						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
-						},
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &cartov1alpha1.Source{
-							Image:   ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
-							Subpath: "current-subpath",
-						},
-						Params: []cartov1alpha1.Param{
-							{
-								Name:  "annotations",
-								Value: apiextensionsv1.JSON{Raw: []byte(`{"autoscaling.knative.dev/minScale":"2"}`)},
-							},
-						},
-					},
-				},
-			},
-			ExpectOutput: fmt.Sprintf(`
-❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
-
-Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.cluster.local/source:default-my-workload"...
-No source code is changed
-
-🔎 Update workload:
-...
-  8,  8   |    apps.tanzu.vmware.com/workload-type: web
-  9,  9   |  name: my-workload
- 10, 10   |  namespace: default
- 11, 11   |spec:
-     12 + |  params:
-     13 + |  - name: annotations
-     14 + |    value:
-     15 + |      autoscaling.knative.dev/minScale: "2"
- 12, 16   |  source:
- 13, 17   |    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
- 14, 18   |    subPath: current-subpath
-👍 Updated workload "my-workload"
-
-To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
-To get status: "tanzu apps workload get my-workload"
-
-`, localSource),
-		},
-		{
-			Name: "update from local source using lsp from file with image",
-			Skip: runtm.GOOS == "windows",
-			Args: []string{workloadName, flags.LocalPathFlagName, localSource, flags.FilePathFlagName, "./testdata/workload-lsp-image-non-subPath.yaml", flags.YesFlagName},
-			GivenObjects: []client.Object{
-				parent.
-					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"})
-						d.Labels(map[string]string{apis.WorkloadTypeLabelName: "web"})
-					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-					d.Source(&cartov1alpha1.Source{
-						Image:   ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
-						Subpath: "current-subpath",
-					})
-				}),
-			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
-			ExpectUpdates: []client.Object{
-				&cartov1alpha1.Workload{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: defaultNamespace,
-						Name:      workloadName,
-						Labels: map[string]string{
-							apis.WorkloadTypeLabelName: "web",
-						},
-						Annotations: map[string]string{
-							apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
-						},
-					},
-					Spec: cartov1alpha1.WorkloadSpec{
-						Source: &cartov1alpha1.Source{
-							Image:   ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
-							Subpath: "current-subpath",
-						},
-						Params: []cartov1alpha1.Param{
-							{
-								Name:  "annotations",
-								Value: apiextensionsv1.JSON{Raw: []byte(`{"autoscaling.knative.dev/minScale":"2"}`)},
-							},
-						},
-					},
-				},
-			},
-			ExpectOutput: fmt.Sprintf(`
-❗ WARNING: Configuration file update strategy is changing. By default, provided configuration files will replace rather than merge existing configuration. The change will take place in the January 2024 TAP release (use "--update-strategy" to control strategy explicitly).
-
-Publishing source in "%s" to "local-source-proxy.tap-local-source-system.svc.cluster.local/source:default-my-workload"...
-No source code is changed
-
-🔎 Update workload:
-...
-  8,  8   |    apps.tanzu.vmware.com/workload-type: web
-  9,  9   |  name: my-workload
- 10, 10   |  namespace: default
- 11, 11   |spec:
-     12 + |  params:
-     13 + |  - name: annotations
-     14 + |    value:
-     15 + |      autoscaling.knative.dev/minScale: "2"
- 12, 16   |  source:
- 13, 17   |    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
- 14, 18   |    subPath: current-subpath
-👍 Updated workload "my-workload"
-
-To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
-To get status: "tanzu apps workload get my-workload"
-
-`, localSource),
-		},
-		{
-			Name: "update image to git with subpath using flags",
-			Args: []string{workloadName, flags.GitBranchFlagName, "main", flags.GitRepoFlagName, "my-repo-server/my-repo", flags.SubPathFlagName, subpath, flags.YesFlagName},
-			GivenObjects: []client.Object{
-				parent.
-					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-						d.Labels(map[string]string{apis.WorkloadTypeLabelName: "web"})
-					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-					d.Image(":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69")
-				}),
-			},
-			ExpectUpdates: []client.Object{
-				parent.
-					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-						d.Labels(map[string]string{apis.WorkloadTypeLabelName: "web"})
-					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-					d.Source(
-						&cartov1alpha1.Source{
-							Git: &cartov1alpha1.GitSource{
-								URL: "my-repo-server/my-repo",
-								Ref: cartov1alpha1.GitRef{
-									Branch: "main",
-								},
-							},
-							Subpath: subpath,
-						},
-					)
-				}),
-			},
-			ExpectOutput: fmt.Sprintf(`
-🔎 Update workload:
-...
-  6,  6   |    apps.tanzu.vmware.com/workload-type: web
-  7,  7   |  name: my-workload
-  8,  8   |  namespace: default
-  9,  9   |spec:
- 10     - |  image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
-     10 + |  source:
-     11 + |    git:
-     12 + |      ref:
-     13 + |        branch: main
-     14 + |      url: my-repo-server/my-repo
-     15 + |    subPath: %s
-👍 Updated workload "my-workload"
-
-To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
-To get status: "tanzu apps workload get my-workload"
-
-`, subpath),
-		},
-		{
-			Name: "update local source to git without changing subpath using flags",
-			Skip: runtm.GOOS == "windows",
-			Args: []string{workloadName, flags.GitBranchFlagName, "main", flags.GitRepoFlagName, "my-repo-server/my-repo", flags.YesFlagName},
-			GivenObjects: []client.Object{
-				parent.
-					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-						d.Annotations(map[string]string{apis.LocalSourceProxyAnnotationName: ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69"})
-						d.Labels(map[string]string{apis.WorkloadTypeLabelName: "web"})
-					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-					d.Source(
-						&cartov1alpha1.Source{
-							Image:   ":default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69",
-							Subpath: subpath,
-						},
-					)
-				}),
-			},
-			KubeConfigTransport: clitesting.NewFakeTransportFromResponse(respCreator(http.StatusOK, `{"statuscode": "200", "message": "any ignored message"}`, myWorkloadHeader)),
-			ExpectUpdates: []client.Object{
-				parent.
-					MetadataDie(func(d *diemetav1.ObjectMetaDie) {
-						d.Labels(map[string]string{apis.WorkloadTypeLabelName: "web"})
-					}).SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
-					d.Source(
-						&cartov1alpha1.Source{
-							Git: &cartov1alpha1.GitSource{
-								URL: "my-repo-server/my-repo",
-								Ref: cartov1alpha1.GitRef{
-									Branch: "main",
-								},
-							},
-							Subpath: subpath,
-						},
-					)
-				}),
-			},
-			ExpectOutput: `
-🔎 Update workload:
-  1,  1   |---
-  2,  2   |apiVersion: carto.run/v1alpha1
-  3,  3   |kind: Workload
-  4,  4   |metadata:
-  5     - |  annotations:
-  6     - |    local-source-proxy.apps.tanzu.vmware.com: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
-  7,  5   |  labels:
-  8,  6   |    apps.tanzu.vmware.com/workload-type: web
-  9,  7   |  name: my-workload
- 10,  8   |  namespace: default
- 11,  9   |spec:
- 12, 10   |  source:
- 13     - |    image: :default-my-workload@sha256:978be33a7f0cbe89bf48fbb438846047a28e1298d6d10d0de2d64bdc102a9e69
-     11 + |    git:
-     12 + |      ref:
-     13 + |        branch: main
-     14 + |      url: my-repo-server/my-repo
- 14, 15   |    subPath: testdata/local-source/subpath
-👍 Updated workload "my-workload"
-
-To see logs:   "tanzu apps workload tail my-workload --timestamp --since 1h"
-To get status: "tanzu apps workload get my-workload"
-
-`,
 		},
 	}
 
