@@ -512,7 +512,7 @@ github.com/vmware-tanzu/carvel-imgpkg/pkg/imgpkg/registry/auth/credentialprovide
 # github.com/vmware-tanzu/difflib v0.0.0-20201117154628-0c031775bf57
 ## explicit
 github.com/vmware-tanzu/difflib
-# github.com/vmware-tanzu/tanzu-plugin-runtime v0.90.0
+# github.com/vmware-tanzu/tanzu-plugin-runtime v1.0.0
 ## explicit; go 1.18
 github.com/vmware-tanzu/tanzu-plugin-runtime/component
 github.com/vmware-tanzu/tanzu-plugin-runtime/config/types

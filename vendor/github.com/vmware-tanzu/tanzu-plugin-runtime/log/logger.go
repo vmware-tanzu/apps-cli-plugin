@@ -8,10 +8,15 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
+)
+
+const (
+	EnvTanzuCLILogLevel = "TANZU_CLI_LOG_LEVEL"
 )
 
 var defaultLogThreshold int32 = 3
@@ -28,14 +33,27 @@ type logEntry struct {
 	Values []interface{}
 }
 
-// NewLogger returns a new instance of the clusterctl.
+// NewLogger returns a new instance of the logger.
 func NewLogger() LoggerImpl {
+	logThreshold := getLogThreshold()
 	return &logger{
-		threshold: &defaultLogThreshold,
+		threshold: &logThreshold,
 	}
 }
 
-// logger defines a clusterctl friendly logr.Logger
+func getLogThreshold() int32 {
+	reqLogLevelStr := os.Getenv(EnvTanzuCLILogLevel)
+	if reqLogLevelStr != "" {
+		requestedLogLevel, err := strconv.ParseUint(reqLogLevelStr, 10, 32)
+		if err == nil {
+			return int32(requestedLogLevel)
+		}
+		fmt.Fprintf(os.Stderr, "invalid value %q for %s\n", reqLogLevelStr, EnvTanzuCLILogLevel)
+	}
+	return defaultLogThreshold
+}
+
+// logger defines a logr.Logger
 type logger struct {
 	threshold  *int32
 	level      int32
