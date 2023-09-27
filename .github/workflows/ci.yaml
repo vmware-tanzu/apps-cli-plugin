@@ -177,7 +177,7 @@ jobs:
       OS_ARCH: linux-amd64
     steps:
     - uses: actions/checkout@v3
-    - uses: vmware-tanzu/carvel-setup-action@v1
+    - uses: vmware-tanzu/carvel-setup-action@v2
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/setup-go@v4
