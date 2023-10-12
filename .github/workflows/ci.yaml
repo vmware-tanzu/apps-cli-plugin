@@ -46,7 +46,7 @@ jobs:
       uses: get-woke/woke-action@v0
       with:
         fail-on-error: true
-        woke-args: -c https://via.vmw.com/its-woke-rules
+        woke-args: -c ./hack/woke/its-woke-rules.yaml
     - name: Test
       run: make test
     - name: Codecov

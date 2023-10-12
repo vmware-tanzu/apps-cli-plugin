@@ -1,3 +1,4 @@
+hack/woke/its-woke-rules.yaml
 **/go.mod
 **/go.sum
 vendor/
