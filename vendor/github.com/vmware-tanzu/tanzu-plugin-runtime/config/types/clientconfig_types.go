@@ -65,6 +65,9 @@ type Context struct {
 	// ClusterOpts if the context is a kubernetes cluster.
 	ClusterOpts *ClusterServer `json:"clusterOpts,omitempty" yaml:"clusterOpts,omitempty"`
 
+	// AdditionalMetadata to provide any additional data that is respective to each context
+	AdditionalMetadata map[string]interface{} `json:"additionalMetadata,omitempty" yaml:"additionalMetadata,omitempty"`
+
 	// DiscoverySources determines from where to discover plugins
 	// associated with this context.
 	// Deprecated: This field is deprecated.  It is currently no used.
@@ -297,6 +300,19 @@ type CoreCliOptions struct {
 	EULAStatus string `json:"eulaStatus,omitempty" yaml:"eulaStatus,omitempty"`
 	// DiscoverySources determine where to discover plugins
 	DiscoverySources []PluginDiscovery `json:"discoverySources,omitempty" yaml:"discoverySources,omitempty"`
+	// CliID is the uuid uniquely identifying the CLI instance
+	CliID string `json:"cliId,omitempty" yaml:"cliId,omitempty"`
+	// TelemetryOptions are the core CLI specific telemetry options
+	TelemetryOptions *TelemetryOptions `json:"telemetry,omitempty" yaml:"telemetry,omitempty"`
+}
+
+type TelemetryOptions struct {
+	// Source is the path of the telemetry source database
+	Source string `json:"source,omitempty" yaml:"source,omitempty"`
+	// CSPOrgID is the organization ID the user
+	CSPOrgID string `json:"cspOrgID,omitempty" yaml:"cspOrgID,omitempty"`
+	// EntitlementAccountNumber is the organization ID the user
+	EntitlementAccountNumber string `json:"entitlementAccountNumber,omitempty" yaml:"entitlementAccountNumber,omitempty"`
 }
 
 // Cert provides a certificate configuration for an endpoint

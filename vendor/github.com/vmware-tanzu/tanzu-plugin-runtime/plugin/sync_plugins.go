@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -21,16 +22,62 @@ const (
 	customCommandName string = "_custom_command"
 )
 
-func runCommand(commandPath string, args []string) (bytes.Buffer, bytes.Buffer, error) {
+// cmdOptions specifies the command options
+type cmdOptions struct {
+	outWriter io.Writer
+	errWriter io.Writer
+}
+
+type CommandOptions func(o *cmdOptions)
+
+// WithOutputWriter specifies the CommandOption for configuring Stdout
+func WithOutputWriter(outWriter io.Writer) CommandOptions {
+	return func(o *cmdOptions) {
+		o.outWriter = outWriter
+	}
+}
+
+// WithErrorWriter specifies the CommandOption for configuring Stderr
+func WithErrorWriter(errWriter io.Writer) CommandOptions {
+	return func(o *cmdOptions) {
+		o.errWriter = errWriter
+	}
+}
+
+// WithNoStdout specifies to ignore stdout
+func WithNoStdout() CommandOptions {
+	return func(o *cmdOptions) {
+		o.outWriter = io.Discard
+	}
+}
+
+// WithNoStderr specifies to ignore stderr
+func WithNoStderr() CommandOptions {
+	return func(o *cmdOptions) {
+		o.errWriter = io.Discard
+	}
+}
+
+func runCommand(commandPath string, args []string, opts *cmdOptions) (bytes.Buffer, bytes.Buffer, error) {
+	command := exec.Command(commandPath, args...)
+
 	var stderr bytes.Buffer
 	var stdout bytes.Buffer
 
-	command := exec.Command(commandPath, args...)
-	command.Stdout = &stdout
-	command.Stderr = &stderr
+	wout := io.MultiWriter(&stdout, os.Stdout)
+	werr := io.MultiWriter(&stderr, os.Stderr)
 
-	err := command.Run()
-	return stdout, stderr, err
+	if opts.outWriter != nil {
+		wout = io.MultiWriter(&stdout, opts.outWriter)
+	}
+	if opts.errWriter != nil {
+		werr = io.MultiWriter(&stderr, opts.errWriter)
+	}
+
+	command.Stdout = wout
+	command.Stderr = werr
+
+	return stdout, stderr, command.Run()
 }
 
 // SyncPluginsForTarget will attempt to install plugins required by the active
@@ -43,10 +90,23 @@ func runCommand(commandPath string, args []string) (bytes.Buffer, bytes.Buffer, 
 // implementation are subjected to change/removal if an alternative means to
 // provide equivalent functionality can be introduced.
 //
-// The output of the plugin syncing will be return as a string.
-func SyncPluginsForTarget(target types.Target) (string, error) {
+// By default this API will write to os.Stdout and os.Stderr.
+// To write the logs to different output and error streams as part of the plugin sync
+// command invocation, configure CommandOptions as part of the parameters.
+//
+// Example:
+//
+//	var outBuf bytes.Buffer
+//	var errBuf bytes.Buffer
+//	SyncPluginsForTarget(types.TargetK8s, WithOutputWriter(&outBuf), WithErrorWriter(&errBuf))
+func SyncPluginsForTarget(target types.Target, opts ...CommandOptions) (string, error) {
 	// For now, the implementation expects env var TANZU_BIN to be set and
 	// pointing to the core CLI binary used to invoke the plugin sync with.
+
+	options := &cmdOptions{}
+	for _, opt := range opts {
+		opt(options)
+	}
 
 	cliPath := os.Getenv("TANZU_BIN")
 	if cliPath == "" {
@@ -61,12 +121,12 @@ func SyncPluginsForTarget(target types.Target) (string, error) {
 
 	// Check if there is an alternate means to perform the plugin syncing
 	// operation, if not fall back to `plugin sync`
-	output, _, err := runCommand(cliPath, altCommandArgs)
-	if err == nil && output.String() != "" {
-		args = strings.Fields(output.String())
+	stdoutOutput, _, err := runCommand(cliPath, altCommandArgs, &cmdOptions{outWriter: io.Discard, errWriter: io.Discard})
+	if err == nil && stdoutOutput.String() != "" {
+		args = strings.Fields(stdoutOutput.String())
 	}
 
 	// Runs the actual command
-	stdoutOutput, stderrOutput, err := runCommand(cliPath, args)
+	stdoutOutput, stderrOutput, err := runCommand(cliPath, args, options)
 	return fmt.Sprintf("%s%s", stdoutOutput.String(), stderrOutput.String()), err
 }

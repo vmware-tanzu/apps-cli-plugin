@@ -30,7 +30,7 @@ func newRootCmd(descriptor *PluginDescriptor) *cobra.Command {
 		},
 	}
 	cobra.AddTemplateFuncs(TemplateFuncs)
-	cmd.SetUsageTemplate(CmdTemplate)
+	cmd.SetUsageTemplate(cmdTemplate)
 
 	cmd.AddCommand(
 		newDescribeCmd(descriptor.Description),
