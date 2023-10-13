@@ -133,7 +133,7 @@ func TestUntilReady(t *testing.T) {
 			done := make(chan error, 1)
 			defer close(done)
 			go func() {
-				done <- UntilCondition(ctx, fakeWithWatcher, types.NamespacedName{Name: test.resource.Name, Namespace: test.resource.Namespace}, &cartov1alpha1.WorkloadList{}, test.condFunc)
+				done <- UntilCondition(ctx, fakeWithWatcher, types.NamespacedName{Name: test.resource.Name, Namespace: test.resource.Namespace}, &cartov1alpha1.WorkloadList{}, test.condFunc, 0*time.Second)
 			}()
 
 			for _, r := range objs {

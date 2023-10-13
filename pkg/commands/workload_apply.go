@@ -225,7 +225,7 @@ func (opts *WorkloadApplyOptions) Exec(ctx context.Context, c *cli.Config) error
 				}
 			}
 
-			workers = append(workers, getReadyConditionWorker(c, workload))
+			workers = append(workers, getReadyConditionWorker(c, workload, opts.DelayTime))
 
 			if anyTail {
 				workers = append(workers, getTailWorker(c, workload, opts.TailTimestamps))

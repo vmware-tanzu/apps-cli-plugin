@@ -350,7 +350,7 @@ status:
 		{
 			Name: "create - output yaml with wait",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch,
-				flags.OutputFlagName, printer.OutputFormatYaml, flags.WaitFlagName, flags.YesFlagName},
+				flags.OutputFlagName, printer.OutputFormatYaml, flags.WaitFlagName, flags.YesFlagName, flags.DelayTimeFlagName, "0ns"},
 			GivenObjects: givenNamespaceDefault,
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -936,7 +936,7 @@ To get status: "tanzu apps workload get my-workload"
 		{
 			Name: "wait with timeout error",
 			Skip: runtm.GOOS == "windows",
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName, flags.WaitTimeoutFlagName, "1ns"},
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName, flags.WaitTimeoutFlagName, "1ns", flags.DelayTimeFlagName, "0ns"},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1011,7 +1011,7 @@ Error waiting for ready condition: timeout after 1ns waiting for "my-workload" t
 		},
 		{
 			Name: "create - successful wait for ready cond",
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName},
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName, flags.DelayTimeFlagName, "0ns"},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1203,7 +1203,7 @@ Workload "my-workload" is ready
 		},
 		{
 			Name: "create - watcher error",
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName},
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName, flags.DelayTimeFlagName, "0ns"},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				fakewatch := watchfakes.NewFakeWithWatch(true, config.Client, []watch.Event{})
 				ctx = watchhelper.WithWatcher(ctx, fakewatch)
@@ -1990,7 +1990,7 @@ Error: conflict updating workload, the object was modified by another user; plea
 		{
 			Name: "update - wait for ready condition - error with timeout",
 			Skip: runtm.GOOS == "windows",
-			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
+			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns", flags.DelayTimeFlagName, "0ns"},
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
@@ -2102,7 +2102,7 @@ Error waiting for ready condition: timeout after 1ns waiting for "my-workload" t
 		{
 			Name: "update - wait timeout when there is no transition time",
 			Skip: runtm.GOOS == "windows",
-			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
+			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns", flags.DelayTimeFlagName, "0ns"},
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
@@ -2209,7 +2209,7 @@ Error waiting for status change: timeout after 1ns waiting for "my-workload" to 
 		{
 			Name: "update - wait timeout when there is no ready cond",
 			Skip: runtm.GOOS == "windows",
-			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
+			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns", flags.DelayTimeFlagName, "0ns"},
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
@@ -2302,7 +2302,7 @@ Error waiting for status change: timeout after 1ns waiting for "my-workload" to 
 		{
 			Name: "update - wait for timestamp change error with timeout",
 			Skip: runtm.GOOS == "windows",
-			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns"},
+			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.WaitTimeoutFlagName, "1ns", flags.DelayTimeFlagName, "0ns"},
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
@@ -2412,7 +2412,7 @@ Error waiting for status change: timeout after 1ns waiting for "my-workload" to 
 		},
 		{
 			Name: "update - wait error for false condition",
-			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName},
+			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.DelayTimeFlagName, "0ns"},
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
@@ -2523,7 +2523,7 @@ Error waiting for ready condition: Failed to become ready: a hopefully informati
 		},
 		{
 			Name: "update - successful wait for ready condition",
-			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName},
+			Args: []string{workloadName, flags.ServiceRefFlagName, "database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db", flags.WaitFlagName, flags.YesFlagName, flags.DelayTimeFlagName, "0ns"},
 			GivenObjects: []client.Object{
 				parent.
 					SpecDie(func(d *diecartov1alpha1.WorkloadSpecDie) {
@@ -5356,7 +5356,7 @@ status:
 			Name: "output workload after update in yaml format with wait error",
 			Args: []string{workloadName, flags.ServiceRefFlagName,
 				"database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db",
-				flags.OutputFlagName, printer.OutputFormatYml, flags.WaitFlagName},
+				flags.OutputFlagName, printer.OutputFormatYml, flags.WaitFlagName, flags.DelayTimeFlagName, "0ns"},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -5499,7 +5499,7 @@ status:
 			Name: "console interaction - output workload after update in yaml format with wait",
 			Args: []string{workloadName, flags.ServiceRefFlagName,
 				"database=services.tanzu.vmware.com/v1alpha1:PostgreSQL:my-prod-db",
-				flags.OutputFlagName, printer.OutputFormatYml, flags.WaitFlagName},
+				flags.OutputFlagName, printer.OutputFormatYml, flags.WaitFlagName, flags.DelayTimeFlagName, "0ns"},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{

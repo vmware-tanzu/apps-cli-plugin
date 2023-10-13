@@ -32,12 +32,15 @@ var (
 
 type ConditionFunc = func(client.Object) (bool, error)
 
-func UntilCondition(ctx context.Context, watchClient client.WithWatch, target types.NamespacedName, listType client.ObjectList, condition ConditionFunc) error {
+func UntilCondition(ctx context.Context, watchClient client.WithWatch, target types.NamespacedName, listType client.ObjectList, condition ConditionFunc, delayTime time.Duration) error {
+	readyStatus := false
+	timer := time.NewTimer(delayTime)
 	eventWatcher, err := watchClient.Watch(ctx, listType, &client.ListOptions{Namespace: target.Namespace})
 	if err != nil {
 		return err
 	}
 	defer eventWatcher.Stop()
+	defer timer.Stop()
 	for {
 		select {
 		case event := <-eventWatcher.ResultChan():
@@ -53,9 +56,24 @@ func UntilCondition(ctx context.Context, watchClient client.WithWatch, target ty
 						return err
 					}
 					if cond {
-						return nil
+						// Timer is started/reset to track ready status change.
+						timer.Reset(delayTime)
+						readyStatus = true
+					} else {
+						// This is to capture 'unknown' state to avoid incorrect exit from tailing
+						readyStatus = false
 					}
 				}
+			}
+		case <-timer.C:
+			// Wait until the delay time is met before stopping the tail. This is done to address the use case where
+			// the workload apply flows through supply chain steps to rerun, which may result in the workload status
+			// switching between Ready - unknown - Ready - unknown, and so on.
+			// The delay timer provides an option to allow the supply chain to parse through the steps before exiting the tail.
+			if readyStatus {
+				return nil
+			} else {
+				timer.Reset(delayTime)
 			}
 		case <-ctx.Done():
 			return ctx.Err()

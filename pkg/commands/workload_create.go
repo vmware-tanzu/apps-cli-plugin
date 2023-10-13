@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
@@ -144,7 +145,7 @@ func (opts *WorkloadCreateOptions) Exec(ctx context.Context, c *cli.Config) erro
 		if opts.Wait || anyTail {
 			cli.PrintPrompt(shouldPrint, c.Infof, "Waiting for workload %q to become ready...\n", opts.Name)
 
-			workers = append(workers, getReadyConditionWorker(c, workload))
+			workers = append(workers, getReadyConditionWorker(c, workload, 0*time.Second))
 
 			if anyTail {
 				workers = append(workers, getTailWorker(c, workload, opts.TailTimestamps))
