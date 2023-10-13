@@ -147,6 +147,7 @@ type WorkloadOptions struct {
 
 	Wait           bool
 	WaitTimeout    time.Duration
+	DelayTime      time.Duration
 	Tail           bool
 	TailTimestamps bool
 	DryRun         bool
@@ -896,18 +897,18 @@ func getStatusChangeWorker(c *cli.Config, workload *cartov1alpha1.Workload) wait
 				}
 			}
 			return false, nil
-		})
+		}, 0*time.Second)
 	})
 	return worker
 }
 
-func getReadyConditionWorker(c *cli.Config, workload *cartov1alpha1.Workload) wait.Worker {
+func getReadyConditionWorker(c *cli.Config, workload *cartov1alpha1.Workload, delayTime time.Duration) wait.Worker {
 	worker := wait.Worker(func(ctx context.Context) error {
 		clientWithWatch, err := watch.GetWatcher(ctx, c)
 		if err != nil {
 			return err
 		}
-		return wait.UntilCondition(ctx, clientWithWatch, types.NamespacedName{Name: workload.Name, Namespace: workload.Namespace}, &cartov1alpha1.WorkloadList{}, cartov1alpha1.WorkloadReadyConditionFunc)
+		return wait.UntilCondition(ctx, clientWithWatch, types.NamespacedName{Name: workload.Name, Namespace: workload.Namespace}, &cartov1alpha1.WorkloadList{}, cartov1alpha1.WorkloadReadyConditionFunc, delayTime)
 	})
 
 	return worker
@@ -1018,6 +1019,8 @@ func (opts *WorkloadOptions) DefineFlags(ctx context.Context, c *cli.Config, cmd
 	cmd.MarkFlagFilename(cli.StripDash(flags.FilePathFlagName), ".yaml", ".yml")
 	cmd.Flags().BoolVar(&opts.DryRun, cli.StripDash(flags.DryRunFlagName), false, "print kubernetes resources to stdout rather than apply them to the cluster, messages normally on stdout will be sent to stderr")
 	cmd.Flags().BoolVarP(&opts.Yes, cli.StripDash(flags.YesFlagName), "y", false, "accept all prompts")
+	cmd.Flags().DurationVar(&opts.DelayTime, cli.StripDash(flags.DelayTimeFlagName), 30*time.Second, "delay set to prevent premature exit before supply chain step completion when waiting/tailing")
+	cmd.RegisterFlagCompletionFunc(cli.StripDash(flags.DelayTimeFlagName), completion.SuggestDurationUnits(ctx, completion.CommonDurationUnits))
 }
 
 func (opts *WorkloadOptions) DefineEnvVars(ctx context.Context, c *cli.Config, cmd *cobra.Command) {

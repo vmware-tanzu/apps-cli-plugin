@@ -30,6 +30,7 @@ const (
 	ConfigFlagName           = "--config"
 	ContextFlagName          = cli.ContextFlagName
 	DebugFlagName            = "--debug"
+	DelayTimeFlagName        = "--delay"
 	DryRunFlagName           = "--dry-run"
 	EnvFlagName              = "--env"
 	ExportFlagName           = "--export"

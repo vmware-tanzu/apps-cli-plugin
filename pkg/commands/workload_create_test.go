@@ -185,7 +185,7 @@ status:
 		{
 			Name: "create - output yaml with wait",
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch,
-				flags.OutputFlagName, printer.OutputFormatYaml, flags.WaitFlagName, flags.YesFlagName},
+				flags.OutputFlagName, printer.OutputFormatYaml, flags.WaitFlagName, flags.YesFlagName, flags.DelayTimeFlagName, "0ns"},
 			GivenObjects: givenNamespaceDefault,
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
@@ -310,7 +310,7 @@ status:
 		},
 		{
 			Name: "wait error for false condition",
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName},
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName, flags.DelayTimeFlagName, "0ns"},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -463,7 +463,7 @@ Error waiting for ready condition: timeout after 1ns waiting for "my-workload" t
 		},
 		{
 			Name: "successful wait for ready cond",
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName},
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName, flags.DelayTimeFlagName, "0ns"},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				workload := &cartov1alpha1.Workload{
 					ObjectMeta: metav1.ObjectMeta{
@@ -756,7 +756,7 @@ Error: workload "default/my-workload" already exists
 		},
 		{
 			Name: "watcher error",
-			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName},
+			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch, flags.YesFlagName, flags.WaitFlagName, flags.DelayTimeFlagName, "0ns"},
 			Prepare: func(t *testing.T, ctx context.Context, config *cli.Config, tc *clitesting.CommandTestCase) (context.Context, error) {
 				fakewatch := watchfakes.NewFakeWithWatch(true, config.Client, []watch.Event{})
 				ctx = watchhelper.WithWatcher(ctx, fakewatch)
@@ -1901,7 +1901,7 @@ Error waiting for ready condition: failed to create watcher
 			Name:         "output workload after create in json format with wait error",
 			GivenObjects: givenNamespaceDefault,
 			Args: []string{workloadName, flags.GitRepoFlagName, gitRepo, flags.GitBranchFlagName, gitBranch,
-				flags.TypeFlagName, "web", flags.OutputFlagName, printer.OutputFormatJson, flags.WaitFlagName},
+				flags.TypeFlagName, "web", flags.OutputFlagName, printer.OutputFormatJson, flags.WaitFlagName, flags.DelayTimeFlagName, "0ns"},
 			WithConsoleInteractions: func(t *testing.T, c *expect.Console) {
 				c.ExpectString(clitesting.ToInteractTerminal("Do you want to create this workload? [yN]: "))
 				c.Send(clitesting.InteractInputLine("y"))

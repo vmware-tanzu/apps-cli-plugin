@@ -29,6 +29,7 @@ tanzu apps workload apply --file workload.yaml
   -a, --app name                       application name the workload is a part of
       --build-env "key=value" pair     build environment variables represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
       --debug                          put the workload in debug mode (--debug=false to deactivate)
+      --delay duration                 delay set to prevent premature exit before supply chain step completion when waiting/tailing (default 30s)
       --dry-run                        print kubernetes resources to stdout rather than apply them to the cluster, messages normally on stdout will be sent to stderr
   -e, --env "key=value" pair           environment variables represented as a "key=value" pair ("key-" to remove, flag can be used multiple times)
   -f, --file file path                 file path containing the description of a single workload, other flags are layered on top of this resource. Use value "-" to read from stdin
