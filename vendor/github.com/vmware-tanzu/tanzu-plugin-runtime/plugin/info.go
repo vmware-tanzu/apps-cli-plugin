@@ -6,6 +6,7 @@ package plugin
 import (
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"runtime/debug"
 
 	"github.com/spf13/cobra"
@@ -24,6 +25,11 @@ type pluginInfo struct {
 	// PluginRuntimeVersion of the plugin. Must be a valid semantic version https://semver.org/
 	// This version specifies the version of Plugin Runtime that was used to build the plugin
 	PluginRuntimeVersion string `json:"pluginRuntimeVersion" yaml:"pluginRuntimeVersion"`
+
+	// The machine architecture of the plugin binary.
+	// This information can prove useful on Darwin (MacOS) ARM64 machine
+	// which can also execute AMD64 binaries in the Rosetta emulator.
+	BinaryArch string `json:"binaryArch" yaml:"binaryArch"`
 }
 
 func newInfoCmd(desc *PluginDescriptor) *cobra.Command {
@@ -35,6 +41,7 @@ func newInfoCmd(desc *PluginDescriptor) *cobra.Command {
 			pi := pluginInfo{
 				PluginDescriptor:     *desc,
 				PluginRuntimeVersion: getPluginRuntimeVersion(),
+				BinaryArch:           runtime.GOARCH,
 			}
 			b, err := json.Marshal(pi)
 			if err != nil {

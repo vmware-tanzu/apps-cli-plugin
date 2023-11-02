@@ -42,21 +42,56 @@ const (
 
 // outputwriter is our internal implementation.
 type outputwriter struct {
-	out          io.Writer
-	keys         []string
-	values       [][]string
-	outputFormat OutputType
+	out                 io.Writer
+	keys                []string
+	values              [][]interface{}
+	outputFormat        OutputType
+	autoStringifyFields bool
+}
+
+// OutputWriterOption is an option for outputwriter
+type OutputWriterOption func(*outputwriter)
+
+// WithAutoStringify configures the output writer to automatically convert
+// row fields to their golang string representations. It is used to maintain
+// backward compatibility with old rendering behavior, and should be _avoided_
+// if that need does not apply.
+func WithAutoStringify() OutputWriterOption {
+	return func(ow *outputwriter) {
+		ow.autoStringifyFields = true
+	}
 }
 
 // NewOutputWriter gets a new instance of our output writer.
+//
+// Deprecated: NewOutputWriter is being deprecated in favor of NewOutputWriterWithOptions
+// Until it is removed, it will retain the existing behavior of converting
+// incoming row values to their golang string representation for backward
+// compatibility reasons
 func NewOutputWriter(output io.Writer, outputFormat string, headers ...string) OutputWriter {
+	// for retaining old json/yaml rendering behavior
+	opts := []OutputWriterOption{WithAutoStringify()}
+
+	return NewOutputWriterWithOptions(output, outputFormat, opts, headers...)
+}
+
+// NewOutputWriterWithOptions gets a new instance of our output writer with some customization options.
+func NewOutputWriterWithOptions(output io.Writer, outputFormat string, opts []OutputWriterOption, headers ...string) OutputWriter {
 	// Initialize the output writer that we use under the covers
 	ow := &outputwriter{}
 	ow.out = output
 	ow.outputFormat = OutputType(outputFormat)
 	ow.keys = headers
 
+	ow.applyOptions(opts)
+
 	return ow
+}
+
+func (ow *outputwriter) applyOptions(opts []OutputWriterOption) {
+	for i := range opts {
+		opts[i](ow)
+	}
 }
 
 // SetKeys sets the values to use as the keys for the output values.
@@ -65,14 +100,25 @@ func (ow *outputwriter) SetKeys(headerKeys ...string) {
 	ow.keys = headerKeys
 }
 
+func stringify(items []interface{}) []interface{} {
+	var results []interface{}
+	for i := range items {
+		results = append(results, fmt.Sprintf("%v", items[i]))
+	}
+	return results
+}
+
 // AddRow appends a new row to our table.
 func (ow *outputwriter) AddRow(items ...interface{}) {
-	row := []string{}
+	row := []interface{}{}
 
-	// Make sure all values are ultimately strings
-	for _, item := range items {
-		row = append(row, fmt.Sprintf("%v", item))
+	var rowValues []interface{}
+	rowValues = items
+	if ow.autoStringifyFields {
+		rowValues = stringify(items)
 	}
+
+	row = append(row, rowValues...)
 	ow.values = append(ow.values, row)
 }
 
@@ -90,15 +136,15 @@ func (ow *outputwriter) Render() {
 	}
 }
 
-func (ow *outputwriter) dataStruct() []map[string]string {
-	data := []map[string]string{}
+func (ow *outputwriter) dataStruct() []map[string]interface{} {
+	data := []map[string]interface{}{}
 	keys := ow.keys
 	for i, k := range keys {
 		keys[i] = strings.ToLower(strings.ReplaceAll(k, " ", "_"))
 	}
 
 	for _, itemValues := range ow.values {
-		item := map[string]string{}
+		item := map[string]interface{}{}
 		for i, value := range itemValues {
 			if i == len(keys) {
 				continue
@@ -192,7 +238,7 @@ func renderListTable(ow *outputwriter) {
 				// There are more headers than values, leave it blank
 				continue
 			}
-			row = append(row, data[i])
+			row = append(row, fmt.Sprintf("%v", data[i]))
 		}
 		headerLabel := strings.ToUpper(header) + ":"
 		values := strings.Join(row, ", ")
@@ -222,6 +268,19 @@ func renderTable(ow *outputwriter) {
 	table.SetColWidth(colWidth)
 	table.SetTablePadding("\t\t")
 	table.SetHeader(ow.keys)
-	table.AppendBulk(ow.values)
+	table.AppendBulk(convertInterfaceToString(ow.values))
 	table.Render()
+}
+
+func convertInterfaceToString(values [][]interface{}) [][]string {
+	result := [][]string{}
+	for _, valuesRow := range values {
+		row := []string{}
+		for _, field := range valuesRow {
+			row = append(row, fmt.Sprintf("%v", field))
+		}
+
+		result = append(result, row)
+	}
+	return result
 }
