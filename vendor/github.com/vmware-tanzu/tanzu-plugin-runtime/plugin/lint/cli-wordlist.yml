@@ -1,124 +1,368 @@
 ---
 nouns:
+  - accelerator
   - account
   - admin-kubeconfig
+  - agentartifacts
+  - aks-cluster
   - alpha
   - app
+  - apps
+  - audit
   - available
   - available-upgrades
+  - available-zone
   - aws
+  - backup
+  - backup-location
+  - build-service
+  - builder
+  - buildpack
   - ceip-participation
+  - chart
+  - chartmetadata
+  - claimable
+  - claims
+  - class-claim
+  - classes
+  - cli
+  - cli-usage-analytics
   - cluster
+  - cluster-stores
+  - cluster-supply-chain
+  - clusterbuilder
+  - clusterbuildpack
   - clustergroup
+  - clusterstack
+  - clusterstore
   - component
+  - config
+  - continuousdelivery
+  - credential
   - credentials
   - data-protection
+  - docs
+  - ekscluster
+  - events
+  - extension
+  - external-secrets
+  - feature
+  - fragment
+  - gitrepository
+  - health
+  - helm
+  - iam
+  - image
   - insight
+  - inspection
   - installed
+  - instances
+  - integration
+  - inventory
+  - isolated-cluster
   - kubeconfig
   - kubernetes-release
+  - kustomization
+  - local-source-proxy
   - login
+  - logs
   - machinehealthcheck
+  - managed-resources
   - management-cluster
+  - metadata
+  - namespace
+  - namespaces
+  - nodepool
+  - node-pool
+  - object
+  - options
   - os
+  - osimage
   - package
+  - participation
   - permissions
   - pinniped-auth
   - plugin
   - policy
+  - policy-template
+  - post-install
+  - provider-aks-cluster
+  - provider-eks-cluster
   - provisioner
+  - recipe
+  - registry
+  - release
   - repo
   - repository
+  - repositorysecret
+  - resource-claims
+  - role
+  - schedule
+  - secret
+  - secrets
+  - service-mesh
+  - services
+  - setting
+  - snapshot-location
   - source
+  - status
+  - stores
+  - stream
+  - tanzupackage
+  - tap
+  - telemetry
+  - template
+  - test
+  - test-permission
+  - type
+  - types
+  - update-policy
+  - vulnerabilities
   - wordlist
+  - workload
+  - workload-cluster
   - workspace
 verbs:
+  - activate
   - add
+  - add-binding
+  - apply
+  - attach
+  - build
   - clean
   - completion
   - create
   - delete
+  - deactivate
+  - deregister
   - describe
+  - disable
+  - download-bundle
+  - enable
+  - export
+  - fetch
+  - generate
+  - generate-docs
+  - generate-from-local
+  - generate-token
   - get
   - import
   - info
   - init
   - install
   - list
+  - manage
+  - publish
+  - push
+  - reattach
   - register
+  - remove-binding
+  - reregister
+  - restore
   - scale
+  - scan
   - show
+  - triage
+  - unmanage
+  - upload-bundle
   - update
   - upgrade
+  - validate
   - version
 global-flags:
+  - column
+  - context
+  - debug
   - help
+  - kube-api-burst
+  - kube-api-qps
+  - kubeconfig
+  - kubeconfig-context
+  - kubeconfig-yaml
   - log-file
+  - namespace
+  - no-color
+  - output-format
   - v
   - verbose
+  - verbosity
+  - yes
 command-flags:
+  - CEIP-opt-in
+  - CEIP-opt-out
+  - accelerator-name
+  - accelerator-path
+  - acknowledge-CEIP
+  - activated
+  - additional-tkg-system-manifests
+  - agent-name
+  - all
   - all-namespaces
-  - apiToken
   - app
+  - artifact-group-uid
+  - az-file
   - bind
   - browser
+  - build-values
+  - build-ytt-validations
   - ca-bundle
   - ca-bundle-data
+  - ca-certificate
   - ceip-participation
+  - chdir
   - client-id
+  - cluster
+  - cluster-arn
+  - cluster-group
+  - cluster-group-name
+  - cluster-name
   - cni
+  - comment
   - concierge-authenticator-name
   - concierge-authenticator-type
   - concierge-ca-bundle-data
   - concierge-endpoint
+  - concierge-is-cluster-scoped
   - concierge-namespace
   - context
+  - continue-bootstrap
   - controlplane-machine-count
   - controlplane-size
+  - copy-to
   - create
   - create-namespace
+  - credential-cache
+  - credential-name
+  - csp-org-id
+  - cveid
+  - dangerous-allow-use-of-shared-namespace
+  - data-values-file
+  - deactivated
   - debug
+  - debug-always
   - debug-session-cache
+  - default-cluster-group
+  - default-workload-cluster-image-registry
+  - default-workload-cluster-proxy-name
+  - delete-backups
   - deploy-tkg-on-vSphere7
+  - description
+  - destination-repo
+  - direct
+  - directory
   - disable-grouping
   - disable-no-echo
+  - display-name
+  - docs-dir
   - dry-run
   - enable-cluster-options
   - enable-concierge
   - enable-tkgs-on-vSphere7
   - endpoint
+  - entitlement-account-number
   - env
+  - env-is-prod
+  - export-to-all-namespaces
+  - extended
+  - extension-name
   - feature-flags
+  - featuregate
   - file
+  - filename
   - force
+  - force-config-update
   - force-csp
+  - fragment-names
+  - fragment-paths
+  - from-context
   - gcp-bucket-name
   - gcp-root-path
   - git-branch
   - git-commit
   - git-repo
+  - git-sub-path
   - git-tag
+  - group
+  - groups
+  - icon-url
+  - image-registry
+  - img-digest
+  - img-registry
+  - include-all-families
+  - include-experimental
   - include-management-cluster
   - infrastructure
+  - input-artifact-dir
+  - insecure
+  - interval
   - issuer
+  - justification
   - kubeconfig
+  - kubernetes-provider-type
+  - labels
+  - latest
+  - limit
   - limit-cpu
   - limit-memory
   - listen-port
+  - local
+  - local-output-discovery-dir
+  - local-output-distribution-dir
+  - local-path
+  - manageable
+  - management-cluster
+  - management-cluster-name
+  - max-size
   - name
   - namespace
+  - namespace-name
+  - node-pool-name
+  - oci-discovery-image
+  - oci-distribution-image-repository
   - offset
+  - openapi-schema
+  - options
+  - options-file
+  - org
   - os-arch
   - os-name
   - os-version
   - output
+  - output-dir
+  - package
   - package-name
+  - page
+  - password
+  - password-env-var
+  - password-file
+  - password-stdin
+  - permission
+  - pkg-name
+  - pkg-version
   - plan
+  - plugins
   - poll-interval
   - poll-timeout
+  - private-saas
+  - provisioner
+  - provisioner-name
+  - proxy-name
+  - query
+  - reconcile
+  - region
+  - repo-output
+  - repo-type
   - request-audience
+  - resource-group
+  - resource-group-name
+  - response
+  - role
+  - scope
   - scopes
+  - secret-ref
+  - secret-type
   - server
+  - server-url
   - service-account-name
   - session-cache
   - show-all-conditions
@@ -126,22 +370,50 @@ command-flags:
   - show-group-members
   - size
   - skip-browser
+  - skip-verify
+  - source-directory
+  - source-image
+  - source-repo
+  - src-commit
+  - src-org
+  - src-repo
   - staging
+  - state
   - stderr-only
+  - subscription-id
+  - tag
+  - tags
   - target-namespace
+  - template
   - timeout
+  - tkg-custom-compatibility-image-path
+  - tkg-version
   - tkr
+  - token
+  - triage-uid-to-copy
+  - tty
+  - type
   - ui
   - uri
   - url
   - use-existing-bootstrap-cluster
   - use-existing-cleanup-cluster
+  - use-proxy
+  - user
+  - username
+  - users
+  - values
   - values-file
   - values-schema
+  - verbose
   - version
   - vsphere-controlplane-endpoint
   - vsphere-vm-template-name
   - wait
+  - wait-check-interval
+  - wait-timeout
   - worker-machine-count
   - worker-size
   - yes
+  - ytt-overlay-file
+  - ytt-overlays

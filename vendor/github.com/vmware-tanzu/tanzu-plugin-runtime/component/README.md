@@ -68,12 +68,26 @@ This package provides a way to write output to different formats. It defines the
 #### Initialization
 
 ``` go
-func NewOutputWriter(output io.Writer, outputFormat string, headers ...string) OutputWriter
+func NewOutputWriterWithOptions(output io.Writer, outputFormat string, opts []OutputWriterOption, headers ...string) OutputWriter
 func NewObjectWriter(output io.Writer, outputFormat string, data interface{}) OutputWriter
 ```
 
-- `NewOutputWriter` returns a new instance of `OutputWriter` and it accepts an `io.Writer`, an `outputFormat` (one of `TableOutputType`, `YAMLOutputType`, `JSONOutputType`, `ListTableOutputType`), and a variadic list of headers for the table.
-- `NewObjectWriter` is the same as `NewOutputWriter` but it is used for writing objects instead of tables. It accepts an `io.Writer`, an `outputFormat` (one of `YAMLOutputType`, `JSONOutputType`), and an object that should be written.
+- `NewOutputWriterWithOptions` returns a new instance of `OutputWriter` and it accepts an `io.Writer`, an `outputFormat` (one of `TableOutputType`, `YAMLOutputType`, `JSONOutputType`, `ListTableOutputType`), and a variadic list of headers for the table.
+
+- `NewObjectWriter` is the same as `NewOutputWriterWithOptions` but it is used for writing objects instead of tables. It accepts an `io.Writer`, an `outputFormat` (one of `YAMLOutputType`, `JSONOutputType`), and an object that should be written.
+- It also accepts a list of OutputWriterOption's that can be used to further customize its output.
+
+Note that NewOutputWriter has been deprecated in favor of NewOutputWriterWithOptions
+One difference in the default rendering behavior for YAML/JSON output between
+the writer created with NewOutputWriter vs that created with NewOutputWriterWithOptions
+is that row fields no longer gets auto stringified in the latter.
+
+To retain the stringify behavior (unlikely what if needed except for backward compatibility
+reasons), create the output writer like so:
+
+``` go
+    writer := output.NewOutputWriter(os.Stdout, output.TableOutputType, []OutputWriterOption{WithAutoStringify()}, "Name", "Age")
+```
 
 #### Usage
 
@@ -98,7 +112,7 @@ func (obw *objectwriter) Render()
 
 `Render` emits the generated output to the output stream.
 
-If `NewOutputWriter` was used for initialization, `Render` will generate output in the format specified by the `outputFormat` parameter.
+If `NewOutputWriterWithOptions` was used for initialization, `Render` will generate output in the format specified by the `outputFormat` parameter.
 
 If `NewObjectWriter` was used for initialization, `Render` will generate output in the format specified by the `outputFormat` parameter, and it will use the provided object for output.
 
@@ -131,8 +145,11 @@ import (
 )
 
 func main() {
-    // Example usage of NewOutputWriter
-    writer := output.NewOutputWriter(os.Stdout, output.TableOutputType, "Name", "Age")
+    // Example usage of NewOutputWriterWithOptions
+
+    // Create a OutputWriter with default options
+    writer := output.NewOutputWriterWithOptions(os.Stdout, output.TableOutputType, []OutputWriterOption{}, "Name", "Age")
+
     writer.AddRow("John", 30)
     writer.AddRow("Bob", 45)
     writer.Render()
@@ -162,18 +179,27 @@ This will output:
 
 ## OutputWriterSpinner Component
 
-`OutputWriterSpinner` is a Go package that provides an interface to `OutputWriter` augmented with a spinner. It allows for rendering output with a spinner while also providing the ability to stop the spinner and render the final output.
+`OutputWriterSpinner` provides an interface to `OutputWriter` augmented with a spinner. It allows for rendering output with a spinner while also providing the ability to stop the spinner and render the final output.
 
 ### Usage
 
-To use `OutputWriterSpinner`, you can import the package in your Go code and create an instance of the `OutputWriterSpinner` interface using the `NewOutputWriterWithSpinner` function.
+To use `OutputWriterSpinner`, you can import the package in your Go code and create an instance of the `OutputWriterSpinner` interface using the `NewOutputWriterSpinnerWithOptions` function.
+
+Note that NewOutputWriterWithSpinner has been deprecated in favor of NewOutputWriterSpinnerWithOptions
+One difference in the default rendering behavior for YAML/JSON output between
+the writer created with NewOutputWriterWithSpinner vs that created with NewOutputWriterSpinnerWithOptions
+is that row fields no longer gets auto stringified in the latter.
+
+To retain the stringify behavior (unlikely what if needed except for backward compatibility
+reasons), create the output writer by including WithAutoStringify() in the
+options list .
 
 ``` go
 import "github.com/vmware-tanzu/tanzu-plugin-runtime/component"
 
 
 // create new OutputWriterSpinner
-outputWriterSpinner, err := component.NewOutputWriterWithSpinner(os.Stdout, "json", "Loading...", true)
+outputWriterSpinner, err := component.NewOutputWriterSpinnerWithOptions(os.Stdout, "json", "Loading...", true, []OutputWriterOption{})
 if err != nil {
     fmt.Println("Error creating OutputWriterSpinner:", err)
     return

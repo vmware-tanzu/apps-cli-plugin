@@ -52,18 +52,26 @@ type Server struct {
 // Context configuration for a control plane. This can one of the following,
 // 1. Kubernetes Cluster
 // 2. Tanzu Mission Control endpoint
+// 3. Tanzu control plane endpoint
 type Context struct {
 	// Name of the context.
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 
 	// Target of the context.
+	// Deprecated: This field is deprecated. Please use ContextType
 	Target Target `json:"target,omitempty" yaml:"target,omitempty"`
+
+	// ContextType of the context.
+	ContextType ContextType `json:"contextType,omitempty" yaml:"contextType,omitempty"`
 
 	// GlobalOpts if the context is a global control plane (e.g., TMC).
 	GlobalOpts *GlobalServer `json:"globalOpts,omitempty" yaml:"globalOpts,omitempty"`
 
 	// ClusterOpts if the context is a kubernetes cluster.
 	ClusterOpts *ClusterServer `json:"clusterOpts,omitempty" yaml:"clusterOpts,omitempty"`
+
+	// AdditionalMetadata to provide any additional data that is respective to each context
+	AdditionalMetadata map[string]interface{} `json:"additionalMetadata,omitempty" yaml:"additionalMetadata,omitempty"`
 
 	// DiscoverySources determines from where to discover plugins
 	// associated with this context.
@@ -295,8 +303,23 @@ type CoreCliOptions struct {
 	CEIPOptIn string `json:"ceipOptIn,omitempty" yaml:"ceipOptIn,omitempty"`
 	// EULAStatus is the EULA acceptance status.
 	EULAStatus string `json:"eulaStatus,omitempty" yaml:"eulaStatus,omitempty"`
+	// EULAAcceptedVersions is comma-separated list of EULA versions accepted.
+	EULAAcceptedVersions string `json:"eulaAcceptedVersions,omitempty" yaml:"eulaAcceptedVersions,omitempty"`
 	// DiscoverySources determine where to discover plugins
 	DiscoverySources []PluginDiscovery `json:"discoverySources,omitempty" yaml:"discoverySources,omitempty"`
+	// CliID is the uuid uniquely identifying the CLI instance
+	CliID string `json:"cliId,omitempty" yaml:"cliId,omitempty"`
+	// TelemetryOptions are the core CLI specific telemetry options
+	TelemetryOptions *TelemetryOptions `json:"telemetry,omitempty" yaml:"telemetry,omitempty"`
+}
+
+type TelemetryOptions struct {
+	// Source is the path of the telemetry source database
+	Source string `json:"source,omitempty" yaml:"source,omitempty"`
+	// CSPOrgID is the organization ID the user
+	CSPOrgID string `json:"cspOrgID,omitempty" yaml:"cspOrgID,omitempty"`
+	// EntitlementAccountNumber is the organization ID the user
+	EntitlementAccountNumber string `json:"entitlementAccountNumber,omitempty" yaml:"entitlementAccountNumber,omitempty"`
 }
 
 // Cert provides a certificate configuration for an endpoint
@@ -327,7 +350,7 @@ type ClientConfig struct {
 	KnownContexts []*Context `json:"contexts,omitempty" yaml:"contexts,omitempty"`
 
 	// CurrentContext for every type.
-	CurrentContext map[Target]string `json:"currentContext,omitempty" yaml:"currentContext,omitempty"`
+	CurrentContext map[ContextType]string `json:"currentContext,omitempty" yaml:"currentContext,omitempty"`
 
 	// ClientOptions are client specific options like feature flags, environment variables, repositories, discoverySources, etc.
 	ClientOptions *ClientOptions `json:"clientOptions,omitempty" yaml:"clientOptions,omitempty"`

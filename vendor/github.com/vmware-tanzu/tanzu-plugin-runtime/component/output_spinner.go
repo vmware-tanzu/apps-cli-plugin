@@ -28,11 +28,25 @@ type outputwriterspinner struct {
 }
 
 // NewOutputWriterWithSpinner returns implementation of OutputWriterSpinner.
+//
+// Deprecated: NewOutputWriterWithSpinner is being deprecated in favor of
+// NewOutputWriterspinnerWithOptions.
+// Until it is removed, it will retain the existing behavior of converting
+// incoming row values to their golang string representation for backward
+// compatibility reasons
 func NewOutputWriterWithSpinner(output io.Writer, outputFormat, spinnerText string, startSpinner bool, headers ...string) (OutputWriterSpinner, error) {
+	opts := []OutputWriterOption{WithAutoStringify()}
+	return NewOutputWriterSpinnerWithOptions(output, outputFormat, spinnerText, startSpinner, opts, headers...)
+}
+
+// NewOutputWriterSpinnerWithOptions returns implementation of OutputWriterSpinner.
+func NewOutputWriterSpinnerWithOptions(output io.Writer, outputFormat, spinnerText string, startSpinner bool, opts []OutputWriterOption, headers ...string) (OutputWriterSpinner, error) {
 	ows := &outputwriterspinner{}
 	ows.out = output
 	ows.outputFormat = OutputType(outputFormat)
 	ows.keys = headers
+	ows.applyOptions(opts)
+
 	if ows.outputFormat != JSONOutputType && ows.outputFormat != YAMLOutputType {
 		ows.spinnerText = spinnerText
 		ows.spinner = spinner.New(spinner.CharSets[9], 100*time.Millisecond)

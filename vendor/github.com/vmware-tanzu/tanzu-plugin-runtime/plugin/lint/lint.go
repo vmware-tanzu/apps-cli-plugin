@@ -71,7 +71,8 @@ func (c *CobraLintRunner) Run() bool {
 
 // Output writes the results of linting in a table form.
 func (c *CobraLintRunner) Output() {
-	t := component.NewOutputWriter(c.config.cmd.OutOrStdout(), "table", "command", "lint")
+	opts := []component.OutputWriterOption{}
+	t := component.NewOutputWriterWithOptions(c.config.cmd.OutOrStdout(), "table", opts, "command", "lint")
 	for k, vs := range *c.results {
 		for _, v := range vs {
 			t.AddRow(k, v)
