@@ -25,30 +25,18 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/stern/stern/kubernetes"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes"
 )
 
 // Run starts the main run loop
-func Run(ctx context.Context, config *Config) error {
-	clientConfig := kubernetes.NewClientConfig(config.KubeConfig, config.ContextName)
-	cc, err := clientConfig.ClientConfig()
-	if err != nil {
-		return err
-	}
-
-	client, err := clientset.NewForConfig(cc)
-	if err != nil {
-		return err
-	}
-
+func Run(ctx context.Context, client kubernetes.Interface, config *Config) error {
 	var namespaces []string
 	// A specific namespace is ignored if all-namespaces is provided
 	if config.AllNamespaces {
@@ -56,11 +44,7 @@ func Run(ctx context.Context, config *Config) error {
 	} else {
 		namespaces = config.Namespaces
 		if len(namespaces) == 0 {
-			n, _, err := clientConfig.Namespace()
-			if err != nil {
-				return errors.Wrap(err, "unable to get default namespace")
-			}
-			namespaces = []string{n}
+			return errors.New("no namespace specified")
 		}
 	}
 
@@ -99,7 +83,7 @@ func Run(ctx context.Context, config *Config) error {
 			Timestamps:      config.Timestamps,
 			TimestampFormat: config.TimestampFormat,
 			Location:        config.Location,
-			SinceSeconds:    pointer.Int64(int64(config.Since.Seconds())),
+			SinceSeconds:    ptr.To[int64](int64(config.Since.Seconds())),
 			Exclude:         config.Exclude,
 			Include:         config.Include,
 			Namespace:       config.AllNamespaces || len(namespaces) > 1,
@@ -171,15 +155,14 @@ func Run(ctx context.Context, config *Config) error {
 		}
 	}
 
+	eg, nctx := errgroup.WithContext(ctx)
 	var numRequests atomic.Int64
-	errCh := make(chan error)
-	defer close(errCh)
 	for _, n := range namespaces {
-		selector, err := chooseSelector(ctx, client, n, resource.kind, resource.name, config.LabelSelector)
+		selector, err := chooseSelector(nctx, client, n, resource.kind, resource.name, config.LabelSelector)
 		if err != nil {
 			return err
 		}
-		a, err := WatchTargets(ctx,
+		a, err := WatchTargets(nctx,
 			client.CoreV1().Pods(n),
 			selector,
 			config.FieldSelector,
@@ -189,42 +172,34 @@ func Run(ctx context.Context, config *Config) error {
 			return errors.Wrap(err, "failed to set up watch")
 		}
 
-		go func() {
+		eg.Go(func() error {
 			for {
 				select {
 				case target, ok := <-a:
 					if !ok {
-						errCh <- fmt.Errorf("lost watch connection")
-						return
+						return fmt.Errorf("lost watch connection")
 					}
 					numRequests.Add(1)
 					if numRequests.Load() > int64(config.MaxLogRequests) {
-						errCh <- fmt.Errorf(
+						return fmt.Errorf(
 							"stern reached the maximum number of log requests (%d),"+
 								" use --max-log-requests to increase the limit",
 							config.MaxLogRequests)
-						return
 					}
 					go func() {
-						tailTarget(ctx, target)
+						tailTarget(nctx, target)
 						numRequests.Add(-1)
 					}()
-				case <-ctx.Done():
-					return
+				case <-nctx.Done():
+					return nil
 				}
 			}
-		}()
+		})
 	}
-
-	select {
-	case e := <-errCh:
-		return e
-	case <-ctx.Done():
-		return nil
-	}
+	return eg.Wait()
 }
 
-func chooseSelector(ctx context.Context, client clientset.Interface, namespace, kind, name string, selector labels.Selector) (labels.Selector, error) {
+func chooseSelector(ctx context.Context, client kubernetes.Interface, namespace, kind, name string, selector labels.Selector) (labels.Selector, error) {
 	if kind == "" {
 		return selector, nil
 	}
@@ -242,7 +217,7 @@ func chooseSelector(ctx context.Context, client clientset.Interface, namespace, 
 	return labels.SelectorFromSet(labelMap), nil
 }
 
-func retrieveLabelsFromResource(ctx context.Context, client clientset.Interface, namespace, kind, name string) (map[string]string, error) {
+func retrieveLabelsFromResource(ctx context.Context, client kubernetes.Interface, namespace, kind, name string) (map[string]string, error) {
 	opt := metav1.GetOptions{}
 	switch {
 	// core
