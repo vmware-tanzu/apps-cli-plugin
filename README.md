@@ -1,4 +1,9 @@
 # Apps Plugin for the Tanzu CLI
+<br/>
+
+## VMware has migrated active development on this project to a private repository.<br/>This repository will no longer be updated.
+
+<br/><br/>
 
 [![CI](https://github.com/vmware-tanzu/apps-cli-plugin/actions/workflows/ci.yaml/badge.svg)](https://github.com/vmware-tanzu/apps-cli-plugin/actions/workflows/ci.yaml)
 [![GoDoc](https://godoc.org/github.com/vmware-tanzu/apps-cli-plugin?status.svg)](https://godoc.org/github.com/vmware-tanzu/apps-cli-plugin)
