@@ -36,9 +36,9 @@ func (d *PersistentVolumeClaimSpecDie) SelectorDie(fn func(d *diemetav1.LabelSel
 	})
 }
 
-func (d *PersistentVolumeClaimSpecDie) ResourcesDie(fn func(d *ResourceRequirementsDie)) *PersistentVolumeClaimSpecDie {
+func (d *PersistentVolumeClaimSpecDie) ResourcesDie(fn func(d *VolumeResourceRequirementsDie)) *PersistentVolumeClaimSpecDie {
 	return d.DieStamp(func(r *corev1.PersistentVolumeClaimSpec) {
-		d := ResourceRequirementsBlank.DieImmutable(false).DieFeed(r.Resources)
+		d := VolumeResourceRequirementsBlank.DieImmutable(false).DieFeed(r.Resources)
 		fn(d)
 		r.Resources = d.DieRelease()
 	})
@@ -61,6 +61,35 @@ func (d *PersistentVolumeClaimSpecDie) DataSourceRefDie(fn func(d *TypedObjectRe
 }
 
 // +die
+type _ = corev1.VolumeResourceRequirements
+
+func (d *VolumeResourceRequirementsDie) AddLimit(name corev1.ResourceName, quantity resource.Quantity) *VolumeResourceRequirementsDie {
+	return d.DieStamp(func(r *corev1.VolumeResourceRequirements) {
+		if r.Limits == nil {
+			r.Limits = corev1.ResourceList{}
+		}
+		r.Limits[name] = quantity
+	})
+}
+
+func (d *VolumeResourceRequirementsDie) AddLimitString(name corev1.ResourceName, quantity string) *VolumeResourceRequirementsDie {
+	return d.AddLimit(name, resource.MustParse(quantity))
+}
+
+func (d *VolumeResourceRequirementsDie) AddRequest(name corev1.ResourceName, quantity resource.Quantity) *VolumeResourceRequirementsDie {
+	return d.DieStamp(func(r *corev1.VolumeResourceRequirements) {
+		if r.Requests == nil {
+			r.Requests = corev1.ResourceList{}
+		}
+		r.Requests[name] = quantity
+	})
+}
+
+func (d *VolumeResourceRequirementsDie) AddRequestString(name corev1.ResourceName, quantity string) *VolumeResourceRequirementsDie {
+	return d.AddRequest(name, resource.MustParse(quantity))
+}
+
+// +die:ignore={AllocatedResourceStatuses}
 type _ = corev1.PersistentVolumeClaimStatus
 
 func (d *PersistentVolumeClaimStatusDie) AddCapacity(name corev1.ResourceName, quantity resource.Quantity) *PersistentVolumeClaimStatusDie {
@@ -104,6 +133,70 @@ func (d *PersistentVolumeClaimStatusDie) AddAllocatedResources(name corev1.Resou
 func (d *PersistentVolumeClaimStatusDie) AddAllocatedResourcesString(name corev1.ResourceName, quantity string) *PersistentVolumeClaimStatusDie {
 	return d.AddAllocatedResources(name, resource.MustParse(quantity))
 }
+
+// allocatedResourceStatuses stores status of resource being resized for the given PVC.
+// Key names follow standard Kubernetes label syntax. Valid values are either:
+//   - Un-prefixed keys:
+//   - storage - the capacity of the volume.
+//   - Custom resources must use implementation-defined prefixed names such as "example.com/my-custom-resource"
+//
+// Apart from above values - keys that are unprefixed or have kubernetes.io prefix are considered
+// reserved and hence may not be used.
+//
+// ClaimResourceStatus can be in any of following states:
+//   - ControllerResizeInProgress:
+//     State set when resize controller starts resizing the volume in control-plane.
+//   - ControllerResizeFailed:
+//     State set when resize has failed in resize controller with a terminal error.
+//   - NodeResizePending:
+//     State set when resize controller has finished resizing the volume but further resizing of
+//     volume is needed on the node.
+//   - NodeResizeInProgress:
+//     State set when kubelet starts resizing the volume.
+//   - NodeResizeFailed:
+//     State set when resizing has failed in kubelet with a terminal error. Transient errors don't set
+//     NodeResizeFailed.
+//
+// For example: if expanding a PVC for more capacity - this field can be one of the following states:
+//   - pvc.status.allocatedResourceStatus['storage'] = "ControllerResizeInProgress"
+//   - pvc.status.allocatedResourceStatus['storage'] = "ControllerResizeFailed"
+//   - pvc.status.allocatedResourceStatus['storage'] = "NodeResizePending"
+//   - pvc.status.allocatedResourceStatus['storage'] = "NodeResizeInProgress"
+//   - pvc.status.allocatedResourceStatus['storage'] = "NodeResizeFailed"
+//
+// When this field is not set, it means that no resize operation is in progress for the given PVC.
+//
+// A controller that receives PVC update with previously unknown resourceName or ClaimResourceStatus
+// should ignore the update for the purpose it was designed. For example - a controller that
+// only is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid
+// resources associated with PVC.
+//
+// This is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.
+func (d *PersistentVolumeClaimStatusDie) AllocatedResourceStatuses(v map[corev1.ResourceName]corev1.ClaimResourceStatus) *PersistentVolumeClaimStatusDie {
+	return d.DieStamp(func(r *corev1.PersistentVolumeClaimStatus) {
+		r.AllocatedResourceStatuses = v
+	})
+}
+
+func (d *PersistentVolumeClaimStatusDie) AddAllocatedResourceStatus(name corev1.ResourceName, status corev1.ClaimResourceStatus) *PersistentVolumeClaimStatusDie {
+	return d.DieStamp(func(r *corev1.PersistentVolumeClaimStatus) {
+		if r.AllocatedResourceStatuses == nil {
+			r.AllocatedResourceStatuses = map[corev1.ResourceName]corev1.ClaimResourceStatus{}
+		}
+		r.AllocatedResourceStatuses[name] = status
+	})
+}
+
+func (d *PersistentVolumeClaimStatusDie) ModifyVolumeStatusDie(fn func(d *ModifyVolumeStatusDie)) *PersistentVolumeClaimStatusDie {
+	return d.DieStamp(func(r *corev1.PersistentVolumeClaimStatus) {
+		d := ModifyVolumeStatusBlank.DieImmutable(false).DieFeedPtr(r.ModifyVolumeStatus)
+		fn(d)
+		r.ModifyVolumeStatus = d.DieReleasePtr()
+	})
+}
+
+// +die
+type _ corev1.ModifyVolumeStatus
 
 // +die
 type _ corev1.PersistentVolumeClaimTemplate

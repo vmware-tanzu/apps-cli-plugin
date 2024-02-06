@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	diemetav1 "dies.dev/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -545,6 +546,14 @@ func (d *VolumeProjectionDie) ServiceAccountTokenDie(fn func(d *ServiceAccountTo
 	})
 }
 
+func (d *VolumeProjectionDie) ClusterTrustBundleDie(fn func(d *ClusterTrustBundleProjectionDie)) *VolumeProjectionDie {
+	return d.DieStamp(func(r *corev1.VolumeProjection) {
+		d := ClusterTrustBundleProjectionBlank.DieImmutable(false).DieFeedPtr(r.ClusterTrustBundle)
+		fn(d)
+		r.ClusterTrustBundle = d.DieReleasePtr()
+	})
+}
+
 // +die
 type _ = corev1.SecretProjection
 
@@ -619,6 +628,17 @@ func (d *ConfigMapProjectionDie) ItemDie(key string, fn func(d *KeyToPathDie)) *
 
 // +die
 type _ = corev1.ServiceAccountTokenProjection
+
+// +die
+type _ = corev1.ClusterTrustBundleProjection
+
+func (d *ClusterTrustBundleProjectionDie) LabelSelectorDie(fn func(d *diemetav1.LabelSelectorDie)) *ClusterTrustBundleProjectionDie {
+	return d.DieStamp(func(r *corev1.ClusterTrustBundleProjection) {
+		d := diemetav1.LabelSelectorBlank.DieImmutable(false).DieFeedPtr(r.LabelSelector)
+		fn(d)
+		r.LabelSelector = d.DieReleasePtr()
+	})
+}
 
 // +die
 type _ = corev1.PortworxVolumeSource
